@@ -48,13 +48,12 @@
 
             <!-- Right section with notifications and user menu -->
             <div class="flex items-center space-x-3 ml-4">
-                <!-- Notifications Button with Dropdown -->
+                <!-- Notifications Button - Now opens modal instead of dropdown -->
                 <div class="relative">
                     <button
                         type="button"
-                        @click="toggleNotificationDropdown"
+                        @click="showNotificationModal = true"
                         class="relative p-2 text-gray-500 rounded-full hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-700 focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600 transition-all duration-200"
-                        ref="notificationButton"
                     >
                         <BellIcon class="w-6 h-6" />
                         <span
@@ -64,243 +63,6 @@
                             {{ unreadCount > 99 ? "99+" : unreadCount }}
                         </span>
                     </button>
-
-                    <!-- Notification Dropdown -->
-                    <div
-                        v-show="isNotificationDropdownOpen"
-                        v-click-outside="closeNotificationDropdown"
-                        class="absolute right-0 mt-3 w-96 origin-top-right rounded-xl shadow-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden z-50 transform transition-all duration-200"
-                        :class="{
-                            'scale-100 opacity-100': isNotificationDropdownOpen,
-                            'scale-95 opacity-0': !isNotificationDropdownOpen,
-                        }"
-                    >
-                        <!-- Header -->
-                        <div
-                            class="px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-600 border-b border-gray-100 dark:border-gray-600"
-                        >
-                            <div class="flex justify-between items-center">
-                                <h3
-                                    class="text-lg font-semibold text-gray-900 dark:text-white"
-                                >
-                                    Notifications
-                                    <span
-                                        v-if="unreadCount > 0"
-                                        class="ml-2 inline-flex items-center justify-center w-6 h-6 text-xs font-bold text-white bg-red-500 rounded-full"
-                                        >{{ unreadCount }}</span
-                                    >
-                                </h3>
-                                <button
-                                    @click="closeNotificationDropdown"
-                                    class="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition-colors duration-200"
-                                >
-                                    <XMarkIcon class="w-5 h-5" />
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Content -->
-                        <div class="max-h-96 overflow-y-auto">
-                            <!-- Loading State -->
-                            <div
-                                v-if="isLoadingNotifications"
-                                class="p-8 text-center"
-                            >
-                                <div
-                                    class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"
-                                ></div>
-                                <p
-                                    class="text-gray-500 dark:text-gray-400 text-sm mt-3"
-                                >
-                                    Loading notifications...
-                                </p>
-                            </div>
-
-                            <!-- Empty State -->
-                            <div
-                                v-else-if="localNotifications.length === 0"
-                                class="p-8 text-center"
-                            >
-                                <div
-                                    class="w-16 h-16 mx-auto mb-4 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center"
-                                >
-                                    <BellIcon class="w-8 h-8 text-gray-400" />
-                                </div>
-                                <p class="text-gray-500 dark:text-gray-400">
-                                    No notifications available
-                                </p>
-                            </div>
-
-                            <!-- Notifications List -->
-                            <div
-                                v-else
-                                class="divide-y divide-gray-100 dark:divide-gray-700"
-                            >
-                                <div
-                                    v-for="notification in localNotifications"
-                                    :key="notification.id"
-                                    class="p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer group relative"
-                                    :class="{
-                                        'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500':
-                                            notification.unread,
-                                    }"
-                                    @click="
-                                        handleNotificationClick(notification)
-                                    "
-                                >
-                                    <!-- Three dots menu -->
-                                    <div class="absolute top-3 right-3">
-                                        <button
-                                            @click.stop="
-                                                toggleNotificationMenu(
-                                                    notification.id
-                                                )
-                                            "
-                                            class="p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
-                                            :class="{
-                                                'opacity-100':
-                                                    activeNotificationMenu ===
-                                                    notification.id,
-                                            }"
-                                        >
-                                            <EllipsisVerticalIcon
-                                                class="w-4 h-4 text-gray-500"
-                                            />
-                                        </button>
-
-                                        <!-- Delete menu -->
-                                        <div
-                                            v-if="
-                                                activeNotificationMenu ===
-                                                notification.id
-                                            "
-                                            class="absolute right-0 top-full mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-10 min-w-[120px]"
-                                        >
-                                            <button
-                                                @click.stop="
-                                                    deleteNotification(
-                                                        notification
-                                                    )
-                                                "
-                                                class="w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 text-left flex items-center gap-2"
-                                            >
-                                                <TrashIcon class="w-4 h-4" />
-                                                Delete
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <div
-                                        class="flex items-start space-x-3 pr-8"
-                                    >
-                                        <!-- Avatar/Icon -->
-                                        <div class="flex-shrink-0 relative">
-                                            <img
-                                                v-if="notification.user_avatar"
-                                                :src="notification.user_avatar"
-                                                :alt="
-                                                    notification.user_name ||
-                                                    'User'
-                                                "
-                                                class="w-10 h-10 rounded-full border-2 border-white dark:border-gray-700 shadow-sm"
-                                            />
-                                            <div
-                                                v-else
-                                                class="w-10 h-10 rounded-full flex items-center justify-center shadow-sm"
-                                                :class="
-                                                    getNotificationAvatarClass(
-                                                        notification
-                                                    )
-                                                "
-                                            >
-                                                <component
-                                                    :is="
-                                                        getNotificationIcon(
-                                                            notification
-                                                        )
-                                                    "
-                                                    class="w-5 h-5 text-white"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <!-- Content -->
-                                        <div class="flex-1 min-w-0">
-                                            <div
-                                                class="flex items-start justify-between"
-                                            >
-                                                <div class="flex-1 min-w-0">
-                                                    <p
-                                                        class="text-sm font-medium text-gray-900 dark:text-white"
-                                                    >
-                                                        <span
-                                                            v-if="
-                                                                notification.user_name &&
-                                                                notification.type !==
-                                                                    'announcement'
-                                                            "
-                                                            class="font-semibold"
-                                                            >{{
-                                                                notification.user_name
-                                                            }}</span
-                                                        >
-                                                        {{
-                                                            getNotificationTitle(
-                                                                notification
-                                                            )
-                                                        }}
-                                                    </p>
-                                                    <p
-                                                        class="text-sm text-gray-600 dark:text-gray-300 mt-1 line-clamp-2"
-                                                    >
-                                                        {{
-                                                            getNotificationMessage(
-                                                                notification
-                                                            )
-                                                        }}
-                                                    </p>
-                                                </div>
-                                                <p
-                                                    class="text-xs text-gray-500 dark:text-gray-400 text-right ml-2"
-                                                >
-                                                    {{
-                                                        getRelativeTime(
-                                                            getDateField(
-                                                                notification
-                                                            )
-                                                        )
-                                                    }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Footer Actions -->
-                        <div
-                            class="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30"
-                        >
-                            <div class="flex">
-                                <button
-                                    v-if="unreadCount > 0"
-                                    @click="markAllAsRead"
-                                    :disabled="isMarkingAllRead"
-                                    class="flex-1 py-3 text-center text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border-r border-gray-200 dark:border-gray-600 disabled:opacity-50"
-                                >
-                                    Mark All Read
-                                </button>
-                                <Link
-                                    :href="notificationRoute"
-                                    @click="closeNotificationDropdown"
-                                    class="flex-1 py-3 text-center text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                                >
-                                    View All
-                                </Link>
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- User Dropdown -->
@@ -406,6 +168,218 @@
                 </div>
             </div>
         </div>
+
+        <!-- Notification Modal -->
+        <div
+            v-if="showNotificationModal"
+            class="fixed inset-0 z-50 overflow-y-auto"
+        >
+            <!-- Background -->
+            <div
+                class="fixed inset-0 bg-black bg-opacity-50"
+                @click="showNotificationModal = false"
+            ></div>
+
+            <!-- Modal -->
+            <div
+                class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0"
+            >
+                <div
+                    class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full"
+                >
+                    <!-- Header -->
+                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-bold text-gray-900">
+                                Notifications
+                                <span
+                                    v-if="
+                                        modalNotifications.length > 0 &&
+                                        !modalLoading
+                                    "
+                                    class="ml-2 text-sm text-gray-500"
+                                >
+                                    ({{ modalUnreadCount }} unread)
+                                </span>
+                            </h3>
+                            <div class="flex items-center space-x-2">
+                                <button
+                                    v-if="
+                                        modalNotifications.length > 0 &&
+                                        modalUnreadCount > 0
+                                    "
+                                    @click="markAllAsReadInModal"
+                                    class="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 transition-colors"
+                                    :disabled="markingAllAsRead"
+                                >
+                                    <span v-if="markingAllAsRead">...</span>
+                                    <span v-else>Mark All Read</span>
+                                </button>
+                                <button
+                                    @click="showNotificationModal = false"
+                                    class="text-gray-400 hover:text-gray-500"
+                                >
+                                    <svg
+                                        class="h-6 w-6"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M6 18L18 6M6 6l12 12"
+                                        />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Notifications List -->
+                        <div class="max-h-96 overflow-y-auto">
+                            <div v-if="modalLoading" class="text-center py-4">
+                                <div
+                                    class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"
+                                ></div>
+                                <p class="mt-2 text-gray-500">
+                                    Loading notifications...
+                                </p>
+                            </div>
+
+                            <div
+                                v-else-if="modalNotifications.length === 0"
+                                class="text-center py-8 text-gray-500"
+                            >
+                                <div class="text-4xl mb-2">🔔</div>
+                                <p>No notifications available</p>
+                                <p class="text-sm mt-1">
+                                    You're all caught up!
+                                </p>
+                            </div>
+
+                            <div v-else class="space-y-3">
+                                <div
+                                    v-for="notification in modalNotifications"
+                                    :key="notification.id"
+                                    class="p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-all"
+                                    :class="{
+                                        'bg-blue-50 border-blue-200':
+                                            notification.unread,
+                                        'border-l-4 border-l-orange-500':
+                                            notification.important,
+                                    }"
+                                    @click="
+                                        handleNotificationClickInModal(
+                                            notification
+                                        )
+                                    "
+                                >
+                                    <div class="flex items-start space-x-3">
+                                        <div class="flex-shrink-0 text-xl">
+                                            {{
+                                                getNotificationIcon(
+                                                    notification.type
+                                                )
+                                            }}
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <div
+                                                class="flex items-center justify-between"
+                                            >
+                                                <p
+                                                    class="text-sm font-medium text-gray-900"
+                                                >
+                                                    {{ notification.title }}
+                                                </p>
+                                                <div
+                                                    class="flex items-center space-x-2"
+                                                >
+                                                    <span
+                                                        v-if="
+                                                            notification.unread
+                                                        "
+                                                        class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                                                    >
+                                                        New
+                                                    </span>
+                                                    <span
+                                                        :class="
+                                                            getStatusBadgeClass(
+                                                                notification.type
+                                                            )
+                                                        "
+                                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                                                    >
+                                                        {{
+                                                            formatNotificationType(
+                                                                notification.type
+                                                            )
+                                                        }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <p
+                                                class="text-sm text-gray-600 mt-1"
+                                            >
+                                                {{
+                                                    notification.message ||
+                                                    "No message available"
+                                                }}
+                                            </p>
+                                            <div
+                                                class="flex justify-between items-center mt-2"
+                                            >
+                                                <p
+                                                    class="text-xs text-gray-400"
+                                                >
+                                                    {{
+                                                        formatTime(
+                                                            notification.created_at
+                                                        )
+                                                    }}
+                                                </p>
+                                                <button
+                                                    v-if="notification.unread"
+                                                    @click.stop="
+                                                        markAsReadInModal(
+                                                            notification.id
+                                                        )
+                                                    "
+                                                    class="text-xs text-green-600 hover:text-green-800 transition-colors"
+                                                >
+                                                    Mark read
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div
+                        class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse"
+                    >
+                        <button
+                            type="button"
+                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm"
+                            @click="viewAllNotifications"
+                        >
+                            View All Notifications
+                        </button>
+                        <!-- <button
+                            type="button"
+                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                            @click="showNotificationModal = false"
+                        >
+                            Close
+                        </button> -->
+                    </div>
+                </div>
+            </div>
+        </div>
     </nav>
 </template>
 
@@ -421,14 +395,8 @@ import {
     ArrowRightOnRectangleIcon,
     Bars3Icon,
     XMarkIcon,
-    FlagIcon,
-    SpeakerWaveIcon,
-    ExclamationTriangleIcon,
-    EllipsisVerticalIcon,
-    TrashIcon,
 } from "@heroicons/vue/24/outline";
 import Swal from "sweetalert2";
-import debounce from "lodash/debounce";
 
 const props = defineProps({
     isSidebarOpen: { type: Boolean, default: true },
@@ -451,6 +419,21 @@ const userInitials = computed(() => {
         .slice(0, 2)
         .join("")
         .toUpperCase();
+});
+
+// Modal state
+const showNotificationModal = ref(false);
+const modalNotifications = ref([]);
+const modalLoading = ref(false);
+const markingAllAsRead = ref(false);
+
+// Computed
+const modalUnreadCount = computed(() => {
+    return modalNotifications.value.filter((n) => n.unread).length;
+});
+
+const unreadCount = computed(() => {
+    return modalUnreadCount.value;
 });
 
 // Breadcrumbs data
@@ -504,19 +487,6 @@ const notificationRoute = computed(() =>
         : "/customer/notifications"
 );
 
-// Notification state
-const localNotifications = ref([]);
-const isNotificationDropdownOpen = ref(false);
-const isUserDropdownOpen = ref(false);
-const isLoadingNotifications = ref(false);
-const isMarkingAllRead = ref(false);
-const activeNotificationMenu = ref(null);
-const notificationButton = ref(null);
-const userButton = ref(null);
-const unreadCount = computed(
-    () => localNotifications.value.filter((n) => n.unread).length
-);
-
 // Window width state
 const windowWidth = ref(
     typeof window !== "undefined" ? window.innerWidth : 1024
@@ -531,289 +501,176 @@ const handleResize = () => {
 };
 
 // Notification methods
-const getNotificationIcon = (notification) => {
+const getNotificationIcon = (type) => {
     const icons = {
-        announcement: SpeakerWaveIcon,
-        billing_status: BellIcon,
-        overdue_warning: ExclamationTriangleIcon,
-        new_report: FlagIcon,
-        report_update: FlagIcon,
+        info: "ℹ️",
+        report_update: "🔄",
+        announcement: "📢",
+        bill_overdue: "🚨",
+        bill_due_soon: "📅",
+        bill_final_reminder: "⏰",
+        bill_due_today: "⚠️",
+        alert: "⚠️",
+        reminder: "⏰",
+        system: "⚙️",
+        order: "📦",
     };
-    return icons[notification.type] || BellIcon;
+    return icons[type] || "🔔";
 };
 
-const getNotificationAvatarClass = (notification) => {
+const getStatusBadgeClass = (type) => {
     const classes = {
-        new_report: "bg-orange-500",
-        report_update: "bg-blue-500",
-        announcement: "bg-purple-500",
-        billing_status: "bg-green-500",
-        overdue_warning: "bg-red-500",
+        info: "bg-blue-100 text-blue-800",
+        report_update: "bg-purple-100 text-purple-800",
+        announcement: "bg-gray-100 text-gray-800",
+        bill_overdue: "bg-red-100 text-red-800",
+        bill_due_soon: "bg-orange-100 text-orange-800",
+        bill_final_reminder: "bg-yellow-100 text-yellow-800",
+        bill_due_today: "bg-red-100 text-red-800",
+        alert: "bg-red-100 text-red-800",
+        reminder: "bg-yellow-100 text-yellow-800",
     };
-    return classes[notification.type] || "bg-gray-500";
+    return classes[type] || "bg-gray-100 text-gray-800";
 };
 
-const getNotificationTitle = (notification) => {
-    switch (notification.type) {
-        case "new_report":
-            return "submitted a new water quality report";
-        case "report_update":
-            return `updated report #${notification.tracking_code}`;
-        case "announcement":
-            return notification.title;
-        case "billing_status":
-            return "billing status updated";
-        case "overdue_warning":
-            return "payment overdue warning";
-        default:
-            return "sent you a notification";
-    }
+const formatNotificationType = (type) => {
+    const types = {
+        info: "Information",
+        report_update: "Report Update",
+        announcement: "Announcement",
+        bill_overdue: "Overdue",
+        bill_due_soon: "Due Soon",
+        bill_final_reminder: "Final Reminder",
+        bill_due_today: "Due Today",
+        alert: "Alert",
+        reminder: "Reminder",
+    };
+    return types[type] || type;
 };
 
-const getNotificationMessage = (notification) => {
-    switch (notification.type) {
-        case "new_report":
-            return `A new water quality report has been submitted for ${notification.barangay}, ${notification.municipality}. Please review and take appropriate action.`;
-        case "report_update":
-            return `Report status has been updated to "${formatStatus(
-                notification.status
-            )}". Location: ${notification.barangay}, ${
-                notification.municipality
-            }`;
-        case "announcement":
-            return notification.message;
-        case "billing_status":
-            return "Your billing information has been updated. Please check your account for details.";
-        case "overdue_warning":
-            return "You have an overdue payment. Please settle your account to avoid service interruption.";
-        default:
-            return notification.message || "You have a new notification";
-    }
-};
-
-const getDateField = (notification) => {
-    if (notification.type === "overdue_warning") return notification.due_date;
-    if (notification.type === "announcement") return notification.created_at;
-    return notification.updated_at || notification.created_at;
-};
-
-const formatStatus = (status) => {
-    if (!status) return "";
-    return status
-        .split("_")
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(" ");
-};
-
-const getRelativeTime = (dateString) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
+const formatTime = (timestamp) => {
+    if (!timestamp) return "Recently";
     const now = new Date();
-    const diffInSeconds = Math.floor((now - date) / 1000);
-    if (diffInSeconds < 60) return "a few seconds ago";
-    if (diffInSeconds < 3600)
-        return `${Math.floor(diffInSeconds / 60)} minutes ago`;
-    if (diffInSeconds < 86400)
-        return `${Math.floor(diffInSeconds / 3600)} hours ago`;
-    if (diffInSeconds < 604800)
-        return `${Math.floor(diffInSeconds / 86400)} days ago`;
-    return date.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: date.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
-    });
+    const notificationTime = new Date(timestamp);
+    const diff = now - notificationTime;
+
+    if (diff < 60 * 1000) {
+        return "Just now";
+    }
+
+    if (diff < 60 * 60 * 1000) {
+        const minutes = Math.floor(diff / (60 * 1000));
+        return `${minutes} minute${minutes > 1 ? "s" : ""} ago`;
+    }
+
+    if (diff < 24 * 60 * 60 * 1000) {
+        const hours = Math.floor(diff / (60 * 60 * 1000));
+        return `${hours} hour${hours > 1 ? "s" : ""} ago`;
+    }
+
+    const days = Math.floor(diff / (24 * 60 * 60 * 1000));
+    return `${days} day${days > 1 ? "s" : ""} ago`;
 };
 
-// Notification service
-const notificationService = {
-    async getNotifications() {
-        try {
-            const response = await fetch("/api/notifications", {
-                headers: {
-                    Accept: "application/json",
-                    "X-Requested-With": "XMLHttpRequest",
-                    "X-CSRF-TOKEN": document.querySelector(
-                        'meta[name="csrf-token"]'
-                    )?.content,
-                },
-            });
-            if (!response.ok)
-                throw new Error(`HTTP error! status: ${response.status}`);
-            return await response.json();
-        } catch (error) {
-            console.error("Error fetching notifications:", error);
-            return { success: false, notifications: [], unread_count: 0 };
-        }
-    },
-    async markAsRead(notificationId) {
-        try {
-            const response = await fetch("/api/notifications/mark-read", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Accept: "application/json",
-                    "X-Requested-With": "XMLHttpRequest",
-                    "X-CSRF-TOKEN": document.querySelector(
-                        'meta[name="csrf-token"]'
-                    )?.content,
-                },
-                body: JSON.stringify({ notification_id: notificationId }),
-            });
-            if (!response.ok)
-                throw new Error(`HTTP error! status: ${response.status}`);
-            return await response.json();
-        } catch (error) {
-            console.error("Error marking notification as read:", error);
-            return { success: false };
-        }
-    },
-    async markAllAsRead() {
-        try {
-            const response = await fetch("/api/notifications/mark-all-read", {
-                method: "POST",
-                headers: {
-                    Accept: "application/json",
-                    "X-Requested-With": "XMLHttpRequest",
-                    "X-CSRF-TOKEN": document.querySelector(
-                        'meta[name="csrf-token"]'
-                    )?.content,
-                },
-            });
-            if (!response.ok)
-                throw new Error(`HTTP error! status: ${response.status}`);
-            return await response.json();
-        } catch (error) {
-            console.error("Error marking all notifications as read:", error);
-            return { success: false };
-        }
-    },
-    async deleteNotification(notificationId) {
-        try {
-            const response = await fetch(
-                `/api/notifications/${notificationId}`,
-                {
-                    method: "DELETE",
-                    headers: {
-                        Accept: "application/json",
-                        "X-Requested-With": "XMLHttpRequest",
-                        "X-CSRF-TOKEN": document.querySelector(
-                            'meta[name="csrf-token"]'
-                        )?.content,
-                    },
-                }
-            );
-            if (!response.ok)
-                throw new Error(`HTTP error! status: ${response.status}`);
-            return await response.json();
-        } catch (error) {
-            console.error("Error deleting notification:", error);
-            return { success: false };
-        }
-    },
-};
-
-// Load notifications
-const loadNotifications = async () => {
-    isLoadingNotifications.value = true;
+// Modal methods
+const fetchModalNotifications = async () => {
+    modalLoading.value = true;
     try {
-        const response = await notificationService.getNotifications();
-        if (response.success)
-            localNotifications.value = response.notifications || [];
+        const response = await fetch("/api/notifications", {
+            headers: {
+                Accept: "application/json",
+                "X-Requested-With": "XMLHttpRequest",
+            },
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            modalNotifications.value = data.notifications || [];
+        } else {
+            console.error("Failed to fetch notifications");
+            modalNotifications.value = [];
+        }
     } catch (error) {
-        console.error("Failed to load notifications:", error);
+        console.error("Error fetching notifications:", error);
+        modalNotifications.value = [];
     } finally {
-        isLoadingNotifications.value = false;
+        modalLoading.value = false;
     }
 };
 
-// Three dots menu methods
-const toggleNotificationMenu = (notificationId) => {
-    activeNotificationMenu.value =
-        activeNotificationMenu.value === notificationId ? null : notificationId;
-};
-
-const deleteNotification = async (notification) => {
-    const result = await Swal.fire({
-        title: "Are you sure?",
-        text: "You won't be able to revert this!",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#d33",
-        cancelButtonColor: "#3085d6",
-        confirmButtonText: "Yes, delete it!",
-        cancelButtonText: "Cancel",
-    });
-
-    if (result.isConfirmed) {
-        try {
-            const response = await notificationService.deleteNotification(
-                notification.id
-            );
-            if (response.success) {
-                // Remove notification from local list
-                localNotifications.value = localNotifications.value.filter(
-                    (n) => n.id !== notification.id
-                );
-
-                Swal.fire({
-                    icon: "success",
-                    title: "Deleted!",
-                    text: "Notification has been deleted.",
-                    timer: 2000,
-                    showConfirmButton: false,
-                    toast: true,
-                    position: "top-end",
-                });
-            } else {
-                throw new Error("Failed to delete notification");
-            }
-        } catch (error) {
-            console.error("Error deleting notification:", error);
-            Swal.fire({
-                icon: "error",
-                title: "Error!",
-                text: "Failed to delete notification. Please try again.",
-                timer: 3000,
-                showConfirmButton: false,
-                toast: true,
-                position: "top-end",
-            });
-        }
-    }
-
-    activeNotificationMenu.value = null;
-};
-
-// Auto-mark as read when opening dropdown
-const markAllAsReadSilent = async () => {
+const markAsReadInModal = async (id) => {
     try {
-        const response = await notificationService.markAllAsRead();
-        if (response.success) {
-            localNotifications.value.forEach((notification) => {
+        const response = await fetch(`/customer/notifications/${id}/read`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": document.querySelector(
+                    'meta[name="csrf-token"]'
+                ).content,
+            },
+        });
+
+        if (response.ok) {
+            // Update local state
+            const notification = modalNotifications.value.find(
+                (n) => n.id === id
+            );
+            if (notification) {
+                notification.unread = false;
+            }
+        }
+    } catch (error) {
+        console.error("Failed to mark notification as read:", error);
+    }
+};
+
+const markAllAsReadInModal = async () => {
+    markingAllAsRead.value = true;
+    try {
+        const response = await fetch("/customer/notifications/mark-all-read", {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": document.querySelector(
+                    'meta[name="csrf-token"]'
+                ).content,
+            },
+        });
+
+        if (response.ok) {
+            // Update all notifications to read
+            modalNotifications.value.forEach((notification) => {
                 notification.unread = false;
             });
         }
     } catch (error) {
-        console.error("Error marking all notifications as read:", error);
+        console.error("Failed to mark all notifications as read:", error);
+    } finally {
+        markingAllAsRead.value = false;
     }
 };
 
-// Dropdown controls
-const toggleNotificationDropdown = async () => {
-    if (!isNotificationDropdownOpen.value) {
-        await loadNotifications();
-        // Auto-mark all as read when opening dropdown
-        if (unreadCount.value > 0) {
-            await markAllAsReadSilent();
-        }
+const handleNotificationClickInModal = (notification) => {
+    // Mark as read when clicked
+    if (notification.unread) {
+        markAsReadInModal(notification.id);
     }
-    isNotificationDropdownOpen.value = !isNotificationDropdownOpen.value;
+
+    // Navigate based on action_url
+    if (notification.action_url) {
+        router.visit(notification.action_url);
+        showNotificationModal.value = false;
+    }
 };
 
-const closeNotificationDropdown = () => {
-    isNotificationDropdownOpen.value = false;
-    activeNotificationMenu.value = null;
+const viewAllNotifications = () => {
+    router.visit(notificationRoute.value);
+    showNotificationModal.value = false;
 };
+
+// User dropdown methods
+const isUserDropdownOpen = ref(false);
+const userButton = ref(null);
 
 const toggleUserDropdown = () => {
     isUserDropdownOpen.value = !isUserDropdownOpen.value;
@@ -821,78 +678,6 @@ const toggleUserDropdown = () => {
 
 const closeUserDropdown = () => {
     isUserDropdownOpen.value = false;
-};
-
-const handleNotificationClick = async (notification) => {
-    activeNotificationMenu.value = null; // Close menu if open
-
-    if (notification.unread) {
-        const response = await notificationService.markAsRead(notification.id);
-        if (response.success) notification.unread = false;
-    }
-
-    // Close notification dropdown
-    closeNotificationDropdown();
-
-    // Handle redirection based on notification type
-    switch (notification.type) {
-        case "new_report":
-        case "report_update":
-            if (notification.report_id) {
-                // Redirect to admin reports page with the specific report ID
-                router.visit(route('admin.reports', {
-                    report_id: notification.report_id
-                }), {
-                    preserveState: true,
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        console.log('Redirected to reports with report_id:', notification.report_id);
-                    }
-                });
-            } else {
-                router.visit(route('admin.reports'));
-            }
-            break;
-        case "announcement":
-            router.visit(route('admin.announcements'));
-            break;
-        default:
-            router.visit(notificationRoute.value);
-    }
-};
-
-const markAllAsRead = async () => {
-    isMarkingAllRead.value = true;
-    try {
-        const response = await notificationService.markAllAsRead();
-        if (response.success) {
-            localNotifications.value.forEach((notification) => {
-                notification.unread = false;
-            });
-            Swal.fire({
-                icon: "success",
-                title: "Success!",
-                text: "All notifications have been marked as read.",
-                timer: 2000,
-                showConfirmButton: false,
-                toast: true,
-                position: "top-end",
-            });
-        } else throw new Error("Failed to mark notifications as read");
-    } catch (error) {
-        console.error("Error marking all notifications as read:", error);
-        Swal.fire({
-            icon: "error",
-            title: "Error!",
-            text: "Failed to mark notifications as read. Please try again.",
-            timer: 3000,
-            showConfirmButton: false,
-            toast: true,
-            position: "top-end",
-        });
-    } finally {
-        isMarkingAllRead.value = false;
-    }
 };
 
 const handleLogout = async () => {
@@ -912,26 +697,14 @@ const handleLogout = async () => {
     }
 };
 
-const handleKeydown = (e) => {
-    if (e.key === "Escape") {
-        if (isUserDropdownOpen.value) {
-            closeUserDropdown();
-            userButton.value?.focus();
-        }
-        if (isNotificationDropdownOpen.value) {
-            closeNotificationDropdown();
-            notificationButton.value?.focus();
-        }
-        activeNotificationMenu.value = null;
+// Watch for modal open state
+watch(showNotificationModal, (isOpen) => {
+    if (isOpen) {
+        fetchModalNotifications();
     }
-};
+});
 
-const handleClickOutside = (event) => {
-    if (activeNotificationMenu.value && !event.target.closest(".relative")) {
-        activeNotificationMenu.value = null;
-    }
-};
-
+// Click outside directive
 const vClickOutside = {
     beforeMount(el, binding) {
         el.clickOutsideEvent = (event) => {
@@ -947,41 +720,16 @@ const vClickOutside = {
     },
 };
 
-let notificationInterval = null;
-
-const startNotificationPolling = () => {
-    loadNotifications();
-    notificationInterval = setInterval(() => {
-        if (!isNotificationDropdownOpen.value) loadNotifications();
-    }, 30000);
-};
-
-const stopNotificationPolling = () => {
-    if (notificationInterval) {
-        clearInterval(notificationInterval);
-        notificationInterval = null;
-    }
-};
-
+// Lifecycle
 onMounted(() => {
     window.addEventListener("resize", handleResize);
-    window.addEventListener("keydown", handleKeydown);
-    document.addEventListener("click", handleClickOutside);
-    startNotificationPolling();
+    // Load initial notifications for badge count
+    fetchModalNotifications();
 });
 
 onUnmounted(() => {
     window.removeEventListener("resize", handleResize);
-    window.removeEventListener("keydown", handleKeydown);
-    document.removeEventListener("click", handleClickOutside);
-    stopNotificationPolling();
 });
-
-watch(
-    () => pageProps,
-    () => loadNotifications(),
-    { deep: true }
-);
 </script>
 
 <style scoped>
@@ -1051,50 +799,5 @@ button:focus {
 
 .animate-pulse {
     animation: badge-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-.notification-dropdown {
-    transform-origin: top right;
-    transition: transform 0.2s ease-out, opacity 0.2s ease-out;
-}
-.scale-y-100 {
-    transform: scaleY(1);
-    opacity: 1;
-}
-.scale-y-95 {
-    transform: scaleY(0.95);
-    opacity: 0;
-}
-
-/* Three dots menu animations */
-.opacity-0 {
-    opacity: 0;
-    transition: opacity 0.2s ease-in-out;
-}
-.opacity-100 {
-    opacity: 1;
-}
-.group:hover .opacity-0 {
-    opacity: 1;
-}
-
-/* Smooth transitions for menu */
-button:active {
-    transform: scale(0.95);
-}
-
-/* Ensure menu stays on top */
-.relative .absolute {
-    z-index: 60;
-}
-
-/* Menu styling */
-.min-w-\[120px\] {
-    min-width: 120px;
-}
-
-/* Smooth transitions */
-.transition-all {
-    transition: all 0.2s ease-in-out;
 }
 </style>

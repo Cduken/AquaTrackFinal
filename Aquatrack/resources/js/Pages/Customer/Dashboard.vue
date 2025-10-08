@@ -49,6 +49,33 @@
                 </div>
             </div>
 
+            <!-- Overdue Alert Banner -->
+            <div
+                v-if="overdueBills > 0"
+                class="bg-red-50 border-b border-red-200 px-6 py-3"
+            >
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <v-icon
+                            name="bi-exclamation-triangle-fill"
+                            class="w-5 h-5 text-red-600"
+                        />
+                        <span class="text-red-700 font-medium">
+                            You have {{ overdueBills }} overdue bill{{
+                                overdueBills > 1 ? "s" : ""
+                            }}
+                            totaling ₱{{ overdueAmount.toFixed(2) }}
+                        </span>
+                    </div>
+                    <button
+                        @click="$inertia.visit(route('customer.usage'))"
+                        class="text-red-700 hover:text-red-800 font-medium text-sm flex items-center gap-1"
+                    >
+                        <v-icon name="bi-arrow-right" class="w-4 h-4" />
+                    </button>
+                </div>
+            </div>
+
             <!-- Main Content -->
             <div class="p-6">
                 <!-- Key Metrics Grid with improved visual hierarchy -->
@@ -77,7 +104,7 @@
                             Monthly Usage
                         </h3>
                         <p class="text-2xl font-bold text-gray-800 mb-2">
-                            {{ monthlyUsage }}
+                            {{ monthlyUsage }} m³
                         </p>
                         <div class="flex items-center text-xs mt-3">
                             <div
@@ -97,9 +124,7 @@
                                     class="mr-1"
                                 />
                                 <span>
-                                    {{
-                                        monthlyUsage > 15 ? "Above" : "Below"
-                                    }}
+                                    {{ monthlyUsage > 15 ? "Above" : "Below" }}
                                     average
                                 </span>
                             </div>
@@ -111,19 +136,50 @@
                         class="bg-white rounded-xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden"
                     >
                         <div
-                            class="absolute top-0 right-0 w-20 h-20 -mr-4 -mt-4 rounded-full bg-green-100 opacity-30"
+                            class="absolute top-0 right-0 w-20 h-20 -mr-4 -mt-4 rounded-full"
+                            :class="
+                                currentBillStatus === 'Overdue'
+                                    ? 'bg-red-100 opacity-30'
+                                    : currentBillStatus === 'Due Soon'
+                                    ? 'bg-yellow-100 opacity-30'
+                                    : 'bg-green-100 opacity-30'
+                            "
                         ></div>
                         <div class="flex items-center justify-between mb-4">
-                            <div class="p-2 bg-green-100 rounded-lg shadow-xs">
+                            <div
+                                class="p-2 rounded-lg shadow-xs"
+                                :class="
+                                    currentBillStatus === 'Overdue'
+                                        ? 'bg-red-100'
+                                        : currentBillStatus === 'Due Soon'
+                                        ? 'bg-yellow-100'
+                                        : 'bg-green-100'
+                                "
+                            >
                                 <v-icon
                                     name="bi-cash-stack"
-                                    class="text-green-600 text-xl"
+                                    class="text-xl"
+                                    :class="
+                                        currentBillStatus === 'Overdue'
+                                            ? 'text-red-600'
+                                            : currentBillStatus === 'Due Soon'
+                                            ? 'text-yellow-600'
+                                            : 'text-green-600'
+                                    "
                                 />
                             </div>
                             <span
-                                class="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full font-medium"
-                                >Due in 15 days</span
+                                class="text-xs px-2 py-1 rounded-full font-medium"
+                                :class="
+                                    currentBillStatus === 'Overdue'
+                                        ? 'text-red-700 bg-red-50'
+                                        : currentBillStatus === 'Due Soon'
+                                        ? 'text-yellow-700 bg-yellow-50'
+                                        : 'text-green-700 bg-green-50'
+                                "
                             >
+                                {{ currentBillStatusText }}
+                            </span>
                         </div>
                         <h3 class="text-sm font-medium text-gray-500 mb-1">
                             Current Bill
@@ -133,7 +189,14 @@
                         </p>
                         <div class="w-full bg-gray-100 rounded-full h-2 mt-2">
                             <div
-                                class="bg-gradient-to-r from-green-400 to-green-600 h-2 rounded-full transition-all duration-500"
+                                class="h-2 rounded-full transition-all duration-500"
+                                :class="
+                                    currentBillStatus === 'Overdue'
+                                        ? 'bg-gradient-to-r from-red-400 to-red-600'
+                                        : currentBillStatus === 'Due Soon'
+                                        ? 'bg-gradient-to-r from-yellow-400 to-yellow-600'
+                                        : 'bg-gradient-to-r from-green-400 to-green-600'
+                                "
                                 :style="`width: ${Math.min(
                                     (currentBill / 1000) * 100,
                                     100
@@ -142,7 +205,7 @@
                         </div>
                     </div>
 
-                    <!-- Notifications Card -->
+                    <!-- Announcements Card -->
                     <div
                         class="bg-white rounded-xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden"
                     >
@@ -360,97 +423,9 @@
                     </div>
                 </div>
 
-                <!-- Quick Reading Stats -->
-                <div
-                    class="bg-white rounded-xl border border-gray-100 p-6 shadow-sm"
-                >
-                    <h2 class="text-lg font-semibold text-gray-800 mb-5">
-                        <span
-                            class="bg-gradient-to-r from-gray-700 to-gray-900 bg-clip-text text-transparent"
-                        >
-                            Reading Statistics
-                        </span>
-                    </h2>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div
-                            class="text-center p-4 bg-gradient-to-b from-blue-50 to-white rounded-xl border border-blue-100 transition-transform hover:scale-[1.02]"
-                        >
-                            <div
-                                class="inline-flex items-center justify-center w-10 h-10 bg-blue-100 rounded-lg mb-2"
-                            >
-                                <v-icon
-                                    name="bi-arrow-up"
-                                    class="text-blue-600"
-                                />
-                            </div>
-                            <p class="text-xs text-blue-600 font-medium mb-1">
-                                Highest Reading
-                            </p>
-                            <p class="text-lg font-bold text-blue-700">
-                                {{
-                                    Math.max(
-                                        ...(chartData.map(
-                                            (item) => item.reading
-                                        ) || [0])
-                                    )
-                                }}
-                                m³
-                            </p>
-                        </div>
-                        <div
-                            class="text-center p-4 bg-gradient-to-b from-gray-50 to-white rounded-xl border border-gray-100 transition-transform hover:scale-[1.02]"
-                        >
-                            <div
-                                class="inline-flex items-center justify-center w-10 h-10 bg-gray-100 rounded-lg mb-2"
-                            >
-                                <v-icon name="bi-dash" class="text-gray-600" />
-                            </div>
-                            <p class="text-xs text-gray-600 font-medium mb-1">
-                                Average Reading
-                            </p>
-                            <p class="text-lg font-bold text-gray-700">
-                                {{
-                                    (
-                                        chartData.reduce(
-                                            (a, b) => a + b.reading,
-                                            0
-                                        ) / (chartData.length || 1)
-                                    ).toFixed(1)
-                                }}
-                                m³
-                            </p>
-                        </div>
-                        <div
-                            class="text-center p-4 bg-gradient-to-b from-green-50 to-white rounded-xl border border-green-100 transition-transform hover:scale-[1.02]"
-                        >
-                            <div
-                                class="inline-flex items-center justify-center w-10 h-10 bg-green-100 rounded-lg mb-2"
-                            >
-                                <v-icon
-                                    name="bi-arrow-down"
-                                    class="text-green-600"
-                                />
-                            </div>
-                            <p class="text-xs text-green-600 font-medium mb-1">
-                                Lowest Reading
-                            </p>
-                            <p class="text-lg font-bold text-green-700">
-                                {{
-                                    Math.min(
-                                        ...(chartData.map(
-                                            (item) => item.reading
-                                        ) || [0])
-                                    )
-                                }}
-                                m³
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Water Saving Tips -->
                 <div
-                    class="mt-8 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border border-blue-100 p-5 shadow-sm"
+                    class="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border border-blue-100 p-5 shadow-sm"
                 >
                     <h2
                         class="text-lg font-semibold text-gray-800 mb-3 flex items-center"
@@ -496,9 +471,61 @@ const areaAverage = page.props.areaAverage ?? 0;
 const chartData = page.props.chartData ?? [];
 const customerName = page.props.customerName ?? "Customer";
 
+// Use real billing data from backend - REMOVE THE HARDCODED DATA
+const billingData = page.props.billingData ?? [];
+
 const waterChart = ref(null);
 const yieldChart = ref(null);
 const currentTipIndex = ref(0);
+
+// Compute billing statistics - UPDATED LOGIC
+const overdueBills = computed(() => {
+    return billingData.filter((bill) => bill.status === "Overdue").length;
+});
+
+const overdueAmount = computed(() => {
+    return billingData
+        .filter((bill) => bill.status === "Overdue")
+        .reduce((total, bill) => total + parseFloat(bill.amount || 0), 0);
+});
+
+const currentBillStatus = computed(() => {
+    // Find current month's bill or use the first one
+    const currentBillData =
+        billingData.find((bill) => bill.is_current) || billingData[0];
+    if (!currentBillData) return "No Bills";
+
+    // Use the status calculated by the backend
+    return currentBillData.status || "Pending";
+});
+
+const currentBillStatusText = computed(() => {
+    const currentBillData =
+        billingData.find((bill) => bill.is_current) || billingData[0];
+    if (!currentBillData) return "No bills";
+
+    switch (currentBillStatus.value) {
+        case "Overdue":
+            return "Overdue";
+        case "Due Soon":
+            // Calculate exact days until due for more accurate display
+            if (currentBillData.due_date) {
+                const dueDate = new Date(currentBillData.due_date);
+                const today = new Date();
+                const daysUntilDue = Math.ceil(
+                    (dueDate - today) / (1000 * 60 * 60 * 24)
+                );
+                if (daysUntilDue > 0) {
+                    return `Due in ${daysUntilDue} days`;
+                }
+            }
+            return "Due Soon";
+        case "Paid":
+            return "Paid";
+        default:
+            return "Pending";
+    }
+});
 
 const waterSavingTips = [
     "Fix leaky faucets promptly - a dripping faucet can waste up to 20 gallons of water a day.",
@@ -523,129 +550,133 @@ onMounted(() => {
     const areaAvgData = Array(consumptionData.length).fill(areaAverage / 12);
 
     // Water Consumption Chart
-    new Chart(waterChart.value, {
-        type: "line",
-        data: {
-            labels: labels,
-            datasets: [
-                {
-                    label: "Your Consumption",
-                    data: consumptionData,
-                    borderColor: "rgb(59, 130, 246)",
-                    backgroundColor: "rgba(59, 130, 246, 0.08)",
-                    borderWidth: 3,
-                    tension: 0.3,
-                    fill: true,
-                    pointBackgroundColor: "rgb(59, 130, 246)",
-                    pointBorderColor: "#fff",
-                    pointBorderWidth: 2,
-                    pointRadius: 4,
-                    pointHoverRadius: 6,
-                },
-                {
-                    label: "Area Average",
-                    data: areaAvgData,
-                    borderColor: "rgb(156, 163, 175)",
-                    backgroundColor: "transparent",
-                    borderWidth: 2,
-                    tension: 0.3,
-                    borderDash: [5, 5],
-                    pointRadius: 0,
-                    pointHoverRadius: 0,
-                },
-            ],
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false,
-                },
+    if (waterChart.value) {
+        new Chart(waterChart.value, {
+            type: "line",
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: "Your Consumption",
+                        data: consumptionData,
+                        borderColor: "rgb(59, 130, 246)",
+                        backgroundColor: "rgba(59, 130, 246, 0.08)",
+                        borderWidth: 3,
+                        tension: 0.3,
+                        fill: true,
+                        pointBackgroundColor: "rgb(59, 130, 246)",
+                        pointBorderColor: "#fff",
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                    },
+                    {
+                        label: "Area Average",
+                        data: areaAvgData,
+                        borderColor: "rgb(156, 163, 175)",
+                        backgroundColor: "transparent",
+                        borderWidth: 2,
+                        tension: 0.3,
+                        borderDash: [5, 5],
+                        pointRadius: 0,
+                        pointHoverRadius: 0,
+                    },
+                ],
             },
-            scales: {
-                y: {
-                    beginAtZero: false,
-                    grid: {
-                        color: "rgba(0, 0, 0, 0.03)",
-                    },
-                    ticks: {
-                        font: {
-                            size: 11,
-                        },
-                        callback: function (value) {
-                            return value + " m³";
-                        },
-                    },
-                },
-                x: {
-                    grid: {
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
                         display: false,
                     },
-                    ticks: {
-                        font: {
-                            size: 11,
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        grid: {
+                            color: "rgba(0, 0, 0, 0.03)",
+                        },
+                        ticks: {
+                            font: {
+                                size: 11,
+                            },
+                            callback: function (value) {
+                                return value + " m³";
+                            },
+                        },
+                    },
+                    x: {
+                        grid: {
+                            display: false,
+                        },
+                        ticks: {
+                            font: {
+                                size: 11,
+                            },
                         },
                     },
                 },
             },
-        },
-    });
+        });
+    }
 
     // Meter Readings Chart
-    new Chart(yieldChart.value, {
-        type: "bar",
-        data: {
-            labels: labels,
-            datasets: [
-                {
-                    label: "Meter Readings",
-                    data: readingData,
-                    backgroundColor: "rgba(99, 102, 241, 0.7)",
-                    borderColor: "rgb(99, 102, 241)",
-                    borderWidth: 0,
-                    borderRadius: 6,
-                    barThickness: "flex",
-                    maxBarThickness: 40,
-                },
-            ],
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false,
-                },
+    if (yieldChart.value) {
+        new Chart(yieldChart.value, {
+            type: "bar",
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: "Meter Readings",
+                        data: readingData,
+                        backgroundColor: "rgba(99, 102, 241, 0.7)",
+                        borderColor: "rgb(99, 102, 241)",
+                        borderWidth: 0,
+                        borderRadius: 6,
+                        barThickness: "flex",
+                        maxBarThickness: 40,
+                    },
+                ],
             },
-            scales: {
-                y: {
-                    beginAtZero: false,
-                    grid: {
-                        color: "rgba(0, 0, 0, 0.03)",
-                    },
-                    ticks: {
-                        font: {
-                            size: 11,
-                        },
-                        callback: function (value) {
-                            return value + " m³";
-                        },
-                    },
-                },
-                x: {
-                    grid: {
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
                         display: false,
                     },
-                    ticks: {
-                        font: {
-                            size: 11,
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        grid: {
+                            color: "rgba(0, 0, 0, 0.03)",
+                        },
+                        ticks: {
+                            font: {
+                                size: 11,
+                            },
+                            callback: function (value) {
+                                return value + " m³";
+                            },
+                        },
+                    },
+                    x: {
+                        grid: {
+                            display: false,
+                        },
+                        ticks: {
+                            font: {
+                                size: 11,
+                            },
                         },
                     },
                 },
             },
-        },
-    });
+        });
+    }
 });
 </script>
 

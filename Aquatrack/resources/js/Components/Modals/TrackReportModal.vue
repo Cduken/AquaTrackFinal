@@ -438,7 +438,7 @@ const isVideoFile = (media) => {
         >
             <!-- Softer background -->
             <div
-                class="fixed inset-0 bg-gray-800/80 transition-all duration-300"
+                class="fixed inset-0 bg-black/80 transition-all duration-300"
                 @click="closeModal"
             ></div>
 

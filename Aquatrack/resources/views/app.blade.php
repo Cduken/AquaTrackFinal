@@ -10,11 +10,9 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap"
-        rel="stylesheet">
+
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
     <!-- Scripts -->
@@ -26,11 +24,15 @@
     <link rel="manifest" href="/manifest.json">
     <link rel="icon" href="/icons/icon-192x192.png">
 
-    <!-- iOS Safari -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <!-- For Chrome, Firefox OS, Opera, and Android -->
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <!-- For Safari on iOS -->
+    <meta name="apple-mobile-web-app-capable" content="yes"> <!-- Deprecated, but still useful for older iOS -->
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Clarin Water">
     <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+
 </head>
 
 <body class="font-sans antialiased">

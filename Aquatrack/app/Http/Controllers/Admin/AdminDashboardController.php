@@ -14,126 +14,265 @@ use Carbon\Carbon;
 
 class AdminDashboardController extends Controller
 {
+    protected $currentYear;
+    protected $currentMonth;
+
+    public function __construct()
+    {
+        $this->currentYear = Carbon::now()->year;
+        $this->currentMonth = Carbon::now()->month;
+    }
+
     /**
      * Display the admin dashboard.
      */
     public function index()
     {
-        // Get current year and month for analytics
-        $currentYear = Carbon::now()->year;
-        $currentMonth = Carbon::now()->month;
+        return Inertia::render('Admin/Dashboard', $this->getDashboardData());
+    }
 
-        // Fetch dashboard data
-        $dashboardData = [
-            'total_users' => User::count(),
-            'total_staffs' => User::role('staff')->count(),
-            'total_reports' => Report::count(),
-            'total_customers' => User::role('customer')->count(),
-            'monthly_consumption' => $this->getMonthlyConsumption($currentYear),
-            'current_month_consumption' => $this->getCurrentMonthConsumption($currentYear, $currentMonth),
-            'average_consumption' => $this->getAverageConsumption($currentYear),
-            'peak_usage' => $this->getPeakUsage($currentYear),
-            'growth_percentage' => $this->getGrowthPercentage($currentYear, $currentMonth),
+    /**
+     * Get comprehensive dashboard data.
+     */
+    protected function getDashboardData(): array
+    {
+        return [
+            'total_users' => $this->getTotalUsers(),
+            'total_staffs' => $this->getTotalStaffs(),
+            'total_reports' => $this->getTotalReports(),
+            'total_customers' => $this->getTotalCustomers(),
+            'monthly_consumption' => $this->getMonthlyConsumption(),
+            'current_month_consumption' => $this->getCurrentMonthConsumption(),
+            'average_consumption' => $this->getAverageConsumption(),
+            'peak_usage' => $this->getPeakUsage(),
+            'growth_percentage' => $this->getGrowthPercentage(),
             'resolution_rate' => $this->getReportResolutionRate(),
             'recent_activities' => $this->getRecentActivities(),
+            'recent_customers' => $this->getRecentCustomers(),
+            'report_stats' => $this->getReportStats(),
+            'consumption_by_area' => $this->getConsumptionByArea(),
+            'recent_reports' => $this->getRecentReports(),
         ];
-
-        return Inertia::render('Admin/Dashboard', $dashboardData);
     }
 
     /**
-     * Export water analytics data as CSV.
+     * Get total users count.
      */
-    public function exportWaterAnalytics(Request $request)
+    protected function getTotalUsers(): int
     {
-        $data = $request->validate([
-            'monthly_consumption' => 'required|array',
-            'current_month_consumption' => 'required|numeric',
-            'average_consumption' => 'required|numeric',
-            'peak_usage' => 'required|numeric',
-        ]);
-
-        $filename = "water_analytics_{Carbon::now()->format('Ymd_His')}.csv";
-
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => "attachment; filename=\"$filename\"",
-        ];
-
-        $callback = function () use ($data) {
-            $file = fopen('php://output', 'w');
-            $months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-            // Write CSV headers
-            fputcsv($file, [
-                'Month',
-                'Monthly Consumption (m³)',
-                'Current Month Consumption (m³)',
-                'Average Consumption (m³)',
-                'Peak Usage (m³)',
-            ]);
-
-            // Write data for each month
-            foreach ($data['monthly_consumption'] as $index => $consumption) {
-                fputcsv($file, [
-                    $months[$index],
-                    round($consumption, 2),
-                    round($data['current_month_consumption'], 2),
-                    round($data['average_consumption'], 2),
-                    round($data['peak_usage'], 2),
-                ]);
-            }
-
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
+        return User::count();
     }
 
     /**
-     * Get monthly consumption data for the specified year.
+     * Get total staff count.
      */
-    private function getMonthlyConsumption($year)
+    protected function getTotalStaffs(): int
+    {
+        return User::role('staff')->count();
+    }
+
+    /**
+     * Get total reports count.
+     */
+    protected function getTotalReports(): int
+    {
+        return Report::count();
+    }
+
+    /**
+     * Get total customers count.
+     */
+    protected function getTotalCustomers(): int
+    {
+        return User::role('customer')->count();
+    }
+
+    /**
+     * Get recent customers (last 5).
+     */
+    protected function getRecentCustomers(): array
+    {
+        return User::role('customer')
+            ->latest()
+            ->take(5)
+            ->get()
+            ->map(function ($user) {
+                return [
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'joined' => $user->created_at->diffForHumans(),
+                    'created_at' => $user->created_at,
+                ];
+            })
+            ->toArray();
+    }
+
+    /**
+     * Get report statistics by status.
+     */
+    protected function getReportStats(): array
+    {
+        return [
+            'pending' => $this->getReportsByStatus('pending'),
+            'in_progress' => $this->getReportsByStatus('in_progress'),
+            'resolved' => $this->getReportsByStatus('resolved'),
+            'total' => $this->getTotalValidReports(),
+        ];
+    }
+
+    /**
+     * Get reports count by status.
+     */
+    protected function getReportsByStatus(string $status): int
+    {
+        return Report::where('status', $status)
+            ->whereNull('deleted_at')
+            ->where('is_merged_reference', false)
+            ->count();
+    }
+
+    /**
+     * Get total valid reports count.
+     */
+    protected function getTotalValidReports(): int
+    {
+        return Report::whereNull('deleted_at')
+            ->where('is_merged_reference', false)
+            ->count();
+    }
+
+    /**
+     * Get consumption by area (zones).
+     */
+    protected function getConsumptionByArea(): array
+    {
+        $zones = $this->getZones();
+        $consumptionByZone = [];
+
+        foreach ($zones as $zone) {
+            $reportCount = Report::where('zone', $zone)
+                ->whereNull('deleted_at')
+                ->where('is_merged_reference', false)
+                ->count();
+
+            if ($reportCount > 0) {
+                $consumptionByZone[] = [
+                    'name' => $zone,
+                    'consumption' => $reportCount,
+                ];
+            }
+        }
+
+        return $this->sortAndLimit($consumptionByZone, 'consumption', 5);
+    }
+
+    /**
+     * Get available zones.
+     */
+    protected function getZones(): array
+    {
+        return [
+            'Zone 1',
+            'Zone 2',
+            'Zone 3',
+            'Zone 4',
+            'Zone 5',
+            'Zone 6',
+            'Zone 7',
+            'Zone 8',
+            'Zone 9',
+            'Zone 10',
+            'Zone 11',
+            'Zone 12'
+        ];
+    }
+
+    /**
+     * Sort array by key and limit results.
+     */
+    protected function sortAndLimit(array $data, string $sortKey, int $limit): array
+    {
+        usort($data, function ($a, $b) use ($sortKey) {
+            return $b[$sortKey] - $a[$sortKey];
+        });
+
+        return array_slice($data, 0, $limit);
+    }
+
+    /**
+     * Get recent reports for dashboard.
+     */
+    protected function getRecentReports(): array
+    {
+        return Report::with(['user'])
+            ->whereNull('deleted_at')
+            ->where('is_merged_reference', false)
+            ->latest()
+            ->take(6)
+            ->get()
+            ->map(function ($report) {
+                return [
+                    'id' => $report->id,
+                    'tracking_code' => $report->tracking_code,
+                    'customer' => $report->user ? $report->user->name : $report->reporter_name,
+                    'type' => $report->water_issue_type,
+                    'status' => $report->status,
+                    'priority' => $report->priority,
+                    'date' => $report->created_at->toISOString(),
+                    'zone' => $report->zone,
+                ];
+            })
+            ->toArray();
+    }
+
+    /**
+     * Get monthly consumption data.
+     */
+    protected function getMonthlyConsumption(): array
     {
         $consumptionData = [];
 
         for ($month = 1; $month <= 12; $month++) {
-            $startDate = Carbon::create($year, $month, 1)->startOfMonth();
-            $endDate = Carbon::create($year, $month, 1)->endOfMonth();
-
-            $totalConsumption = MeterReading::whereBetween('reading_date', [$startDate, $endDate])
-                ->sum('consumption');
-
-            $consumptionData[] = round($totalConsumption, 2);
+            $consumptionData[] = $this->getMonthlyConsumptionForMonth($month);
         }
 
         return $consumptionData;
     }
 
     /**
+     * Get consumption for specific month.
+     */
+    protected function getMonthlyConsumptionForMonth(int $month): float
+    {
+        $startDate = Carbon::create($this->currentYear, $month, 1)->startOfMonth();
+        $endDate = Carbon::create($this->currentYear, $month, 1)->endOfMonth();
+
+        $totalConsumption = MeterReading::whereBetween('reading_date', [$startDate, $endDate])
+            ->sum('consumption');
+
+        return round($totalConsumption, 2);
+    }
+
+    /**
      * Get current month's consumption.
      */
-    private function getCurrentMonthConsumption($year, $month)
+    protected function getCurrentMonthConsumption(): float
     {
-        $startDate = Carbon::create($year, $month, 1)->startOfMonth();
-        $endDate = Carbon::create($year, $month, 1)->endOfMonth();
-
-        return MeterReading::whereBetween('reading_date', [$startDate, $endDate])
-            ->sum('consumption');
+        return $this->getMonthlyConsumptionForMonth($this->currentMonth);
     }
 
     /**
      * Get average consumption for the year.
      */
-    private function getAverageConsumption($year)
+    protected function getAverageConsumption(): float
     {
-        $startDate = Carbon::create($year, 1, 1)->startOfYear();
-        $endDate = Carbon::create($year, 12, 31)->endOfYear();
+        $startDate = Carbon::create($this->currentYear, 1, 1)->startOfYear();
+        $endDate = Carbon::create($this->currentYear, 12, 31)->endOfYear();
 
         $totalConsumption = MeterReading::whereBetween('reading_date', [$startDate, $endDate])
             ->sum('consumption');
 
-        $monthCount = Carbon::now()->month; // Months that have passed this year
+        $monthCount = $this->currentMonth;
 
         return $monthCount > 0 ? round($totalConsumption / $monthCount, 2) : 0;
     }
@@ -141,61 +280,44 @@ class AdminDashboardController extends Controller
     /**
      * Get peak usage for the year.
      */
-    private function getPeakUsage($year)
+    protected function getPeakUsage(): float
     {
         $peakUsage = 0;
 
         for ($month = 1; $month <= 12; $month++) {
-            $startDate = Carbon::create($year, $month, 1)->startOfMonth();
-            $endDate = Carbon::create($year, $month, 1)->endOfMonth();
-
-            $monthlyConsumption = MeterReading::whereBetween('reading_date', [$startDate, $endDate])
-                ->sum('consumption');
-
-            if ($monthlyConsumption > $peakUsage) {
-                $peakUsage = $monthlyConsumption;
-            }
+            $monthlyConsumption = $this->getMonthlyConsumptionForMonth($month);
+            $peakUsage = max($peakUsage, $monthlyConsumption);
         }
 
-        return round($peakUsage, 2);
+        return $peakUsage;
     }
 
     /**
      * Get growth percentage compared to previous month.
      */
-    private function getGrowthPercentage($year, $month)
+    protected function getGrowthPercentage(): float
     {
-        if ($month == 1) {
-            return 0; // No previous month in January
+        if ($this->currentMonth == 1) {
+            return 0;
         }
 
-        // Current month consumption
-        $currentStartDate = Carbon::create($year, $month, 1)->startOfMonth();
-        $currentEndDate = Carbon::create($year, $month, 1)->endOfMonth();
-        $currentConsumption = MeterReading::whereBetween('reading_date', [$currentStartDate, $currentEndDate])
-            ->sum('consumption');
+        $currentConsumption = $this->getCurrentMonthConsumption();
+        $previousConsumption = $this->getMonthlyConsumptionForMonth($this->currentMonth - 1);
 
-        // Previous month consumption
-        $prevMonth = $month - 1;
-        $prevStartDate = Carbon::create($year, $prevMonth, 1)->startOfMonth();
-        $prevEndDate = Carbon::create($year, $prevMonth, 1)->endOfMonth();
-        $prevConsumption = MeterReading::whereBetween('reading_date', [$prevStartDate, $prevEndDate])
-            ->sum('consumption');
-
-        if ($prevConsumption == 0) {
+        if ($previousConsumption == 0) {
             return $currentConsumption > 0 ? 100 : 0;
         }
 
-        return round((($currentConsumption - $prevConsumption) / $prevConsumption) * 100, 1);
+        return round((($currentConsumption - $previousConsumption) / $previousConsumption) * 100, 1);
     }
 
     /**
      * Get report resolution rate.
      */
-    private function getReportResolutionRate()
+    protected function getReportResolutionRate(): float
     {
-        $totalReports = Report::count();
-        $resolvedReports = Report::where('status', 'Resolved')->count();
+        $totalReports = $this->getTotalValidReports();
+        $resolvedReports = $this->getReportsByStatus('resolved');
 
         return $totalReports > 0 ? round(($resolvedReports / $totalReports) * 100, 0) : 0;
     }
@@ -203,7 +325,7 @@ class AdminDashboardController extends Controller
     /**
      * Get recent activities with formatted data.
      */
-    private function getRecentActivities()
+    protected function getRecentActivities(): array
     {
         return Activity::latest()
             ->take(5)
@@ -218,51 +340,62 @@ class AdminDashboardController extends Controller
                     'properties' => $activity->properties,
                     'subject_type' => $activity->subject_type,
                 ];
-            });
+            })
+            ->toArray();
     }
 
     /**
-     * Get activity title based on event.
+     * Export water analytics data as CSV.
      */
-    protected function getActivityTitle($activity): string
+    public function exportWaterAnalytics(Request $request)
     {
-        return match ($activity->event) {
-            'created' => "New {$activity->log_name} created",
-            'updated' => "{$activity->log_name} updated",
-            'deleted' => "{$activity->log_name} deleted",
-            'logged_in' => "User logged in",
-            'logged_out' => "User logged out",
-            default => "System activity",
-        };
+        $data = $request->validate([
+            'monthly_consumption' => 'required|array',
+            'current_month_consumption' => 'required|numeric',
+            'average_consumption' => 'required|numeric',
+            'peak_usage' => 'required|numeric',
+        ]);
+
+        $filename = "water_analytics_" . Carbon::now()->format('Ymd_His') . ".csv";
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"$filename\"",
+        ];
+
+        return response()->stream(function () use ($data) {
+            $this->generateCsv($data);
+        }, 200, $headers);
     }
 
     /**
-     * Get activity icon based on event.
+     * Generate CSV file.
      */
-    protected function getActivityIcon($activity): string
+    protected function generateCsv(array $data): void
     {
-        return match ($activity->event) {
-            'created' => 'bi-file-earmark-plus',
-            'updated' => 'bi-pencil-square',
-            'deleted' => 'bi-trash',
-            'logged_in' => 'bi-box-arrow-in-right',
-            'logged_out' => 'bi-box-arrow-left',
-            default => 'bi-activity',
-        };
-    }
+        $file = fopen('php://output', 'w');
+        $months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-    /**
-     * Get activity color based on event.
-     */
-    protected function getActivityColor($activity): string
-    {
-        return match ($activity->event) {
-            'created' => 'blue',
-            'updated' => 'green',
-            'deleted' => 'red',
-            'logged_in' => 'purple',
-            'logged_out' => 'gray',
-            default => 'indigo',
-        };
+        // Write headers
+        fputcsv($file, [
+            'Month',
+            'Monthly Consumption (m³)',
+            'Current Month Consumption (m³)',
+            'Average Consumption (m³)',
+            'Peak Usage (m³)',
+        ]);
+
+        // Write data
+        foreach ($data['monthly_consumption'] as $index => $consumption) {
+            fputcsv($file, [
+                $months[$index],
+                round($consumption, 2),
+                round($data['current_month_consumption'], 2),
+                round($data['average_consumption'], 2),
+                round($data['peak_usage'], 2),
+            ]);
+        }
+
+        fclose($file);
     }
 }

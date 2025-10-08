@@ -233,6 +233,10 @@ import {
     HiBell,
     HiSolidCalendar,
     HiDatabase,
+    HiFlag,
+    HiShieldExclamation,
+    HiArrowRight,
+    HiArrowLeft,
 } from "oh-vue-icons/icons";
 
 // Font Awesome
@@ -327,6 +331,7 @@ addIcons(
     HiShieldCheck, HiXCircle, HiLockOpen, HiTrendingUp, HiArrowSmUp, HiSpeakerphone, HiDocumentText, HiClock,
     HiPlus, HiDesktopComputer, HiExclamationCircle, HiExclamation, HiInformationCircle, HiCamera, HiVideoCamera,
     HiSolidX, HiPlay, HiPhotograph, HiDownload, HiSortDescending, HiPaperAirplane, HiBell, HiSolidCalendar, HiDatabase,
+    HiFlag, HiShieldExclamation,  HiArrowRight, HiArrowLeft,
 
     // Font Awesome
     FaBuilding, FaLeaf, FaIndustry, FaUtensils, FaUserCog, FaUsers, FaChartBar, FaCogs, FaTrash, FaFolderOpen,

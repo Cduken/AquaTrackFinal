@@ -68,6 +68,11 @@ const customerLinks = [
         url: "/customer/announcements",
         icon: "bi-megaphone-fill",
     },
+    // {
+    //     name: "Notifications",
+    //     url: "/customer/notifications",
+    //     icon: "bi-bell-fill",
+    // },
 ];
 
 const form = useForm({});

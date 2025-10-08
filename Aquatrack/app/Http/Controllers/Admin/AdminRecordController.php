@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class AdminRecordController extends Controller
 {
@@ -56,27 +57,129 @@ class AdminRecordController extends Controller
     }
 
     /**
-     * Calculate surcharge if the record is overdue.
+     * Fix missing due dates for all records
      */
-    private function calculateSurcharge($record, $dueDate)
+    private function fixMissingDueDates()
+    {
+        $recordsWithoutDueDate = MeterReading::with('user')
+            ->whereNull('due_date')
+            ->get();
+
+        $fixedCount = 0;
+
+        foreach ($recordsWithoutDueDate as $record) {
+            try {
+                $dueDate = $this->getDueDate($record->user, $record->reading_date);
+                $record->due_date = $dueDate;
+                $record->save(); // Use save() instead of update to ensure it works
+                $fixedCount++;
+            } catch (\Exception $e) {
+                // Log error but continue with other records
+                Log::error("Failed to fix due date for record {$record->id}: " . $e->getMessage());
+            }
+        }
+
+        return $fixedCount;
+    }
+
+    /**
+     * Calculate surcharge and update status if overdue.
+     */
+    private function calculateSurchargeAndUpdateStatus($record, $dueDate)
     {
         if ($record->status === 'Paid' || !$dueDate) {
-            return null;
+            return [
+                'surcharge' => null,
+                'total_amount' => $record->amount,
+                'original_amount' => $record->amount
+            ];
         }
 
         $dueDate = Carbon::parse($dueDate);
-        $today = Carbon::today('America/Los_Angeles'); // Adjusted for PST
+        $today = Carbon::today('America/Los_Angeles');
 
-        // Surcharge applies the day after the due date
+        // Check if record is overdue (the day after due date)
         if ($today->gt($dueDate)) {
-            return round($record->amount * 0.10, 2); // 10% surcharge
+            $originalAmount = $record->amount; // This is the base amount without surcharge
+            $surcharge = round($originalAmount * 0.10, 2); // 10% surcharge
+            $totalAmount = $originalAmount + $surcharge;
+
+            // Auto-update status to Overdue if it's currently Pending
+            if ($record->status === 'Pending') {
+                $record->update([
+                    'status' => 'Overdue',
+                    'amount' => $totalAmount // Save the total amount with surcharge to database
+                ]);
+                $record->refresh(); // Refresh the record to get updated status and amount
+            }
+
+            return [
+                'surcharge' => $surcharge,
+                'total_amount' => $totalAmount,
+                'original_amount' => $originalAmount
+            ];
         }
 
-        return null;
+        return [
+            'surcharge' => null,
+            'total_amount' => $record->amount,
+            'original_amount' => $record->amount
+        ];
+    }
+
+    /**
+     * Auto-check and update overdue records
+     */
+    private function autoUpdateOverdueRecords()
+    {
+        $records = MeterReading::with('user')
+            ->where('status', 'Pending')
+            ->get();
+
+        $updatedCount = 0;
+
+        foreach ($records as $record) {
+            // Ensure due date is set
+            if (!$record->due_date) {
+                $dueDate = $this->getDueDate($record->user, $record->reading_date);
+                $record->due_date = $dueDate;
+                $record->save();
+            } else {
+                $dueDate = $record->due_date;
+            }
+
+            $dueDate = Carbon::parse($dueDate);
+            $today = Carbon::today('America/Los_Angeles');
+
+            if ($today->gt($dueDate)) {
+                $originalAmount = $record->amount;
+                $surcharge = round($originalAmount * 0.10, 2);
+                $totalAmount = $originalAmount + $surcharge;
+
+                $record->update([
+                    'status' => 'Overdue',
+                    'amount' => $totalAmount // Save the total amount with surcharge
+                ]);
+                $updatedCount++;
+            }
+        }
+
+        return $updatedCount;
     }
 
     public function index(Request $request)
     {
+        // Fix missing due dates first - FORCE it to run
+        $fixedDueDates = $this->fixMissingDueDates();
+
+        // Log for debugging
+        if ($fixedDueDates > 0) {
+            Log::info("Fixed {$fixedDueDates} records with missing due dates");
+        }
+
+        // Auto-update overdue records every time we load the page
+        $updatedOverdue = $this->autoUpdateOverdueRecords();
+
         // Build the query with relationships
         $query = MeterReading::with('user');
 
@@ -120,10 +223,19 @@ class AdminRecordController extends Controller
         $perPage = $request->get('perPage', 10);
         $records = $query->paginate($perPage);
 
-        // Add due_date and surcharge to each record
+        // Add due_date, surcharge, and total_amount to each record
         $records->getCollection()->transform(function ($record) {
-            $record->due_date = $this->getDueDate($record->user, $record->reading_date);
-            $record->surcharge = $this->calculateSurcharge($record, $record->due_date);
+            // DOUBLE CHECK: If due_date is still null, fix it immediately
+            if (!$record->due_date) {
+                $record->due_date = $this->getDueDate($record->user, $record->reading_date);
+                $record->save();
+            }
+
+            $surchargeData = $this->calculateSurchargeAndUpdateStatus($record, $record->due_date);
+            $record->surcharge = $surchargeData['surcharge'];
+            $record->total_amount = $surchargeData['total_amount'];
+            $record->original_amount = $surchargeData['original_amount'];
+
             return $record;
         });
 
@@ -141,8 +253,17 @@ class AdminRecordController extends Controller
     public function show(MeterReading $record)
     {
         $record->load('user');
-        $record->due_date = $this->getDueDate($record->user, $record->reading_date);
-        $record->surcharge = $this->calculateSurcharge($record, $record->due_date);
+
+        // Ensure due date is set
+        if (!$record->due_date) {
+            $record->due_date = $this->getDueDate($record->user, $record->reading_date);
+            $record->save();
+        }
+
+        $surchargeData = $this->calculateSurchargeAndUpdateStatus($record, $record->due_date);
+        $record->surcharge = $surchargeData['surcharge'];
+        $record->total_amount = $surchargeData['total_amount'];
+        $record->original_amount = $surchargeData['original_amount'];
 
         // Return JSON if it's an AJAX request (for modal)
         if (request()->ajax() || request()->expectsJson()) {
@@ -158,8 +279,18 @@ class AdminRecordController extends Controller
     public function edit(MeterReading $record)
     {
         $record->load('user');
-        $record->due_date = $this->getDueDate($record->user, $record->reading_date);
-        $record->surcharge = $this->calculateSurcharge($record, $record->due_date);
+
+        // Ensure due date is set
+        if (!$record->due_date) {
+            $record->due_date = $this->getDueDate($record->user, $record->reading_date);
+            $record->save();
+        }
+
+        $surchargeData = $this->calculateSurchargeAndUpdateStatus($record, $record->due_date);
+        $record->surcharge = $surchargeData['surcharge'];
+        $record->total_amount = $surchargeData['total_amount'];
+        $record->original_amount = $surchargeData['original_amount'];
+
         return Inertia::render('Admin/Records/Edit', [
             'record' => $record,
         ]);
@@ -173,6 +304,12 @@ class AdminRecordController extends Controller
             'amount' => 'sometimes|numeric',
             'status' => 'sometimes|in:Paid,Pending,Overdue'
         ]);
+
+        // Ensure due date is set before updating
+        if (!$record->due_date) {
+            $record->due_date = $this->getDueDate($record->user, $record->reading_date);
+            $record->save();
+        }
 
         $record->update($validated);
 
@@ -191,8 +328,44 @@ class AdminRecordController extends Controller
     public function details(MeterReading $record)
     {
         $record->load('user');
-        $record->due_date = $this->getDueDate($record->user, $record->reading_date);
-        $record->surcharge = $this->calculateSurcharge($record, $record->due_date);
+
+        // Ensure due date is set
+        if (!$record->due_date) {
+            $record->due_date = $this->getDueDate($record->user, $record->reading_date);
+            $record->save();
+        }
+
+        $surchargeData = $this->calculateSurchargeAndUpdateStatus($record, $record->due_date);
+        $record->surcharge = $surchargeData['surcharge'];
+        $record->total_amount = $surchargeData['total_amount'];
+        $record->original_amount = $surchargeData['original_amount'];
+
         return response()->json($record);
+    }
+
+    /**
+     * Manual endpoint to update overdue records and fix due dates
+     */
+    public function manualUpdateOverdue()
+    {
+        $fixedDueDates = $this->fixMissingDueDates();
+        $updatedCount = $this->autoUpdateOverdueRecords();
+
+        return redirect()->route('admin.records.index')
+            ->with('success', "Fixed {$fixedDueDates} due dates and updated {$updatedCount} records to Overdue status.");
+    }
+
+    /**
+     * Force fix all due dates - direct access endpoint
+     */
+    public function forceFixDueDates()
+    {
+        $fixedDueDates = $this->fixMissingDueDates();
+
+        // Also check for any remaining null due dates and fix them
+        $remainingNull = MeterReading::whereNull('due_date')->count();
+
+        return redirect()->route('admin.records.index')
+            ->with('success', "Fixed {$fixedDueDates} due dates. {$remainingNull} records still without due dates.");
     }
 }

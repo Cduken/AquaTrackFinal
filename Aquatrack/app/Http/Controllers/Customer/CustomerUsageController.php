@@ -9,33 +9,34 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
-
-
+use Carbon\Carbon;
 
 class CustomerUsageController extends Controller
 {
     public function index()
     {
-        // Get the authenticated user
         $user = Auth::user();
 
-        // Fetch meter readings for the authenticated user
         $readings = MeterReading::where('user_id', $user->id)
             ->orderBy('reading_date', 'desc')
             ->limit(12)
             ->get()
             ->map(function ($reading) {
+                // Convert due_date string to Carbon date
+                $dueDate = $reading->due_date ? Carbon::parse($reading->due_date) : null;
+
                 return [
-                    'id' => $reading->id, // Add ID for updates
-                    'month' => $reading->billing_month . ' ' . $reading->reading_date->format('Y'),
+                    'id' => $reading->id,
+                    'month' => $reading->billing_month . ' ' . ($reading->reading_date ? $reading->reading_date->format('Y') : date('Y')),
                     'usage' => $reading->consumption,
                     'amount' => number_format($reading->amount, 2),
-                    'status' => $reading->status ?? ($reading->amount > 0 ? 'Pending' : 'Paid'), // Use actual status if available
+                    'status' => $reading->status ?? ($reading->amount > 0 ? 'Pending' : 'Paid'),
+                    'due_date' => $reading->due_date, // Keep as raw string
+                    'due_date_formatted' => $dueDate ? $dueDate->format('M d, Y') : 'N/A',
+                    'reading_date' => $reading->reading_date ? $reading->reading_date->format('Y-m-d') : null,
                 ];
             });
 
-
-        // Prepare chart data
         $chartData = MeterReading::where('user_id', $user->id)
             ->orderBy('reading_date', 'asc')
             ->limit(6)
@@ -54,7 +55,6 @@ class CustomerUsageController extends Controller
         ]);
     }
 
-
     public function getPreviousReadings($userId)
     {
         try {
@@ -67,14 +67,19 @@ class CustomerUsageController extends Controller
                 ->limit(12)
                 ->get()
                 ->map(function ($reading) {
+                    $dueDate = $reading->due_date ? Carbon::parse($reading->due_date) : null;
+
                     return [
                         'billing_month' => $reading->billing_month,
                         'reading_date' => $reading->reading_date ? $reading->reading_date->format('Y-m-d') : 'N/A',
-                        'previous_reading' => $reading->previous_reading, // Include previous reading
+                        'previous_reading' => $reading->previous_reading,
                         'reading' => $reading->reading,
                         'consumption' => $reading->consumption,
                         'amount' => $reading->amount,
-                        'year' => $reading->reading_date ? $reading->reading_date->format('Y') : date('Y')
+                        'year' => $reading->reading_date ? $reading->reading_date->format('Y') : date('Y'),
+                        'due_date' => $reading->due_date,
+                        'due_date_formatted' => $dueDate ? $dueDate->format('M d, Y') : 'N/A',
+                        'status' => $reading->status ?? ($reading->amount > 0 ? 'Pending' : 'Paid'),
                     ];
                 });
 
@@ -87,36 +92,33 @@ class CustomerUsageController extends Controller
         }
     }
 
-    /**
-     * Update the status of a meter reading (mark as paid)
-     */
     public function update(Request $request, $id)
     {
-        // Find the meter reading
         $reading = MeterReading::findOrFail($id);
 
-        // Authorization check - only admins can update status
         if (Auth::user()->role !== 'admin') {
             abort(403, 'Unauthorized action.');
         }
 
-        // Validate the request
         $validated = $request->validate([
             'status' => 'required|in:Pending,Paid'
         ]);
 
-        // Update the status
         $reading->status = $validated['status'];
         $reading->save();
+
+        $dueDate = $reading->due_date ? Carbon::parse($reading->due_date) : null;
 
         return response()->json([
             'message' => 'Bill status updated successfully!',
             'reading' => [
                 'id' => $reading->id,
-                'month' => $reading->billing_month . ' ' . $reading->reading_date->format('Y'),
+                'month' => $reading->billing_month . ' ' . ($reading->reading_date ? $reading->reading_date->format('Y') : date('Y')),
                 'usage' => $reading->consumption,
                 'amount' => number_format($reading->amount, 2),
                 'status' => $reading->status,
+                'due_date' => $reading->due_date,
+                'due_date_formatted' => $dueDate ? $dueDate->format('M d, Y') : 'N/A',
             ]
         ]);
     }

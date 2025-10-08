@@ -12,6 +12,20 @@ class Report extends Model
 {
     use HasFactory, SoftDeletes;
 
+    // In your Report.php model, add this:
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::updating(function ($report) {
+            // Check if status is being changed
+            if ($report->isDirty('status')) {
+                // Reset viewed_by_user so notification shows as unread
+                $report->viewed_by_user = false;
+            }
+        });
+    }
+
     protected $fillable = [
         'municipality',
         'province',
@@ -35,6 +49,7 @@ class Report extends Model
         'viewed_by_staff',
         'viewed_by_user',
         'update_viewed_by_admin',
+        'last_notified_at',
         'assigned_to'
     ];
 

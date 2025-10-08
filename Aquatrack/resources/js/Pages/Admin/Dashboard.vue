@@ -1,903 +1,754 @@
-//Admin/Dashboard.vue
+//Pages/Admin/Dashboard.vue
 <script setup>
 import AdminLayout from "@/Layouts/AdminLayout.vue";
-import { ref, onMounted, computed } from "vue";
-import { usePage, Link } from "@inertiajs/vue3";
+import StatCard from "@/Components/Admin/Dashboard/StatCard.vue";
+import ActivityItem from "@/Components/Admin/Dashboard/ActivityItem.vue";
+import { ref, onMounted, computed, watch, h, resolveComponent } from "vue";
+import { usePage, Link, router } from "@inertiajs/vue3";
 import Chart from "chart.js/auto";
+import {
+    formatTimeAgo,
+    getCurrentMonthName,
+    getCurrentYear,
+} from "@/utils/formatters";
+import {
+    createWaterChartConfig,
+    createDoughnutChartConfig,
+} from "@/utils/chartConfig";
+import { History, ChevronRight, RefreshCw, AlertCircle } from "lucide-vue-next";
 
-const waterChart = ref(null);
+// Reactive state
+const state = ref({
+    isLoading: false,
+    timeFilter: "month",
+    chartInstances: {
+        consumption: null,
+        area: null,
+        reportStatus: null,
+    },
+});
 
+// Refs
+const consumptionChart = ref(null);
+const areaChart = ref(null);
+const reportStatusChart = ref(null);
 const page = usePage();
-const totalUsers = page.props.total_users ?? 0;
-const totalStaffs = page.props.total_staffs ?? 0;
-const totalReports = page.props.total_reports ?? 0;
-const totalCustomers = page.props.total_customers ?? 0;
-const monthlyConsumption = page.props.monthly_consumption ?? Array(12).fill(0);
-const currentMonthConsumption = page.props.current_month_consumption ?? 0;
-const averageConsumption = page.props.average_consumption ?? 0;
-const peakUsage = page.props.peak_usage ?? 0;
-const growthPercentage = page.props.growth_percentage ?? 0;
-const resolutionRate = page.props.resolution_rate ?? 0;
-const recentActivities = page.props.recent_activities ?? [];
-const canViewActivityLog =
-    page.props.auth?.user?.can?.("view-activity-log") ?? false;
 
-// Activity display helpers
-const activityConfig = {
-    created: {
-        icon: "plus-circle",
-        bg: "bg-blue-50",
-        text: "text-blue-500",
-        title: "New record created",
+// Constants
+const FILTER_OPTIONS = [
+    { value: "day", label: "Today" },
+    { value: "week", label: "This Week" },
+    { value: "month", label: "This Month" },
+    { value: "year", label: "This Year" },
+];
+
+const STATUS_CONFIG = {
+    pending: {
+        color: "text-yellow-600 bg-yellow-50 border-yellow-200",
+        text: "Pending",
     },
-    updated: {
-        icon: "pencil-square",
-        bg: "bg-green-50",
-        text: "text-green-500",
-        title: "Record updated",
+    in_progress: {
+        color: "text-blue-600 bg-blue-50 border-blue-200",
+        text: "In Progress",
     },
-    deleted: {
-        icon: "trash",
-        bg: "bg-red-50",
-        text: "text-red-500",
-        title: "Record deleted",
-    },
-    logged_in: {
-        icon: "arrow-right-on-rectangle",
-        bg: "bg-purple-50",
-        text: "text-purple-500",
-        title: "User login",
-    },
-    logged_out: {
-        icon: "arrow-left-on-rectangle",
-        bg: "bg-gray-50",
-        text: "text-gray-500",
-        title: "User logout",
-    },
-    verification_success: {
-        icon: "shield-check",
-        bg: "bg-teal-50",
-        text: "text-teal-500",
-        title: "Verification passed",
-    },
-    verification_failed: {
-        icon: "shield-exclamation",
-        bg: "bg-amber-50",
-        text: "text-amber-500",
-        title: "Verification failed",
-    },
-    default: {
-        icon: "sparkles",
-        bg: "bg-indigo-50",
-        text: "text-indigo-500",
-        title: "System activity",
-    },
-    report_created: {
-        icon: "flag",
-        bg: "bg-amber-50",
-        text: "text-amber-500",
-        title: "New Report Submitted",
-    },
-    report_status_changed: {
-        icon: "arrow-path",
-        bg: "bg-blue-50",
-        text: "text-blue-500",
-        title: "Report Status Updated",
+    resolved: {
+        color: "text-green-600 bg-green-50 border-green-200",
+        text: "Resolved",
     },
 };
 
-const getActivityConfig = (activity) => {
-    if (activity.subject_type === "App\\Models\\Report") {
-        return activity.event === "report_created"
-            ? activityConfig.report_created
-            : activityConfig.report_status_changed;
-    }
-    return activityConfig[activity.event] || activityConfig.default;
+const PRIORITY_COLORS = {
+    high: "text-red-600 bg-red-50",
+    medium: "text-yellow-600 bg-yellow-50",
+    low: "text-blue-600 bg-blue-50",
 };
 
-const getActivityIcon = (activity) => {
-    return getActivityConfig(activity).icon;
+// Computed properties
+const dashboardData = computed(() => ({
+    totalUsers: page.props.total_users ?? 0,
+    totalStaffs: page.props.total_staffs ?? 0,
+    totalReports: page.props.total_reports ?? 0,
+    totalCustomers: page.props.total_customers ?? 0,
+    monthlyConsumption: page.props.monthly_consumption ?? Array(12).fill(0),
+    currentMonthConsumption: page.props.current_month_consumption ?? 0,
+    averageConsumption: page.props.average_consumption ?? 0,
+    peakUsage: page.props.peak_usage ?? 0,
+    growthPercentage: page.props.growth_percentage ?? 0,
+    resolutionRate: page.props.resolution_rate ?? 0,
+    recentActivities: page.props.recent_activities ?? [],
+    recentCustomers: page.props.recent_customers ?? [],
+    reportStats: page.props.report_stats ?? {
+        pending: 0,
+        in_progress: 0,
+        resolved: 0,
+        total: 0,
+    },
+    consumptionByArea: page.props.consumption_by_area ?? [],
+    recentReports: page.props.recent_reports ?? [],
+    canViewActivityLog:
+        page.props.auth?.user?.can?.("view-activity-log") ?? false,
+}));
+
+const statCards = computed(() => [
+    {
+        title: "Total Users",
+        value: dashboardData.value.totalUsers.toLocaleString(),
+        description: "All system users",
+        icon: "users",
+        iconBgColor: "bg-blue-50",
+        iconColor: "text-blue-600",
+        change: "+12%",
+        changeType: "positive",
+    },
+    {
+        title: "Active Staff",
+        value: dashboardData.value.totalStaffs.toLocaleString(),
+        description: "System staff members",
+        icon: "staff",
+        iconBgColor: "bg-green-50",
+        iconColor: "text-green-600",
+        change: "+5%",
+        changeType: "positive",
+    },
+    {
+        title: "Customers",
+        value: dashboardData.value.totalCustomers.toLocaleString(),
+        description: "Water service customers",
+        icon: "customers",
+        iconBgColor: "bg-purple-50",
+        iconColor: "text-purple-600",
+        change: "+8%",
+        changeType: "positive",
+    },
+    {
+        title: "Reports",
+        value: dashboardData.value.totalReports.toLocaleString(),
+        description: `Resolution: ${dashboardData.value.resolutionRate}%`,
+        icon: "reports",
+        iconBgColor: "bg-amber-50",
+        iconColor: "text-amber-600",
+        change: "-3%",
+        changeType: "negative",
+    },
+]);
+
+const reportStatusData = computed(() => ({
+    labels: ["Pending", "In Progress", "Resolved"],
+    data: [
+        dashboardData.value.reportStats.pending || 0,
+        dashboardData.value.reportStats.in_progress || 0,
+        dashboardData.value.reportStats.resolved || 0,
+    ],
+    colors: ["#F59E0B", "#3B82F6", "#10B981"],
+}));
+
+// Methods
+const refreshData = async () => {
+    state.value.isLoading = true;
+
+    // Show loading animation for 1.5 seconds
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+
+    router.reload();
+    state.value.isLoading = false;
 };
 
-const getActivityBgColor = (activity) => {
-    return getActivityConfig(activity).bg;
+const handleFilterChange = (filter) => {
+    state.value.timeFilter = filter;
+    refreshData();
 };
 
-const getActivityTextColor = (activity) => {
-    return getActivityConfig(activity).text;
+const getStatusConfig = (status) => {
+    return STATUS_CONFIG[status] || STATUS_CONFIG.pending;
 };
 
-const getActivityTitle = (activity) => {
-    return getActivityConfig(activity).title;
+const getPriorityColor = (priority) => {
+    return PRIORITY_COLORS[priority] || PRIORITY_COLORS.low;
 };
 
-const formatTimeAgo = (dateString) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const seconds = Math.floor((now - date) / 1000);
-    const intervals = {
-        year: 31536000,
-        month: 2592000,
-        week: 604800,
-        day: 86400,
-        hour: 3600,
-        minute: 60,
-    };
+const safeRecentReports = computed(() => {
+    return dashboardData.value.recentReports || [];
+});
 
-    if (seconds < 60) return "Just now";
+// Chart management
+const initializeCharts = () => {
+    initializeConsumptionChart();
+    initializeAreaChart();
+    initializeReportStatusChart();
+};
 
-    for (const [unit, secondsInUnit] of Object.entries(intervals)) {
-        const interval = Math.floor(seconds / secondsInUnit);
-        if (interval >= 1) {
-            return `${interval} ${unit}${interval === 1 ? "" : "s"} ago`;
-        }
-    }
+const initializeConsumptionChart = () => {
+    if (!consumptionChart.value) return;
 
-    return date.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: date.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
+    destroyChart("consumption");
+
+    const config = createWaterChartConfig(
+        dashboardData.value.monthlyConsumption
+    );
+    state.value.chartInstances.consumption = new Chart(
+        consumptionChart.value,
+        config
+    );
+};
+
+const initializeAreaChart = () => {
+    if (!areaChart.value || dashboardData.value.consumptionByArea.length === 0)
+        return;
+
+    destroyChart("area");
+
+    state.value.chartInstances.area = new Chart(areaChart.value, {
+        ...createDoughnutChartConfig(
+            dashboardData.value.consumptionByArea.map((item) => item.name),
+            dashboardData.value.consumptionByArea.map(
+                (item) => item.consumption
+            ),
+            ["#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6"]
+        ),
+        options: {
+            ...createDoughnutChartConfig().options,
+            plugins: {
+                ...createDoughnutChartConfig().options.plugins,
+                tooltip: {
+                    callbacks: {
+                        label: (context) => {
+                            const total =
+                                dashboardData.value.consumptionByArea.reduce(
+                                    (sum, item) => sum + item.consumption,
+                                    0
+                                );
+                            const percentage = (
+                                (context.parsed / total) *
+                                100
+                            ).toFixed(1);
+                            return `${context.label}: ${context.parsed} reports (${percentage}%)`;
+                        },
+                    },
+                },
+            },
+        },
     });
 };
 
-// Get current month name
-const currentMonthName = computed(() => {
-    const months = [
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
-        "May",
-        "Jun",
-        "Jul",
-        "Aug",
-        "Sep",
-        "Oct",
-        "Nov",
-        "Dec",
-    ];
-    return months[new Date().getMonth()];
-});
+const initializeReportStatusChart = () => {
+    if (!reportStatusChart.value) return;
 
-// Get current year
-const currentYear = computed(() => {
-    return new Date().getFullYear();
-});
+    destroyChart("reportStatus");
 
-// Get peak usage month
-const peakUsageMonth = computed(() => {
-    const months = [
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
-        "May",
-        "Jun",
-        "Jul",
-        "Aug",
-        "Sep",
-        "Oct",
-        "Nov",
-        "Dec",
-    ];
-    const maxConsumption = Math.max(...monthlyConsumption);
-    const peakIndex = monthlyConsumption.indexOf(maxConsumption);
-    return months[peakIndex];
-});
+    state.value.chartInstances.reportStatus = new Chart(
+        reportStatusChart.value,
+        createDoughnutChartConfig(
+            reportStatusData.value.labels,
+            reportStatusData.value.data,
+            reportStatusData.value.colors
+        )
+    );
+};
 
-// Water chart initialization
-onMounted(() => {
-    if (waterChart.value) {
-        new Chart(waterChart.value, {
-            type: "line",
-            data: {
-                labels: [
-                    "Jan",
-                    "Feb",
-                    "Mar",
-                    "Apr",
-                    "May",
-                    "Jun",
-                    "Jul",
-                    "Aug",
-                    "Sep",
-                    "Oct",
-                    "Nov",
-                    "Dec",
-                ],
-                datasets: [
-                    {
-                        label: "Water Consumption (m³)",
-                        data: monthlyConsumption,
-                        borderColor: "rgb(79, 70, 229)",
-                        backgroundColor: "rgba(79, 70, 229, 0.05)",
-                        tension: 0.4,
-                        fill: true,
-                        borderWidth: 3,
-                        pointBackgroundColor: "white",
-                        pointBorderColor: "rgb(79, 70, 229)",
-                        pointBorderWidth: 3,
-                        pointRadius: 5,
-                        pointHoverRadius: 7,
-                    },
-                ],
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        backgroundColor: "white",
-                        titleColor: "#1f2937",
-                        bodyColor: "#4b5563",
-                        borderColor: "#e5e7eb",
-                        borderWidth: 1,
-                        padding: 12,
-                        usePointStyle: true,
-                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
-                        callbacks: {
-                            label: (context) => `${context.parsed.y} m³`,
-                        },
-                    },
-                },
-                scales: {
-                    y: {
-                        beginAtZero: false,
-                        grid: { drawBorder: false, color: "#f3f4f6" },
-                        ticks: {
-                            color: "#9ca3af",
-                            callback: (value) => `${value} m³`,
-                        },
-                    },
-                    x: {
-                        grid: { display: false, drawBorder: false },
-                        ticks: { color: "#9ca3af" },
-                    },
-                },
-                interaction: { intersect: false, mode: "index" },
-            },
-        });
+const destroyChart = (chartName) => {
+    if (state.value.chartInstances[chartName]) {
+        state.value.chartInstances[chartName].destroy();
+        state.value.chartInstances[chartName] = null;
     }
+};
+
+const destroyAllCharts = () => {
+    Object.keys(state.value.chartInstances).forEach((chartName) => {
+        destroyChart(chartName);
+    });
+};
+
+const DashboardSection = {
+    props: {
+        title: String,
+        action: Object,
+        badge: [String, Number],
+        padding: {
+            type: Boolean,
+            default: true,
+        },
+    },
+    setup(props, { slots }) {
+        return () =>
+            h(
+                "div",
+                {
+                    class: `bg-white rounded-xl border border-gray-200 ${
+                        props.padding ? "p-6" : "p-4"
+                    }`,
+                },
+                [
+                    // Header
+                    h(
+                        "div",
+                        { class: "flex items-center justify-between mb-4" },
+                        [
+                            h("div", { class: "flex items-center gap-2" }, [
+                                h(
+                                    "h2",
+                                    {
+                                        class: "text-lg font-semibold text-gray-900",
+                                    },
+                                    props.title
+                                ),
+                                props.badge &&
+                                    h(
+                                        "span",
+                                        {
+                                            class: "text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full",
+                                        },
+                                        `${props.badge} new`
+                                    ),
+                            ]),
+                            props.action &&
+                                h(
+                                    Link,
+                                    {
+                                        href: props.action.href,
+                                        class: "text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors flex items-center gap-1",
+                                    },
+                                    [
+                                        props.action.label,
+                                        h(ChevronRight, { class: "w-4 h-4" }),
+                                    ]
+                                ),
+                        ]
+                    ),
+                    // Content
+                    slots.default?.(),
+                ]
+            );
+    },
+};
+
+// Report Item Component
+const ReportItem = {
+    props: {
+        report: Object,
+    },
+    setup(props) {
+        return () =>
+            h(
+                "div",
+                {
+                    class: "flex items-center justify-between p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors group",
+                },
+                [
+                    // Customer Info
+                    h(
+                        "div",
+                        { class: "flex items-center gap-4 flex-1 min-w-0" },
+                        [
+                            h("div", { class: "flex-shrink-0" }, [
+                                h(
+                                    "div",
+                                    {
+                                        class: "w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center group-hover:bg-blue-100 transition-colors",
+                                    },
+                                    [
+                                        h(
+                                            "span",
+                                            {
+                                                class: "text-sm font-semibold text-blue-600",
+                                            },
+                                            props.report.customer?.charAt(0) ||
+                                                "U"
+                                        ),
+                                    ]
+                                ),
+                            ]),
+                            h("div", { class: "min-w-0 flex-1" }, [
+                                h(
+                                    "p",
+                                    {
+                                        class: "text-sm font-medium text-gray-900 truncate",
+                                    },
+                                    props.report.customer || "Unknown Customer"
+                                ),
+                                h(
+                                    "p",
+                                    {
+                                        class: "text-xs text-gray-500 truncate mt-1",
+                                    },
+                                    `${props.report.type} • ${props.report.zone}`
+                                ),
+                            ]),
+                        ]
+                    ),
+                    // Status & Priority
+                    h(
+                        "div",
+                        { class: "flex items-center gap-3 flex-shrink-0" },
+                        [
+                            h(
+                                "span",
+                                {
+                                    class: [
+                                        "px-3 py-1 text-xs font-medium rounded-full border",
+                                        getStatusConfig(props.report.status)
+                                            .color,
+                                    ],
+                                },
+                                getStatusConfig(props.report.status).text
+                            ),
+                            props.report.priority &&
+                                h(
+                                    "span",
+                                    {
+                                        class: [
+                                            "px-2 py-1 text-xs font-medium rounded-full",
+                                            getPriorityColor(
+                                                props.report.priority
+                                            ),
+                                        ],
+                                    },
+                                    props.report.priority
+                                ),
+                        ]
+                    ),
+                ]
+            );
+    },
+};
+
+// Status Item Component
+const StatusItem = {
+    props: {
+        status: String,
+        count: Number,
+        color: String,
+    },
+    setup(props) {
+        return () =>
+            h("div", { class: "flex items-center justify-between text-sm" }, [
+                h("div", { class: "flex items-center gap-2" }, [
+                    h("div", {
+                        class: "w-3 h-3 rounded-full",
+                        style: { backgroundColor: props.color },
+                    }),
+                    h("span", { class: "text-gray-600" }, props.status),
+                ]),
+                h(
+                    "span",
+                    { class: "font-semibold text-gray-900" },
+                    props.count
+                ),
+            ]);
+    },
+};
+
+// Customer Item Component
+const CustomerItem = {
+    props: {
+        customer: Object,
+    },
+    setup(props) {
+        return () =>
+            h("div", { class: "flex items-center gap-3 group" }, [
+                h(
+                    "div",
+                    {
+                        class: "w-8 h-8 bg-blue-50 rounded-full flex items-center justify-center group-hover:bg-blue-100 transition-colors",
+                    },
+                    [
+                        h(
+                            "span",
+                            { class: "text-sm font-medium text-blue-600" },
+                            props.customer.name?.charAt(0) || "U"
+                        ),
+                    ]
+                ),
+                h("div", { class: "flex-1 min-w-0" }, [
+                    h(
+                        "p",
+                        { class: "text-sm font-medium text-gray-900 truncate" },
+                        props.customer.name || "Unknown User"
+                    ),
+                    h(
+                        "p",
+                        { class: "text-xs text-gray-500 truncate" },
+                        props.customer.email || "No email"
+                    ),
+                ]),
+                h(
+                    "div",
+                    { class: "text-xs text-gray-400 whitespace-nowrap" },
+                    props.customer.joined || "Recently"
+                ),
+            ]);
+    },
+};
+
+// Empty State Component
+const EmptyState = {
+    props: {
+        icon: String,
+        title: String,
+        description: String,
+        size: {
+            type: String,
+            default: "md",
+        },
+        class: String,
+    },
+    setup(props) {
+        const sizes = {
+            sm: "py-6",
+            md: "py-12",
+            lg: "py-16",
+        };
+
+        const iconSize = {
+            sm: "w-8 h-8",
+            md: "w-12 h-12",
+            lg: "w-16 h-16",
+        };
+
+        return () =>
+            h(
+                "div",
+                {
+                    class: `text-center text-gray-500 ${sizes[props.size]} ${
+                        props.class
+                    }`,
+                },
+                [
+                    props.icon &&
+                        h(resolveComponent(props.icon), {
+                            class: `mx-auto text-gray-300 mb-3 ${
+                                iconSize[props.size]
+                            }`,
+                        }),
+                    h("p", { class: "text-sm" }, props.title),
+                    props.description &&
+                        h(
+                            "p",
+                            { class: "text-xs text-gray-400 mt-1" },
+                            props.description
+                        ),
+                ]
+            );
+    },
+};
+
+// Lifecycle
+onMounted(() => {
+    setTimeout(initializeCharts, 500);
 });
+
+onMounted(() => {
+    return destroyAllCharts;
+});
+
+// Watchers
+watch(
+    () => [
+        dashboardData.value.monthlyConsumption,
+        dashboardData.value.consumptionByArea,
+        dashboardData.value.reportStats,
+    ],
+    () => {
+        setTimeout(initializeCharts, 100);
+    },
+    { deep: true }
+);
 </script>
 
 <template>
     <AdminLayout>
         <!-- Header Section -->
-        <div class="mb-4">
-            <div class="flex items-center mb-2">
-                <!-- <div class="p-2 rounded-lg bg-indigo-50 mr-3">
-                    <v-icon
-                        name="md-dashboard-sharp"
-                        class="text-indigo-600"
-                        scale="1.2"
-                    />
-                </div> -->
-                <h1 class="text-2xl font-bold text-gray-900">
-                    Dashboard Overview
-                </h1>
+        <div class="mb-8">
+            <div
+                class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4"
+            >
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">
+                        Dashboard Overview
+                    </h1>
+                    <p class="text-gray-500 mt-1">
+                        Welcome back! Here's what's happening with your water
+                        management system.
+                    </p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <!-- Filter Buttons -->
+                    <div
+                        class="flex items-center bg-white border border-gray-200 rounded-lg p-1"
+                    >
+                        <button
+                            v-for="option in FILTER_OPTIONS"
+                            :key="option.value"
+                            @click="handleFilterChange(option.value)"
+                            :class="[
+                                'px-3 py-1.5 text-sm font-medium rounded-md transition-all',
+                                state.timeFilter === option.value
+                                    ? 'bg-blue-50 text-blue-600 border border-blue-200'
+                                    : 'text-gray-600 hover:text-gray-900',
+                            ]"
+                        >
+                            {{ option.label }}
+                        </button>
+                    </div>
+
+                    <button
+                        @click="refreshData"
+                        :disabled="state.isLoading"
+                        class="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <RefreshCw
+                            class="w-4 h-4 transition-transform duration-1500"
+                            :class="{ 'animate-spin': state.isLoading }"
+                        />
+                        {{ state.isLoading ? "Refreshing..." : "Refresh" }}
+                    </button>
+                </div>
             </div>
-            <p class="text-gray-500">
-                Welcome back! Here's what's happening with your water management
-                system today.
-            </p>
         </div>
 
         <!-- Stats Grid -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-            <!-- Total Users Card -->
-            <div
-                class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-300"
-            >
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-500 mb-1">
-                            Total Users
-                        </p>
-                        <p class="text-2xl font-bold text-gray-900">
-                            {{ totalUsers }}
-                        </p>
-                        <p class="text-xs text-gray-400 mt-1">
-                            All system users
-                        </p>
-                    </div>
-                    <div class="p-3 rounded-lg bg-blue-50 text-blue-500">
-                        <svg
-                            class="w-6 h-6"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                            ></path>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Active Staff Card -->
-            <div
-                class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-300"
-            >
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-500 mb-1">
-                            Active Staff
-                        </p>
-                        <p class="text-2xl font-bold text-gray-900">
-                            {{ totalStaffs }}
-                        </p>
-                        <p class="text-xs text-gray-400 mt-1">
-                            System staffs
-                        </p>
-                    </div>
-                    <div class="p-3 rounded-lg bg-green-50 text-green-500">
-                        <svg
-                            class="w-6 h-6"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2"
-                            ></path>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Customers Card -->
-            <div
-                class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-300"
-            >
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-500 mb-1">
-                            Customers
-                        </p>
-                        <p class="text-2xl font-bold text-gray-900">
-                            {{ totalCustomers }}
-                        </p>
-                        <p class="text-xs text-gray-400 mt-1">
-                            Water service customers
-                        </p>
-                    </div>
-                    <div class="p-3 rounded-lg bg-purple-50 text-purple-500">
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            fill="currentColor"
-                            class="size-6"
-                        >
-                            <path
-                                fill-rule="evenodd"
-                                d="M8.25 6.75a3.75 3.75 0 1 1 7.5 0 3.75 3.75 0 0 1-7.5 0ZM15.75 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0ZM2.25 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0ZM6.31 15.117A6.745 6.745 0 0 1 12 12a6.745 6.745 0 0 1 6.709 7.498.75.75 0 0 1-.372.568A12.696 12.696 0 0 1 12 21.75c-2.305 0-4.47-.612-6.337-1.684a.75.75 0 0 1-.372-.568 6.787 6.787 0 0 1 1.019-4.38Z"
-                                clip-rule="evenodd"
-                            />
-                            <path
-                                d="M5.082 14.254a8.287 8.287 0 0 0-1.308 5.135 9.687 9.687 0 0 1-1.764-.44l-.115-.04a.563.563 0 0 1-.373-.487l-.01-.121a3.75 3.75 0 0 1 3.57-4.047ZM20.226 19.389a8.287 8.287 0 0 0-1.308-5.135 3.75 3.75 0 0 1 3.57 4.047l-.01.121a.563.563 0 0 1-.373.486l-.115.04c-.567.2-1.156.349-1.764.441Z"
-                            />
-                        </svg>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Reports Card -->
-            <div
-                class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-300"
-            >
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-500 mb-1">
-                            Reports
-                        </p>
-                        <p class="text-2xl font-bold text-gray-900">
-                            {{ totalReports }}
-                        </p>
-                        <p class="text-xs text-gray-400 mt-1">
-                            Water service reports
-                        </p>
-                    </div>
-                    <div class="p-3 rounded-lg bg-amber-50 text-amber-500">
-                        <v-icon name="bi-flag" />
-                    </div>
-                </div>
-            </div>
+            <StatCard
+                v-for="stat in statCards"
+                :key="stat.title"
+                :title="stat.title"
+                :value="stat.value"
+                :description="stat.description"
+                :icon="stat.icon"
+                :icon-bg-color="stat.iconBgColor"
+                :icon-color="stat.iconColor"
+                :change="stat.change"
+                :change-type="stat.changeType"
+            />
         </div>
 
-        <!-- Analytics Section -->
+        <!-- Main Content Grid -->
         <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-8">
-            <!-- Water Consumption Chart -->
-            <div
-                class="xl:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 p-6"
-            >
-                <div
-                    class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6"
-                >
-                    <div>
-                        <h2 class="text-lg font-semibold text-gray-900 mb-1">
-                            Water Consumption Analytics
-                        </h2>
-                        <p class="text-sm text-gray-500">
-                            Monthly water consumption trends for
-                            {{ currentYear }}
-                        </p>
-                    </div>
-                    <div class="flex items-center mt-2 sm:mt-0">
-                        <div class="flex items-center mr-4">
-                            <div
-                                class="w-3 h-3 rounded-full bg-indigo-500 mr-2"
-                            ></div>
-                            <span class="text-sm text-gray-600"
-                                >Consumption (m³)</span
-                            >
+            <!-- Left Column - Main Charts -->
+            <div class="xl:col-span-2 space-y-6">
+                <!-- Water Consumption Chart -->
+                <div class="bg-white rounded-xl border border-gray-200 p-6">
+                    <div
+                        class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4"
+                    >
+                        <div>
+                            <h2 class="text-lg font-semibold text-gray-900">
+                                Water Consumption
+                            </h2>
+                            <p class="text-sm text-gray-500 mt-1">
+                                {{ getCurrentYear() }} Overview
+                            </p>
                         </div>
-                        <div
-                            class="bg-gray-50 rounded-lg px-3 py-1.5 text-sm font-medium text-gray-700"
-                        >
-                            {{ currentYear }}
-                        </div>
-                    </div>
-                </div>
-                <div class="h-80">
-                    <canvas ref="waterChart"></canvas>
-                </div>
-            </div>
-
-            <!-- Key Metrics -->
-            <div class="space-y-5">
-                <!-- Current Month -->
-                <div
-                    class="bg-white rounded-xl shadow-sm border border-gray-100 p-5"
-                >
-                    <div class="flex items-center justify-between mb-3">
-                        <h3 class="text-sm font-medium text-gray-700">
-                            Current Month
-                        </h3>
-                        <div class="flex items-center">
-                            <span
-                                class="text-xs font-medium text-gray-500 mr-2"
-                                >{{ currentMonthName }}</span
-                            >
+                        <div class="flex items-center gap-2">
                             <div
-                                :class="`p-1 rounded ${
-                                    growthPercentage >= 0
-                                        ? 'bg-green-100 text-green-600'
-                                        : 'bg-red-100 text-red-600'
-                                }`"
+                                class="flex items-center text-sm text-gray-600"
                             >
-                                <svg
-                                    v-if="growthPercentage >= 0"
-                                    class="w-3 h-3"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M5 10l7-7m0 0l7 7m-7-7v18"
-                                    ></path>
-                                </svg>
-                                <svg
-                                    v-else
-                                    class="w-3 h-3"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M19 14l-7 7m0 0l-7-7m7 7V3"
-                                    ></path>
-                                </svg>
+                                <div
+                                    class="w-2 h-2 rounded-full bg-indigo-500 mr-2"
+                                ></div>
+                                Consumption (m³)
                             </div>
                         </div>
                     </div>
-                    <div class="flex items-end">
-                        <p class="text-2xl font-bold text-gray-900 mr-2">
-                            {{ currentMonthConsumption }}
-                        </p>
-                        <span class="text-sm text-gray-500 mb-1">m³</span>
+                    <div class="h-80">
+                        <canvas ref="consumptionChart"></canvas>
                     </div>
-                    <p
-                        :class="`text-xs mt-2 font-medium ${
-                            growthPercentage >= 0
-                                ? 'text-green-600'
-                                : 'text-red-600'
-                        }`"
-                    >
-                        {{ growthPercentage >= 0 ? "+" : ""
-                        }}{{ growthPercentage }}% vs last month
-                    </p>
                 </div>
 
-                <!-- Average Consumption -->
-                <div
-                    class="bg-white rounded-xl shadow-sm border border-gray-100 p-5"
+                <!-- Recent Reports -->
+                <DashboardSection
+                    title="Recent Reports"
+                    :action="{
+                        label: 'View All',
+                        href: route('admin.reports'),
+                    }"
                 >
-                    <div class="flex items-center justify-between mb-3">
-                        <h3 class="text-sm font-medium text-gray-700">
-                            Average Consumption
-                        </h3>
-                        <div class="p-1 rounded bg-gray-100 text-gray-500">
-                            <svg
-                                class="w-3 h-3"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                                xmlns="http://www.w3.org/2000/svg"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M20 12H4"
-                                ></path>
-                            </svg>
-                        </div>
+                    <div class="space-y-3">
+                        <ReportItem
+                            v-for="report in safeRecentReports"
+                            :key="report.id"
+                            :report="report"
+                        />
+                        <EmptyState
+                            v-if="safeRecentReports.length === 0"
+                            icon="AlertCircle"
+                            title="No reports found"
+                            description="Reports will appear here once submitted"
+                        />
                     </div>
-                    <div class="flex items-end">
-                        <p class="text-2xl font-bold text-gray-900 mr-2">
-                            {{ averageConsumption }}
-                        </p>
-                        <span class="text-sm text-gray-500 mb-1">m³</span>
-                    </div>
-                    <p class="text-xs text-gray-500 mt-2">Monthly average</p>
-                </div>
+                </DashboardSection>
+            </div>
 
-                <!-- Peak Usage -->
-                <div
-                    class="bg-white rounded-xl shadow-sm border border-gray-100 p-5"
-                >
-                    <div class="flex items-center justify-between mb-3">
-                        <h3 class="text-sm font-medium text-gray-700">
-                            Peak Usage
-                        </h3>
-                        <div class="p-1 rounded bg-amber-100 text-amber-500">
-                            <svg
-                                class="w-3 h-3"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                                xmlns="http://www.w3.org/2000/svg"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M13 10V3L4 14h7v7l9-11h-7z"
-                                ></path>
-                            </svg>
-                        </div>
+            <!-- Right Column - Sidebar -->
+            <div class="space-y-6">
+                <!-- Report Status -->
+                <DashboardSection title="Report Status">
+                    <div class="h-48 mb-4">
+                        <canvas ref="reportStatusChart"></canvas>
                     </div>
-                    <div class="flex items-end">
-                        <p class="text-2xl font-bold text-gray-900 mr-2">
-                            {{ peakUsage }}
-                        </p>
-                        <span class="text-sm text-gray-500 mb-1">m³</span>
+                    <div class="space-y-3">
+                        <StatusItem
+                            v-for="(status, index) in reportStatusData.labels"
+                            :key="status"
+                            :status="status"
+                            :count="reportStatusData.data[index]"
+                            :color="reportStatusData.colors[index]"
+                        />
                     </div>
-                    <p class="text-xs text-gray-500 mt-2">
-                        Recorded in {{ peakUsageMonth }}
-                    </p>
-                </div>
+                </DashboardSection>
 
-                <!-- Resolution Rate -->
-                <div
-                    class="bg-white rounded-xl shadow-sm border border-gray-100 p-5"
+                <!-- Recent Customers -->
+                <DashboardSection
+                    title="Recent Customers"
+                    :badge="dashboardData.recentCustomers.length"
                 >
-                    <div class="flex items-center justify-between mb-3">
-                        <h3 class="text-sm font-medium text-gray-700">
-                            Report Resolution
-                        </h3>
-                        <div class="p-1 rounded bg-blue-100 text-blue-500">
-                            <svg
-                                class="w-3 h-3"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                                xmlns="http://www.w3.org/2000/svg"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                                ></path>
-                            </svg>
-                        </div>
+                    <div class="space-y-4">
+                        <CustomerItem
+                            v-for="customer in dashboardData.recentCustomers"
+                            :key="customer.email"
+                            :customer="customer"
+                        />
+                        <EmptyState
+                            v-if="dashboardData.recentCustomers.length === 0"
+                            title="No recent customers"
+                            size="sm"
+                        />
                     </div>
-                    <div class="flex items-end">
-                        <p class="text-2xl font-bold text-gray-900 mr-2">
-                            {{ resolutionRate }}%
-                        </p>
+                </DashboardSection>
+
+                <!-- Reports by Zone -->
+                <DashboardSection title="Reports by Zone">
+                    <div class="h-48">
+                        <canvas ref="areaChart"></canvas>
                     </div>
-                    <p class="text-xs text-gray-500 mt-2">
-                        Reports resolved this month
-                    </p>
-                </div>
+                </DashboardSection>
             </div>
         </div>
 
         <!-- Recent Activity Section -->
-        <div
-            class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
+        <DashboardSection
+            title="Recent Activity"
+            :action="
+                dashboardData.canViewActivityLog
+                    ? { label: 'View All', href: route('admin.activity-logs') }
+                    : null
+            "
+            class="bg-white rounded-xl border border-gray-200"
+            :padding="false"
         >
-            <div
-                class="p-6 border-b border-gray-100 flex items-center justify-between"
-            >
-                <h2
-                    class="text-lg font-semibold text-gray-900 flex items-center"
-                >
-                    <v-icon
-                        name="bi-clock-history"
-                        class="text-indigo-500 mr-2"
-                        scale="1.2"
-                    />
-                    Recent Activity
-                </h2>
-                <Link
-                    v-if="canViewActivityLog"
-                    :href="route('admin.activity-logs')"
-                    class="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors flex items-center gap-1"
-                >
-                    View All
-                    <svg
-                        class="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M9 5l7 7-7 7"
-                        ></path>
-                    </svg>
-                </Link>
-            </div>
             <div class="divide-y divide-gray-100">
-                <div
-                    v-for="activity in recentActivities"
+                <ActivityItem
+                    v-for="activity in dashboardData.recentActivities"
                     :key="activity.id"
-                    class="p-4 hover:bg-gray-50 transition-colors flex items-start gap-4 group"
-                >
-                    <div
-                        :class="`p-2.5 rounded-lg ${getActivityBgColor(
-                            activity
-                        )} shadow-sm group-hover:shadow transition-all duration-200`"
-                    >
-                        <svg
-                            v-if="getActivityIcon(activity) === 'plus-circle'"
-                            class="w-5 h-5"
-                            :class="getActivityTextColor(activity)"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 01118 0z"
-                            ></path>
-                        </svg>
-                        <svg
-                            v-else-if="
-                                getActivityIcon(activity) === 'pencil-square'
-                            "
-                            class="w-5 h-5"
-                            :class="getActivityTextColor(activity)"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                            ></path>
-                        </svg>
-                        <svg
-                            v-else-if="getActivityIcon(activity) === 'trash'"
-                            class="w-5 h-5"
-                            :class="getActivityTextColor(activity)"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4m-4 0H6a1 1 0 00-1 1v1m14 0V4a1 1 0 00-1-1h-4"
-                            ></path>
-                        </svg>
-                        <svg
-                            v-else-if="
-                                getActivityIcon(activity) ===
-                                'arrow-right-on-rectangle'
-                            "
-                            class="w-5 h-5"
-                            :class="getActivityTextColor(activity)"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
-                            ></path>
-                        </svg>
-                        <svg
-                            v-else-if="
-                                getActivityIcon(activity) ===
-                                'arrow-left-on-rectangle'
-                            "
-                            class="w-5 h-5"
-                            :class="getActivityTextColor(activity)"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M13 7l5 5m0 0l-5 5m5-5H6m0-2v-1a3 3 0 013-3h7a3 3 0 013 3v7a3 3 0 01-3 3H9a3 3 0 01-3-3v-1"
-                            ></path>
-                        </svg>
-                        <svg
-                            v-else-if="
-                                getActivityIcon(activity) === 'shield-check'
-                            "
-                            class="w-5 h-5"
-                            :class="getActivityTextColor(activity)"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                            ></path>
-                        </svg>
-                        <svg
-                            v-else-if="
-                                getActivityIcon(activity) ===
-                                'shield-exclamation'
-                            "
-                            class="w-5 h-5"
-                            :class="getActivityTextColor(activity)"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M20.618 5.984A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016zM12 9v2m0 4h.01"
-                            ></path>
-                        </svg>
-                        <svg
-                            v-else-if="getActivityIcon(activity) === 'sparkles'"
-                            class="w-5 h-5"
-                            :class="getActivityTextColor(activity)"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
-                            ></path>
-                        </svg>
-                        <svg
-                            v-else-if="getActivityIcon(activity) === 'flag'"
-                            class="w-5 h-5"
-                            :class="getActivityTextColor(activity)"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-                            ></path>
-                        </svg>
-                        <svg
-                            v-else-if="
-                                getActivityIcon(activity) === 'arrow-path'
-                            "
-                            class="w-5 h-5"
-                            :class="getActivityTextColor(activity)"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"
-                            ></path>
-                        </svg>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm font-medium text-gray-800 truncate">
-                            {{ getActivityTitle(activity) }}
-                        </p>
-                        <p class="text-xs text-gray-500 mt-1 truncate">
-                            {{ activity.description }}
-                            <span
-                                v-if="activity.properties?.tracking_code"
-                                class="font-medium text-gray-700"
-                            >
-                                ({{ activity.properties.tracking_code }})
-                            </span>
-                        </p>
-                        <p class="text-xs text-gray-400 mt-1 truncate">
-                            <span v-if="activity.causer_name"
-                                >By {{ activity.causer_name }}</span
-                            >
-                            <span v-else>By System</span>
-                            <span
-                                v-if="activity.properties?.old_status"
-                                class="ml-2 text-gray-600"
-                            >
-                                Status: {{ activity.properties.old_status }} →
-                                {{ activity.properties.new_status }}
-                            </span>
-                        </p>
-                    </div>
-                    <div class="text-xs text-gray-400 whitespace-nowrap">
-                        {{ formatTimeAgo(activity.created_at) }}
-                    </div>
-                </div>
-                <div
-                    v-if="recentActivities.length === 0"
-                    class="p-6 text-center text-gray-500"
-                >
-                    No recent activities found
-                </div>
+                    :activity="activity"
+                />
+                <EmptyState
+                    v-if="dashboardData.recentActivities.length === 0"
+                    icon="History"
+                    title="No recent activities"
+                    description="Activities will appear here as they occur"
+                    class="p-8"
+                />
             </div>
-        </div>
+        </DashboardSection>
     </AdminLayout>
 </template>

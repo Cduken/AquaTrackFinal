@@ -366,4 +366,41 @@ class StaffReadingController extends Controller
 
         return $dueDate->toDateString();
     }
+
+    // In StaffReadingController
+    public function viewCustomerReading($readingId)
+    {
+        try {
+            $staff = Auth::user();
+
+            if ($staff->role !== 'staff') {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
+            $reading = MeterReading::find($readingId);
+            if (!$reading) {
+                return response()->json(['error' => 'Reading not found'], 404);
+            }
+
+            // Mark as viewed by staff - this triggers notification
+            $reading->update([
+                'viewed_by_staff' => true,
+                'staff_viewed_at' => now(),
+            ]);
+
+            Log::info('Staff viewed customer water reading', [
+                'staff_id' => $staff->id,
+                'reading_id' => $readingId,
+                'customer_id' => $reading->user_id
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'reading' => $reading
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error viewing reading: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to view reading'], 500);
+        }
+    }
 }

@@ -2,29 +2,43 @@
     <AdminLayout>
         <div class="mx-auto w-full">
             <div class="lg:items-center lg:flex mb-4 hidden">
-                <v-icon name="md-peoplealt-outlined" class="mr-2 text-blue-500" scale="1.5" />
+                <v-icon
+                    name="md-peoplealt-outlined"
+                    class="mr-2 text-blue-500"
+                    scale="1.5"
+                />
                 <h1 class="text-2xl">Customer Records Management</h1>
             </div>
 
             <!-- Records Stats Cards Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            <div
+                class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6"
+            >
                 <!-- Total Records Card -->
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                     <div class="flex items-center">
-                        <div class="p-3 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+                        <div
+                            class="p-3 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
+                        >
                             <v-icon name="bi-clipboard-data" class="w-6 h-6" />
                         </div>
                         <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">
+                            <p
+                                class="text-sm font-medium text-gray-600 dark:text-gray-400"
+                            >
                                 Total Records
                             </p>
-                            <h3 class="text-2xl font-bold text-gray-900 dark:text-white">
+                            <h3
+                                class="text-2xl font-bold text-gray-900 dark:text-white"
+                            >
                                 {{ records.total || 0 }}
                             </h3>
                         </div>
                     </div>
                     <div class="mt-4">
-                        <div class="flex items-center text-sm text-blue-600 dark:text-blue-400">
+                        <div
+                            class="flex items-center text-sm text-blue-600 dark:text-blue-400"
+                        >
                             <v-icon name="bi-list-ul" class="w-4 h-4 mr-1" />
                             <span>All customer records</span>
                         </div>
@@ -35,20 +49,27 @@
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                     <div class="flex items-center">
                         <div
-                            class="p-3 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400">
+                            class="p-3 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400"
+                        >
                             <v-icon name="bi-check-circle" class="w-6 h-6" />
                         </div>
                         <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">
+                            <p
+                                class="text-sm font-medium text-gray-600 dark:text-gray-400"
+                            >
                                 Paid Records
                             </p>
-                            <h3 class="text-2xl font-bold text-gray-900 dark:text-white">
+                            <h3
+                                class="text-2xl font-bold text-gray-900 dark:text-white"
+                            >
                                 {{ paidRecordsCount }}
                             </h3>
                         </div>
                     </div>
                     <div class="mt-4">
-                        <div class="flex items-center text-sm text-green-600 dark:text-green-400">
+                        <div
+                            class="flex items-center text-sm text-green-600 dark:text-green-400"
+                        >
                             <v-icon name="bi-cash" class="w-4 h-4 mr-1" />
                             <span>{{ paidPercentage }}% of total</span>
                         </div>
@@ -59,21 +80,31 @@
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                     <div class="flex items-center">
                         <div
-                            class="p-3 rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400">
+                            class="p-3 rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400"
+                        >
                             <v-icon name="bi-clock" class="w-6 h-6" />
                         </div>
                         <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">
+                            <p
+                                class="text-sm font-medium text-gray-600 dark:text-gray-400"
+                            >
                                 Pending Records
                             </p>
-                            <h3 class="text-2xl font-bold text-gray-900 dark:text-white">
+                            <h3
+                                class="text-2xl font-bold text-gray-900 dark:text-white"
+                            >
                                 {{ pendingRecordsCount }}
                             </h3>
                         </div>
                     </div>
                     <div class="mt-4">
-                        <div class="flex items-center text-sm text-yellow-600 dark:text-yellow-400">
-                            <v-icon name="bi-hourglass-split" class="w-4 h-4 mr-1" />
+                        <div
+                            class="flex items-center text-sm text-yellow-600 dark:text-yellow-400"
+                        >
+                            <v-icon
+                                name="bi-hourglass-split"
+                                class="w-4 h-4 mr-1"
+                            />
                             <span>{{ pendingPercentage }}% of total</span>
                         </div>
                     </div>
@@ -82,20 +113,31 @@
                 <!-- Overdue Records Card -->
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                     <div class="flex items-center">
-                        <div class="p-3 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400">
-                            <v-icon name="bi-exclamation-octagon" class="w-6 h-6" />
+                        <div
+                            class="p-3 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
+                        >
+                            <v-icon
+                                name="bi-exclamation-octagon"
+                                class="w-6 h-6"
+                            />
                         </div>
                         <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">
+                            <p
+                                class="text-sm font-medium text-gray-600 dark:text-gray-400"
+                            >
                                 Overdue Records
                             </p>
-                            <h3 class="text-2xl font-bold text-gray-900 dark:text-white">
+                            <h3
+                                class="text-2xl font-bold text-gray-900 dark:text-white"
+                            >
                                 {{ overdueRecordsCount }}
                             </h3>
                         </div>
                     </div>
                     <div class="mt-4">
-                        <div class="flex items-center text-sm text-red-600 dark:text-red-400">
+                        <div
+                            class="flex items-center text-sm text-red-600 dark:text-red-400"
+                        >
                             <v-icon name="bi-alarm" class="w-4 h-4 mr-1" />
                             <span>{{ overduePercentage }}% of total</span>
                         </div>
@@ -104,84 +146,155 @@
             </div>
 
             <!-- Header Section with Filters -->
-            <div class="relative bg-white shadow-md dark:bg-gray-800 sm:rounded-lg mb-6">
+            <div
+                class="relative bg-white shadow-md dark:bg-gray-800 sm:rounded-lg mb-6"
+            >
                 <div
-                    class="flex flex-col items-center justify-between p-4 space-y-3 md:flex-row md:space-y-0 md:space-x-4">
+                    class="flex flex-col items-center justify-between p-4 space-y-3 md:flex-row md:space-y-0 md:space-x-4"
+                >
                     <div class="w-full md:w-1/2">
                         <form class="flex items-center">
-                            <label for="simple-search" class="sr-only">Search</label>
+                            <label for="simple-search" class="sr-only"
+                                >Search</label
+                            >
                             <div class="relative w-full">
-                                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                    <v-icon name="hi-solid-search" class="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                                <div
+                                    class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
+                                >
+                                    <v-icon
+                                        name="hi-solid-search"
+                                        class="w-5 h-5 text-gray-500 dark:text-gray-400"
+                                    />
                                 </div>
-                                <input v-model="filters.search" type="text" id="simple-search"
+                                <input
+                                    v-model="filters.search"
+                                    type="text"
+                                    id="simple-search"
                                     class="block w-full p-2 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                                    placeholder="Search customers, account numbers..." @keyup.enter="getRecords" />
+                                    placeholder="Search customers, account numbers..."
+                                    @keyup.enter="getRecords"
+                                />
                             </div>
                         </form>
                     </div>
                     <div
-                        class="flex flex-col items-stretch justify-end flex-shrink-0 w-full space-y-2 md:w-auto md:flex-row md:space-y-0 md:items-center md:space-x-3">
-                        <div class="flex items-center w-full space-x-3 md:w-auto">
+                        class="flex flex-col items-stretch justify-end flex-shrink-0 w-full space-y-2 md:w-auto md:flex-row md:space-y-0 md:items-center md:space-x-3"
+                    >
+                        <div
+                            class="flex items-center w-full space-x-3 md:w-auto"
+                        >
                             <div class="relative">
-                                <button @click="
-                                    showFilterDropdown = !showFilterDropdown
+                                <button
+                                    @click="
+                                        showFilterDropdown = !showFilterDropdown
                                     "
                                     class="flex items-center justify-center w-full px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg md:w-auto focus:outline-none hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
-                                    type="button" :disabled="loading" aria-label="Status filter dropdown button">
-                                    <v-icon name="hi-solid-filter" class="w-4 h-4 mr-2 text-gray-400" />
+                                    type="button"
+                                    :disabled="loading"
+                                    aria-label="Status filter dropdown button"
+                                >
+                                    <v-icon
+                                        name="hi-solid-filter"
+                                        class="w-4 h-4 mr-2 text-gray-400"
+                                    />
                                     Status
-                                    <v-icon name="hi-chevron-down" class="-mr-1 ml-1.5 w-5 h-5" />
+                                    <v-icon
+                                        name="hi-chevron-down"
+                                        class="-mr-1 ml-1.5 w-5 h-5"
+                                    />
                                 </button>
 
                                 <!-- Status Filter Dropdown -->
-                                <div v-if="showFilterDropdown"
+                                <div
+                                    v-if="showFilterDropdown"
                                     class="absolute z-10 top-full right-0 mt-1 w-48 p-3 bg-white rounded-lg shadow dark:bg-gray-700"
-                                    aria-label="Status filter dropdown">
-                                    <h6 class="mb-3 text-sm font-medium text-gray-900 dark:text-white">
+                                    aria-label="Status filter dropdown"
+                                >
+                                    <h6
+                                        class="mb-3 text-sm font-medium text-gray-900 dark:text-white"
+                                    >
                                         Status
                                     </h6>
                                     <ul class="space-y-2 text-sm">
                                         <li class="flex items-center">
-                                            <input id="status-all" type="radio" name="status" value=""
-                                                :checked="!filters.status" @change="updateStatusFilter('')"
-                                                class="w-4 h-4 bg-gray-100 border-gray-300 rounded text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
-                                            <label for="status-all"
-                                                class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100">All
-                                                Status</label>
+                                            <input
+                                                id="status-all"
+                                                type="radio"
+                                                name="status"
+                                                value=""
+                                                :checked="!filters.status"
+                                                @change="updateStatusFilter('')"
+                                                class="w-4 h-4 bg-gray-100 border-gray-300 rounded text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
+                                            />
+                                            <label
+                                                for="status-all"
+                                                class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100"
+                                                >All Status</label
+                                            >
                                         </li>
                                         <li class="flex items-center">
-                                            <input id="status-paid" type="radio" name="status" value="Paid" :checked="filters.status === 'Paid'
-                                                " @change="
+                                            <input
+                                                id="status-paid"
+                                                type="radio"
+                                                name="status"
+                                                value="Paid"
+                                                :checked="
+                                                    filters.status === 'Paid'
+                                                "
+                                                @change="
                                                     updateStatusFilter('Paid')
-                                                    "
-                                                class="w-4 h-4 bg-gray-100 border-gray-300 rounded text-green-600 focus:ring-green-500 dark:focus:ring-green-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
-                                            <label for="status-paid"
-                                                class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100">Paid</label>
+                                                "
+                                                class="w-4 h-4 bg-gray-100 border-gray-300 rounded text-green-600 focus:ring-green-500 dark:focus:ring-green-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
+                                            />
+                                            <label
+                                                for="status-paid"
+                                                class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100"
+                                                >Paid</label
+                                            >
                                         </li>
                                         <li class="flex items-center">
-                                            <input id="status-pending" type="radio" name="status" value="Pending"
-                                                :checked="filters.status === 'Pending'
-                                                    " @change="
+                                            <input
+                                                id="status-pending"
+                                                type="radio"
+                                                name="status"
+                                                value="Pending"
+                                                :checked="
+                                                    filters.status === 'Pending'
+                                                "
+                                                @change="
                                                     updateStatusFilter(
                                                         'Pending'
                                                     )
-                                                    "
-                                                class="w-4 h-4 bg-gray-100 border-gray-300 rounded text-yellow-600 focus:ring-yellow-500 dark:focus:ring-yellow-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
-                                            <label for="status-pending"
-                                                class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100">Pending</label>
+                                                "
+                                                class="w-4 h-4 bg-gray-100 border-gray-300 rounded text-yellow-600 focus:ring-yellow-500 dark:focus:ring-yellow-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
+                                            />
+                                            <label
+                                                for="status-pending"
+                                                class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100"
+                                                >Pending</label
+                                            >
                                         </li>
                                         <li class="flex items-center">
-                                            <input id="status-overdue" type="radio" name="status" value="Overdue"
-                                                :checked="filters.status === 'Overdue'
-                                                    " @change="
+                                            <input
+                                                id="status-overdue"
+                                                type="radio"
+                                                name="status"
+                                                value="Overdue"
+                                                :checked="
+                                                    filters.status === 'Overdue'
+                                                "
+                                                @change="
                                                     updateStatusFilter(
                                                         'Overdue'
                                                     )
-                                                    "
-                                                class="w-4 h-4 bg-gray-100 border-gray-300 rounded text-red-600 focus:ring-red-500 dark:focus:ring-red-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
-                                            <label for="status-overdue"
-                                                class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100">Overdue</label>
+                                                "
+                                                class="w-4 h-4 bg-gray-100 border-gray-300 rounded text-red-600 focus:ring-red-500 dark:focus:ring-red-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
+                                            />
+                                            <label
+                                                for="status-overdue"
+                                                class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100"
+                                                >Overdue</label
+                                            >
                                         </li>
                                     </ul>
                                 </div>
@@ -189,47 +302,81 @@
 
                             <!-- Month and Year Filter -->
                             <div class="relative">
-                                <button @click="
-                                    showDateFilterDropdown =
-                                    !showDateFilterDropdown
+                                <button
+                                    @click="
+                                        showDateFilterDropdown =
+                                            !showDateFilterDropdown
                                     "
                                     class="flex items-center justify-center w-full px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg md:w-auto focus:outline-none hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
-                                    type="button" :disabled="loading" aria-label="Date filter dropdown button">
-                                    <v-icon name="hi-solid-calendar" class="w-4 h-4 mr-2 text-gray-400" />
+                                    type="button"
+                                    :disabled="loading"
+                                    aria-label="Date filter dropdown button"
+                                >
+                                    <v-icon
+                                        name="hi-solid-calendar"
+                                        class="w-4 h-4 mr-2 text-gray-400"
+                                    />
                                     Date
-                                    <v-icon name="hi-chevron-down" class="-mr-1 ml-1.5 w-5 h-5" />
+                                    <v-icon
+                                        name="hi-chevron-down"
+                                        class="-mr-1 ml-1.5 w-5 h-5"
+                                    />
                                 </button>
 
                                 <!-- Date Filter Dropdown -->
-                                <div v-if="showDateFilterDropdown"
+                                <div
+                                    v-if="showDateFilterDropdown"
                                     class="absolute z-10 top-full right-0 mt-1 w-64 p-3 bg-white rounded-lg shadow dark:bg-gray-700"
-                                    aria-label="Date filter dropdown">
-                                    <h6 class="mb-3 text-sm font-medium text-gray-900 dark:text-white">
+                                    aria-label="Date filter dropdown"
+                                >
+                                    <h6
+                                        class="mb-3 text-sm font-medium text-gray-900 dark:text-white"
+                                    >
                                         Filter by Month and Year
                                     </h6>
                                     <div class="grid grid-cols-2 gap-2">
                                         <div>
-                                            <label for="filter-month"
-                                                class="text-sm font-medium text-gray-900 dark:text-gray-100">Month</label>
-                                            <select id="filter-month" v-model="filters.month"
-                                                class="mt-1 w-full p-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                                            <label
+                                                for="filter-month"
+                                                class="text-sm font-medium text-gray-900 dark:text-gray-100"
+                                                >Month</label
+                                            >
+                                            <select
+                                                id="filter-month"
+                                                v-model="filters.month"
+                                                class="mt-1 w-full p-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                            >
                                                 <option value="">
                                                     All Months
                                                 </option>
-                                                <option v-for="month in months" :key="month.value" :value="month.value">
+                                                <option
+                                                    v-for="month in months"
+                                                    :key="month.value"
+                                                    :value="month.value"
+                                                >
                                                     {{ month.name }}
                                                 </option>
                                             </select>
                                         </div>
                                         <div>
-                                            <label for="filter-year"
-                                                class="text-sm font-medium text-gray-900 dark:text-gray-100">Year</label>
-                                            <select id="filter-year" v-model="filters.year"
-                                                class="mt-1 w-full p-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                                            <label
+                                                for="filter-year"
+                                                class="text-sm font-medium text-gray-900 dark:text-gray-100"
+                                                >Year</label
+                                            >
+                                            <select
+                                                id="filter-year"
+                                                v-model="filters.year"
+                                                class="mt-1 w-full p-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                            >
                                                 <option value="">
                                                     All Years
                                                 </option>
-                                                <option v-for="year in years" :key="year" :value="year">
+                                                <option
+                                                    v-for="year in years"
+                                                    :key="year"
+                                                    :value="year"
+                                                >
                                                     {{ year }}
                                                 </option>
                                             </select>
@@ -238,11 +385,16 @@
                                 </div>
                             </div>
 
-                            <button @click="resetFilters"
+                            <button
+                                @click="resetFilters"
                                 class="flex items-center justify-center w-full px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg md:w-auto focus:outline-none hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
-                                :disabled="loading">
-                                <v-icon name="hi-refresh" class="w-4 h-4 mr-1"
-                                    :class="{ 'animate-spin': isResetting }" />
+                                :disabled="loading"
+                            >
+                                <v-icon
+                                    name="hi-refresh"
+                                    class="w-4 h-4 mr-1"
+                                    :class="{ 'animate-spin': isResetting }"
+                                />
                                 Reset Filters
                             </button>
                         </div>
@@ -251,74 +403,133 @@
             </div>
 
             <!-- Loading indicator -->
-            <div v-if="loading"
-                class="mb-4 p-3 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg flex items-center">
-                <div class="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-3"></div>
-                <span class="text-blue-700 dark:text-blue-300 text-sm">Loading records...</span>
+            <div
+                v-if="loading"
+                class="mb-4 p-3 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg flex items-center"
+            >
+                <div
+                    class="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-3"
+                ></div>
+                <span class="text-blue-700 dark:text-blue-300 text-sm"
+                    >Loading records...</span
+                >
             </div>
 
             <!-- Table Section -->
             <div class="relative overflow-x-auto mb-4 shadow-md sm:rounded-lg">
-                <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400"
-                    :class="{ 'opacity-70': loading }">
-                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                <table
+                    class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400"
+                    :class="{ 'opacity-70': loading }"
+                >
+                    <thead
+                        class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400"
+                    >
                         <tr>
                             <th scope="col" class="px-6 py-3">Account No.</th>
-                            <th scope="col" class="px-6 py-3 cursor-pointer" @click="sort('name')">
+                            <th
+                                scope="col"
+                                class="px-6 py-3 cursor-pointer"
+                                @click="sort('name')"
+                            >
                                 <div class="flex items-center">
                                     Customer
-                                    <SortIndicator :field="'name'" :current-field="sortField"
-                                        :direction="sortDirection" />
+                                    <SortIndicator
+                                        :field="'name'"
+                                        :current-field="sortField"
+                                        :direction="sortDirection"
+                                    />
                                 </div>
                             </th>
                             <th scope="col" class="px-6 py-3">Serial No.</th>
-                            <th scope="col" class="px-6 py-3 cursor-pointer" @click="sort('reading')">
+                            <th
+                                scope="col"
+                                class="px-6 py-3 cursor-pointer"
+                                @click="sort('reading')"
+                            >
                                 <div class="flex items-center">
                                     Last Reading
-                                    <SortIndicator :field="'reading'" :current-field="sortField"
-                                        :direction="sortDirection" />
+                                    <SortIndicator
+                                        :field="'reading'"
+                                        :current-field="sortField"
+                                        :direction="sortDirection"
+                                    />
                                 </div>
                             </th>
-                            <th scope="col" class="px-6 py-3 cursor-pointer" @click="sort('consumption')">
+                            <th
+                                scope="col"
+                                class="px-6 py-3 cursor-pointer"
+                                @click="sort('consumption')"
+                            >
                                 <div class="flex items-center">
                                     Consumption
-                                    <SortIndicator :field="'consumption'" :current-field="sortField"
-                                        :direction="sortDirection" />
+                                    <SortIndicator
+                                        :field="'consumption'"
+                                        :current-field="sortField"
+                                        :direction="sortDirection"
+                                    />
                                 </div>
                             </th>
-                            <th scope="col" class="px-6 py-3 cursor-pointer" @click="sort('amount')">
+                            <th
+                                scope="col"
+                                class="px-6 py-3 cursor-pointer"
+                                @click="sort('amount')"
+                            >
                                 <div class="flex items-center">
                                     Amount
-                                    <SortIndicator :field="'amount'" :current-field="sortField"
-                                        :direction="sortDirection" />
+                                    <SortIndicator
+                                        :field="'amount'"
+                                        :current-field="sortField"
+                                        :direction="sortDirection"
+                                    />
                                 </div>
                             </th>
-                            <th scope="col" class="px-6 py-3 cursor-pointer" @click="sort('due_date')">
+                            <th
+                                scope="col"
+                                class="px-6 py-3 cursor-pointer"
+                                @click="sort('due_date')"
+                            >
                                 <div class="flex items-center">
                                     Due Date
-                                    <SortIndicator :field="'due_date'" :current-field="sortField"
-                                        :direction="sortDirection" />
+                                    <SortIndicator
+                                        :field="'due_date'"
+                                        :current-field="sortField"
+                                        :direction="sortDirection"
+                                    />
                                 </div>
                             </th>
-                            <th scope="col" class="px-6 py-3 cursor-pointer" @click="sort('status')">
+                            <th
+                                scope="col"
+                                class="px-6 py-3 cursor-pointer"
+                                @click="sort('status')"
+                            >
                                 <div class="flex items-center">
                                     Status
-                                    <SortIndicator :field="'status'" :current-field="sortField"
-                                        :direction="sortDirection" />
+                                    <SortIndicator
+                                        :field="'status'"
+                                        :current-field="sortField"
+                                        :direction="sortDirection"
+                                    />
                                 </div>
                             </th>
                             <th scope="col" class="px-6 py-3">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="record in records.data" :key="record.id"
+                        <tr
+                            v-for="record in records.data"
+                            :key="record.id"
                             class="border-b dark:border-gray-700 border-gray-200"
-                            :class="getStatusRowClass(record.status)">
-                            <th scope="row"
-                                class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                            :class="getStatusRowClass(record.status)"
+                        >
+                            <th
+                                scope="row"
+                                class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"
+                            >
                                 {{ record.user.account_number }}
                             </th>
-                            <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">
+                            <td
+                                class="px-6 py-4 font-medium text-gray-900 dark:text-white"
+                            >
                                 {{ record.user.name }}
                                 {{ record.user.lastname }}
                             </td>
@@ -330,54 +541,107 @@
                                 {{ record.consumption }} m³
                             </td>
                             <td class="px-6 py-4">
-                                ₱{{ record.amount }}
-                                <span v-if="record.surcharge && record.status !== 'Paid'"
-                                    class="text-xs text-red-600 dark:text-red-400">
-                                    (+₱{{ record.surcharge }} surcharge)
-                                </span>
+                                <!-- For Paid records, just show the final amount -->
+                                <div v-if="record.status === 'Paid'">
+                                    <span class="font-semibold text-green-600 dark:text-green-400">
+                                        ₱{{ record.amount }}
+                                    </span>
+                                    <div v-if="record.surcharge" class="text-xs text-gray-500 dark:text-gray-400">
+                                        (includes ₱{{ record.surcharge }} surcharge)
+                                    </div>
+                                </div>
+
+                                <!-- For Overdue records with surcharge -->
+                                <div v-else-if="record.surcharge">
+                                    <span class="line-through text-gray-400 text-sm">
+                                        ₱{{ (record.amount - record.surcharge).toFixed(2) }}
+                                    </span>
+                                    <br>
+                                    <span class="text-red-600 dark:text-red-400 font-semibold">
+                                        ₱{{ record.amount }}
+                                    </span>
+                                    <div class="text-xs text-red-600 dark:text-red-400">
+                                        (+₱{{ record.surcharge }} surcharge)
+                                    </div>
+                                </div>
+
+                                <!-- For Pending records without surcharge -->
+                                <div v-else>
+                                    ₱{{ record.amount }}
+                                </div>
                             </td>
                             <td class="px-6 py-4">
                                 {{ formatDate(record.due_date) }}
                             </td>
                             <td class="px-6 py-4">
-                                <span :class="statusClasses(record.status)"
-                                    class="inline-flex items-center text-xs px-2 py-1 rounded-full">
-                                    <v-icon :name="getStatusIcon(record.status)" class="w-3 h-3 mr-1" />
+                                <span
+                                    :class="statusClasses(record.status)"
+                                    class="inline-flex items-center text-xs px-2 py-1 rounded-full"
+                                >
+                                    <v-icon
+                                        :name="getStatusIcon(record.status)"
+                                        class="w-3 h-3 mr-1"
+                                    />
                                     {{ record.status }}
                                 </span>
                             </td>
                             <td class="px-6 py-4">
                                 <div class="flex space-x-3">
-                                    <button @click="showRecordDetails(record)"
-                                        class="text-blue-600 hover:text-blue-800 transition-colors" title="View"
-                                        :disabled="loading">
+                                    <button
+                                        @click="showRecordDetails(record)"
+                                        class="text-blue-600 hover:text-blue-800 transition-colors"
+                                        title="View"
+                                        :disabled="loading"
+                                    >
                                         <v-icon name="hi-eye" class="w-5 h-5" />
                                     </button>
-                                    <button @click="showEditModal(record)"
-                                        class="text-yellow-500 hover:text-yellow-700 transition-colors" title="Edit"
-                                        :disabled="loading">
-                                        <v-icon name="hi-pencil" class="w-5 h-5" />
+                                    <button
+                                        @click="showEditModal(record)"
+                                        class="text-yellow-500 hover:text-yellow-700 transition-colors"
+                                        title="Edit"
+                                        :disabled="loading"
+                                    >
+                                        <v-icon
+                                            name="hi-pencil"
+                                            class="w-5 h-5"
+                                        />
                                     </button>
                                 </div>
                             </td>
                         </tr>
                         <tr v-if="records.data.length === 0 && !loading">
-                            <td colspan="9" class="px-6 py-8 text-center text-sm text-gray-500">
-                                <div class="flex flex-col items-center justify-center space-y-2">
-                                    <v-icon name="bi-clipboard-data" class="w-10 h-10 text-gray-300 mb-2" />
-                                    <span class="font-semibold text-gray-400">No records found</span>
-                                    <span class="text-xs text-gray-300">Try adjusting your filters or search
-                                        keywords.</span>
+                            <td
+                                colspan="9"
+                                class="px-6 py-8 text-center text-sm text-gray-500"
+                            >
+                                <div
+                                    class="flex flex-col items-center justify-center space-y-2"
+                                >
+                                    <v-icon
+                                        name="bi-clipboard-data"
+                                        class="w-10 h-10 text-gray-300 mb-2"
+                                    />
+                                    <span class="font-semibold text-gray-400"
+                                        >No records found</span
+                                    >
+                                    <span class="text-xs text-gray-300"
+                                        >Try adjusting your filters or search
+                                        keywords.</span
+                                    >
                                 </div>
                             </td>
                         </tr>
                         <tr v-else-if="loading && records.data.length > 0">
                             <td colspan="9" class="px-6 py-4 text-center">
-                                <div class="flex justify-center items-center py-2">
+                                <div
+                                    class="flex justify-center items-center py-2"
+                                >
                                     <div
-                                        class="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-2">
-                                    </div>
-                                    <span class="text-sm text-gray-500">Updating records...</span>
+                                        class="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-2"
+                                    ></div>
+                                    <span class="text-sm text-gray-500"
+                                        >Updating records...</span
+                                    >
                                 </div>
                             </td>
                         </tr>
@@ -385,14 +649,27 @@
                 </table>
             </div>
 
-            <RecordDetailsModal :show="showRecordModal" :record="selectedRecord" :loading="loadingRecord"
-                @close="closeRecordModal" />
+            <RecordDetailsModal
+                :show="showRecordModal"
+                :record="selectedRecord"
+                :loading="loadingRecord"
+                @close="closeRecordModal"
+            />
 
-            <RecordEditModal :show="showEditRecordModal" :record="selectedRecord" :loading="loadingRecord"
-                @close="closeEditModal" @saved="handleRecordUpdated" />
+            <RecordEditModal
+                :show="showEditRecordModal"
+                :record="selectedRecord"
+                :loading="loadingRecord"
+                @close="closeEditModal"
+                @saved="handleRecordUpdated"
+            />
 
-            <Pagination v-if="records.data && records.data.length > 0" :items="records" item-name="records"
-                class="mt-6" />
+            <Pagination
+                v-if="records.data && records.data.length > 0"
+                :items="records"
+                item-name="records"
+                class="mt-6"
+            />
         </div>
     </AdminLayout>
 </template>
@@ -636,8 +913,8 @@ const getStatusRowClass = (status) => {
     return status === "Paid"
         ? "bg-green-50 dark:bg-gray-900"
         : status === "Pending"
-            ? "bg-yellow-50 dark:bg-yellow-900/20"
-            : "bg-red-50 dark:bg-red-900/20";
+        ? "bg-yellow-50 dark:bg-yellow-900/20"
+        : "bg-red-50 dark:bg-red-900/20";
 };
 
 // Sort functionality
@@ -727,7 +1004,7 @@ const updateStatus = (record) => {
                     onError: (errors) => {
                         Swal.showValidationMessage(
                             errors.message ||
-                            "Failed to update status. Please try again."
+                                "Failed to update status. Please try again."
                         );
                     },
                 }
@@ -760,7 +1037,7 @@ const confirmDelete = (record) => {
                 onError: (errors) => {
                     Swal.showValidationMessage(
                         errors.message ||
-                        "Failed to delete record. Please try again."
+                            "Failed to delete record. Please try again."
                     );
                 },
             });

@@ -2,7 +2,7 @@
 <template>
     <aside
         :class="[
-            'fixed top-0 left-0 z-50 h-screen bg-gradient-to-b from-[#062F64] to-indigo-900 border-r shadow-lg dark:bg-gradient-to-b dark:from-gray-800 dark:to-gray-700 dark:border-gray-700 transition-all duration-300 ease-in-out',
+            'fixed top-0 left-0 z-50 h-screen bg-[#062F64] border-r shadow-lg dark:bg-gradient-to-b dark:from-gray-800 dark:to-gray-700 dark:border-gray-700 transition-all duration-300 ease-in-out',
             isOpen ? 'w-[260px]' : 'w-[70px]',
             isMobileMenuOpen
                 ? 'translate-x-0'

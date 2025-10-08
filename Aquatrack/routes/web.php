@@ -68,6 +68,11 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::delete('/admin/reports/{report}', [ReportController::class, 'destroy'])->name('admin.reports.destroy');
     Route::post('/admin/reports/{report}/update-status', [ReportController::class, 'updateStatus'])->name('admin.reports.updateStatus');
 
+    Route::get('/admin/records/update-overdue', [AdminRecordController::class, 'manualUpdateOverdue'])
+        ->name('admin.records.update-overdue');
+    Route::get('/admin/records/force-fix-due-dates', [AdminRecordController::class, 'forceFixDueDates'])
+        ->name('admin.records.force-fix-due-dates');
+
     Route::get('/admin/records/{record}/details', [AdminRecordController::class, 'details'])->name('admin.records.details');
     Route::get('/admin/users', [AdminUsersController::class, 'index'])->name('admin.users');
     Route::post('/admin/users', [AdminUsersController::class, 'store'])->name('admin.users.store');
@@ -96,14 +101,11 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/activity-logs', [AdminActivityLogController::class, 'index'])->name('admin.activity-logs');
     Route::get('/activity-logs/export', [AdminActivityLogController::class, 'export'])->name('admin.activity-logs.export');
 
-    Route::get('/admin/notifications', function () {
-        return Inertia::render('Admin/Notifications', [
-            'notifications' => app(NotificationController::class)->index(request())->getData(true)['notifications'] ?? [],
-        ]);
-    })->name('admin.notifications');
+    Route::get('/admin/notifications', [NotificationController::class, 'adminIndex'])->name('admin.notifications');
 
     Route::post('/notifications/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
     Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    Route::get('/notifications', [NotificationController::class, 'index']);
 });
 
 // Staff Routes
@@ -119,16 +121,13 @@ Route::middleware(['auth', 'role:staff'])->group(function () {
     Route::post('/staff/reading', [StaffReadingController::class, 'storeReading'])->name('staff.reading.store');
     Route::put('/staff/reading/{readingId}/update', [StaffReadingController::class, 'updateReading'])->name('staff.reading.update');
 
-    Route::get('/staff/notifications', function () {
-        return Inertia::render('Staff/Notifications', [
-            'notifications' => app(NotificationController::class)->index(request())->getData(true)['notifications'] ?? [],
-        ]);
-    })->name('staff.notifications');
+    Route::get('/staff/notifications', [NotificationController::class, 'staffIndex'])->name('staff.notifications');
 });
 
 // routes/web.php or routes/api.php
 Route::get('/staff/readings/{userId}/previous', [StaffReadingController::class, 'getPreviousReadings']);
 
+// Customer Routes
 // Customer Routes
 Route::middleware(['auth', 'role:customer'])->group(function () {
     Route::get('/customer/dashboard', [CustomerDashboardController::class, 'index'])->name('customer.dashboard');
@@ -138,12 +137,11 @@ Route::middleware(['auth', 'role:customer'])->group(function () {
         ->name('customer.reports');
     Route::get('/customer/announcements', [CustomerAnnouncementsController::class, 'index'])->name('customer.announcements');
 
-    Route::get('/customer/notifications', function () {
-        return Inertia::render('Customer/Notifications', [
-            'notifications' => app(NotificationController::class)->index(request())->getData(true)['notifications'] ?? [],
-        ]);
-    })->name('customer.notifications');
+    // ✅ This is the correct route for customer notifications page
+    Route::get('/customer/notifications', [NotificationController::class, 'customerIndex'])->name('customer.notifications');
 });
+
+
 
 Route::post('/reports/sync-offline', [ReportController::class, 'syncOfflineReports'])->name('reports.sync-offline');
 
@@ -151,13 +149,24 @@ Route::post('/reports/sync-offline', [ReportController::class, 'syncOfflineRepor
 Route::get('/select-roles', [SelectRolesController::class, 'index'])->name('select-roles');
 
 // Notification Routes
+// Add this to your web.php routes
 Route::middleware('auth')->group(function () {
-    Route::get('/api/notifications', [NotificationController::class, 'index']);
-    Route::post('/api/notifications/mark-read', [NotificationController::class, 'markAsRead']);
-    Route::post('/api/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
-    Route::get('/api/notifications/unread-count', [NotificationController::class, 'getUnreadCount']);
-    // Add the delete notification route
-    Route::delete('/api/notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
+    // API route for modal notifications
+    Route::get('/api/notifications', [NotificationController::class, 'getNotificationsApi'])
+        ->name('api.notifications');
+
+    // Your existing notification routes...
+    // Route::get('/customer/notifications', [NotificationController::class, 'index'])
+    //     ->name('customer.notifications');
+
+    Route::put('/customer/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])
+        ->name('customer.notifications.read');
+
+    Route::put('/customer/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])
+        ->name('customer.notifications.mark-all-read');
+
+    Route::delete('/customer/notifications/{notification}', [NotificationController::class, 'destroy'])
+        ->name('customer.notifications.destroy');
 });
 
 // Report Routes (Public and Authenticated)

@@ -1,5 +1,4 @@
 <?php
-// app/Http/Controllers/NotificationController.php
 
 namespace App\Http\Controllers;
 
@@ -8,61 +7,364 @@ use App\Models\Report;
 use App\Models\Announcements;
 use App\Models\DismissedNotification;
 use App\Models\User;
+use App\Models\MeterReading;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
+use Inertia\Inertia;
 
 class NotificationController extends Controller
 {
     /**
-     * Get notifications for the authenticated user
+     * Get notifications for admin users (Inertia response)
+     */
+    public function adminIndex(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user || !$user->hasRole('admin')) {
+            return redirect()->route('login');
+        }
+
+        $notifications = $this->getAdminNotifications();
+
+        $notifications = $notifications->sortByDesc(function ($item) {
+            return $item['created_at'] ?? $item['updated_at'] ?? now();
+        })->values();
+
+        // Debug log
+        Log::info('Admin notifications sent to page', [
+            'count' => $notifications->count(),
+            'user_id' => $user->id
+        ]);
+
+        return Inertia::render('Admin/Notifications', [
+            'notifications' => $notifications,
+            'filters' => $request->only(['search', 'sort', 'order']),
+        ]);
+    }
+
+    /**
+     * Get notifications for staff users (Inertia response)
+     */
+    public function staffIndex(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user || !$user->hasRole('staff')) {
+            return redirect()->route('login');
+        }
+
+        $notifications = $this->getStaffNotifications();
+
+        $notifications = $notifications->sortByDesc(function ($item) {
+            return $item['created_at'] ?? $item['updated_at'] ?? now();
+        })->values();
+
+        // Debug log
+        Log::info('Staff notifications sent to page', [
+            'count' => $notifications->count(),
+            'user_id' => $user->id
+        ]);
+
+        return Inertia::render('Staff/Notifications', [
+            'notifications' => $notifications,
+            'filters' => $request->only(['search', 'sort', 'order']),
+        ]);
+    }
+
+    /**
+     * Get notifications for customer users (Inertia response)
+     */
+    public function customerIndex(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user || $user->role !== 'customer') {
+            return redirect()->route('login');
+        }
+
+        Log::info('Fetching customer notifications for page', ['user_id' => $user->id]);
+
+        $notifications = collect();
+        try {
+            $notifications = $this->getCustomerNotifications();
+        } catch (\Exception $e) {
+            Log::error('Error fetching customer notifications: ' . $e->getMessage());
+            $notifications = collect();
+        }
+
+        $notifications = $notifications->sortByDesc(function ($item) {
+            return $item['created_at'] ?? $item['updated_at'] ?? now();
+        })->values();
+
+        // Debug log - check what's being sent
+        Log::info('Customer notifications sent to page', [
+            'count' => $notifications->count(),
+            'user_id' => $user->id,
+            'sample_notifications' => $notifications->take(3)->toArray()
+        ]);
+
+        return Inertia::render('Customer/Notifications', [
+            'notifications' => $notifications,
+            'filters' => $request->only(['search', 'sort', 'order']),
+        ]);
+    }
+
+    /**
+     * Get notifications for API calls (JSON response only)
      */
     public function index(Request $request)
     {
         $user = Auth::user();
-        if (!$user || !$user->role) {
-            Log::error('User missing or invalid role', ['user_id' => Auth::id()]);
-            return response()->json(['success' => false, 'message' => 'Invalid user role'], 400);
+        if (!$user) {
+            return response()->json(['notifications' => []]);
         }
 
-        Log::info('Fetching notifications for user', ['user_id' => $user->id, 'role' => $user->role]);
+        Log::info('Fetching API notifications for user', ['user_id' => $user->id, 'role' => $user->role]);
 
         $notifications = collect();
         try {
             switch ($user->role) {
                 case 'admin':
-                    Log::info('Calling getAdminNotifications');
                     $notifications = $this->getAdminNotifications();
                     break;
                 case 'staff':
-                    Log::info('Calling getStaffNotifications');
                     $notifications = $this->getStaffNotifications();
                     break;
                 default:
-                    Log::info('Calling getCustomerNotifications');
                     $notifications = $this->getCustomerNotifications();
             }
         } catch (\Exception $e) {
-            Log::error('Error fetching notifications: ' . $e->getMessage(), [
-                'user_id' => Auth::id(),
-                'stack_trace' => $e->getTraceAsString()
-            ]);
-            return response()->json(['success' => false, 'message' => 'Internal server error'], 500);
+            Log::error('Error fetching API notifications: ' . $e->getMessage());
+            $notifications = collect();
         }
 
-        Log::info('Notifications fetched', ['count' => $notifications->count()]);
+        Log::info('API Notifications fetched', ['count' => $notifications->count()]);
 
-        $notifications = $notifications->sortByDesc(function ($item) {
-            return $item['created_at'] ?? $item['updated_at'] ?? now();
-        })->take(50)->values();
+        // Convert to array format expected by the modal
+        $formattedNotifications = $notifications->map(function ($notification) {
+            return [
+                'id' => $notification['id'],
+                'type' => $notification['type'],
+                'title' => $notification['title'] ?? $this->getDefaultTitle($notification['type']),
+                'message' => $notification['message'],
+                'due_date' => $notification['due_date'] ?? null,
+                'created_at' => $notification['created_at'],
+                'unread' => $notification['unread'] ?? true,
+                'important' => $notification['important'] ?? false,
+                'action_url' => $notification['action_url'] ?? $this->getDefaultActionUrl($notification['type']),
+            ];
+        })->values()->toArray();
 
         return response()->json([
-            'success' => true,
-            'notifications' => $notifications,
-            'unread_count' => $notifications->where('unread', true)->count()
+            'notifications' => $formattedNotifications,
+            'unread_count' => collect($formattedNotifications)->where('unread', true)->count()
         ]);
+    }
+
+    /**
+     * Improved getCustomerNotifications method with better debugging
+     */
+    private function getCustomerNotifications()
+    {
+        $notifications = collect();
+        $user = Auth::user();
+
+        Log::info('Getting customer notifications for user: ' . $user->id);
+
+        // 1. Report status updates
+        $userReports = Report::where('user_id', $user->id)
+            ->where('updated_at', '>=', now()->subDays(7))
+            ->latest('updated_at')
+            ->get();
+
+        Log::info('Customer reports found: ' . $userReports->count());
+
+        foreach ($userReports as $report) {
+            $notification = [
+                'id' => 'report_status_' . $report->id . '_' . $report->updated_at->timestamp,
+                'type' => 'info',
+                'title' => 'Report Status Updated',
+                'message' => "Your report #{$report->tracking_code} status has been updated to: " . ucfirst($report->status),
+                'action_url' => '/customer/reports',
+                'unread' => !$report->viewed_by_user,
+                'created_at' => $report->updated_at->toISOString(),
+                'important' => true
+            ];
+            $notifications->push($notification);
+            Log::info('Added report notification', $notification);
+        }
+
+        // 2. Bill amount updates
+        $updatedBills = MeterReading::where('user_id', $user->id)
+            ->where('updated_at', '>=', now()->subDays(7))
+            ->latest('updated_at')
+            ->get();
+
+        Log::info('Customer bill updates found: ' . $updatedBills->count());
+
+        foreach ($updatedBills as $bill) {
+            $notification = [
+                'id' => 'bill_updated_' . $bill->id . '_' . $bill->updated_at->timestamp,
+                'type' => 'alert',
+                'title' => 'Bill Amount Updated',
+                'message' => "Your bill for {$bill->billing_month} has been updated. New amount: ₱" . number_format($bill->amount, 2),
+                'action_url' => '/customer/usage',
+                'unread' => (bool) $bill->amount_updated,
+                'created_at' => $bill->updated_at->toISOString(),
+                'important' => true
+            ];
+            $notifications->push($notification);
+        }
+
+        // 3. Staff viewed water consumption
+        $staffViewedReadings = MeterReading::where('user_id', $user->id)
+            ->where('staff_viewed_at', '>=', now()->subDays(7))
+            ->latest('staff_viewed_at')
+            ->get();
+
+        Log::info('Staff viewed readings found: ' . $staffViewedReadings->count());
+
+        foreach ($staffViewedReadings as $reading) {
+            $notification = [
+                'id' => 'staff_viewed_' . $reading->id . '_' . $reading->staff_viewed_at->timestamp,
+                'type' => 'info',
+                'title' => 'Water Consumption Reviewed',
+                'message' => "Your water consumption for {$reading->billing_month} has been reviewed by our staff",
+                'action_url' => '/customer/usage',
+                'unread' => (bool) $reading->viewed_by_staff,
+                'created_at' => $reading->staff_viewed_at->toISOString(),
+                'important' => false
+            ];
+            $notifications->push($notification);
+        }
+
+        // 4. Regular bill notifications (overdue, due soon, etc.)
+        $billNotifications = $this->getBillNotifications();
+        Log::info('Bill notifications found: ' . $billNotifications->count());
+        $notifications = $notifications->merge($billNotifications);
+
+        // 5. Customer announcements
+        $announcements = Announcements::where('active', true)
+            ->where(function ($query) {
+                $query->where('target_audience', 'customer')
+                    ->orWhere('target_audience', 'all');
+            })
+            ->latest()
+            ->get();
+
+        Log::info('Customer announcements found: ' . $announcements->count());
+
+        foreach ($announcements as $announcement) {
+            $message = $announcement->content ?? $announcement->message ?? $announcement->description ?? 'No content available';
+
+            $notification = [
+                'id' => 'announcement_' . $announcement->id,
+                'type' => 'info',
+                'title' => $announcement->title ?? 'Announcement',
+                'message' => $message,
+                'action_url' => '/customer/announcements',
+                'unread' => !$this->isAnnouncementRead($announcement->id),
+                'created_at' => $announcement->created_at ? $announcement->created_at->toISOString() : now()->toISOString(),
+                'important' => false
+            ];
+            $notifications->push($notification);
+        }
+
+        Log::info('Final customer notifications count', [
+            'total' => $notifications->count(),
+            'unread' => $notifications->where('unread', true)->count(),
+            'types' => $notifications->groupBy('type')->map->count()
+        ]);
+
+        return $notifications;
+    }
+
+
+    /**
+     * Get bill-related notifications for customers
+     */
+    private function getBillNotifications()
+    {
+        $notifications = collect();
+        $user = Auth::user();
+
+        // Only for customers
+        if ($user->role !== 'customer') {
+            return $notifications;
+        }
+
+        $today = now();
+
+        // Get user's unpaid meter readings
+        $meterReadings = MeterReading::where('user_id', $user->id)
+            ->where(function ($query) {
+                $query->where('status', 'Pending')
+                    ->orWhere('status', 'Overdue');
+            })
+            ->whereNotNull('due_date')
+            ->get();
+
+        foreach ($meterReadings as $reading) {
+            $dueDate = Carbon::parse($reading->due_date);
+            $daysUntilDue = $today->diffInDays($dueDate, false);
+
+            // Overdue notification
+            if ($daysUntilDue < 0) {
+                $overdueDays = abs($daysUntilDue);
+                $notifications->push([
+                    'id' => 'overdue_bill_' . $reading->id,
+                    'type' => 'alert',
+                    'title' => 'Bill Overdue',
+                    'message' => "🚨 Your bill for {$reading->billing_month} is {$overdueDays} day(s) overdue. Amount: ₱" . number_format($reading->amount, 2),
+                    'action_url' => '/customer/usage',
+                    'unread' => !$this->isNotificationDismissed('overdue_bill_' . $reading->id),
+                    'created_at' => $today->toISOString(),
+                    'important' => true
+                ]);
+            }
+            // Due in 5 days notification
+            elseif ($daysUntilDue <= 5 && $daysUntilDue > 2) {
+                $notifications->push([
+                    'id' => 'due_soon_' . $reading->id,
+                    'type' => 'reminder',
+                    'title' => 'Bill Due Soon',
+                    'message' => "📅 Reminder: Your bill for {$reading->billing_month} is due in {$daysUntilDue} days. Amount: ₱" . number_format($reading->amount, 2),
+                    'action_url' => '/customer/usage',
+                    'unread' => !$this->isNotificationDismissed('due_soon_' . $reading->id),
+                    'created_at' => $today->toISOString(),
+                    'important' => true
+                ]);
+            }
+            // Final reminder
+            elseif ($daysUntilDue <= 2 && $daysUntilDue > 0) {
+                $notifications->push([
+                    'id' => 'final_reminder_' . $reading->id,
+                    'type' => 'reminder',
+                    'title' => 'Final Reminder',
+                    'message' => "⏰ Final reminder: Your bill for {$reading->billing_month} is due in {$daysUntilDue} days. Amount: ₱" . number_format($reading->amount, 2),
+                    'action_url' => '/customer/usage',
+                    'unread' => !$this->isNotificationDismissed('final_reminder_' . $reading->id),
+                    'created_at' => $today->toISOString(),
+                    'important' => true
+                ]);
+            }
+            // Due today notification
+            elseif ($daysUntilDue === 0) {
+                $notifications->push([
+                    'id' => 'due_today_' . $reading->id,
+                    'type' => 'alert',
+                    'title' => 'Bill Due Today',
+                    'message' => "⚠️ Your bill for {$reading->billing_month} is due today! Amount: ₱" . number_format($reading->amount, 2),
+                    'action_url' => '/customer/usage',
+                    'unread' => !$this->isNotificationDismissed('due_today_' . $reading->id),
+                    'created_at' => $today->toISOString(),
+                    'important' => true
+                ]);
+            }
+        }
+
+        return $notifications;
     }
 
     /**
@@ -72,7 +374,7 @@ class NotificationController extends Controller
     {
         $notifications = collect();
 
-        // New reports from customers/guests (last 7 days)
+        // New reports from customers/guests
         $newReports = Report::with('user')
             ->where('created_at', '>=', now()->subDays(7))
             ->where('status', 'pending')
@@ -82,41 +384,13 @@ class NotificationController extends Controller
         foreach ($newReports as $report) {
             $notifications->push([
                 'id' => 'new_report_' . $report->id,
-                'type' => 'new_report',
-                'user_name' => $report->user ? $report->user->name : ($report->reporter_name ?? 'Guest User'),
-                'user_avatar' => $report->user ? $report->user->avatar_url : null,
-                'tracking_code' => $report->tracking_code ?? 'N/A',
-                'barangay' => $report->barangay ?? 'Unknown',
-                'municipality' => $report->municipality ?? 'Unknown',
-                'status' => $report->status ?? 'pending',
-                'report_id' => $report->id,
+                'type' => 'info',
+                'title' => 'New Report Submitted',
+                'message' => "New water quality report from " . ($report->user ? $report->user->name : ($report->reporter_name ?? 'Guest User')),
+                'action_url' => '/admin/reports',
                 'unread' => !($report->viewed_by_admin ?? false),
                 'created_at' => $report->created_at ? $report->created_at->toISOString() : now()->toISOString(),
-                'message' => "New water quality report submitted"
-            ]);
-        }
-
-        // Recent report updates (last 3 days)
-        $updatedReports = Report::with('user')
-            ->where('updated_at', '>=', now()->subDays(3))
-            ->where('updated_at', '!=', DB::raw('created_at'))
-            ->latest('updated_at')
-            ->get();
-
-        foreach ($updatedReports as $report) {
-            $notifications->push([
-                'id' => 'report_update_' . $report->id,
-                'type' => 'report_update',
-                'user_name' => $report->user ? $report->user->name : ($report->reporter_name ?? 'System'),
-                'user_avatar' => $report->user ? $report->user->avatar_url : null,
-                'tracking_code' => $report->tracking_code ?? 'N/A',
-                'barangay' => $report->barangay ?? 'Unknown',
-                'municipality' => $report->municipality ?? 'Unknown',
-                'status' => $report->status ?? 'unknown',
-                'report_id' => $report->id,
-                'unread' => !($report->update_viewed_by_admin ?? false),
-                'updated_at' => $report->updated_at ? $report->updated_at->toISOString() : now()->toISOString(),
-                'message' => "Report status updated"
+                'important' => true
             ]);
         }
 
@@ -131,24 +405,21 @@ class NotificationController extends Controller
                 $query->whereNull('end_date')
                     ->orWhere('end_date', '>=', now());
             })
-            ->where('created_at', '>=', now()->subDays(30))
             ->latest()
             ->get();
 
         foreach ($announcements as $announcement) {
             $notifications->push([
                 'id' => 'announcement_' . $announcement->id,
-                'type' => 'announcement',
-                'title' => $announcement->title ?? 'Untitled',
-                'message' => $announcement->content ?? 'No content', // Use content instead of message
+                'type' => 'info',
+                'title' => $announcement->title ?? 'Announcement',
+                'message' => $announcement->content ?? 'No content',
+                'action_url' => '/admin/announcements',
                 'unread' => !$this->isAnnouncementRead($announcement->id),
-                'created_at' => $announcement->created_at ? $announcement->created_at->toISOString() : now()->toISOString()
+                'created_at' => $announcement->created_at ? $announcement->created_at->toISOString() : now()->toISOString(),
+                'important' => false
             ]);
         }
-
-        $notifications = $notifications->filter(function ($notification) {
-            return !$this->isNotificationDismissed($notification['id']);
-        });
 
         return $notifications;
     }
@@ -162,7 +433,7 @@ class NotificationController extends Controller
         $user = Auth::user();
 
         // Assigned reports
-        $assignedReports = Report::with('user') // Remove 'location'
+        $assignedReports = Report::with('user')
             ->where('assigned_to', $user->id)
             ->where('updated_at', '>=', now()->subDays(7))
             ->latest('updated_at')
@@ -171,17 +442,13 @@ class NotificationController extends Controller
         foreach ($assignedReports as $report) {
             $notifications->push([
                 'id' => 'assigned_report_' . $report->id,
-                'type' => 'report_update',
-                'user_name' => $report->user ? $report->user->name : ($report->reporter_name ?? 'System'),
-                'user_avatar' => $report->user ? $report->user->avatar_url : null,
-                'tracking_code' => $report->tracking_code ?? 'N/A',
-                'barangay' => $report->barangay ?? 'Unknown',
-                'municipality' => $report->municipality ?? 'Unknown',
-                'status' => $report->status ?? 'unknown',
-                'report_id' => $report->id,
+                'type' => 'info',
+                'title' => 'Report Assigned',
+                'message' => "Report assigned to you from " . ($report->user ? $report->user->name : ($report->reporter_name ?? 'System')),
+                'action_url' => '/staff/dashboard',
                 'unread' => !($report->viewed_by_staff ?? false),
-                'updated_at' => $report->updated_at ? $report->updated_at->toISOString() : now()->toISOString(),
-                'message' => "Report assigned to you"
+                'created_at' => $report->updated_at ? $report->updated_at->toISOString() : now()->toISOString(),
+                'important' => true
             ]);
         }
 
@@ -191,18 +458,19 @@ class NotificationController extends Controller
                 $query->where('target_audience', 'staff')
                     ->orWhere('target_audience', 'all');
             })
-            ->where('created_at', '>=', now()->subDays(30))
             ->latest()
             ->get();
 
         foreach ($announcements as $announcement) {
             $notifications->push([
                 'id' => 'announcement_' . $announcement->id,
-                'type' => 'announcement',
-                'title' => $announcement->title ?? 'Untitled',
+                'type' => 'info',
+                'title' => $announcement->title ?? 'Announcement',
                 'message' => $announcement->message ?? 'No message',
+                'action_url' => '/staff/dashboard',
                 'unread' => !$this->isAnnouncementRead($announcement->id),
-                'created_at' => $announcement->created_at ? $announcement->created_at->toISOString() : now()->toISOString()
+                'created_at' => $announcement->created_at ? $announcement->created_at->toISOString() : now()->toISOString(),
+                'important' => false
             ]);
         }
 
@@ -212,91 +480,167 @@ class NotificationController extends Controller
     /**
      * Get notifications for customer users
      */
-    private function getCustomerNotifications()
-    {
-        $notifications = collect();
-        $user = Auth::user();
+    // In your getCustomerNotifications method, add:
+    // private function getCustomerNotifications()
+    // {
+    //     $notifications = collect();
+    //     $user = Auth::user();
 
-        // User's report updates
-        $userReports = Report::where('user_id', $user->id)
-            ->where('updated_at', '>=', now()->subDays(14))
-            ->latest('updated_at')
-            ->get();
+    //     Log::info('Getting customer notifications for user: ' . $user->id);
 
-        foreach ($userReports as $report) {
-            $notifications->push([
-                'id' => 'my_report_' . $report->id,
-                'type' => 'report_update',
-                'tracking_code' => $report->tracking_code,
-                'barangay' => $report->barangay,
-                'municipality' => $report->municipality,
-                'status' => $report->status,
-                'report_id' => $report->id,
-                'unread' => !$report->viewed_by_user,
-                'updated_at' => $report->updated_at->toISOString(),
-                'message' => "Your report status has been updated"
-            ]);
-        }
+    //     // 1. Report status updates - REMOVE THE viewed_by_user FILTER
+    //     $userReports = Report::where('user_id', $user->id)
+    //         ->where('updated_at', '>=', now()->subDays(7))
+    //         ->latest('updated_at')
+    //         ->get();
 
-        // Customer announcements
-        $announcements = Announcements::where('active', true)
-            ->where('target_audience', 'customer')
-            ->orWhere('target_audience', 'all')
-            ->where('created_at', '>=', now()->subDays(30))
-            ->latest()
-            ->get();
+    //     foreach ($userReports as $report) {
+    //         $notifications->push([
+    //             'id' => 'report_status_' . $report->id . '_' . $report->updated_at->timestamp,
+    //             'type' => 'info',
+    //             'title' => 'Report Status Updated',
+    //             'message' => "Your report #{$report->tracking_code} status has been updated to: " . ucfirst($report->status),
+    //             'action_url' => '/customer/reports',
+    //             'unread' => !$report->viewed_by_user, // Use this to control read/unread display
+    //             'created_at' => $report->updated_at->toISOString(),
+    //             'important' => true
+    //         ]);
+    //     }
 
-        foreach ($announcements as $announcement) {
-            $notifications->push([
-                'id' => 'announcement_' . $announcement->id,
-                'type' => 'announcement',
-                'title' => $announcement->title,
-                'message' => $announcement->message,
-                'unread' => !$this->isAnnouncementRead($announcement->id),
-                'created_at' => $announcement->created_at->toISOString()
-            ]);
-        }
+    //     // 2. Bill amount updates - REMOVE THE amount_updated FILTER
+    //     $updatedBills = MeterReading::where('user_id', $user->id)
+    //         ->where('updated_at', '>=', now()->subDays(7))
+    //         ->latest('updated_at')
+    //         ->get();
 
-        return $notifications;
-    }
+    //     foreach ($updatedBills as $bill) {
+    //         $notifications->push([
+    //             'id' => 'bill_updated_' . $bill->id . '_' . $bill->updated_at->timestamp,
+    //             'type' => 'alert',
+    //             'title' => 'Bill Amount Updated',
+    //             'message' => "Your bill for {$bill->billing_month} has been updated. New amount: ₱" . number_format($bill->amount, 2),
+    //             'action_url' => '/customer/usage',
+    //             'unread' => $bill->amount_updated, // Use this to control read/unread display
+    //             'created_at' => $bill->updated_at->toISOString(),
+    //             'important' => true
+    //         ]);
+    //     }
+
+    //     // 3. Staff viewed water consumption - REMOVE THE viewed_by_staff FILTER
+    //     $staffViewedReadings = MeterReading::where('user_id', $user->id)
+    //         ->where('staff_viewed_at', '>=', now()->subDays(7))
+    //         ->latest('staff_viewed_at')
+    //         ->get();
+
+    //     foreach ($staffViewedReadings as $reading) {
+    //         $notifications->push([
+    //             'id' => 'staff_viewed_' . $reading->id . '_' . $reading->staff_viewed_at->timestamp,
+    //             'type' => 'info',
+    //             'title' => 'Water Consumption Reviewed',
+    //             'message' => "Your water consumption for {$reading->billing_month} has been reviewed by our staff",
+    //             'action_url' => '/customer/usage',
+    //             'unread' => $reading->viewed_by_staff, // Use this to control read/unread display
+    //             'created_at' => $reading->staff_viewed_at->toISOString(),
+    //             'important' => false
+    //         ]);
+    //     }
+
+    //     // 4. Regular bill notifications (overdue, due soon, etc.)
+    //     $billNotifications = $this->getBillNotifications();
+    //     $notifications = $notifications->merge($billNotifications);
+
+    //     // 5. Customer announcements
+    //     $announcements = Announcements::where('active', true)
+    //         ->where(function ($query) {
+    //             $query->where('target_audience', 'customer')
+    //                 ->orWhere('target_audience', 'all');
+    //         })
+    //         ->latest()
+    //         ->get();
+
+    //     foreach ($announcements as $announcement) {
+    //         $message = $announcement->content ?? $announcement->message ?? $announcement->description ?? 'No content available';
+
+    //         $notifications->push([
+    //             'id' => 'announcement_' . $announcement->id,
+    //             'type' => 'info',
+    //             'title' => $announcement->title ?? 'Announcement',
+    //             'message' => $message,
+    //             'action_url' => '/customer/announcements',
+    //             'unread' => !$this->isAnnouncementRead($announcement->id),
+    //             'created_at' => $announcement->created_at ? $announcement->created_at->toISOString() : now()->toISOString(),
+    //             'important' => false
+    //         ]);
+    //     }
+
+    //     Log::info('Customer notifications fetched', [
+    //         'total' => $notifications->count(),
+    //         'unread' => $notifications->where('unread', true)->count()
+    //     ]);
+
+    //     return $notifications;
+    // }
+
 
     /**
      * Mark a notification as read
      */
-    public function markAsRead(Request $request)
+    public function markAsRead($id)
     {
-        $notificationId = $request->input('notification_id');
         $user = Auth::user();
 
-        // Parse notification ID to determine type and actual ID
-        if (str_starts_with($notificationId, 'new_report_') || str_starts_with($notificationId, 'report_update_')) {
-            $reportId = (int) str_replace(['new_report_', 'report_update_', 'assigned_report_', 'my_report_'], '', $notificationId);
-            $report = Report::find($reportId);
+        try {
+            if (str_starts_with($id, 'report_status_')) {
+                // Extract report ID from: report_status_{id}_{timestamp}
+                $parts = explode('_', $id);
+                $reportId = $parts[2]; // The report ID is at index 2
 
-            if ($report) {
-                switch ($user->role) {
-                    case 'admin':
-                        $report->viewed_by_admin = true;
-                        $report->update_viewed_by_admin = true;
-                        break;
-                    case 'staff':
-                        $report->viewed_by_staff = true;
-                        break;
-                    default:
-                        $report->viewed_by_user = true;
+                $report = Report::find($reportId);
+
+                if ($report && $report->user_id == $user->id) {
+                    $report->viewed_by_user = true;
+                    $report->save();
+
+                    Log::info('Report notification marked as read', [
+                        'report_id' => $reportId,
+                        'user_id' => $user->id,
+                        'notification_id' => $id
+                    ]);
                 }
-                $report->save();
-            }
-        } elseif (str_starts_with($notificationId, 'announcement_')) {
-            $announcementId = (int) str_replace('announcement_', '', $notificationId);
-            $this->markAnnouncementAsRead($announcementId);
-        }
+            } elseif (str_starts_with($id, 'bill_updated_')) {
+                $parts = explode('_', $id);
+                $billId = $parts[2];
+                $bill = MeterReading::find($billId);
 
-        // Return redirect instead of JSON
-        return redirect()->back()->with([
-            'success' => true,
-            'message' => 'Notification marked as read'
-        ]);
+                if ($bill && $bill->user_id == $user->id) {
+                    $bill->amount_updated = false;
+                    $bill->save();
+                }
+            } elseif (str_starts_with($id, 'staff_viewed_')) {
+                $parts = explode('_', $id);
+                $readingId = $parts[2];
+                $reading = MeterReading::find($readingId);
+
+                if ($reading && $reading->user_id == $user->id) {
+                    $reading->viewed_by_staff = false;
+                    $reading->save();
+                }
+            } elseif (str_starts_with($id, 'announcement_')) {
+                $announcementId = (int) str_replace('announcement_', '', $id);
+                $this->markAnnouncementAsRead($announcementId);
+            } elseif (str_starts_with($id, 'overdue_bill_') || str_starts_with($id, 'due_soon_') || str_starts_with($id, 'final_reminder_') || str_starts_with($id, 'due_today_')) {
+                $this->dismissNotification($id);
+            }
+
+            return response()->json(['success' => true, 'message' => 'Notification marked as read']);
+        } catch (\Exception $e) {
+            Log::error('Error marking notification as read: ' . $e->getMessage(), [
+                'notification_id' => $id,
+                'user_id' => $user->id,
+                'error' => $e->getMessage()
+            ]);
+            return response()->json(['success' => false, 'message' => 'Failed to mark notification as read'], 500);
+        }
     }
 
     /**
@@ -306,90 +650,39 @@ class NotificationController extends Controller
     {
         $user = Auth::user();
 
-        switch ($user->role) {
-            case 'admin':
-                Report::where('viewed_by_admin', false)
-                    ->orWhere('update_viewed_by_admin', false)
-                    ->update([
-                        'viewed_by_admin' => true,
-                        'update_viewed_by_admin' => true
-                    ]);
-                break;
-            case 'staff':
-                Report::where('assigned_to', $user->id)
-                    ->where('viewed_by_staff', false)
-                    ->update(['viewed_by_staff' => true]);
-                break;
-            default:
-                Report::where('user_id', $user->id)
-                    ->where('viewed_by_user', false)
-                    ->update(['viewed_by_user' => true]);
-        }
+        try {
+            switch ($user->role) {
+                case 'admin':
+                    Report::where('viewed_by_admin', false)
+                        ->orWhere('update_viewed_by_admin', false)
+                        ->update([
+                            'viewed_by_admin' => true,
+                            'update_viewed_by_admin' => true
+                        ]);
+                    break;
+                case 'staff':
+                    Report::where('assigned_to', $user->id)
+                        ->where('viewed_by_staff', false)
+                        ->update(['viewed_by_staff' => true]);
+                    break;
+                default:
+                    Report::where('user_id', $user->id)
+                        ->where('viewed_by_user', false)
+                        ->update(['viewed_by_user' => true]);
+            }
 
-        // Mark all announcements as read
-        $this->markAllAnnouncementsAsRead();
+            // Mark all announcements as read
+            $this->markAllAnnouncementsAsRead();
 
-        // Return redirect instead of JSON
-        return redirect()->back()->with([
-            'success' => true,
-            'message' => 'All notifications marked as read'
-        ]);
-    }
-
-    /**
-     * Get unread notifications count
-     */
-    public function getUnreadCount()
-    {
-        $notifications = $this->index(request())->getData();
-        $unreadCount = collect($notifications->notifications)->where('unread', true)->count();
-
-        return response()->json([
-            'success' => true,
-            'unread_count' => $unreadCount
-        ]);
-    }
-
-    /**
-     * Check if announcement is read by current user
-     */
-    private function isAnnouncementRead($announcementId)
-    {
-        return DB::table('announcement_reads')
-            ->where('announcement_id', $announcementId)
-            ->where('user_id', Auth::id())
-            ->exists();
-    }
-
-    /**
-     * Mark announcement as read
-     */
-    private function markAnnouncementAsRead($announcementId)
-    {
-        DB::table('announcement_reads')->updateOrInsert([
-            'announcement_id' => $announcementId,
-            'user_id' => Auth::id(),
-        ], [
-            'read_at' => now(),
-            'created_at' => now(),
-            'updated_at' => now()
-        ]);
-    }
-
-    /**
-     * Mark all announcements as read
-     */
-    private function markAllAnnouncementsAsRead()
-    {
-        $announcements = Announcements::where('active', true)->get();
-
-        foreach ($announcements as $announcement) {
-            $this->markAnnouncementAsRead($announcement->id);
+            return response()->json(['success' => true, 'message' => 'All notifications marked as read']);
+        } catch (\Exception $e) {
+            Log::error('Error marking all notifications as read: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Failed to mark all notifications as read'], 500);
         }
     }
 
     /**
-     * Delete a notification (NEW METHOD)
+     * Delete a notification
      */
     public function destroy($id)
     {
@@ -419,6 +712,114 @@ class NotificationController extends Controller
         }
     }
 
+    /**
+     * Helper methods
+     */
+    private function dismissNotification($notificationId)
+    {
+        DismissedNotification::create([
+            'user_id' => Auth::id(),
+            'notification_id' => $notificationId,
+            'type' => $this->getNotificationType($notificationId)
+        ]);
+    }
+
+    /**
+     * Get notifications for API calls (used by NotificationModal)
+     */
+    public function getNotificationsApi(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['notifications' => []]);
+        }
+
+        Log::info('Fetching API notifications for user', ['user_id' => $user->id, 'role' => $user->role]);
+
+        $notifications = collect();
+        try {
+            switch ($user->role) {
+                case 'admin':
+                    $notifications = $this->getAdminNotifications();
+                    break;
+                case 'staff':
+                    $notifications = $this->getStaffNotifications();
+                    break;
+                default:
+                    $notifications = $this->getCustomerNotifications();
+            }
+        } catch (\Exception $e) {
+            Log::error('Error fetching API notifications: ' . $e->getMessage());
+            $notifications = collect();
+        }
+
+        Log::info('API Notifications fetched', ['count' => $notifications->count()]);
+
+        // Convert to array format expected by the modal
+        $formattedNotifications = $notifications->map(function ($notification) {
+            return [
+                'id' => $notification['id'],
+                'type' => $notification['type'],
+                'title' => $notification['title'] ?? $this->getDefaultTitle($notification['type']),
+                'message' => $notification['message'],
+                'due_date' => $notification['due_date'] ?? null,
+                'created_at' => $notification['created_at'],
+                'unread' => $notification['unread'] ?? true,
+                'important' => $notification['important'] ?? false,
+                'action_url' => $notification['action_url'] ?? $this->getDefaultActionUrl($notification['type']),
+            ];
+        })->values()->toArray();
+
+        return response()->json([
+            'notifications' => $formattedNotifications,
+            'unread_count' => collect($formattedNotifications)->where('unread', true)->count()
+        ]);
+    }
+
+    /**
+     * Get default action URL based on notification type
+     */
+    private function getDefaultActionUrl($type)
+    {
+        $urls = [
+            'bill_overdue' => '/customer/usage',
+            'bill_due_soon' => '/customer/usage',
+            'bill_final_reminder' => '/customer/usage',
+            'bill_due_today' => '/customer/usage',
+            'new_report' => '/customer/reports',
+            'report_update' => '/customer/reports',
+            'announcement' => '/customer/announcements',
+            'alert' => '/customer/notifications',
+            'reminder' => '/customer/notifications',
+            'info' => '/customer/notifications',
+        ];
+
+        return $urls[$type] ?? '/customer/notifications';
+    }
+
+    /**
+     * Get default title based on notification type
+     */
+    private function getDefaultTitle($type)
+    {
+        $titles = [
+            'bill_overdue' => 'Overdue Bill',
+            'bill_due_soon' => 'Bill Reminder',
+            'bill_final_reminder' => 'Final Reminder',
+            'bill_due_today' => 'Bill Due Today',
+            'new_report' => 'New Report',
+            'report_update' => 'Report Update',
+            'announcement' => 'Announcement',
+            'alert' => 'Alert',
+            'reminder' => 'Reminder',
+            'info' => 'Information',
+            'system' => 'System Notification',
+            'order' => 'Order Update',
+        ];
+
+        return $titles[$type] ?? 'Notification';
+    }
+
     private function getNotificationType($notificationId)
     {
         if (str_starts_with($notificationId, 'new_report_')) {
@@ -431,6 +832,13 @@ class NotificationController extends Controller
             return 'report_update';
         } elseif (str_starts_with($notificationId, 'announcement_')) {
             return 'announcement';
+        } elseif (
+            str_starts_with($notificationId, 'overdue_bill_') ||
+            str_starts_with($notificationId, 'due_soon_') ||
+            str_starts_with($notificationId, 'final_reminder_') ||
+            str_starts_with($notificationId, 'due_today_')
+        ) {
+            return 'bill_notification';
         }
 
         return 'unknown';
@@ -441,5 +849,34 @@ class NotificationController extends Controller
         return DismissedNotification::where('user_id', Auth::id())
             ->where('notification_id', $notificationId)
             ->exists();
+    }
+
+    private function isAnnouncementRead($announcementId)
+    {
+        return DB::table('announcement_reads')
+            ->where('announcement_id', $announcementId)
+            ->where('user_id', Auth::id())
+            ->exists();
+    }
+
+    private function markAnnouncementAsRead($announcementId)
+    {
+        DB::table('announcement_reads')->updateOrInsert([
+            'announcement_id' => $announcementId,
+            'user_id' => Auth::id(),
+        ], [
+            'read_at' => now(),
+            'created_at' => now(),
+            'updated_at' => now()
+        ]);
+    }
+
+    private function markAllAnnouncementsAsRead()
+    {
+        $announcements = Announcements::where('active', true)->get();
+
+        foreach ($announcements as $announcement) {
+            $this->markAnnouncementAsRead($announcement->id);
+        }
     }
 }

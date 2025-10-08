@@ -9,6 +9,19 @@ class MeterReading extends Model
 {
     use HasFactory;
 
+    // In your MeterReading.php model, add this:
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::updating(function ($reading) {
+            // Check if amount is being changed by admin
+            if ($reading->isDirty('amount')) {
+                // Reset some flag to trigger notification (we'll handle this differently)
+            }
+        });
+    }
+
     protected $fillable = [
         'user_id',
         'staff_id',
@@ -34,22 +47,22 @@ class MeterReading extends Model
         return $this->belongsTo(User::class);
     }
 
-     public function staff()
+    public function staff()
     {
         return $this->belongsTo(User::class, 'staff_id');
     }
 
     public function getStatusAttribute()
-{
-    if (isset($this->attributes['status'])) {
-        return $this->attributes['status'];
-    }
+    {
+        if (isset($this->attributes['status'])) {
+            return $this->attributes['status'];
+        }
 
-    // Example: Mark as Overdue if reading_date is past and amount is unpaid
-    if ($this->reading_date->isPast() && $this->amount > 0) {
-        return 'Overdue';
-    }
+        // Example: Mark as Overdue if reading_date is past and amount is unpaid
+        if ($this->reading_date->isPast() && $this->amount > 0) {
+            return 'Overdue';
+        }
 
-    return 'Pending';
-}
+        return 'Pending';
+    }
 }

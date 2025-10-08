@@ -5,7 +5,7 @@
         >
             <!-- Header Section -->
             <div
-                class="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/30 dark:to-cyan-900/30 p-6 border-b border-gray-200 dark:border-gray-700"
+                class=" p-6 border-b border-gray-200 dark:border-gray-700"
             >
                 <div
                     class="flex flex-col md:flex-row md:items-center justify-between gap-4"
@@ -30,22 +30,24 @@
                         </p>
                     </div>
 
-                    <div class="flex items-center gap-3">
-                        <div
-                            class="hidden sm:flex items-center gap-2 text-sm bg-white dark:bg-gray-700 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600"
-                        >
-                            <div class="w-3 h-3 rounded-full bg-blue-500"></div>
-                            <span class="text-gray-700 dark:text-gray-300"
-                                >Usage (m³)</span
+                    <!-- Overdue Alert -->
+                    <div
+                        v-if="overdueBills > 0"
+                        class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3"
+                    >
+                        <div class="flex items-center gap-2">
+                            <v-icon
+                                name="bi-exclamation-triangle-fill"
+                                class="w-5 h-5 text-red-600 dark:text-red-400"
+                            />
+                            <span
+                                class="text-red-700 dark:text-red-300 font-medium"
                             >
-                        </div>
-                        <div
-                            class="hidden sm:flex items-center gap-2 text-sm bg-white dark:bg-gray-700 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600"
-                        >
-                            <div class="w-3 h-3 rounded-full bg-gray-400"></div>
-                            <span class="text-gray-700 dark:text-gray-300"
-                                >Amount (₱)</span
-                            >
+                                {{ overdueBills }} overdue bill{{
+                                    overdueBills > 1 ? "s" : ""
+                                }}
+                                - Total: ₱{{ overdueAmount }}
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -117,7 +119,7 @@
                                 Total Amount Due
                             </h3>
                             <v-icon
-                                name="bi-currency-dollar"
+                                name="bi-cash-coin"
                                 class="w-5 h-5 text-purple-500"
                             />
                         </div>
@@ -127,9 +129,23 @@
                             ₱{{ totalAmountDue }}
                         </p>
                         <p
-                            class="text-sm text-purple-700 dark:text-purple-300 mt-1"
+                            class="text-sm mt-1"
+                            :class="
+                                overdueBills > 0
+                                    ? 'text-red-600 dark:text-red-400 font-medium'
+                                    : 'text-purple-700 dark:text-purple-300'
+                            "
                         >
-                            {{ pendingBills }} pending bills
+                            <span v-if="overdueBills > 0">
+                                {{ overdueBills }} overdue bill{{
+                                    overdueBills > 1 ? "s" : ""
+                                }}
+                            </span>
+                            <span v-else>
+                                {{ pendingBills }} pending bill{{
+                                    pendingBills > 1 ? "s" : ""
+                                }}
+                            </span>
                         </p>
                     </div>
                 </div>
@@ -266,6 +282,11 @@
                                     <th
                                         class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
                                     >
+                                        Due Date
+                                    </th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                    >
                                         Status
                                     </th>
                                     <th
@@ -305,15 +326,23 @@
                                         </div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
+                                        <div
+                                            class="text-sm text-gray-600 dark:text-gray-400"
+                                        >
+                                            {{
+                                                usage.due_date_formatted ||
+                                                "N/A"
+                                            }}
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
                                         <span
                                             :class="statusClasses(usage.status)"
                                             class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
                                         >
                                             <v-icon
                                                 :name="
-                                                    usage.status === 'Paid'
-                                                        ? 'bi-check-circle-fill'
-                                                        : 'bi-clock-fill'
+                                                    getStatusIcon(usage.status)
                                                 "
                                                 class="w-3 h-3 mr-1"
                                             />
@@ -323,7 +352,7 @@
                                     <td
                                         class="px-6 py-4 whitespace-nowrap text-sm font-medium"
                                     >
-                                        <div class="flex space-x-2">
+                                        <div class="flex space-x-2 ml-4">
                                             <button
                                                 @click="openUsageModal(usage)"
                                                 class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 p-1.5 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
@@ -334,6 +363,20 @@
                                                     class="w-4 h-4"
                                                 />
                                             </button>
+                                            <!-- <button
+                                                v-if="
+                                                    usage.status ===
+                                                        'Pending' ||
+                                                    usage.status === 'Overdue'
+                                                "
+                                                class="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 p-1.5 rounded-md hover:bg-green-50 dark:hover:bg-green-900/30 transition-colors"
+                                                title="Pay Bill"
+                                            >
+                                                <v-icon
+                                                    name="bi-credit-card-fill"
+                                                    class="w-4 h-4"
+                                                />
+                                            </button> -->
                                         </div>
                                     </td>
                                 </tr>
@@ -353,37 +396,6 @@
                         <p class="mt-4 text-gray-500 dark:text-gray-400">
                             No usage records found
                         </p>
-                    </div>
-
-                    <!-- Pagination -->
-                    <div
-                        v-if="filteredUsageData.length > 0"
-                        class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between"
-                    >
-                        <div class="text-sm text-gray-700 dark:text-gray-400">
-                            Showing <span class="font-medium">1</span> to
-                            <span class="font-medium">{{
-                                filteredUsageData.length
-                            }}</span>
-                            of
-                            <span class="font-medium">{{
-                                filteredUsageData.length
-                            }}</span>
-                            results
-                        </div>
-                        <div class="flex space-x-2">
-                            <button
-                                class="px-3 py-1.5 text-sm rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                                disabled
-                            >
-                                Previous
-                            </button>
-                            <button
-                                class="px-3 py-1.5 text-sm rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-                            >
-                                Next
-                            </button>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -448,15 +460,29 @@ const averageUsage = computed(() => {
 });
 
 const totalAmountDue = computed(() => {
-    if (usageData.value.length === 0) return "0";
-    return usageData.value
-        .filter((item) => item.status === "Pending")
-        .reduce((acc, item) => acc + parseFloat(item.amount), 0)
-        .toFixed(2);
+    if (usageData.value.length === 0) return "0.00";
+    const total = usageData.value
+        .filter(
+            (item) => item.status === "Pending" || item.status === "Overdue"
+        )
+        .reduce((acc, item) => acc + parseFloat(item.amount), 0);
+    return total.toFixed(2);
 });
 
 const pendingBills = computed(() => {
     return usageData.value.filter((item) => item.status === "Pending").length;
+});
+
+const overdueBills = computed(() => {
+    return usageData.value.filter((item) => item.status === "Overdue").length;
+});
+
+const overdueAmount = computed(() => {
+    if (usageData.value.length === 0) return "0.00";
+    const total = usageData.value
+        .filter((item) => item.status === "Overdue")
+        .reduce((acc, item) => acc + parseFloat(item.amount), 0);
+    return total.toFixed(2);
 });
 
 const currentMonthChange = computed(() => {
@@ -505,14 +531,33 @@ const filteredUsageData = computed(() => {
 });
 
 // Methods
+const getStatusIcon = (status) => {
+    switch (status) {
+        case "Paid":
+            return "bi-check-circle-fill";
+        case "Overdue":
+            return "bi-exclamation-triangle-fill";
+        case "Pending":
+            return "bi-clock-fill";
+        default:
+            return "bi-question-circle-fill";
+    }
+};
+
 const statusClasses = (status) => {
-    return {
-        "px-2 py-1 rounded-full text-xs font-semibold": true,
-        "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300":
-            status === "Pending",
-        "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300":
-            status === "Paid",
-    };
+    const baseClasses =
+        "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium";
+
+    switch (status) {
+        case "Pending":
+            return `${baseClasses} bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300`;
+        case "Paid":
+            return `${baseClasses} bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300`;
+        case "Overdue":
+            return `${baseClasses} bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300`;
+        default:
+            return `${baseClasses} bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300`;
+    }
 };
 
 const sortTable = (field) => {

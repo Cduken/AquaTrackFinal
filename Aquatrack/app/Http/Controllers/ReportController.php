@@ -1160,7 +1160,9 @@ class ReportController extends Controller
             })->get();
 
             foreach ($linkedReports as $linkedReport) {
+                // ✅ ADD THIS: Reset viewed_by_user to trigger notification
                 $linkedReport->status = $newStatus;
+                $linkedReport->viewed_by_user = false; // This makes notification appear as unread
                 $linkedReport->save();
 
                 Activity::create([
@@ -1176,13 +1178,22 @@ class ReportController extends Controller
                         'new_status' => $newStatus,
                     ],
                 ]);
+
+                // ✅ ADD LOGGING TO CONFIRM NOTIFICATION TRIGGER
+                Log::info('Report status updated - notification triggered', [
+                    'report_id' => $linkedReport->id,
+                    'user_id' => $linkedReport->user_id,
+                    'old_status' => $oldStatus,
+                    'new_status' => $newStatus,
+                    'viewed_by_user_reset' => true
+                ]);
             }
 
             return redirect()->route('admin.reports')->with([
                 'swal' => [
                     'icon' => 'success',
                     'title' => 'Status Updated',
-                    'text' => 'Report status updated successfully for all linked reports!',
+                    'text' => 'Report status updated successfully for all linked reports! Customers will be notified.',
                 ],
             ]);
         } catch (\Exception $e) {

@@ -137,7 +137,7 @@ onMounted(() => {
             <!-- Background overlay -->
             <div class="fixed inset-0 transition-opacity" aria-hidden="true">
                 <div
-                    class="absolute inset-0 bg-gray-900/80 backdrop-blur-sm"
+                    class="absolute inset-0 bg-black/80 backdrop-blur-sm"
                 ></div>
             </div>
 

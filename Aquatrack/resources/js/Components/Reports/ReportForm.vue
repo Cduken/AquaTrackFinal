@@ -1,718 +1,80 @@
 <template>
     <div class="w-full p-6 bg-white">
-        <!-- Network Status Indicator -->
-        <div
-            v-if="!isOnline"
-            class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg"
-        >
-            <div class="flex items-center text-yellow-800">
-                <v-icon name="hi-exclamation" class="w-5 h-5 mr-2" />
-                <span class="font-medium">You are currently offline</span>
-            </div>
-            <p class="text-sm text-yellow-700 mt-1">
-                Your report will be saved locally and automatically submitted
-                when you're back online.
-            </p>
-        </div>
-
-        <!-- Offline Reports Queue Indicator -->
-        <div
-            v-if="offlineReportsCount > 0"
-            class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg"
-        >
-            <div class="flex items-center justify-between">
-                <div class="flex items-center text-blue-800">
-                    <v-icon name="hi-database" class="w-5 h-5 mr-2" />
-                    <span class="font-medium"
-                        >{{ offlineReportsCount }} report(s) waiting to
-                        sync</span
-                    >
-                </div>
-                <button
-                    @click="triggerManualSync"
-                    :disabled="!isOnline || isSyncing"
-                    class="text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 disabled:opacity-50 flex items-center"
-                >
-                    <v-icon
-                        v-if="isSyncing"
-                        name="bi-arrow-repeat"
-                        class="animate-spin mr-1 w-3 h-3"
-                    />
-                    {{ isSyncing ? "Syncing..." : "Sync Now" }}
-                </button>
-            </div>
-        </div>
-
-        <!-- In reportform.vue template - ensure the modal is properly bound -->
-        <GlobalReportSuccessModal
-            v-if="showTrackModalAfterSync"
-            :show="showTrackModalAfterSync"
-            :tracking-code="lastSyncedTrackingCode"
-            :date-submitted="new Date().toISOString()"
-            @close="closeTrackModalAfterSync"
-            @track-report="handleTrackReport"
+        <!-- Network Status -->
+        <NetworkStatus
+            :is-online="isOnline"
+            :is-syncing="isSyncing"
+            :offline-reports-count="offlineReportsCount"
+            @manual-sync="triggerManualSync"
         />
 
         <!-- Form Errors Indicator -->
-        <div
-            v-if="hasErrors"
-            class="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm"
-        >
-            <div class="flex items-center mb-2">
-                <v-icon name="hi-exclamation-triangle" class="w-5 h-5 mr-2" />
-                <span class="font-medium"
-                    >Please fix the following errors:</span
-                >
-            </div>
-            <ul class="list-disc list-inside mt-2 space-y-1">
-                <li v-for="(error, key) in form.errors" :key="key">
-                    {{ error }}
-                </li>
-            </ul>
-        </div>
+        <FormErrors v-if="hasErrors" :errors="form.errors" />
 
         <form @submit.prevent="submitReport" class="space-y-6">
             <!-- Location Fields -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="space-y-2">
-                    <label class="block text-sm font-semibold text-gray-700">
-                        Municipality <span class="text-red-500">*</span>
-                    </label>
-                    <input
-                        type="text"
-                        v-model="form.municipality"
-                        readonly
-                        class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-gray-700 cursor-not-allowed focus:outline-none text-sm font-medium"
-                    />
-                </div>
-
-                <div class="space-y-2">
-                    <label class="block text-sm font-semibold text-gray-700">
-                        Province
-                    </label>
-                    <input
-                        type="text"
-                        v-model="form.province"
-                        readonly
-                        class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-gray-700 cursor-not-allowed focus:outline-none text-sm font-medium"
-                    />
-                </div>
-            </div>
+            <LocationFields :form="form" />
 
             <!-- Reporter Information -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="space-y-2">
-                    <label class="block text-sm font-semibold text-gray-700">
-                        Full Name <span class="text-red-500">*</span>
-                    </label>
-                    <input
-                        type="text"
-                        v-model="form.reporter_name"
-                        required
-                        class="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm bg-white"
-                        placeholder="Enter your full name"
-                    />
-                    <p
-                        v-if="form.errors.reporter_name"
-                        class="text-xs text-red-500 mt-1"
-                    >
-                        {{ form.errors.reporter_name }}
-                    </p>
-                </div>
-
-                <div class="space-y-2">
-                    <label class="block text-sm font-semibold text-gray-700">
-                        Phone Number
-                    </label>
-                    <input
-                        type="tel"
-                        v-model="form.reporter_phone"
-                        @input="restrictPhoneInput"
-                        class="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm bg-white"
-                        pattern="[0-9]{1,11}"
-                        maxlength="11"
-                        placeholder="Your contact number"
-                    />
-                    <p
-                        v-if="form.errors.reporter_phone"
-                        class="text-xs text-red-500 mt-1"
-                    >
-                        {{ form.errors.reporter_phone }}
-                    </p>
-                </div>
-            </div>
+            <ReporterInfo :form="form" @update:field="updateFormField" />
 
             <!-- Area Information -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="space-y-2">
-                    <label class="block text-sm font-semibold text-gray-700">
-                        Barangay <span class="text-red-500">*</span>
-                    </label>
-                    <select
-                        v-model="form.barangay"
-                        required
-                        class="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm bg-white"
-                    >
-                        <option value="" disabled selected>
-                            Select Barangay
-                        </option>
-                        <option
-                            v-for="barangay in allBarangays"
-                            :key="barangay"
-                            :value="barangay"
-                        >
-                            {{ barangay }}
-                        </option>
-                    </select>
-                    <p
-                        v-if="form.errors.barangay"
-                        class="text-xs text-red-500 mt-1"
-                    >
-                        {{ form.errors.barangay }}
-                    </p>
-                </div>
-
-                <div class="space-y-2">
-                    <label class="block text-sm font-semibold text-gray-700">
-                        Zone <span class="text-red-500">*</span>
-                    </label>
-                    <input
-                        type="text"
-                        v-model="form.zone"
-                        readonly
-                        class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-gray-700 cursor-not-allowed focus:outline-none text-sm font-medium"
-                        placeholder="Zone will be auto-filled"
-                    />
-                    <p
-                        v-if="form.errors.zone"
-                        class="text-xs text-red-500 mt-1"
-                    >
-                        {{ form.errors.zone }}
-                    </p>
-                </div>
-            </div>
-
-            <!-- Purok -->
-            <div class="space-y-2">
-                <label class="block text-sm font-semibold text-gray-700">
-                    Purok/Street <span class="text-red-500">*</span>
-                </label>
-                <input
-                    type="text"
-                    v-model="form.purok"
-                    required
-                    class="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm bg-white"
-                    placeholder="Enter purok number or street name"
-                />
-                <p v-if="form.errors.purok" class="text-xs text-red-500 mt-1">
-                    {{ form.errors.purok }}
-                </p>
-            </div>
+            <AreaInfo
+                :form="form"
+                :zones="props.zones"
+                @update:field="updateFormField"
+            />
 
             <!-- Water Issue Type -->
-            <div class="space-y-2">
-                <label class="block text-sm font-semibold text-gray-700">
-                    Water Issue Type <span class="text-red-500">*</span>
-                </label>
-                <select
-                    v-model="form.water_issue_type"
-                    @change="selectWaterIssue"
-                    class="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm bg-white"
-                    required
-                >
-                    <option disabled value="">Select water issue type</option>
-                    <option
-                        v-for="issue in waterIssueTypes"
-                        :key="issue"
-                        :value="issue"
-                    >
-                        {{ issue }}
-                    </option>
-                    <option value="others">Others (please specify)</option>
-                </select>
-
-                <div v-if="form.water_issue_type === 'others'" class="mt-3">
-                    <input
-                        type="text"
-                        v-model="form.custom_water_issue"
-                        class="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm bg-white"
-                        placeholder="Please specify the water issue"
-                        maxlength="100"
-                        required
-                    />
-                </div>
-
-                <p
-                    v-if="form.errors.water_issue_type"
-                    class="text-xs text-red-500 mt-1"
-                >
-                    {{ form.errors.water_issue_type }}
-                </p>
-            </div>
+            <WaterIssueType :form="form" @update:field="updateFormField" />
 
             <!-- Description -->
-            <div class="space-y-2">
-                <label class="block text-sm font-semibold text-gray-700">
-                    Description <span class="text-red-500">*</span>
-                </label>
-                <textarea
-                    v-model="form.description"
-                    rows="4"
-                    required
-                    class="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm bg-white resize-none"
-                    placeholder="Describe the water quality issue in detail..."
-                ></textarea>
-                <p
-                    v-if="form.errors.description"
-                    class="text-xs text-red-500 mt-1"
-                >
-                    {{ form.errors.description }}
-                </p>
-            </div>
+            <DescriptionField :form="form" @update:field="updateFormField" />
 
-            <!-- Enhanced Camera Section -->
-            <div class="space-y-4">
-                <div class="flex items-center justify-between">
-                    <label class="block text-sm font-semibold text-gray-700">
-                        Capture Evidence
-                        <span class="text-red-500">*</span>
-                    </label>
-                    <div
-                        class="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full"
-                    >
-                        {{ form.photos.length }}/{{ MAX_TOTAL }} files
-                    </div>
-                </div>
-
-                <!-- Camera Status Banner -->
-                <div
-                    v-if="cameraError"
-                    class="p-4 bg-red-50 border border-red-200 rounded-xl"
-                >
-                    <div class="flex items-center text-red-700 text-sm">
-                        <v-icon
-                            name="bi-exclamation-triangle-fill"
-                            class="w-5 h-5 mr-2"
-                        />
-                        {{ cameraError }}
-                    </div>
-                    <button
-                        type="button"
-                        @click="retryCamera"
-                        class="mt-2 text-sm text-blue-600 hover:text-blue-800 underline"
-                    >
-                        Try Again
-                    </button>
-                </div>
-
-                <!-- Camera Interface -->
-                <div
-                    class="bg-gray-50 rounded-xl overflow-hidden border border-gray-200"
-                >
-                    <!-- Camera Not Active State -->
-                    <div v-if="!isCameraActive" class="p-8 text-center">
-                        <div class="mb-6">
-                            <div
-                                class="w-20 h-20 mx-auto bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mb-4 shadow-lg"
-                            >
-                                <v-icon
-                                    name="hi-camera"
-                                    class="w-10 h-10 text-white"
-                                />
-                            </div>
-                            <h3
-                                class="text-gray-900 text-xl font-semibold mb-3"
-                            >
-                                Camera Required
-                            </h3>
-                            <p
-                                class="text-gray-600 text-sm mb-6 max-w-md mx-auto"
-                            >
-                                Take photos and videos to document the water
-                                quality issue. Visual evidence helps us resolve
-                                issues faster.
-                            </p>
-                        </div>
-
-                        <button
-                            type="button"
-                            @click="initializeCamera"
-                            :disabled="isCameraLoading"
-                            class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:from-blue-300 disabled:to-blue-400 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
-                        >
-                            <v-icon
-                                v-if="isCameraLoading"
-                                name="bi-arrow-repeat"
-                                class="animate-spin -ml-1 mr-3 h-5 w-5"
-                            />
-                            <v-icon
-                                v-else
-                                name="hi-camera"
-                                class="w-5 h-5 mr-3"
-                            />
-                            {{
-                                isCameraLoading
-                                    ? "Starting Camera..."
-                                    : "Open Camera"
-                            }}
-                        </button>
-
-                        <div class="mt-6 text-xs text-gray-400 space-y-1">
-                            <p>Your browser will ask for camera permission</p>
-                            <p>
-                                Make sure to allow access to capture photos and
-                                videos
-                            </p>
-                        </div>
-                    </div>
-
-                    <!-- Active Camera View -->
-                    <div v-else class="relative">
-                        <!-- Video Element Container -->
-                        <div
-                            class="relative bg-black rounded-lg overflow-hidden"
-                            style="aspect-ratio: 4/3"
-                        >
-                            <video
-                                ref="videoElement"
-                                class="w-full h-full object-cover"
-                                autoplay
-                                playsinline
-                                muted
-                            ></video>
-
-                            <!-- Camera Loading Overlay -->
-                            <div
-                                v-if="!isCameraReady"
-                                class="absolute inset-0 bg-black bg-opacity-75 flex items-center justify-center"
-                            >
-                                <div class="text-center text-white">
-                                    <div
-                                        class="inline-block animate-spin w-8 h-8 border-2 border-white border-t-transparent rounded-full mb-3"
-                                    ></div>
-                                    <p class="text-sm">{{ cameraStatus }}</p>
-                                </div>
-                            </div>
-
-                            <!-- Camera Ready Indicator -->
-                            <div
-                                v-if="isCameraReady"
-                                class="absolute top-4 left-4"
-                            >
-                                <div
-                                    class="flex items-center bg-green-500 text-white px-3 py-1.5 rounded-full text-xs font-medium shadow-lg"
-                                >
-                                    <div
-                                        class="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"
-                                    ></div>
-                                    LIVE
-                                </div>
-                            </div>
-
-                            <!-- Recording Indicator -->
-                            <div
-                                v-if="isRecording"
-                                class="absolute top-4 left-1/2 transform -translate-x-1/2"
-                            >
-                                <div
-                                    class="flex items-center bg-red-500 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg"
-                                >
-                                    <div
-                                        class="w-3 h-3 bg-white rounded-full mr-2 animate-pulse"
-                                    ></div>
-                                    REC {{ formatTime(recordingTime) }}
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Enhanced Camera Controls -->
-                        <div class="bg-white p-6 border-t border-gray-200">
-                            <div class="flex items-center justify-center gap-4">
-                                <!-- Switch Camera Button -->
-                                <button
-                                    type="button"
-                                    @click="switchCamera"
-                                    v-if="
-                                        hasMultipleCameras &&
-                                        isCameraReady &&
-                                        !isRecording
-                                    "
-                                    class="p-3 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all duration-200 text-gray-700 disabled:opacity-50"
-                                    :disabled="
-                                        !isCameraReady || isSwitchingCamera
-                                    "
-                                >
-                                    <v-icon
-                                        v-if="isSwitchingCamera"
-                                        name="eo-loading"
-                                        class="animate-spin w-6 h-6"
-                                    />
-                                    <v-icon
-                                        v-else
-                                        name="bi-arrow-repeat"
-                                        class="w-6 h-6"
-                                    />
-                                </button>
-
-                                <!-- Photo Capture Button -->
-                                <button
-                                    type="button"
-                                    @click="capturePhoto"
-                                    :disabled="
-                                        !isCameraReady ||
-                                        form.photos.filter((file) =>
-                                            file.type.startsWith('image')
-                                        ).length >= MAX_PHOTOS ||
-                                        isCapturing ||
-                                        isRecording
-                                    "
-                                    class="p-4 bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 rounded-full transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
-                                >
-                                    <v-icon
-                                        name="hi-camera"
-                                        class="w-6 h-6 text-white"
-                                    />
-                                </button>
-
-                                <!-- Video Recording Button -->
-                                <button
-                                    type="button"
-                                    @click="
-                                        isRecording
-                                            ? stopVideoRecording()
-                                            : startVideoRecording()
-                                    "
-                                    :disabled="
-                                        !isCameraReady ||
-                                        (form.photos.filter((file) =>
-                                            file.type.startsWith('video')
-                                        ).length >= MAX_VIDEOS &&
-                                            !isRecording)
-                                    "
-                                    class="p-4 rounded-full transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
-                                    :class="
-                                        isRecording
-                                            ? 'bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700'
-                                            : 'bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700'
-                                    "
-                                >
-                                    <div
-                                        v-if="isRecording"
-                                        class="w-6 h-6 bg-white rounded-sm"
-                                    ></div>
-                                    <v-icon
-                                        v-else
-                                        name="hi-video-camera"
-                                        class="w-6 h-6 text-white"
-                                    />
-                                </button>
-
-                                <!-- Close Camera Button -->
-                                <button
-                                    type="button"
-                                    @click="stopCamera"
-                                    :disabled="isRecording"
-                                    class="p-3 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all duration-200 text-gray-700 disabled:opacity-50"
-                                >
-                                    <v-icon name="hi-solid-x" class="w-6 h-6" />
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Media Gallery -->
-                <div v-if="form.photo_previews.length > 0" class="space-y-4">
-                    <div class="flex items-center justify-between">
-                        <h4 class="text-sm font-semibold text-gray-700">
-                            Captured Media ({{ form.photo_previews.length }})
-                        </h4>
-                        <button
-                            type="button"
-                            @click="clearAllMedia"
-                            class="text-sm text-red-600 hover:text-red-800 font-medium"
-                        >
-                            Clear All
-                        </button>
-                    </div>
-
-                    <div
-                        class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"
-                    >
-                        <div
-                            v-for="(preview, index) in form.photo_previews"
-                            :key="'media-' + index"
-                            class="relative group aspect-square"
-                        >
-                            <div
-                                v-if="
-                                    form.photos[index].type.startsWith('image')
-                                "
-                            >
-                                <img
-                                    :src="preview"
-                                    class="w-full h-full object-cover rounded-lg border-2 border-gray-200 group-hover:border-blue-400 transition-all duration-200"
-                                    :alt="'Photo ' + (index + 1)"
-                                />
-                                <div
-                                    class="absolute top-2 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full flex items-center"
-                                >
-                                    <v-icon
-                                        name="hi-photograph"
-                                        class="w-3 h-3 mr-1"
-                                    />
-                                    {{
-                                        form.photos
-                                            .filter((file) =>
-                                                file.type.startsWith("image")
-                                            )
-                                            .indexOf(form.photos[index]) + 1
-                                    }}
-                                </div>
-                            </div>
-                            <div v-else>
-                                <video
-                                    :src="preview"
-                                    class="w-full h-full object-cover rounded-lg border-2 border-gray-200 group-hover:border-green-400 transition-all duration-200"
-                                    muted
-                                    preload="metadata"
-                                ></video>
-                                <div
-                                    class="absolute top-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full flex items-center"
-                                >
-                                    <v-icon
-                                        name="hi-video-camera"
-                                        class="w-3 h-3 mr-1"
-                                    />
-                                    {{
-                                        form.photos
-                                            .filter((file) =>
-                                                file.type.startsWith("video")
-                                            )
-                                            .indexOf(form.photos[index]) + 1
-                                    }}
-                                </div>
-                            </div>
-                            <button
-                                @click="removeMedia(index)"
-                                type="button"
-                                class="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200"
-                            >
-                                <v-icon name="hi-trash" class="w-3 h-3" />
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Media requirement message -->
-                <div
-                    v-if="form.photos.length === 0"
-                    class="p-4 bg-blue-50 border border-blue-200 rounded-xl"
-                >
-                    <div class="flex items-center text-blue-700 text-sm">
-                        <v-icon
-                            name="hi-information-circle"
-                            class="w-5 h-5 mr-2"
-                        />
-                        At least one photo or video is required to submit your
-                        report
-                    </div>
-                </div>
-
-                <p v-if="form.errors.photos" class="text-xs text-red-500 mt-2">
-                    {{ form.errors.photos }}
-                </p>
-            </div>
+            <!-- Camera Section -->
+            <CameraSection
+                ref="cameraSectionRef"
+                :form="form"
+                :is-camera-active="isCameraActive"
+                :is-camera-ready="isCameraReady"
+                :is-camera-loading="isCameraLoading"
+                :is-switching-camera="isSwitchingCamera"
+                :is-capturing="isCapturing"
+                :is-recording="isRecording"
+                :recording-time="recordingTime"
+                :has-multiple-cameras="hasMultipleCameras"
+                :camera-error="cameraError"
+                :camera-status="cameraStatus"
+                :media-count="mediaCount"
+                :MAX_PHOTOS="MAX_PHOTOS"
+                :MAX_VIDEOS="MAX_VIDEOS"
+                @retry-camera="retryCamera"
+                @initialize-camera="initializeCamera"
+                @switch-camera="switchCamera"
+                @capture-photo="capturePhoto"
+                @start-recording="startVideoRecording"
+                @stop-recording="stopVideoRecording"
+                @stop-camera="stopCamera"
+                @remove-media="removeMedia"
+                @clear-all-media="clearAllMedia"
+            />
 
             <!-- Location Status -->
-            <div class="p-4 bg-gray-50 rounded-xl border border-gray-200">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center">
-                        <v-icon
-                            name="hi-location-marker"
-                            class="w-5 h-5 mr-2"
-                            :class="{
-                                'text-green-500': locationStatus === 'success',
-                                'text-yellow-500': locationStatus === 'loading',
-                                'text-red-500': locationStatus === 'error',
-                            }"
-                        />
-                        <span class="text-sm font-medium text-gray-700">
-                            GPS Location
-                        </span>
-                    </div>
-                    <div class="text-xs text-gray-500">
-                        <span v-if="locationStatus === 'success'"
-                            >Acquired</span
-                        >
-                        <span v-else-if="locationStatus === 'loading'"
-                            >Acquiring...</span
-                        >
-                        <span v-else-if="locationStatus === 'error'"
-                            >Failed</span
-                        >
-                        <span v-else>Pending</span>
-                    </div>
-                </div>
-                <div
-                    v-if="locationStatus === 'success'"
-                    class="mt-2 text-xs text-gray-600"
-                >
-                    Lat: {{ form.latitude?.toFixed(6) }}, Lng:
-                    {{ form.longitude?.toFixed(6) }}
-                </div>
-                <div v-if="locationStatus === 'error'" class="mt-2">
-                    <button
-                        @click="getLocation"
-                        class="text-xs text-blue-600 hover:text-blue-800 underline"
-                    >
-                        Retry Location
-                    </button>
-                </div>
-            </div>
+            <LocationStatus
+                :location-status="locationStatus"
+                :form="form"
+                @get-location="getLocation"
+            />
 
             <!-- Submit Button -->
-            <div class="pt-6 border-t border-gray-200">
-                <button
-                    type="submit"
-                    :disabled="
-                        form.processing ||
-                        isSubmitting ||
-                        isRecording ||
-                        !isFormValid ||
-                        locationStatus === 'loading'
-                    "
-                    class="w-full py-4 px-6 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
-                >
-                    <span
-                        v-if="isSubmitting"
-                        class="flex items-center justify-center"
-                    >
-                        <v-icon
-                            name="bi-arrow-repeat"
-                            class="animate-spin -ml-1 mr-3 h-5 w-5"
-                        />
-                        {{
-                            isOnline
-                                ? "Submitting Report..."
-                                : "Saving Offline..."
-                        }}
-                    </span>
-                    <span
-                        v-else-if="isRecording"
-                        class="flex items-center justify-center text-yellow-200"
-                    >
-                        <div
-                            class="w-2 h-2 bg-yellow-300 rounded-full mr-3 animate-pulse"
-                        ></div>
-                        Stop recording to submit
-                    </span>
-                    <span v-else class="flex items-center justify-center">
-                        <v-icon name="hi-paper-airplane" class="w-5 h-5 mr-2" />
-                        {{ isOnline ? "Submit Report" : "Save Report Offline" }}
-                    </span>
-                </button>
-            </div>
+            <SubmitButton
+                :is-submitting="isSubmitting"
+                :is-recording="isRecording"
+                :is-form-valid="isFormValid"
+                :location-status="locationStatus"
+                :is-online="isOnline"
+                :form-processing="form.processing"
+            />
         </form>
     </div>
 </template>
@@ -723,13 +85,21 @@ import { ref, computed, watch, onMounted, onUnmounted, nextTick } from "vue";
 import axios from "axios";
 import Swal from "sweetalert2";
 import localforage from "localforage";
-import GlobalReportSuccessModal from "@/Components/Modals/GlobalReportSuccessModal.vue"; // Adjust path as needed
 
-// Configure localforage
-const offlineReportsStore = localforage.createInstance({
-    name: "aquatrack",
-    storeName: "offline_reports",
-});
+// Components
+import NetworkStatus from "./NetworkStatus.vue";
+import FormErrors from "./FormErrors.vue";
+import LocationFields from "./FormFields/LocationFields.vue";
+import ReporterInfo from "./FormFields/ReporterInfo.vue";
+import AreaInfo from "./FormFields/AreaInfo.vue";
+import WaterIssueType from "./FormFields/WaterIssueType.vue";
+import DescriptionField from "./FormFields/DescriptionField.vue";
+import CameraSection from "./Camera/CameraSection.vue";
+import LocationStatus from "./LocationStatus.vue";
+import SubmitButton from "./SubmitButton.vue";
+
+// Emits declaration
+const emit = defineEmits(["submitted", "offlineReportsSynced", "cancel"]);
 
 const props = defineProps({
     zones: {
@@ -738,25 +108,19 @@ const props = defineProps({
     },
 });
 
-const emit = defineEmits([
-    "update:showSuccessModal",
-    "update:successData",
-    "update:showTrackModal",
-    "track-report",
-    "submitted",
-]);
-
 // Network and sync state
 const isOnline = ref(navigator.onLine);
 const isSyncing = ref(false);
 const offlineReportsCount = ref(0);
-const showTrackModalAfterSync = ref(false);
-const lastSyncedTrackingCode = ref("");
 
 // Form state
 const isSubmitting = ref(false);
 const locationStatus = ref("idle");
 
+// Advanced GPS State
+const lastKnownLocation = ref(null);
+const locationWatchId = ref(null);
+const locationCacheTimeout = 15 * 60 * 1000; // 15 minutes cache
 
 // Camera state
 const isCameraActive = ref(false);
@@ -768,17 +132,45 @@ const isRecording = ref(false);
 const recordingTime = ref(0);
 const availableCameras = ref([]);
 const currentCameraIndex = ref(0);
-const videoElement = ref(null);
 const cameraError = ref("");
 const cameraStatus = ref("Initializing...");
-const loadingProgress = ref(0);
 
+// Camera refs
+const cameraSectionRef = ref(null);
+
+// Camera stream and recording variables
 let stream = null;
-let progressInterval = null;
 let mediaRecorder = null;
 let recordedChunks = [];
 let recordingInterval = null;
-let timeUpdateInterval = null;
+
+// Constants
+const MAX_PHOTOS = 3;
+const MAX_VIDEOS = 2;
+const MAX_TOTAL = MAX_PHOTOS + MAX_VIDEOS;
+const MAX_PHOTO_SIZE = 5 * 1024 * 1024;
+const MAX_VIDEO_SIZE = 25 * 1024 * 1024;
+const MAX_VIDEO_DURATION = 30;
+
+const currentLocation = ref("Clarin, Bohol");
+
+const waterIssueTypes = [
+    "Burst pipe",
+    "Rusty water",
+    "Low water pressure",
+    "No water supply",
+    "Clogged pipes",
+    "Smelly water",
+    "Cloudy or dirty water",
+    "Hot water issues",
+    "Running toilet",
+];
+
+// Configure localforage
+const offlineReportsStore = localforage.createInstance({
+    name: "aquatrack",
+    storeName: "offline_reports",
+});
 
 // Form data
 const form = useForm({
@@ -790,8 +182,6 @@ const form = useForm({
     description: "",
     photos: [],
     photo_previews: [],
-    videos: [],
-    video_previews: [],
     reporter_name: "",
     reporter_phone: "",
     latitude: null,
@@ -799,30 +189,6 @@ const form = useForm({
     water_issue_type: "",
     custom_water_issue: "",
 });
-
-// Constants
-const MAX_PHOTOS = 3;
-const MAX_VIDEOS = 2;
-const MAX_TOTAL = MAX_PHOTOS + MAX_VIDEOS;
-const MAX_PHOTO_SIZE = 5 * 1024 * 1024;
-const MAX_VIDEO_SIZE = 25 * 1024 * 1024;
-const MAX_VIDEO_DURATION = 30;
-
-const currentDate = ref("");
-const currentTime = ref("");
-const currentLocation = ref("Clarin, Bohol");
-
-const waterIssueTypes = ref([
-    "Burst pipe",
-    "Rusty water",
-    "Low water pressure",
-    "No water supply",
-    "Clogged pipes",
-    "Smelly water",
-    "Cloudy or dirty water",
-    "Hot water issues",
-    "Running toilet",
-]);
 
 // Computed properties
 const allBarangays = computed(() => {
@@ -843,27 +209,56 @@ const hasErrors = computed(() => {
     return Object.keys(form.errors).length > 0;
 });
 
+// Enhanced form validation with advanced GPS support
+// Enhanced form validation with better GPS handling
 const isFormValid = computed(() => {
-    return (
+    const basicValidation =
         form.reporter_name &&
         form.barangay &&
         form.purok &&
         form.description &&
         form.water_issue_type &&
         (form.water_issue_type !== "others" || form.custom_water_issue) &&
-        form.photos.length > 0 &&
-        locationStatus.value === "success"
+        form.photos.length > 0;
+
+    // For online mode, allow cached locations if GPS fails
+    if (isOnline.value) {
+        const validOnlineLocations = [
+            "success",
+            "offline_cached_location", // Allow cached in online mode too
+        ];
+        return (
+            basicValidation &&
+            validOnlineLocations.includes(locationStatus.value)
+        );
+    }
+
+    // For offline mode, allow cached or default locations
+    const validOfflineLocations = [
+        "success",
+        "offline_cached_location",
+        "offline_default_location",
+    ];
+
+    return (
+        basicValidation && validOfflineLocations.includes(locationStatus.value)
     );
 });
 
 const hasMultipleCameras = computed(() => availableCameras.value.length > 1);
-const currentCameraName = computed(() => {
-    if (availableCameras.value.length === 0) return "";
-    const camera = availableCameras.value[currentCameraIndex.value];
-    return camera?.label || `Camera ${currentCameraIndex.value + 1}`;
-});
 
-// Network status monitoring
+const mediaCount = computed(() => ({
+    images: form.photos.filter((file) => file.type.startsWith("image")).length,
+    videos: form.photos.filter((file) => file.type.startsWith("video")).length,
+    total: form.photos.length,
+}));
+
+// Methods
+const updateFormField = ({ field, value }) => {
+    form[field] = value;
+};
+
+// Network methods
 const updateOnlineStatus = () => {
     isOnline.value = navigator.onLine;
     if (isOnline.value) {
@@ -871,7 +266,6 @@ const updateOnlineStatus = () => {
     }
 };
 
-// Load offline reports count
 const loadOfflineReportsCount = async () => {
     try {
         const queue =
@@ -882,82 +276,248 @@ const loadOfflineReportsCount = async () => {
     }
 };
 
-// Modal methods
-const closeTrackModalAfterSync = () => {
-    showTrackModalAfterSync.value = false;
-    // Small delay before clearing to avoid flickering
-    setTimeout(() => {
-        lastSyncedTrackingCode.value = "";
-    }, 300);
+const triggerAutoSync = () => {
+    if (isOnline.value && offlineReportsCount.value > 0) {
+        setTimeout(syncOfflineReports, 2000);
+    }
 };
 
-const handleTrackReport = (trackingCode) => {
-    // Navigate to tracking page or show tracking details
-    console.log("Track report:", trackingCode);
-    // Example: router.get(route('reports.track', { code: trackingCode }));
+const triggerManualSync = async () => {
+    if (isOnline.value) {
+        syncOfflineReports();
+    }
+};
 
-    // Close the modal after tracking
-    closeTrackModalAfterSync();
+// Advanced GPS Methods
+const loadCachedLocation = () => {
+    try {
+        const cached = localStorage.getItem("lastKnownLocation");
+        if (cached) {
+            const location = JSON.parse(cached);
+            const cacheAge = Date.now() - location.timestamp;
+
+            if (cacheAge < locationCacheTimeout) {
+                lastKnownLocation.value = location;
+                console.log("Loaded cached location:", location);
+                return location;
+            } else {
+                console.log("Cached location expired");
+                localStorage.removeItem("lastKnownLocation");
+            }
+        }
+    } catch (e) {
+        console.warn("Failed to load cached location:", e);
+    }
+    return null;
+};
+
+const saveLocationToCache = (coords) => {
+    try {
+        const locationData = {
+            latitude: coords.latitude,
+            longitude: coords.longitude,
+            accuracy: coords.accuracy,
+            timestamp: Date.now(),
+        };
+        localStorage.setItem("lastKnownLocation", JSON.stringify(locationData));
+        lastKnownLocation.value = locationData;
+        console.log("Location saved to cache:", locationData);
+    } catch (e) {
+        console.warn("Failed to save location to cache:", e);
+    }
+};
+
+const startLocationTracking = () => {
+    if (!navigator.geolocation) {
+        console.warn("Geolocation not supported");
+        return;
+    }
+
+    try {
+        locationWatchId.value = navigator.geolocation.watchPosition(
+            (position) => {
+                const coords = {
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude,
+                    accuracy: position.coords.accuracy,
+                    timestamp: Date.now(),
+                };
+
+                // Update cache with fresh location
+                saveLocationToCache(coords);
+
+                // Only update form if we're actively trying to get location
+                if (
+                    locationStatus.value === "loading" ||
+                    locationStatus.value === "success"
+                ) {
+                    form.latitude = coords.latitude;
+                    form.longitude = coords.longitude;
+                    locationStatus.value = "success";
+                }
+            },
+            (error) => {
+                console.warn("Location tracking error:", {
+                    code: error.code,
+                    message: error.message,
+                });
+                // Don't show errors for tracking, just log them
+            },
+            {
+                enableHighAccuracy: false, // Use false for better reliability
+                maximumAge: 60000, // 1 minute
+                timeout: 10000,
+            }
+        );
+        console.log("Started continuous location tracking");
+    } catch (error) {
+        console.error("Failed to start location tracking:", error);
+    }
+};
+
+const stopLocationTracking = () => {
+    if (locationWatchId.value) {
+        navigator.geolocation.clearWatch(locationWatchId.value);
+        locationWatchId.value = null;
+        console.log("Stopped location tracking");
+    }
+};
+
+const handleLocationError = (error) => {
+    console.warn("Location error details:", {
+        code: error.code,
+        message: error.message,
+        isOnline: isOnline.value,
+    });
+
+    // Try to use cached location first (both online and offline)
+    const cachedLocation = loadCachedLocation();
+    if (cachedLocation) {
+        form.latitude = cachedLocation.latitude;
+        form.longitude = cachedLocation.longitude;
+        locationStatus.value = isOnline.value
+            ? "offline_cached_location"
+            : "offline_cached_location";
+        console.log("Using cached location:", cachedLocation);
+
+        if (isOnline.value) {
+            Swal.fire({
+                icon: "info",
+                title: "Using Cached Location",
+                text: "Could not get fresh GPS signal. Using previously saved location.",
+                toast: true,
+                position: "top-end",
+                showConfirmButton: false,
+                timer: 3000,
+            });
+        }
+        return;
+    }
+
+    // For any mode with no cache, use default
+    form.latitude = 9.9616;
+    form.longitude = 124.025;
+    locationStatus.value = "offline_default_location";
+
+    let errorMessage = "Using default location for Clarin, Bohol.";
+
+    if (error.code === error.TIMEOUT) {
+        errorMessage =
+            "GPS signal timed out. Using default location for Clarin, Bohol.";
+    } else if (error.code === error.POSITION_UNAVAILABLE) {
+        errorMessage =
+            "GPS signal unavailable. Using default location for Clarin, Bohol.";
+    }
+
+    if (isOnline.value) {
+        Swal.fire({
+            icon: "warning",
+            title: "Location Issue",
+            text: errorMessage,
+            confirmButtonColor: "#3085d6",
+        });
+    } else {
+        console.log("Offline mode with default location");
+    }
+};
+
+const getLocation = () => {
+    // First, check if we have a valid cached location (especially for offline)
+    if (!isOnline.value) {
+        const cachedLocation = loadCachedLocation();
+        if (cachedLocation) {
+            form.latitude = cachedLocation.latitude;
+            form.longitude = cachedLocation.longitude;
+            locationStatus.value = "offline_cached_location";
+            console.log(
+                "Using cached location for offline report:",
+                cachedLocation
+            );
+            return;
+        }
+    }
+
+    if (!navigator.geolocation) {
+        handleLocationError("Geolocation not supported");
+        return;
+    }
+
+    locationStatus.value = "loading";
+
+    // More realistic timeout settings
+    const locationOptions = {
+        enableHighAccuracy: true,
+        timeout: isOnline.value ? 20000 : 15000, // Longer timeouts
+        maximumAge: isOnline.value ? 60000 : 300000, // Use older locations
+    };
+
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            const coords = {
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+                accuracy: position.coords.accuracy,
+                timestamp: Date.now(),
+            };
+
+            // Cache the location
+            saveLocationToCache(coords);
+
+            form.latitude = coords.latitude;
+            form.longitude = coords.longitude;
+            locationStatus.value = "success";
+
+            console.log("Live GPS location acquired:", coords);
+
+            Swal.fire({
+                icon: "success",
+                title: "Location Acquired!",
+                text: `GPS coordinates captured successfully. Accuracy: ${
+                    coords.accuracy
+                        ? coords.accuracy.toFixed(1) + " meters"
+                        : "High"
+                }`,
+                toast: true,
+                position: "top-end",
+                showConfirmButton: false,
+                timer: 3000,
+            });
+        },
+        (error) => {
+            console.warn("GPS Error Details:", {
+                code: error.code,
+                message: error.message,
+                PERMISSION_DENIED: error.PERMISSION_DENIED,
+                POSITION_UNAVAILABLE: error.POSITION_UNAVAILABLE,
+                TIMEOUT: error.TIMEOUT,
+            });
+            handleLocationError(error);
+        },
+        locationOptions
+    );
 };
 
 // Camera methods
-const updateTimeDisplay = () => {
-    const now = new Date();
-    currentDate.value = now.toLocaleDateString("en-US", {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-    });
-    currentTime.value = now.toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: true,
-    });
-};
-
-const selectWaterIssue = (event) => {
-    form.water_issue_type = event.target.value || "";
-    if (form.water_issue_type !== "others") {
-        form.custom_water_issue = "";
-    }
-};
-
-const getNextCameraName = () => {
-    if (availableCameras.value.length <= 1) return "";
-    const nextIndex =
-        (currentCameraIndex.value + 1) % availableCameras.value.length;
-    const camera = availableCameras.value[nextIndex];
-    return camera?.label || `Camera ${nextIndex + 1}`;
-};
-
-const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
-};
-
-const startLoadingProgress = () => {
-    loadingProgress.value = 0;
-    progressInterval = setInterval(() => {
-        if (loadingProgress.value < 90) {
-            loadingProgress.value += Math.random() * 15;
-        }
-    }, 200);
-};
-
-const stopLoadingProgress = () => {
-    if (progressInterval) {
-        clearInterval(progressInterval);
-        progressInterval = null;
-    }
-    loadingProgress.value = 100;
-    setTimeout(() => {
-        loadingProgress.value = 0;
-    }, 500);
-};
-
 const getCameras = async () => {
     try {
         cameraStatus.value = "Detecting cameras...";
@@ -992,20 +552,11 @@ const getCameras = async () => {
     }
 };
 
-const initializeCamera = async (retryCount = 0, maxRetries = 3) => {
-    if (retryCount >= maxRetries) {
-        cameraError.value =
-            "Failed to access camera after multiple attempts. Please close other applications using the camera or restart your browser.";
-        return;
-    }
-
+const initializeCamera = async () => {
     cameraError.value = "";
     isCameraLoading.value = true;
-    startLoadingProgress();
 
     try {
-        cameraStatus.value = "Requesting camera permission...";
-
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
             throw new Error("Camera not supported by this browser");
         }
@@ -1019,19 +570,14 @@ const initializeCamera = async (retryCount = 0, maxRetries = 3) => {
         if (stream) {
             stream.getTracks().forEach((track) => track.stop());
             stream = null;
-            await nextTick();
         }
 
         await startCameraStream();
-
-        updateTimeDisplay();
-        timeUpdateInterval = setInterval(updateTimeDisplay, 1000);
     } catch (error) {
         console.error("Camera initialization failed:", error);
-        handleCameraError(error, retryCount, maxRetries);
+        handleCameraError(error);
     } finally {
         isCameraLoading.value = false;
-        stopLoadingProgress();
     }
 };
 
@@ -1045,11 +591,7 @@ const startCameraStream = async () => {
         }
 
         isCameraActive.value = true;
-        await nextTick();
-
-        if (!videoElement.value) {
-            throw new Error("Video element not available");
-        }
+        await nextTick(); // Wait for DOM update
 
         const constraints = {
             video: {
@@ -1071,40 +613,10 @@ const startCameraStream = async () => {
 
         stream = await navigator.mediaDevices.getUserMedia(constraints);
 
-        cameraStatus.value = "Loading video stream...";
-        videoElement.value.srcObject = stream;
-
-        await new Promise((resolve, reject) => {
-            const timeout = setTimeout(
-                () => reject(new Error("Video load timeout")),
-                10000
-            );
-            const onLoadedMetadata = () => {
-                clearTimeout(timeout);
-                videoElement.value.removeEventListener(
-                    "loadedmetadata",
-                    onLoadedMetadata
-                );
-                videoElement.value.removeEventListener("error", onError);
-                resolve();
-            };
-            const onError = (e) => {
-                clearTimeout(timeout);
-                videoElement.value.removeEventListener(
-                    "loadedmetadata",
-                    onLoadedMetadata
-                );
-                videoElement.value.removeEventListener("error", onError);
-                reject(new Error("Video failed to load"));
-            };
-            videoElement.value.addEventListener(
-                "loadedmetadata",
-                onLoadedMetadata
-            );
-            videoElement.value.addEventListener("error", onError);
-            const playPromise = videoElement.value.play();
-            if (playPromise) playPromise.catch(console.warn);
-        });
+        // FIX: Set the stream to the camera interface
+        if (cameraSectionRef.value) {
+            cameraSectionRef.value.setVideoStream(stream);
+        }
 
         isCameraReady.value = true;
         cameraStatus.value = "Camera ready";
@@ -1114,7 +626,7 @@ const startCameraStream = async () => {
     }
 };
 
-const handleCameraError = (error, retryCount, maxRetries) => {
+const handleCameraError = (error) => {
     isCameraActive.value = false;
     isCameraReady.value = false;
 
@@ -1125,73 +637,21 @@ const handleCameraError = (error, retryCount, maxRetries) => {
 
     let errorMessage = "Camera initialization failed";
 
-    if (
-        error.name === "NotAllowedError" ||
-        error.message.includes("permission")
-    ) {
+    if (error.name === "NotAllowedError") {
         errorMessage =
-            "Camera and microphone access denied. Please allow permissions and try again.";
-    } else if (
-        error.name === "NotFoundError" ||
-        error.message.includes("No camera")
-    ) {
+            "Camera access denied. Please allow permissions and try again.";
+    } else if (error.name === "NotFoundError") {
         errorMessage = "No camera found on your device.";
     } else if (error.name === "NotReadableError") {
-        errorMessage =
-            "Camera is busy or being used by another application. Please close other apps or tabs using the camera and try again.";
-        if (retryCount < maxRetries - 1) {
-            setTimeout(
-                () => initializeCamera(retryCount + 1, maxRetries),
-                2000
-            );
-            return;
-        }
-    } else if (error.name === "OverconstrainedError") {
-        errorMessage = "Camera settings not supported by your device.";
-    } else if (error.message.includes("not supported")) {
-        errorMessage = "Camera not supported by this browser.";
+        errorMessage = "Camera is busy or being used by another application.";
     }
 
     cameraError.value = errorMessage;
-
-    if (error.name === "NotReadableError" && retryCount >= maxRetries - 1) {
-        Swal.fire({
-            icon: "error",
-            title: "Camera Busy",
-            text: `${errorMessage} If the issue persists, reset camera permissions in your browser settings (e.g., chrome://settings/content/camera) and refresh the page.`,
-            confirmButtonColor: "#3085d6",
-        });
-    }
 };
 
 const retryCamera = () => {
     cameraError.value = "";
     initializeCamera();
-};
-
-const stopCamera = () => {
-    if (isRecording.value) {
-        stopVideoRecording();
-    }
-
-    if (timeUpdateInterval) {
-        clearInterval(timeUpdateInterval);
-        timeUpdateInterval = null;
-    }
-
-    if (stream) {
-        stream.getTracks().forEach((track) => track.stop());
-        if (videoElement.value) {
-            videoElement.value.srcObject = null;
-        }
-        stream = null;
-    }
-
-    isCameraActive.value = false;
-    isCameraReady.value = false;
-    isCameraLoading.value = false;
-    cameraError.value = "";
-    stopLoadingProgress();
 };
 
 const switchCamera = async () => {
@@ -1205,25 +665,99 @@ const switchCamera = async () => {
     try {
         isSwitchingCamera.value = true;
         isCameraReady.value = false;
-        cameraStatus.value = "Switching camera...";
 
         currentCameraIndex.value =
             (currentCameraIndex.value + 1) % availableCameras.value.length;
-
         await startCameraStream();
     } catch (error) {
         console.error("Camera switch failed:", error);
-        handleCameraError(error, 0, 1);
+        handleCameraError(error);
     } finally {
         isSwitchingCamera.value = false;
+    }
+};
+
+const capturePhoto = async () => {
+    if (
+        !isCameraReady.value ||
+        mediaCount.value.images >= MAX_PHOTOS ||
+        isCapturing.value ||
+        isRecording.value
+    ) {
+        return;
+    }
+
+    try {
+        isCapturing.value = true;
+
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+
+        // FIX: Get the video element from CameraSection
+        const video = cameraSectionRef.value?.getVideoElement();
+
+        if (!video) {
+            throw new Error("Camera video element not found");
+        }
+
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        // FIX: Properly handle the async toBlob with Promise
+        const blob = await new Promise((resolve, reject) => {
+            canvas.toBlob(
+                (blob) => {
+                    if (blob) {
+                        resolve(blob);
+                    } else {
+                        reject(new Error("Failed to create image blob"));
+                    }
+                },
+                "image/jpeg",
+                0.85 // Slightly lower quality for better reliability
+            );
+        });
+
+        if (blob.size > MAX_PHOTO_SIZE) {
+            throw new Error("Photo size too large");
+        }
+
+        const filename = `water-report-${Date.now()}.jpg`;
+        const file = new File([blob], filename, {
+            type: "image/jpeg",
+            lastModified: Date.now(),
+        });
+
+        form.photos.push(file);
+        form.photo_previews.push(URL.createObjectURL(blob));
+
+        Swal.fire({
+            icon: "success",
+            title: `Photo ${mediaCount.value.images} captured!`,
+            toast: true,
+            position: "top-end",
+            showConfirmButton: false,
+            timer: 2000,
+        });
+    } catch (error) {
+        console.error("Photo capture failed:", error);
+        Swal.fire({
+            icon: "error",
+            title: "Capture Failed",
+            text: error.message || "Failed to capture photo. Please try again.",
+            timer: 3000,
+        });
+    } finally {
+        isCapturing.value = false;
     }
 };
 
 const startVideoRecording = async () => {
     if (
         !isCameraReady.value ||
-        form.photos.filter((file) => file.type.startsWith("video")).length >=
-            MAX_VIDEOS ||
+        mediaCount.value.videos >= MAX_VIDEOS ||
         !stream
     ) {
         return;
@@ -1233,20 +767,7 @@ const startVideoRecording = async () => {
         recordedChunks = [];
         recordingTime.value = 0;
 
-        const options = {
-            mimeType: "video/webm;codecs=vp9,opus",
-        };
-
-        if (!MediaRecorder.isTypeSupported(options.mimeType)) {
-            options.mimeType = "video/webm;codecs=vp8,opus";
-            if (!MediaRecorder.isTypeSupported(options.mimeType)) {
-                options.mimeType = "video/webm";
-                if (!MediaRecorder.isTypeSupported(options.mimeType)) {
-                    options.mimeType = "";
-                }
-            }
-        }
-
+        const options = { mimeType: "video/webm;codecs=vp9,opus" };
         mediaRecorder = new MediaRecorder(stream, options);
 
         mediaRecorder.ondataavailable = (event) => {
@@ -1276,25 +797,16 @@ const startVideoRecording = async () => {
                 lastModified: Date.now(),
             });
 
-            file.duration = recordingTime.value;
-
             form.photos.push(file);
             form.photo_previews.push(URL.createObjectURL(blob));
 
-            const Toast = Swal.mixin({
+            Swal.fire({
+                icon: "success",
+                title: `Video ${mediaCount.value.videos} recorded!`,
                 toast: true,
                 position: "top-end",
                 showConfirmButton: false,
                 timer: 2000,
-                timerProgressBar: true,
-            });
-
-            Toast.fire({
-                icon: "success",
-                title: `Video ${
-                    form.photos.filter((file) => file.type.startsWith("video"))
-                        .length
-                } recorded!`,
             });
         };
 
@@ -1303,7 +815,6 @@ const startVideoRecording = async () => {
 
         recordingInterval = setInterval(() => {
             recordingTime.value++;
-
             if (recordingTime.value >= MAX_VIDEO_DURATION) {
                 stopVideoRecording();
             }
@@ -1335,158 +846,20 @@ const stopVideoRecording = () => {
     }
 };
 
-const capturePhoto = async () => {
-    if (
-        !isCameraReady.value ||
-        form.photos.filter((file) => file.type.startsWith("image")).length >=
-            MAX_PHOTOS ||
-        isCapturing.value ||
-        isRecording.value
-    ) {
-        return;
+const stopCamera = () => {
+    if (isRecording.value) {
+        stopVideoRecording();
     }
 
-    try {
-        isCapturing.value = true;
-
-        const video = videoElement.value;
-        if (!video || !video.videoWidth || !video.videoHeight) {
-            throw new Error("Video not ready for capture");
-        }
-
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-        const now = new Date();
-        const timestamp = now.toLocaleString("en-US", {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-            hour12: true,
-        });
-
-        const timestampPadding = 10;
-        const fontSize = Math.max(16, Math.floor(canvas.width / 60));
-        ctx.font = `bold ${fontSize}px Arial`;
-
-        const textMetrics = ctx.measureText(timestamp);
-        const textWidth = textMetrics.width;
-        const textHeight = fontSize;
-
-        const bgX = timestampPadding;
-        const bgY = canvas.height - timestampPadding - textHeight - 10;
-        const bgWidth = textWidth + 20;
-        const bgHeight = textHeight + 20;
-
-        ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
-        ctx.fillRect(bgX, bgY, bgWidth, bgHeight);
-
-        ctx.strokeStyle = "white";
-        ctx.lineWidth = 2;
-        ctx.strokeRect(bgX, bgY, bgWidth, bgHeight);
-
-        const textX = bgX + 10;
-        const textY = bgY + textHeight + 5;
-
-        ctx.lineWidth = 6;
-        ctx.strokeStyle = "black";
-        ctx.strokeText(timestamp, textX, textY);
-
-        ctx.lineWidth = 4;
-        ctx.strokeStyle = "white";
-        ctx.strokeText(timestamp, textX, textY);
-
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = "black";
-        ctx.strokeText(timestamp, textX, textY);
-
-        ctx.fillStyle = "white";
-        ctx.fillText(timestamp, textX, textY);
-
-        const locationText = currentLocation.value;
-        ctx.font = `${Math.floor(fontSize * 0.8)}px Arial`;
-        const locationY = textY + fontSize + 5;
-
-        const locTextMetrics = ctx.measureText(locationText);
-        const locBgWidth = locTextMetrics.width + 16;
-        const locBgHeight = Math.floor(fontSize * 0.8) + 16;
-
-        ctx.fillStyle = "rgba(0, 100, 200, 0.8)";
-        ctx.fillRect(
-            textX,
-            locationY - Math.floor(fontSize * 0.8) - 8,
-            locBgWidth,
-            locBgHeight
-        );
-
-        ctx.strokeStyle = "white";
-        ctx.lineWidth = 1;
-        ctx.strokeRect(
-            textX,
-            locationY - Math.floor(fontSize * 0.8) - 8,
-            locBgWidth,
-            locBgHeight
-        );
-
-        ctx.fillStyle = "white";
-        ctx.fillText(locationText, textX + 8, locationY);
-
-        const blob = await new Promise((resolve) => {
-            canvas.toBlob(resolve, "image/jpeg", 0.95);
-        });
-
-        if (!blob) {
-            throw new Error("Failed to create image blob");
-        }
-
-        if (blob.size > MAX_PHOTO_SIZE) {
-            throw new Error("Photo size too large");
-        }
-
-        const filename = `water-report-${Date.now()}.jpg`;
-        const file = new File([blob], filename, {
-            type: "image/jpeg",
-            lastModified: Date.now(),
-        });
-
-        form.photos.push(file);
-        form.photo_previews.push(URL.createObjectURL(blob));
-
-        const Toast = Swal.mixin({
-            toast: true,
-            position: "top-end",
-            showConfirmButton: false,
-            timer: 2000,
-            timerProgressBar: true,
-        });
-
-        Toast.fire({
-            icon: "success",
-            title: `Photo ${
-                form.photos.filter((file) => file.type.startsWith("image"))
-                    .length
-            } captured!`,
-        });
-    } catch (error) {
-        console.error("Photo capture failed:", error);
-
-        Swal.fire({
-            icon: "error",
-            title: "Capture Failed",
-            text: error.message || "Failed to capture photo. Please try again.",
-            timer: 3000,
-        });
-    } finally {
-        isCapturing.value = false;
+    if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
+        stream = null;
     }
+
+    isCameraActive.value = false;
+    isCameraReady.value = false;
+    isCameraLoading.value = false;
+    cameraError.value = "";
 };
 
 const removeMedia = (index) => {
@@ -1513,11 +886,8 @@ const clearAllMedia = () => {
     }).then((result) => {
         if (result.isConfirmed) {
             form.photo_previews.forEach((url) => URL.revokeObjectURL(url));
-
             form.photos = [];
             form.photo_previews = [];
-            form.videos = [];
-            form.video_previews = [];
 
             Swal.fire({
                 icon: "success",
@@ -1531,12 +901,301 @@ const clearAllMedia = () => {
     });
 };
 
-const restrictPhoneInput = (event) => {
-    let value = event.target.value.replace(/[^0-9]/g, "");
-    if (value.length > 11) {
-        value = value.slice(0, 11);
+// Helper function for showing sync results
+const showSyncResults = (successfulSyncs, failedSyncs, syncTrackingData) => {
+    if (successfulSyncs.length > 0 || failedSyncs.length > 0) {
+        let message = "";
+
+        if (successfulSyncs.length > 0) {
+            message += ` ${successfulSyncs.length} report(s) synced successfully.\n`;
+            if (syncTrackingData.length > 0) {
+                message += `Tracking code: ${
+                    syncTrackingData[syncTrackingData.length - 1].trackingCode
+                }\n`;
+            }
+        }
+
+        if (failedSyncs.length > 0) {
+            message += ` ${failedSyncs.length} report(s) failed to sync.\n`;
+        }
+
+        Swal.fire({
+            icon: successfulSyncs.length > 0 ? "success" : "error",
+            title: successfulSyncs.length > 0 ? "Sync Complete" : "Sync Issues",
+            text: message,
+            timer: 5000,
+        });
     }
-    form.reporter_phone = value;
+};
+
+const syncOfflineReports = async () => {
+    if (!isOnline.value || isSyncing.value) return;
+
+    isSyncing.value = true;
+    console.log("Starting offline reports sync...");
+
+    try {
+        const queue =
+            (await offlineReportsStore.getItem("offline_reports_queue")) || [];
+
+        if (queue.length === 0) {
+            console.log("No offline reports to sync");
+            isSyncing.value = false;
+            return;
+        }
+
+        const successfulSyncs = [];
+        const failedSyncs = [];
+        const syncTrackingData = [];
+
+        for (const report of queue) {
+            try {
+                console.log(`Processing report: ${report.id}`, report.formData);
+
+                // Enhanced validation - ensure location data exists
+                if (!isValidOfflineReport(report)) {
+                    console.warn(
+                        `Invalid offline report ${report.id}, skipping`
+                    );
+                    failedSyncs.push({ id: report.id, reason: "Invalid data" });
+                    continue;
+                }
+
+                const formData = new FormData();
+
+                // Add all form data fields with proper formatting
+                Object.keys(report.formData).forEach((key) => {
+                    const value = report.formData[key];
+                    if (value !== null && value !== undefined && value !== "") {
+                        if (key === "photos") {
+                            return;
+                        } else if (Array.isArray(value)) {
+                            value.forEach((item) =>
+                                formData.append(`${key}[]`, item)
+                            );
+                        } else {
+                            formData.append(key, value.toString());
+                        }
+                    }
+                });
+
+                // Ensure latitude and longitude are always included
+                if (!formData.has("latitude") || !formData.has("longitude")) {
+                    // Use default coordinates if missing
+                    formData.append(
+                        "latitude",
+                        report.formData.latitude || "9.9616"
+                    );
+                    formData.append(
+                        "longitude",
+                        report.formData.longitude || "124.0250"
+                    );
+                }
+
+                // Convert base64 photos back to files
+                let hasValidPhotos = false;
+                for (const photo of report.photos) {
+                    try {
+                        const response = await fetch(photo.dataUrl);
+                        const blob = await response.blob();
+
+                        if (blob.size === 0 || blob.size > MAX_PHOTO_SIZE) {
+                            console.warn(
+                                `Invalid photo size in report ${report.id}: ${blob.size} bytes`
+                            );
+                            continue;
+                        }
+
+                        const file = new File([blob], photo.name, {
+                            type: photo.type,
+                        });
+                        formData.append("photos[]", file);
+                        hasValidPhotos = true;
+                    } catch (photoError) {
+                        console.warn(
+                            `Failed to process photo in report ${report.id}:`,
+                            photoError
+                        );
+                    }
+                }
+
+                if (!hasValidPhotos) {
+                    console.warn(`No valid photos in report ${report.id}`);
+                    failedSyncs.push({
+                        id: report.id,
+                        reason: "No valid photos",
+                    });
+                    continue;
+                }
+
+                // Add CSRF token for Laravel
+                const csrfToken = document
+                    .querySelector('meta[name="csrf-token"]')
+                    ?.getAttribute("content");
+                if (csrfToken) {
+                    formData.append("_token", csrfToken);
+                }
+
+                const response = await axios.post(
+                    route("reports.store"),
+                    formData,
+                    {
+                        headers: {
+                            "Content-Type": "multipart/form-data",
+                            "X-Requested-With": "XMLHttpRequest",
+                        },
+                        timeout: 30000,
+                    }
+                );
+
+                if (response.data.success) {
+                    successfulSyncs.push(report.id);
+                    if (response.data.trackingCode) {
+                        syncTrackingData.push({
+                            trackingCode: response.data.trackingCode,
+                            dateSubmitted: new Date().toISOString(),
+                            originalReportId: report.id,
+                        });
+                    }
+                    console.log(
+                        `Successfully synced report ${report.id} with tracking code: ${response.data.trackingCode}`
+                    );
+                } else {
+                    failedSyncs.push({
+                        id: report.id,
+                        reason: "Server rejected",
+                        details: response.data,
+                    });
+                }
+            } catch (error) {
+                console.error(`Error syncing report ${report.id}:`, error);
+
+                if (error.response) {
+                    console.error(
+                        "Server response error:",
+                        error.response.status
+                    );
+                    console.error("Server response data:", error.response.data);
+
+                    if (
+                        error.response.status === 422 &&
+                        error.response.data.errors
+                    ) {
+                        console.error(
+                            "VALIDATION ERRORS:",
+                            error.response.data.errors
+                        );
+                    }
+
+                    failedSyncs.push({
+                        id: report.id,
+                        reason: `Server error: ${error.response.status}`,
+                        details: error.response.data,
+                        validationErrors: error.response.data.errors,
+                    });
+                } else if (error.request) {
+                    failedSyncs.push({
+                        id: report.id,
+                        reason: "No server response",
+                    });
+                } else {
+                    failedSyncs.push({ id: report.id, reason: error.message });
+                }
+            }
+        }
+
+        // Update queue
+        const updatedQueue = queue.filter(
+            (report) => !successfulSyncs.includes(report.id)
+        );
+        await offlineReportsStore.setItem(
+            "offline_reports_queue",
+            updatedQueue
+        );
+        offlineReportsCount.value = updatedQueue.length;
+
+        // Show success modal for synced reports
+        if (syncTrackingData.length > 0) {
+            const latestSync = syncTrackingData[syncTrackingData.length - 1];
+
+            // Emit to parent (Hero.vue) instead of showing modal here
+            emit("offlineReportsSynced", {
+                trackingCode: latestSync.trackingCode,
+                dateSubmitted: latestSync.dateSubmitted,
+                totalSynced: syncTrackingData.length,
+            });
+
+            console.log(
+                `Emitting sync success for tracking code: ${latestSync.trackingCode}`
+            );
+        }
+
+        // Show sync results
+        showSyncResults(successfulSyncs, failedSyncs, syncTrackingData);
+    } catch (error) {
+        console.error("Error during offline reports sync:", error);
+        Swal.fire({
+            icon: "error",
+            title: "Sync Failed",
+            text: "An error occurred during sync. Please try again.",
+            timer: 5000,
+        });
+    } finally {
+        isSyncing.value = false;
+    }
+};
+
+// Add this validation function
+const isValidOfflineReport = (report) => {
+    if (!report || !report.formData || !report.photos) {
+        return false;
+    }
+
+    const requiredFields = [
+        "reporter_name",
+        "barangay",
+        "purok",
+        "description",
+        "water_issue_type",
+        "latitude", // Now required by server
+        "longitude", // Now required by server
+    ];
+
+    for (const field of requiredFields) {
+        if (
+            !report.formData[field] ||
+            report.formData[field].toString().trim() === ""
+        ) {
+            console.warn(`Missing required field: ${field}`);
+            return false;
+        }
+    }
+
+    // Validate water issue type
+    if (
+        report.formData.water_issue_type === "others" &&
+        (!report.formData.custom_water_issue ||
+            report.formData.custom_water_issue.trim() === "")
+    ) {
+        console.warn('Custom water issue required when type is "others"');
+        return false;
+    }
+
+    // Validate photos
+    if (!Array.isArray(report.photos) || report.photos.length === 0) {
+        console.warn("No photos in report");
+        return false;
+    }
+
+    // Check if photos are valid
+    for (const photo of report.photos) {
+        if (!photo.dataUrl || !photo.name || !photo.type) {
+            console.warn("Invalid photo data");
+            return false;
+        }
+    }
+
+    return true;
 };
 
 // Offline storage methods
@@ -1557,45 +1216,103 @@ const saveReportOffline = async () => {
             "_" +
             Math.random().toString(36).substr(2, 9);
 
+        // Validate required fields
+        const requiredFields = [
+            "reporter_name",
+            "barangay",
+            "purok",
+            "description",
+            "water_issue_type",
+        ];
+
+        const missingFields = [];
+        for (const field of requiredFields) {
+            if (!form[field] || form[field].toString().trim() === "") {
+                missingFields.push(field);
+            }
+        }
+
+        if (missingFields.length > 0) {
+            throw new Error(
+                `Required fields missing: ${missingFields.join(", ")}`
+            );
+        }
+
+        // Validate water issue type
+        if (
+            form.water_issue_type === "others" &&
+            (!form.custom_water_issue || form.custom_water_issue.trim() === "")
+        ) {
+            throw new Error(
+                "Custom water issue description is required when selecting 'Others'"
+            );
+        }
+
+        // Validate photos
+        if (form.photos.length === 0) {
+            throw new Error("At least one photo is required");
+        }
+
         // Convert photos to base64 for storage
         const photosWithData = [];
         for (const photo of form.photos) {
-            const dataUrl = await fileToBase64(photo);
-            photosWithData.push({
-                name: photo.name,
-                type: photo.type,
-                size: photo.size,
-                dataUrl: dataUrl,
-            });
+            if (!photo || photo.size === 0 || photo.size > MAX_PHOTO_SIZE) {
+                console.warn("Skipping invalid photo:", photo);
+                continue;
+            }
+
+            try {
+                const dataUrl = await fileToBase64(photo);
+                photosWithData.push({
+                    name: photo.name || `photo-${Date.now()}.jpg`,
+                    type: photo.type || "image/jpeg",
+                    size: photo.size,
+                    dataUrl: dataUrl,
+                });
+            } catch (photoError) {
+                console.warn("Failed to convert photo to base64:", photoError);
+            }
         }
+
+        if (photosWithData.length === 0) {
+            throw new Error("No valid photos to save");
+        }
+
+        // Enhanced location data with source information
+        const latitude = form.latitude || 9.9616;
+        const longitude = form.longitude || 124.025;
+        const locationSource =
+            locationStatus.value === "offline_cached_location"
+                ? "cached_gps"
+                : locationStatus.value === "success"
+                ? "live_gps"
+                : "default";
 
         const offlineReport = {
             id: reportId,
             formData: {
-                municipality: form.municipality,
-                province: form.province,
-                zone: form.zone,
-                barangay: form.barangay,
-                purok: form.purok,
-                description: form.description,
-                reporter_name: form.reporter_name,
-                reporter_phone: form.reporter_phone,
-                latitude: form.latitude,
-                longitude: form.longitude,
+                municipality: form.municipality || "Clarin",
+                province: form.province || "Bohol",
+                zone: form.zone || "",
+                barangay: form.barangay.trim(),
+                purok: form.purok.trim(),
+                description: form.description.trim(),
+                reporter_name: form.reporter_name.trim(),
+                reporter_phone: (form.reporter_phone || "").trim(),
+                latitude: latitude,
+                longitude: longitude,
                 water_issue_type: form.water_issue_type,
-                custom_water_issue: form.custom_water_issue,
+                custom_water_issue: (form.custom_water_issue || "").trim(),
+                location_source: locationSource, // Track where the location came from
             },
             photos: photosWithData,
             createdAt: new Date().toISOString(),
             synced: false,
         };
 
-        // Get existing queue
         const queue =
             (await offlineReportsStore.getItem("offline_reports_queue")) || [];
         queue.push(offlineReport);
-
-        // Save back to localforage
         await offlineReportsStore.setItem("offline_reports_queue", queue);
         offlineReportsCount.value = queue.length;
 
@@ -1606,198 +1323,7 @@ const saveReportOffline = async () => {
     }
 };
 
-// Sync methods
-const syncOfflineReports = async () => {
-    if (!isOnline.value || isSyncing.value) return;
-
-    isSyncing.value = true;
-    console.log("Starting offline reports sync...");
-
-    try {
-        const queue =
-            (await offlineReportsStore.getItem("offline_reports_queue")) || [];
-        console.log("Offline queue length:", queue.length);
-
-        if (queue.length === 0) {
-            console.log("No offline reports to sync");
-            isSyncing.value = false;
-            return;
-        }
-
-        const successfulSyncs = [];
-        const failedSyncs = [];
-        const syncedTrackingCodes = [];
-
-        // Get CSRF token from meta tag
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-        if (!csrfToken) {
-            console.error('❌ CSRF token not found');
-            throw new Error('CSRF token not available');
-        }
-
-        for (const [index, report] of queue.entries()) {
-            try {
-                console.log(
-                    `Syncing report ${index + 1}/${queue.length}:`,
-                    report.id
-                );
-
-                const formData = new FormData();
-                Object.keys(report.formData).forEach((key) => {
-                    if (
-                        report.formData[key] !== null &&
-                        report.formData[key] !== undefined
-                    ) {
-                        formData.append(key, report.formData[key]);
-                    }
-                });
-
-                // Convert base64 photos back to files
-                for (const photo of report.photos) {
-                    const response = await fetch(photo.dataUrl);
-                    const blob = await response.blob();
-                    const file = new File([blob], photo.name, {
-                        type: photo.type,
-                    });
-                    formData.append("photos[]", file);
-                }
-
-                const response = await axios.post(
-                    route("reports.store"),
-                    formData,
-                    {
-                        headers: {
-                            "Content-Type": "multipart/form-data",
-                            "X-CSRF-TOKEN": csrfToken,
-                            "X-Requested-With": "XMLHttpRequest"
-                        },
-                        timeout: 30000
-                    }
-                );
-
-                if (response.data.success && response.data.trackingCode) {
-                    successfulSyncs.push(report.id);
-                    syncedTrackingCodes.push(response.data.trackingCode);
-                    console.log(
-                        `✅ Successfully synced report ${report.id}, tracking code: ${response.data.trackingCode}`
-                    );
-
-                    // Use the same modal system as online submission
-                    // Set the reactive variables that control your success modal
-                    lastSyncedTrackingCode.value = response.data.trackingCode;
-
-                    showTrackModalAfterSync.value = true;
-
-                } else {
-                    failedSyncs.push(report.id);
-                    console.error(
-                        `❌ Failed to sync report ${report.id}:`,
-                        response.data
-                    );
-
-                    // Use Swal only for errors (since your online might use it for errors too)
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Sync Failed',
-                        text: response.data.message || 'Failed to sync report'
-                    });
-                }
-            } catch (error) {
-                failedSyncs.push(report.id);
-                console.error(`❌ Error syncing report ${report.id}:`, error);
-
-                // Detailed error handling - use Swal for errors
-                if (error.response) {
-                    console.error('Response error:', error.response.status, error.response.data);
-
-                    if (error.response.status === 403) {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Permission Denied',
-                            text: 'Please log in again to sync reports'
-                        });
-                    } else if (error.response.status === 422) {
-                        const errors = error.response.data.errors;
-                        const errorMessage = errors ? Object.values(errors).flat().join(', ') : 'Validation failed';
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Validation Error',
-                            text: errorMessage
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Sync Error',
-                            text: error.response.data.message || 'Failed to sync report'
-                        });
-                    }
-                } else if (error.request) {
-                    console.error('Network error:', error.request);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Network Error',
-                        text: 'Please check your internet connection'
-                    });
-                    break;
-                } else {
-                    console.error('Other error:', error.message);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Sync Error',
-                        text: error.message || 'Failed to sync report'
-                    });
-                }
-            }
-        }
-
-        // Update queue - remove only successfully synced reports
-        const updatedQueue = queue.filter(
-            (report) => !successfulSyncs.includes(report.id)
-        );
-        await offlineReportsStore.setItem(
-            "offline_reports_queue",
-            updatedQueue
-        );
-        offlineReportsCount.value = updatedQueue.length;
-
-        console.log("Sync completed:", {
-            successful: successfulSyncs.length,
-            failed: failedSyncs.length,
-            trackingCodes: syncedTrackingCodes,
-        });
-
-        // If multiple reports were synced, you might want to show a summary
-        // But use your main modal for the first one, and maybe a different approach for multiple
-        if (successfulSyncs.length > 1) {
-            console.log(`Multiple reports synced: ${successfulSyncs.length}`);
-            // You could show a different notification or handle multiple tracking codes differently
-        }
-
-    } catch (error) {
-        console.error("❌ Error during offline reports sync:", error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Sync Failed',
-            text: 'An unexpected error occurred during sync'
-        });
-    } finally {
-        isSyncing.value = false;
-    }
-};
-
-const triggerAutoSync = () => {
-    if (isOnline.value && offlineReportsCount.value > 0) {
-        // Small delay to ensure network is stable
-        setTimeout(syncOfflineReports, 2000);
-    }
-};
-
-const triggerManualSync = () => {
-    if (isOnline.value) {
-        syncOfflineReports();
-    }
-};
-
+// Form submission
 // Form submission
 const submitReport = async () => {
     if (!form.water_issue_type) {
@@ -1827,19 +1353,70 @@ const submitReport = async () => {
         });
         return;
     }
-    if (locationStatus.value !== "success") {
+
+    // Enhanced location validation with GPS support
+    if (isOnline.value && locationStatus.value !== "success") {
         Swal.fire({
             icon: "error",
             title: "Location Required",
-            text: "Please wait for GPS location to be acquired.",
+            text: "Please wait for GPS location to be acquired for accurate reporting.",
             confirmButtonColor: "#3085d6",
         });
         return;
     }
 
+    // For offline mode, show appropriate warning based on location source
+    if (
+        !isOnline.value &&
+        locationStatus.value === "offline_default_location"
+    ) {
+        const result = await Swal.fire({
+            icon: "warning",
+            title: "Using Area Center Location",
+            text: "GPS signal is weak/unavailable. Your report will use the Clarin, Bohol center location. For more precise location, try moving to an area with better GPS signal.",
+            showCancelButton: true,
+            confirmButtonText: "Continue with Area Center",
+            cancelButtonText: "Try GPS Again",
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#6b7280",
+        });
+
+        if (!result.isConfirmed) {
+            getLocation(); // Retry location
+            return;
+        }
+    }
+
     isSubmitting.value = true;
 
     try {
+        // Show loading message immediately for both online and offline
+        console.log(
+            `Starting ${
+                isOnline.value ? "online" : "offline"
+            } submission with delay...`
+        );
+
+        // Show saving message immediately
+        Swal.fire({
+            title: isOnline.value
+                ? "Submitting Report..."
+                : "Saving Report Offline...",
+            text: isOnline.value
+                ? "Please wait while we submit your report to the server"
+                : "Please wait while we save your report locally",
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            allowEnterKey: false,
+            showConfirmButton: false,
+            willOpen: () => {
+                Swal.showLoading();
+            },
+        });
+
+        // Add 2-second delay before actual processing for both modes
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+
         if (isOnline.value) {
             // Online submission
             const formData = new FormData();
@@ -1854,21 +1431,23 @@ const submitReport = async () => {
             });
 
             const response = await axios.post(
-                route("reports.sync-offline"),
+                route("reports.store"),
                 formData,
                 {
-                    headers: {
-                        "Content-Type": "multipart/form-data",
-                    },
+                    headers: { "Content-Type": "multipart/form-data" },
                 }
             );
 
             isSubmitting.value = false;
 
-            // Show tracking modal for online submission
+            // Close the loading dialog
+            Swal.close();
+
             if (response.data.success) {
-                lastSyncedTrackingCode.value = response.data.trackingCode;
-                showTrackModalAfterSync.value = true;
+                emit("submitted", {
+                    trackingCode: response.data.trackingCode,
+                    dateSubmitted: new Date().toISOString(),
+                });
             }
 
             form.reset();
@@ -1877,13 +1456,27 @@ const submitReport = async () => {
         } else {
             // Offline submission
             const reportId = await saveReportOffline();
-
             isSubmitting.value = false;
+
+            // Close the loading dialog
+            Swal.close();
+
+            let successMessage =
+                "Your report has been saved locally and will be submitted automatically when you're back online.";
+
+            // Add location info to success message
+            if (locationStatus.value === "offline_cached_location") {
+                successMessage =
+                    "Your report with cached GPS coordinates has been saved locally and will be submitted when online.";
+            } else if (locationStatus.value === "offline_default_location") {
+                successMessage =
+                    "Your report with default location has been saved locally and will be submitted when online.";
+            }
 
             Swal.fire({
                 position: "top-end",
                 title: "Report Saved Offline!",
-                text: "Your report has been saved locally and will be submitted automatically when you're back online.",
+                text: successMessage,
                 icon: "success",
                 toast: true,
                 showConfirmButton: false,
@@ -1897,6 +1490,9 @@ const submitReport = async () => {
         }
     } catch (error) {
         isSubmitting.value = false;
+
+        // Close any open loading dialogs
+        Swal.close();
 
         if (isOnline.value) {
             if (error.response?.data?.errors) {
@@ -1921,76 +1517,6 @@ const submitReport = async () => {
     }
 };
 
-// Location methods
-const getLocation = () => {
-    if (!navigator.geolocation) {
-        locationStatus.value = "error";
-        Swal.fire({
-            icon: "error",
-            title: "Geolocation Not Supported",
-            text: "Your browser does not support location services.",
-            confirmButtonColor: "#3085d6",
-        });
-        return;
-    }
-
-    locationStatus.value = "loading";
-
-    const offlineLocationFallback = () => {
-        console.log("Using offline location fallback");
-        form.latitude = 9.9618; // Default coordinates for Clarin, Bohol
-        form.longitude = 124.0253;
-        locationStatus.value = "success";
-    };
-
-    const locationOptions = {
-        enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 300000,
-    };
-
-    navigator.geolocation.getCurrentPosition(
-        (position) => {
-            form.latitude = position.coords.latitude;
-            form.longitude = position.coords.longitude;
-            locationStatus.value = "success";
-        },
-        (error) => {
-            console.warn("Location error:", error);
-
-            let errorMessage =
-                "Please enable GPS/location services for your browser.";
-
-            switch (error.code) {
-                case error.PERMISSION_DENIED:
-                    errorMessage =
-                        "Location access was denied. Please allow location permissions.";
-                    break;
-                case error.POSITION_UNAVAILABLE:
-                    errorMessage =
-                        "Location information is unavailable. Using approximate location.";
-                    offlineLocationFallback();
-                    return;
-                case error.TIMEOUT:
-                    errorMessage =
-                        "Location request timed out. Using approximate location.";
-                    offlineLocationFallback();
-                    return;
-            }
-
-            locationStatus.value = "error";
-
-            Swal.fire({
-                icon: "warning",
-                title: "Location Access Issue",
-                text: errorMessage,
-                confirmButtonColor: "#3085d6",
-            });
-        },
-        locationOptions
-    );
-};
-
 // Watchers
 watch(
     () => form.barangay,
@@ -1999,63 +1525,25 @@ watch(
     }
 );
 
-// Service Worker communication for background sync
-const setupServiceWorkerListener = () => {
-    if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.addEventListener("message", (event) => {
-            if (event.data && event.data.type === "SYNC_RESULT") {
-                if (event.data.hasNewReports) {
-                    // Trigger a reload of offline reports count
-                    loadOfflineReportsCount();
-
-                    // Show a notification that sync happened in background
-                    const Toast = Swal.mixin({
-                        toast: true,
-                        position: "top-end",
-                        showConfirmButton: false,
-                        timer: 3000,
-                        timerProgressBar: true,
-                    });
-
-                    Toast.fire({
-                        icon: "success",
-                        title: `Background sync: ${event.data.successful} report(s) submitted`,
-                    });
-                }
-            }
-        });
-    }
-};
-
 // Lifecycle
 onMounted(() => {
-    // Set up network event listeners
+    // Load cached location on startup
+    loadCachedLocation();
+
+    // Start continuous location tracking
+    startLocationTracking();
+
     window.addEventListener("online", updateOnlineStatus);
     window.addEventListener("offline", updateOnlineStatus);
-
-    // Load initial data
     loadOfflineReportsCount();
     getLocation();
-
-    // Register service worker for background sync
-    setupServiceWorkerListener();
 });
 
 onUnmounted(() => {
+    stopLocationTracking();
     stopCamera();
-
-    // Clean up event listeners
     window.removeEventListener("online", updateOnlineStatus);
     window.removeEventListener("offline", updateOnlineStatus);
-
     form.photo_previews.forEach((url) => URL.revokeObjectURL(url));
-    form.photos = [];
-    form.photo_previews = [];
-    form.videos = [];
-    form.video_previews = [];
-
-    if (progressInterval) clearInterval(progressInterval);
-    if (recordingInterval) clearInterval(recordingInterval);
-    if (timeUpdateInterval) clearInterval(timeUpdateInterval);
 });
 </script>

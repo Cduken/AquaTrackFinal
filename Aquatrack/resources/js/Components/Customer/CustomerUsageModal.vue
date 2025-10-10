@@ -107,18 +107,6 @@
                                                 }}
                                             </p>
                                         </div>
-                                        <div>
-                                            <p
-                                                class="text-sm text-gray-500 dark:text-gray-400"
-                                            >
-                                                Consumption Rate
-                                            </p>
-                                            <p
-                                                class="font-medium text-gray-900 dark:text-white"
-                                            >
-                                                {{ consumptionRate }}
-                                            </p>
-                                        </div>
                                     </div>
                                 </div>
 
@@ -126,71 +114,7 @@
                                     class="border-gray-200 dark:border-gray-600"
                                 />
 
-                                <!-- Usage Comparison -->
-                                <div>
-                                    <h3
-                                        class="text-lg font-semibold text-gray-900 dark:text-white mb-3"
-                                    >
-                                        Usage Comparison
-                                    </h3>
-                                    <div class="space-y-2">
-                                        <div class="flex justify-between">
-                                            <span
-                                                class="text-gray-600 dark:text-gray-300"
-                                                >This month</span
-                                            >
-                                            <span
-                                                class="font-medium text-gray-900 dark:text-white"
-                                                >{{ usage.usage }} m³</span
-                                            >
-                                        </div>
-                                        <div class="flex justify-between">
-                                            <span
-                                                class="text-gray-600 dark:text-gray-300"
-                                                >Previous month</span
-                                            >
-                                            <span
-                                                class="font-medium text-gray-900 dark:text-white"
-                                                >{{
-                                                    previousMonthUsage ||
-                                                    "N/A m³"
-                                                }}</span
-                                            >
-                                        </div>
-                                        <div class="flex justify-between">
-                                            <span
-                                                class="text-gray-600 dark:text-gray-300"
-                                                >Average (6 months)</span
-                                            >
-                                            <span
-                                                class="font-medium text-gray-900 dark:text-white"
-                                                >{{
-                                                    averageUsage || "N/A m³"
-                                                }}</span
-                                            >
-                                        </div>
-                                        <div class="pt-2">
-                                            <p
-                                                class="text-sm font-medium"
-                                                :class="
-                                                    changePercentage >= 0
-                                                        ? 'text-red-600 dark:text-red-400'
-                                                        : 'text-green-600 dark:text-green-400'
-                                                "
-                                            >
-                                                {{
-                                                    Math.abs(changePercentage)
-                                                }}%
-                                                {{
-                                                    changePercentage >= 0
-                                                        ? "increase"
-                                                        : "decrease"
-                                                }}
-                                                from previous month
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
+
 
                                 <hr
                                     class="border-gray-200 dark:border-gray-600"
@@ -359,22 +283,15 @@ const statusClasses = (status) => {
 const previousReading = computed(() => {
     if (!props.usage || !previousReadings.value.length) return "N/A m³";
 
-    // Find the current reading index
-    const currentIndex = previousReadings.value.findIndex(
+    const current = previousReadings.value.find(
         (r) =>
             r.billing_month === props.usage.month.split(" ")[0] &&
             r.year === props.usage.month.split(" ")[1]
     );
 
-    // If current reading is found and there's a next one (previous in time)
-    if (
-        currentIndex !== -1 &&
-        currentIndex < previousReadings.value.length - 1
-    ) {
-        return `${previousReadings.value[currentIndex + 1].reading} m³`;
-    }
-
-    return "N/A m³";
+    return current && current.previous_reading !== null
+        ? `${current.previous_reading} m³`
+        : "N/A m³";
 });
 
 const currentReading = computed(() => {
@@ -387,10 +304,6 @@ const currentReading = computed(() => {
     );
 
     return current ? `${current.reading} m³` : "N/A m³";
-});
-
-const consumptionRate = computed(() => {
-    return "Standard";
 });
 
 const readingDate = computed(() => {

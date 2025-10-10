@@ -6,6 +6,7 @@ import GlobalReportSuccessModal from "@/Components/Modals/GlobalReportSuccessMod
 import TrackReportModal from "@/Components/Modals/TrackReportModal.vue";
 import Navigation from "./Header/Navigation.vue";
 import gsap from "gsap";
+import Swal from "sweetalert2";
 import { defineProps } from "vue";
 import { router } from "@inertiajs/vue3";
 
@@ -41,6 +42,8 @@ const stats = ref({
     resolution_percentage: props.dashboardStats?.resolution_percentage || 0,
 });
 
+
+
 // In Hero.vue script setup section, add this method
 // In Hero.vue, add this method
 const handleOfflineReportsSynced = (data) => {
@@ -64,6 +67,21 @@ const handleOfflineReportsSynced = (data) => {
         trackingInfo.value
     );
 
+    // Show SweetAlert toast for successful sync
+    Swal.fire({
+        icon: "success",
+        title: "Offline Reports Synced!",
+        text: `${data.totalSynced || 1} report(s) submitted successfully`,
+        toast: true,
+        position: "bottom-end",
+        showConfirmButton: false,
+        timer: 4000,
+        timerProgressBar: true,
+        background: "#f0f9ff",
+        iconColor: "#10b981",
+        color: "#065f46",
+    });
+
     // Refresh stats after sync
     setTimeout(() => {
         refreshStats();
@@ -80,7 +98,7 @@ const trackingInfo = ref(null);
 const zones = {
     "Zone 1": ["Poblacion Sur"],
     "Zone 2": ["Poblacion Centro"],
-    "Zone 3": ["Poblacion Centro"],
+    "Zone 3": ["Poblacion Centro (Zone 3)"],
     "Zone 4": ["Poblacion Norte"],
     "Zone 5": ["Candajec", "Buangan"],
     "Zone 6": ["Bonbon"],
@@ -239,6 +257,23 @@ const handleReportSuccess = (data) => {
         trackingInfo: trackingInfo.value,
     });
 
+    // Show SweetAlert toast for successful submission
+     Swal.fire({
+        icon: "success",
+        title: "Report Submitted Successfully!",
+        toast: true,
+        position: "bottom-end",
+        showConfirmButton: false,
+        timer: 5000,
+        timerProgressBar: false,
+        background: "#FFFFFF",
+        iconColor: "#000000",
+        color: "#000000",
+        width: 380,
+        padding: '0.75rem',
+
+    });
+
     // Refresh stats after a report is submitted
     setTimeout(() => {
         refreshStats();
@@ -249,6 +284,8 @@ const handleReportSuccess = (data) => {
 <template>
     <main id="home" class="relative w-full min-h-screen overflow-hidden">
         <Navigation />
+
+
 
         <div
             class="relative px-4 sm:px-8 lg:px-[120px] flex flex-col lg:flex-row gap-12 lg:gap-20 items-center justify-center min-h-[85vh] py-16 lg:py-0"
@@ -618,6 +655,8 @@ const handleReportSuccess = (data) => {
         display: none;
     }
 }
+
+
 
 @media (max-width: 480px) {
     h1 {

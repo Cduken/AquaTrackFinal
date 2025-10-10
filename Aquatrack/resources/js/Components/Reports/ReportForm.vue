@@ -48,6 +48,7 @@
                 :media-count="mediaCount"
                 :MAX_PHOTOS="MAX_PHOTOS"
                 :MAX_VIDEOS="MAX_VIDEOS"
+                :MAX_VIDEO_DURATION="MAX_VIDEO_DURATION"
                 @retry-camera="retryCamera"
                 @initialize-camera="initializeCamera"
                 @switch-camera="switchCamera"
@@ -149,8 +150,9 @@ const MAX_PHOTOS = 3;
 const MAX_VIDEOS = 2;
 const MAX_TOTAL = MAX_PHOTOS + MAX_VIDEOS;
 const MAX_PHOTO_SIZE = 5 * 1024 * 1024;
-const MAX_VIDEO_SIZE = 25 * 1024 * 1024;
-const MAX_VIDEO_DURATION = 30;
+
+const MAX_VIDEO_DURATION = 5; // 5 seconds maximum
+const MAX_VIDEO_SIZE = 10 * 1024 * 1024; // 10MB maximum
 
 const currentLocation = ref("Clarin, Bohol");
 
@@ -487,20 +489,17 @@ const getLocation = () => {
             form.longitude = coords.longitude;
             locationStatus.value = "success";
 
-            console.log("Live GPS location acquired:", coords);
+
 
             Swal.fire({
                 icon: "success",
                 title: "Location Acquired!",
-                text: `GPS coordinates captured successfully. Accuracy: ${
-                    coords.accuracy
-                        ? coords.accuracy.toFixed(1) + " meters"
-                        : "High"
-                }`,
                 toast: true,
-                position: "top-end",
+                position: "bottom-end",
+                iconColor: "#000000",
+                color: "#000000",
                 showConfirmButton: false,
-                timer: 3000,
+                timer: 5000,
             });
         },
         (error) => {
@@ -703,7 +702,11 @@ const capturePhoto = async () => {
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
 
+        // Draw the video frame
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        // Add timestamp and location watermark
+        addWatermark(ctx, canvas.width, canvas.height);
 
         // FIX: Properly handle the async toBlob with Promise
         const blob = await new Promise((resolve, reject) => {
@@ -754,6 +757,116 @@ const capturePhoto = async () => {
     }
 };
 
+// Add this new function to create the watermark
+const addWatermark = (ctx, width, height) => {
+    const now = new Date();
+
+    // Format date and time separately
+    const dateStr = now
+        .toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+        })
+        .replace(/(\d+)\/(\d+)\/(\d+)/, "$3-$1-$2");
+
+    const timeStr = now.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+    });
+
+    // Get location information
+    const locationInfo = getLocationInfo();
+
+    // Watermark lines
+    const lines = [`${dateStr} ${timeStr}`, locationInfo];
+
+    // Watermark styling
+    const padding = 10;
+    const fontSize = Math.max(12, width * 0.012); // Responsive font size
+    const lineHeight = fontSize * 1.2;
+    const fontFamily = "Arial, sans-serif";
+
+    // Set text style
+    ctx.font = `bold ${fontSize}px ${fontFamily}`;
+    ctx.textAlign = "left";
+    ctx.textBaseline = "bottom";
+
+    // Calculate maximum text width
+    let maxTextWidth = 0;
+    lines.forEach((line) => {
+        const textMetrics = ctx.measureText(line);
+        maxTextWidth = Math.max(maxTextWidth, textMetrics.width);
+    });
+
+    // Background dimensions
+    const bgPadding = 6;
+    const bgWidth = maxTextWidth + bgPadding * 2;
+    const bgHeight = lines.length * lineHeight + bgPadding * 2;
+    const bgX = padding;
+    const bgY = height - padding - bgHeight;
+
+    // Draw semi-transparent background
+    ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+    ctx.fillRect(bgX, bgY, bgWidth, bgHeight);
+
+    // Draw text lines
+    ctx.fillStyle = "white";
+    lines.forEach((line, index) => {
+        const yPos =
+            bgY +
+            bgPadding +
+            lineHeight * (index + 1) -
+            (lineHeight - fontSize) / 2;
+        ctx.fillText(line, bgX + bgPadding, yPos);
+    });
+
+    // Optional: Add a small border
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(bgX, bgY, bgWidth, bgHeight);
+};
+
+// Add this helper function to get location information
+const getLocationInfo = () => {
+    const locationParts = [];
+
+    // Add specific location details
+    if (form.purok) {
+        locationParts.push(`Purok ${form.purok}`);
+    }
+
+    if (form.barangay) {
+        locationParts.push(form.barangay);
+    }
+
+    // Add GPS accuracy indicator if available
+    if (form.latitude && form.longitude) {
+        const lat = Number(form.latitude).toFixed(6);
+        const lon = Number(form.longitude).toFixed(6);
+
+        // Add accuracy indicator based on location status
+        let accuracyIndicator = "";
+        if (locationStatus.value === "success") {
+            accuracyIndicator = "GPS";
+        } else if (locationStatus.value === "offline_cached_location") {
+            accuracyIndicator = "Cached";
+        } else {
+            accuracyIndicator = "Approx";
+        }
+
+        locationParts.push(`${accuracyIndicator}: ${lat}, ${lon}`);
+    } else {
+        // Fallback to municipality
+        locationParts.push(form.municipality || "Clarin");
+    }
+
+    return locationParts.join(" • ") || "Location unknown";
+};
+
+// Alternative: Real-time video recording with watermark overlay
 const startVideoRecording = async () => {
     if (
         !isCameraReady.value ||
@@ -767,7 +880,16 @@ const startVideoRecording = async () => {
         recordedChunks = [];
         recordingTime.value = 0;
 
-        const options = { mimeType: "video/webm;codecs=vp9,opus" };
+        const options = {
+            mimeType: "video/webm;codecs=vp9,opus",
+            videoBitsPerSecond: 1000000 // 1 Mbps for smaller files
+        };
+
+        // Fallback to VP8 if VP9 is not supported
+        if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+            options.mimeType = "video/webm;codecs=vp8,opus";
+        }
+
         mediaRecorder = new MediaRecorder(stream, options);
 
         mediaRecorder.ondataavailable = (event) => {
@@ -777,15 +899,16 @@ const startVideoRecording = async () => {
         };
 
         mediaRecorder.onstop = async () => {
-            const blob = new Blob(recordedChunks, { type: "video/webm" });
+            let blob = new Blob(recordedChunks, { type: "video/webm" });
+
+            // Add watermark to the recorded video
+            blob = await addWatermarkToVideo(blob);
 
             if (blob.size > MAX_VIDEO_SIZE) {
                 Swal.fire({
                     icon: "error",
                     title: "Video Too Large",
-                    text: `Video size exceeds ${
-                        MAX_VIDEO_SIZE / 1024 / 1024
-                    }MB limit.`,
+                    text: `Video size exceeds ${MAX_VIDEO_SIZE / 1024 / 1024}MB limit.`,
                     timer: 3000,
                 });
                 return;
@@ -803,18 +926,21 @@ const startVideoRecording = async () => {
             Swal.fire({
                 icon: "success",
                 title: `Video ${mediaCount.value.videos} recorded!`,
+                text: `Duration: 5 seconds | Size: ${(blob.size / 1024 / 1024).toFixed(2)}MB`,
                 toast: true,
                 position: "top-end",
                 showConfirmButton: false,
-                timer: 2000,
+                timer: 3000,
             });
         };
 
-        mediaRecorder.start();
+        mediaRecorder.start(1000);
         isRecording.value = true;
 
         recordingInterval = setInterval(() => {
             recordingTime.value++;
+
+            // Auto-stop at 5 seconds
             if (recordingTime.value >= MAX_VIDEO_DURATION) {
                 stopVideoRecording();
             }
@@ -830,16 +956,51 @@ const startVideoRecording = async () => {
     }
 };
 
+// Add this function in ReportForm.vue
+const addWatermarkToVideo = async (blob) => {
+    // For now, return the original blob since video watermarking is complex
+    // In a production environment, you would use FFmpeg.js or a similar library
+    console.log("Video watermarking would be implemented here");
+    return blob;
+};
+
+// Simple compression function for final size adjustment
+const compressVideoToSize = async (blob) => {
+    return new Promise((resolve) => {
+        // For now, we'll use the original blob since we're already compressing during recording
+        // You can add additional compression here if needed
+        resolve(blob);
+    });
+};
+
 const stopVideoRecording = () => {
     if (!isRecording.value || !mediaRecorder) return;
 
     try {
-        mediaRecorder.stop();
+        // Stop the media recorder
+        if (mediaRecorder.state !== 'inactive') {
+            mediaRecorder.stop();
+        }
+
         isRecording.value = false;
 
+        // Clear the recording interval
         if (recordingInterval) {
             clearInterval(recordingInterval);
             recordingInterval = null;
+        }
+
+        // Show recording stopped message if not auto-stopped
+        if (recordingTime.value < MAX_VIDEO_DURATION) {
+            Swal.fire({
+                icon: "info",
+                title: "Recording Stopped",
+                text: `Video recorded for ${recordingTime.value} seconds.`,
+                toast: true,
+                position: "top-end",
+                showConfirmButton: false,
+                timer: 2000,
+            });
         }
     } catch (error) {
         console.error("Failed to stop recording:", error);

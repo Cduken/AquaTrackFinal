@@ -1,8 +1,7 @@
-```vue
 <template>
     <aside
         :class="[
-            'fixed top-0 left-0 z-50 h-screen bg-[#062F64] border-r shadow-lg dark:bg-gradient-to-b dark:from-gray-800 dark:to-gray-700 dark:border-gray-700 transition-all duration-300 ease-in-out',
+            'fixed top-0 left-0 z-50 h-screen bg-gray-800 border-r shadow-lg dark:bg-gradient-to-b dark:from-gray-800 dark:to-gray-700 dark:border-gray-700 transition-all duration-300 ease-in-out',
             isOpen ? 'w-[260px]' : 'w-[70px]',
             isMobileMenuOpen
                 ? 'translate-x-0'
@@ -60,9 +59,9 @@
                         :title="!isOpen ? link.name : ''"
                         class="flex items-center text-white px-3 py-3 text-sm font-medium rounded-xl transition-all duration-200 group relative"
                         :class="{
-                            'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md transform scale-[1.02]':
+                            'bg-gray-600 text-white shadow-md transform scale-[1.02]':
                                 isActive(link.url),
-                            'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400':
+                            'text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-blue-400':
                                 !isActive(link.url),
                         }"
                         @click="handleLinkClick"
@@ -78,7 +77,7 @@
                             class="w-5 h-5 transition-all duration-200 flex-shrink-0"
                             :class="{
                                 'text-white': isActive(link.url),
-                                'text-white dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400':
+                                'text-white dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-blue-400':
                                     !isActive(link.url),
                             }"
                         />
@@ -118,7 +117,7 @@
             <div class="absolute bottom-4 left-0 right-0 px-3">
                 <button
                     @click="$emit('toggle-sidebar')"
-                    class="w-full flex items-center justify-center px-3 py-2 text-sm font-medium text-white dark:text-gray-400 hover:bg-white hover:text-blue-500 dark:hover:bg-gray-700 rounded-xl transition-all duration-200"
+                    class="w-full flex items-center justify-center px-3 py-2 text-sm font-medium text-white dark:text-gray-400  dark:hover:bg-gray-700 rounded-xl transition-all duration-200"
                 >
                     <ChevronDoubleLeftIcon
                         class="w-5 h-5 transition-transform duration-300"
@@ -263,4 +262,3 @@ nav a .absolute.left-full::before {
     border-right-color: #1f2937;
 }
 </style>
-```

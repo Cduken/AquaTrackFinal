@@ -1,4 +1,4 @@
-<template>
+    ``<template>
     <div
         class="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-50 to-blue-50"
     >
@@ -14,9 +14,9 @@
 
         <!-- Main content -->
         <div
-            class="relative z-10 min-h-screen flex flex-col items-center justify-center px-4"
+            class="relative z-10 min-h-[75vh] flex flex-col items-center justify-center px-4"
         >
-            <div class="w-full min-h-[85vh] max-w-6xl text-center">
+            <div class="w-full min-h-[40vh] max-w-6xl text-center">
                 <!-- Header -->
                 <div class="mb-16 select-roles-header">
                     <h1
@@ -259,12 +259,7 @@ const handleLoginSuccess = () => {
 
 // OPTIMIZED GSAP animations - Much faster and performance focused
 onMounted(() => {
-    // Set initial states - minimal setup
-    gsap.set(".select-roles-header", { y: 20, opacity: 0 });
-    gsap.set(".role-card", { y: 20, opacity: 0 });
 
-    // Remove complex background animations that slow things down
-    gsap.set([".select-roles-drop-top", ".select-roles-drop-bottom"], { opacity: 0 });
 
     // Faster timeline with reduced duration and fewer animations
     const tl = gsap.timeline();

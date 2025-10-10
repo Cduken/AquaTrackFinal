@@ -172,17 +172,29 @@ class NotificationController extends Controller
 
         Log::info('Getting customer notifications for user: ' . $user->id);
 
-        // 1. Report status updates
+        // Get all dismissed notification IDs for this user
+        $dismissedNotifications = DismissedNotification::where('user_id', $user->id)
+            ->pluck('notification_id')
+            ->toArray();
+
+        Log::info('Dismissed notifications found: ' . count($dismissedNotifications));
+
+        // 1. Report status updates - Check if notification is dismissed
         $userReports = Report::where('user_id', $user->id)
             ->where('updated_at', '>=', now()->subDays(7))
             ->latest('updated_at')
             ->get();
 
-        Log::info('Customer reports found: ' . $userReports->count());
-
         foreach ($userReports as $report) {
-            $notification = [
-                'id' => 'report_status_' . $report->id . '_' . $report->updated_at->timestamp,
+            $notificationId = 'report_status_' . $report->id . '_' . $report->updated_at->timestamp;
+
+            // Skip if notification is dismissed
+            if (in_array($notificationId, $dismissedNotifications)) {
+                continue;
+            }
+
+            $notifications->push([
+                'id' => $notificationId,
                 'type' => 'info',
                 'title' => 'Report Status Updated',
                 'message' => "Your report #{$report->tracking_code} status has been updated to: " . ucfirst($report->status),
@@ -190,22 +202,25 @@ class NotificationController extends Controller
                 'unread' => !$report->viewed_by_user,
                 'created_at' => $report->updated_at->toISOString(),
                 'important' => true
-            ];
-            $notifications->push($notification);
-            Log::info('Added report notification', $notification);
+            ]);
         }
 
-        // 2. Bill amount updates
+        // 2. Bill amount updates - Check if notification is dismissed
         $updatedBills = MeterReading::where('user_id', $user->id)
             ->where('updated_at', '>=', now()->subDays(7))
             ->latest('updated_at')
             ->get();
 
-        Log::info('Customer bill updates found: ' . $updatedBills->count());
-
         foreach ($updatedBills as $bill) {
-            $notification = [
-                'id' => 'bill_updated_' . $bill->id . '_' . $bill->updated_at->timestamp,
+            $notificationId = 'bill_updated_' . $bill->id . '_' . $bill->updated_at->timestamp;
+
+            // Skip if notification is dismissed
+            if (in_array($notificationId, $dismissedNotifications)) {
+                continue;
+            }
+
+            $notifications->push([
+                'id' => $notificationId,
                 'type' => 'alert',
                 'title' => 'Bill Amount Updated',
                 'message' => "Your bill for {$bill->billing_month} has been updated. New amount: ₱" . number_format($bill->amount, 2),
@@ -213,21 +228,25 @@ class NotificationController extends Controller
                 'unread' => (bool) $bill->amount_updated,
                 'created_at' => $bill->updated_at->toISOString(),
                 'important' => true
-            ];
-            $notifications->push($notification);
+            ]);
         }
 
-        // 3. Staff viewed water consumption
+        // 3. Staff viewed water consumption - Check if notification is dismissed
         $staffViewedReadings = MeterReading::where('user_id', $user->id)
             ->where('staff_viewed_at', '>=', now()->subDays(7))
             ->latest('staff_viewed_at')
             ->get();
 
-        Log::info('Staff viewed readings found: ' . $staffViewedReadings->count());
-
         foreach ($staffViewedReadings as $reading) {
-            $notification = [
-                'id' => 'staff_viewed_' . $reading->id . '_' . $reading->staff_viewed_at->timestamp,
+            $notificationId = 'staff_viewed_' . $reading->id . '_' . $reading->staff_viewed_at->timestamp;
+
+            // Skip if notification is dismissed
+            if (in_array($notificationId, $dismissedNotifications)) {
+                continue;
+            }
+
+            $notifications->push([
+                'id' => $notificationId,
                 'type' => 'info',
                 'title' => 'Water Consumption Reviewed',
                 'message' => "Your water consumption for {$reading->billing_month} has been reviewed by our staff",
@@ -235,16 +254,17 @@ class NotificationController extends Controller
                 'unread' => (bool) $reading->viewed_by_staff,
                 'created_at' => $reading->staff_viewed_at->toISOString(),
                 'important' => false
-            ];
-            $notifications->push($notification);
+            ]);
         }
 
-        // 4. Regular bill notifications (overdue, due soon, etc.)
+        // 4. Regular bill notifications (overdue, due soon, etc.) - Check if notification is dismissed
         $billNotifications = $this->getBillNotifications();
-        Log::info('Bill notifications found: ' . $billNotifications->count());
-        $notifications = $notifications->merge($billNotifications);
+        $filteredBillNotifications = $billNotifications->filter(function ($notification) use ($dismissedNotifications) {
+            return !in_array($notification['id'], $dismissedNotifications);
+        });
+        $notifications = $notifications->merge($filteredBillNotifications);
 
-        // 5. Customer announcements
+        // 5. Customer announcements - Check if notification is dismissed
         $announcements = Announcements::where('active', true)
             ->where(function ($query) {
                 $query->where('target_audience', 'customer')
@@ -253,13 +273,18 @@ class NotificationController extends Controller
             ->latest()
             ->get();
 
-        Log::info('Customer announcements found: ' . $announcements->count());
-
         foreach ($announcements as $announcement) {
+            $notificationId = 'announcement_' . $announcement->id;
+
+            // Skip if notification is dismissed
+            if (in_array($notificationId, $dismissedNotifications)) {
+                continue;
+            }
+
             $message = $announcement->content ?? $announcement->message ?? $announcement->description ?? 'No content available';
 
-            $notification = [
-                'id' => 'announcement_' . $announcement->id,
+            $notifications->push([
+                'id' => $notificationId,
                 'type' => 'info',
                 'title' => $announcement->title ?? 'Announcement',
                 'message' => $message,
@@ -267,14 +292,13 @@ class NotificationController extends Controller
                 'unread' => !$this->isAnnouncementRead($announcement->id),
                 'created_at' => $announcement->created_at ? $announcement->created_at->toISOString() : now()->toISOString(),
                 'important' => false
-            ];
-            $notifications->push($notification);
+            ]);
         }
 
         Log::info('Final customer notifications count', [
             'total' => $notifications->count(),
             'unread' => $notifications->where('unread', true)->count(),
-            'types' => $notifications->groupBy('type')->map->count()
+            'dismissed_count' => count($dismissedNotifications)
         ]);
 
         return $notifications;
@@ -312,55 +336,75 @@ class NotificationController extends Controller
             // Overdue notification
             if ($daysUntilDue < 0) {
                 $overdueDays = abs($daysUntilDue);
-                $notifications->push([
-                    'id' => 'overdue_bill_' . $reading->id,
-                    'type' => 'alert',
-                    'title' => 'Bill Overdue',
-                    'message' => "🚨 Your bill for {$reading->billing_month} is {$overdueDays} day(s) overdue. Amount: ₱" . number_format($reading->amount, 2),
-                    'action_url' => '/customer/usage',
-                    'unread' => !$this->isNotificationDismissed('overdue_bill_' . $reading->id),
-                    'created_at' => $today->toISOString(),
-                    'important' => true
-                ]);
+                $notificationId = 'overdue_bill_' . $reading->id;
+
+                // Check if already dismissed
+                if (!$this->isNotificationDismissed($notificationId)) {
+                    $notifications->push([
+                        'id' => $notificationId,
+                        'type' => 'alert',
+                        'title' => 'Bill Overdue',
+                        'message' => "🚨 Your bill for {$reading->billing_month} is {$overdueDays} day(s) overdue. Amount: ₱" . number_format($reading->amount, 2),
+                        'action_url' => '/customer/usage',
+                        'unread' => true,
+                        'created_at' => $today->toISOString(),
+                        'important' => true
+                    ]);
+                }
             }
             // Due in 5 days notification
             elseif ($daysUntilDue <= 5 && $daysUntilDue > 2) {
-                $notifications->push([
-                    'id' => 'due_soon_' . $reading->id,
-                    'type' => 'reminder',
-                    'title' => 'Bill Due Soon',
-                    'message' => "📅 Reminder: Your bill for {$reading->billing_month} is due in {$daysUntilDue} days. Amount: ₱" . number_format($reading->amount, 2),
-                    'action_url' => '/customer/usage',
-                    'unread' => !$this->isNotificationDismissed('due_soon_' . $reading->id),
-                    'created_at' => $today->toISOString(),
-                    'important' => true
-                ]);
+                $notificationId = 'due_soon_' . $reading->id;
+
+                // Check if already dismissed
+                if (!$this->isNotificationDismissed($notificationId)) {
+                    $notifications->push([
+                        'id' => $notificationId,
+                        'type' => 'reminder',
+                        'title' => 'Bill Due Soon',
+                        'message' => "📅 Reminder: Your bill for {$reading->billing_month} is due in {$daysUntilDue} days. Amount: ₱" . number_format($reading->amount, 2),
+                        'action_url' => '/customer/usage',
+                        'unread' => true,
+                        'created_at' => $today->toISOString(),
+                        'important' => true
+                    ]);
+                }
             }
             // Final reminder
             elseif ($daysUntilDue <= 2 && $daysUntilDue > 0) {
-                $notifications->push([
-                    'id' => 'final_reminder_' . $reading->id,
-                    'type' => 'reminder',
-                    'title' => 'Final Reminder',
-                    'message' => "⏰ Final reminder: Your bill for {$reading->billing_month} is due in {$daysUntilDue} days. Amount: ₱" . number_format($reading->amount, 2),
-                    'action_url' => '/customer/usage',
-                    'unread' => !$this->isNotificationDismissed('final_reminder_' . $reading->id),
-                    'created_at' => $today->toISOString(),
-                    'important' => true
-                ]);
+                $notificationId = 'final_reminder_' . $reading->id;
+
+                // Check if already dismissed
+                if (!$this->isNotificationDismissed($notificationId)) {
+                    $notifications->push([
+                        'id' => $notificationId,
+                        'type' => 'reminder',
+                        'title' => 'Final Reminder',
+                        'message' => "⏰ Final reminder: Your bill for {$reading->billing_month} is due in {$daysUntilDue} days. Amount: ₱" . number_format($reading->amount, 2),
+                        'action_url' => '/customer/usage',
+                        'unread' => true,
+                        'created_at' => $today->toISOString(),
+                        'important' => true
+                    ]);
+                }
             }
             // Due today notification
             elseif ($daysUntilDue === 0) {
-                $notifications->push([
-                    'id' => 'due_today_' . $reading->id,
-                    'type' => 'alert',
-                    'title' => 'Bill Due Today',
-                    'message' => "⚠️ Your bill for {$reading->billing_month} is due today! Amount: ₱" . number_format($reading->amount, 2),
-                    'action_url' => '/customer/usage',
-                    'unread' => !$this->isNotificationDismissed('due_today_' . $reading->id),
-                    'created_at' => $today->toISOString(),
-                    'important' => true
-                ]);
+                $notificationId = 'due_today_' . $reading->id;
+
+                // Check if already dismissed
+                if (!$this->isNotificationDismissed($notificationId)) {
+                    $notifications->push([
+                        'id' => $notificationId,
+                        'type' => 'alert',
+                        'title' => 'Bill Due Today',
+                        'message' => "⚠️ Your bill for {$reading->billing_month} is due today! Amount: ₱" . number_format($reading->amount, 2),
+                        'action_url' => '/customer/usage',
+                        'unread' => true,
+                        'created_at' => $today->toISOString(),
+                        'important' => true
+                    ]);
+                }
             }
         }
 
@@ -373,6 +417,7 @@ class NotificationController extends Controller
     private function getAdminNotifications()
     {
         $notifications = collect();
+
 
         // New reports from customers/guests
         $newReports = Report::with('user')
@@ -585,11 +630,19 @@ class NotificationController extends Controller
     /**
      * Mark a notification as read
      */
+    /**
+     * Mark a notification as read
+     */
     public function markAsRead($id)
     {
         $user = Auth::user();
 
         try {
+            Log::info('Marking notification as read', [
+                'notification_id' => $id,
+                'user_id' => $user->id
+            ]);
+
             if (str_starts_with($id, 'report_status_')) {
                 // Extract report ID from: report_status_{id}_{timestamp}
                 $parts = explode('_', $id);
@@ -629,8 +682,12 @@ class NotificationController extends Controller
                 $announcementId = (int) str_replace('announcement_', '', $id);
                 $this->markAnnouncementAsRead($announcementId);
             } elseif (str_starts_with($id, 'overdue_bill_') || str_starts_with($id, 'due_soon_') || str_starts_with($id, 'final_reminder_') || str_starts_with($id, 'due_today_')) {
+                // For bill notifications, use the dismiss system
                 $this->dismissNotification($id);
             }
+
+            // Also mark in dismissed notifications for consistency
+            $this->dismissNotification($id);
 
             return response()->json(['success' => true, 'message' => 'Notification marked as read']);
         } catch (\Exception $e) {
@@ -684,6 +741,9 @@ class NotificationController extends Controller
     /**
      * Delete a notification
      */
+    /**
+     * Delete a notification
+     */
     public function destroy($id)
     {
         try {
@@ -693,22 +753,26 @@ class NotificationController extends Controller
                 return response()->json(['error' => 'Unauthorized'], 401);
             }
 
-            Log::info('Dismissing notification', ['notification_id' => $id, 'user_id' => $user->id]);
+            Log::info('Deleting notification', ['notification_id' => $id, 'user_id' => $user->id]);
 
             // Store the dismissed notification
             DismissedNotification::create([
                 'user_id' => $user->id,
                 'notification_id' => $id,
-                'type' => $this->getNotificationType($id)
+                'type' => $this->getNotificationType($id),
+                'dismissed_at' => now()
             ]);
 
-            return response()->json(['success' => true, 'message' => 'Notification dismissed successfully']);
+            // Also mark as read in the respective tables
+            $this->markAsRead($id);
+
+            return response()->json(['success' => true, 'message' => 'Notification deleted successfully']);
         } catch (\Exception $e) {
-            Log::error('Notification dismissal failed: ' . $e->getMessage(), [
+            Log::error('Notification deletion failed: ' . $e->getMessage(), [
                 'notification_id' => $id,
                 'user_id' => Auth::id()
             ]);
-            return response()->json(['error' => 'Failed to dismiss notification'], 500);
+            return response()->json(['error' => 'Failed to delete notification'], 500);
         }
     }
 

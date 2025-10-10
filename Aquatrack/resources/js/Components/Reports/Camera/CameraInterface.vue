@@ -107,6 +107,7 @@
                     </div>
 
                     <!-- Recording Indicator -->
+
                     <div
                         v-if="isRecording"
                         class="absolute top-4 left-1/2 transform -translate-x-1/2"
@@ -117,7 +118,21 @@
                             <div
                                 class="w-3 h-3 bg-white rounded-full mr-2 animate-pulse"
                             ></div>
-                            REC {{ formatTime(recordingTime) }}
+                            REC {{ formatTime(recordingTime) }} / 5s
+                        </div>
+                        <!-- Progress bar -->
+                        <div
+                            class="absolute -bottom-1 left-0 w-full h-1 bg-red-200 rounded-full"
+                        >
+                            <div
+                                class="h-full bg-red-500 rounded-full transition-all duration-1000 ease-linear"
+                                :style="{
+                                    width: `${
+                                        (recordingTime / MAX_VIDEO_DURATION) *
+                                        100
+                                    }%`,
+                                }"
+                            ></div>
                         </div>
                     </div>
                 </div>
@@ -168,6 +183,7 @@
                         </button>
 
                         <!-- Video Recording Button -->
+                        <!-- Video Recording Button -->
                         <button
                             type="button"
                             @click="
@@ -182,7 +198,7 @@
                                 (mediaCount.videos >= MAX_VIDEOS &&
                                     !isRecording)
                             "
-                            class="p-4 rounded-full transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                            class="p-4 rounded-full transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg relative group"
                             :class="
                                 isRecording
                                     ? 'bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700'
@@ -198,6 +214,14 @@
                                 name="hi-video-camera"
                                 class="w-6 h-6 text-white"
                             />
+
+                            <!-- Tooltip for time limit -->
+                            <div
+                                v-if="!isRecording"
+                                class="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap"
+                            >
+                                Max 5 seconds
+                            </div>
                         </button>
 
                         <!-- Close Camera Button -->
@@ -250,6 +274,7 @@ defineProps({
     mediaCount: Object,
     MAX_PHOTOS: Number,
     MAX_VIDEOS: Number,
+    MAX_VIDEO_DURATION: Number,
 });
 
 defineEmits([
@@ -262,10 +287,9 @@ defineEmits([
     "stop-camera",
 ]);
 
+// In CameraInterface.vue
 const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
+    return `${seconds}s`;
 };
 
 // FIX: Expose methods to parent

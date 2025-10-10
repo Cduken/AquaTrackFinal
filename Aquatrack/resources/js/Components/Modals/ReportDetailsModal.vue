@@ -475,6 +475,7 @@
                                 </div>
 
                                 <!-- Media Section -->
+                                <!-- Media Section -->
                                 <div
                                     v-if="report.photos && report.photos.length"
                                     class="bg-gray-50 border border-gray-200 p-4 rounded-lg shadow-sm"
@@ -496,7 +497,13 @@
                                                 media, index
                                             ) in report.photos"
                                             :key="index"
-                                            class="relative group overflow-hidden rounded-lg border border-gray-200 h-32 shadow-sm transition-all duration-300 hover:shadow-md hover:border-blue-300"
+                                            class="relative group overflow-hidden rounded-lg border border-gray-200 h-32 shadow-sm transition-all duration-300 hover:shadow-md hover:border-blue-300 cursor-pointer"
+                                            @click="
+                                                openImageModal(
+                                                    media.path,
+                                                    index
+                                                )
+                                            "
                                         >
                                             <!-- Video Thumbnail -->
                                             <template v-if="isVideoFile(media)">
@@ -529,7 +536,7 @@
                                                     </div>
                                                 </div>
                                                 <button
-                                                    @click="
+                                                    @click.stop="
                                                         openVideoModal(
                                                             media.path
                                                         )
@@ -552,19 +559,16 @@
                                                         index + 1
                                                     }`"
                                                     class="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                                                    loading="lazy"
                                                 />
-                                                <a
-                                                    :href="
-                                                        '/storage/' + media.path
-                                                    "
-                                                    target="_blank"
+                                                <div
                                                     class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100"
                                                 >
                                                     <v-icon
                                                         name="bi-zoom-in"
                                                         class="text-white bg-black/50 p-1.5 rounded-full"
                                                     />
-                                                </a>
+                                                </div>
                                             </template>
 
                                             <div
@@ -643,6 +647,72 @@
             </div>
         </div>
     </transition>
+
+    <!-- Image Modal -->
+    <transition name="modal">
+        <div
+            v-if="showImageModal"
+            class="fixed inset-0 z-[2000] flex items-center justify-center bg-black/90"
+            @click="closeImageModal"
+        >
+            <!-- Close button -->
+            <button
+                @click.stop="closeImageModal"
+                class="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors duration-200 p-2 rounded-full hover:bg-white/10 z-10"
+            >
+                <v-icon name="bi-x-lg" scale="1.5" />
+            </button>
+
+            <!-- Navigation buttons -->
+            <button
+                v-if="allImages.length > 1"
+                @click.stop="prevImage"
+                class="absolute left-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300 transition-colors duration-200 p-3 rounded-full hover:bg-white/10 z-10"
+            >
+                <v-icon name="bi-chevron-left" scale="1.5" />
+            </button>
+
+            <button
+                v-if="allImages.length > 1"
+                @click.stop="nextImage"
+                class="absolute right-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300 transition-colors duration-200 p-3 rounded-full hover:bg-white/10 z-10"
+            >
+                <v-icon name="bi-chevron-right" scale="1.5" />
+            </button>
+
+            <!-- Image counter -->
+            <div
+                v-if="allImages.length > 1"
+                class="absolute top-4 left-1/2 transform -translate-x-1/2 text-white bg-black/50 px-3 py-1 rounded-full text-sm z-10"
+            >
+                {{ currentImageIndex + 1 }} / {{ allImages.length }}
+            </div>
+
+            <!-- Image container -->
+            <div
+                class="relative w-full max-w-6xl max-h-[90vh] mx-4"
+                @click.stop
+            >
+                <img
+                    :src="currentImage"
+                    :alt="`Report photo ${currentImageIndex + 1}`"
+                    class="w-full h-full object-contain max-h-[80vh] rounded-lg"
+                    @load="imageLoaded = true"
+                />
+
+                <!-- Loading indicator -->
+                <div
+                    v-if="!imageLoaded"
+                    class="absolute inset-0 flex items-center justify-center"
+                >
+                    <v-icon
+                        name="bi-arrow-clockwise"
+                        class="text-white text-2xl animate-spin"
+                    />
+                </div>
+            </div>
+        </div>
+    </transition>
 </template>
 
 <script setup>
@@ -666,6 +736,7 @@ const map = ref(null);
 const mapContainer = ref(null);
 const heading = ref(0); // Default heading (north)
 const mapLoaded = ref(false);
+const imageLoaded = ref(false);
 
 // Initialize Leaflet map
 const initializeMap = () => {
@@ -750,6 +821,70 @@ const initializeMap = () => {
         }
     }
 };
+
+const showImageModal = ref(false);
+const currentImage = ref(null);
+const currentImageIndex = ref(0);
+const allImages = ref([]);
+
+// Add these methods
+const openImageModal = (imagePath, index = 0) => {
+    // Filter only images (not videos)
+    allImages.value = props.report.photos
+        .filter((media) => !isVideoFile(media))
+        .map((media) => "/storage/" + media.path);
+
+    currentImageIndex.value = allImages.value.indexOf("/storage/" + imagePath);
+    currentImage.value = allImages.value[currentImageIndex.value];
+    imageLoaded.value = false;
+    showImageModal.value = true;
+};
+
+const closeImageModal = () => {
+    showImageModal.value = false;
+    currentImage.value = null;
+    currentImageIndex.value = 0;
+    allImages.value = [];
+};
+
+const nextImage = () => {
+    if (allImages.value.length > 0) {
+        currentImageIndex.value =
+            (currentImageIndex.value + 1) % allImages.value.length;
+        currentImage.value = allImages.value[currentImageIndex.value];
+    }
+};
+
+const prevImage = () => {
+    if (allImages.value.length > 0) {
+        currentImageIndex.value =
+            (currentImageIndex.value - 1 + allImages.value.length) %
+            allImages.value.length;
+        currentImage.value = allImages.value[currentImageIndex.value];
+    }
+};
+
+// Add keyboard navigation
+const handleKeydown = (event) => {
+    if (showImageModal.value) {
+        if (event.key === "Escape") {
+            closeImageModal();
+        } else if (event.key === "ArrowRight") {
+            nextImage();
+        } else if (event.key === "ArrowLeft") {
+            prevImage();
+        }
+    }
+};
+
+// Add event listener for keyboard
+onMounted(() => {
+    window.addEventListener("keydown", handleKeydown);
+});
+
+onUnmounted(() => {
+    window.removeEventListener("keydown", handleKeydown);
+});
 
 // Watch for changes in show prop to initialize map
 watch(

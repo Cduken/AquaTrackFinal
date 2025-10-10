@@ -1,4 +1,4 @@
-<template>
+    <template>
     <div class="space-y-4">
         <div class="flex items-center justify-between">
             <label class="block text-sm font-semibold text-gray-700">
@@ -28,6 +28,7 @@
             :media-count="mediaCount"
             :MAX_PHOTOS="MAX_PHOTOS"
             :MAX_VIDEOS="MAX_VIDEOS"
+            :MAX_VIDEO_DURATION="MAX_VIDEO_DURATION"
             @retry-camera="$emit('retry-camera')"
             @initialize-camera="$emit('initialize-camera')"
             @switch-camera="$emit('switch-camera')"
@@ -99,6 +100,10 @@ defineProps({
     mediaCount: Object,
     MAX_PHOTOS: Number,
     MAX_VIDEOS: Number,
+    MAX_VIDEO_DURATION: {
+        type: Number,
+        required: true
+    }
 });
 
 defineEmits([

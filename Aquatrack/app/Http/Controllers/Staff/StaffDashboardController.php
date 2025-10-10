@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class StaffDashboardController extends Controller
@@ -39,7 +40,7 @@ class StaffDashboardController extends Controller
 
             // Recent activity (last 5 readings)
             $recentActivity = MeterReading::with(['user' => function ($query) {
-                $query->select('id', 'name', 'lastname', 'account_number', 'serial_number');
+                $query->select('id', 'name', 'lastname', 'account_number', 'serial_number', 'avatar');
             }])
                 ->orderBy('reading_date', 'desc')
                 ->orderBy('created_at', 'desc')
@@ -57,7 +58,8 @@ class StaffDashboardController extends Controller
                         'reading_time' => $reading->created_at->format('H:i A'),
                         'status' => $reading->status,
                         'is_high_consumption' => $reading->consumption > 20,
-                        'type' => 'reading'
+                        'type' => 'reading',
+                        'customer_avatar' => $reading->user->avatar ? Storage::url($reading->user->avatar) : null
                     ];
                 });
 

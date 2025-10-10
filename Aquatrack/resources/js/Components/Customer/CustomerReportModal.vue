@@ -3,17 +3,17 @@
     <transition name="modal">
         <div v-if="isOpen" class="fixed inset-0 z-[1000] overflow-hidden">
             <!-- Overlay -->
-            <div class="absolute inset-0 bg-gray-900/80 backdrop-blur-xs transition-opacity duration-300"
+            <div class="absolute inset-0 bg-black/80 backdrop-blur-xs transition-opacity duration-300"
                 @click.self="closeModal"></div>
 
             <!-- Sliding panel container -->
             <div class="fixed inset-y-0 right-0 w-full max-w-2xl flex">
                 <!-- Panel with transform class for animation -->
                 <div class="relative w-full h-full transform transition-transform duration-300 ease-in-out">
-                    <div class="h-full flex flex-col bg-white shadow-2xl rounded-l-2xl overflow-hidden">
+                    <div class="h-full flex flex-col bg-white shadow-2xl overflow-hidden">
                         <!-- Header -->
                         <div
-                            class="flex items-center justify-between px-6 py-5 bg-gradient-to-r from-[#0D4C9D] to-[#1E5CB2] shadow-md">
+                            class="flex items-center justify-between px-6 py-5 bg-[#0D4C9D] shadow-md">
                             <div class="flex items-center space-x-3">
                                 <div class="p-2 bg-white/10 rounded-full">
                                     <v-icon name="oi-report" class="text-amber-300" scale="1.5" />

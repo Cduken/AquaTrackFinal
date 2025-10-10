@@ -90,7 +90,7 @@ const generateQRCode = async () => {
             width: 180,
             margin: 1,
             color: {
-                dark: "#1E3A8A",
+                dark: "#000000",
                 light: "#ffffff",
             },
         });
@@ -150,10 +150,10 @@ onMounted(() => {
                     <div class="text-center">
                         <!-- Success icon -->
                         <div
-                            class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-emerald-900 mb-2"
+                            class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-2"
                         >
                             <svg
-                                class="h-6 w-6 text-white"
+                                class="h-6 w-6 text-green-900   "
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 stroke="currentColor"
@@ -168,38 +168,26 @@ onMounted(() => {
                         </div>
 
                         <!-- Heading -->
-                        <h3 class="text-xl font-bold text-gray-900 mb-1">
-                            Report Submitted!
+                        <h3 class="text-xl font-semibold text-gray-900 mb-1">
+                            Report Submitted Successfully!
                         </h3>
-                        <p class="text-sm text-gray-500 mb-4">
-                            Thank you for your contribution
+                        <p class="text-xs text-gray-500 mb-4">
+                            Your tracking code has been generated
                         </p>
 
                         <!-- Tracking info -->
-                        <div class="bg-blue-50 rounded-lg p-3 mb-4 text-left">
-                            <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-[#F1F5F9] rounded-lg p-3 mb-4 text-center">
+                            <div class="flex items-center justify-center">
                                 <div>
                                     <p
-                                        class="text-xs font-medium text-blue-800 uppercase tracking-wider"
+                                        class="text-xs font-sm text-gray-500 mb-4 "
                                     >
-                                        Tracking Code
+                                        Your Tracking Code
                                     </p>
                                     <p
-                                        class="text-base font-semibold text-blue-900"
+                                        class="text-xl font-semibold text-[#0B95DA]"
                                     >
                                         {{ trackingCode }}
-                                    </p>
-                                </div>
-                                <div>
-                                    <p
-                                        class="text-xs font-medium text-blue-800 uppercase tracking-wider"
-                                    >
-                                        Date
-                                    </p>
-                                    <p
-                                        class="text-base font-semibold text-blue-900"
-                                    >
-                                        {{ formattedDate }}
                                     </p>
                                 </div>
                             </div>
@@ -207,17 +195,15 @@ onMounted(() => {
 
                         <!-- QR Code -->
                         <div class="mb-4 flex flex-col items-center">
-                            <p class="text-xs text-gray-500 mb-2">
-                                Scan to track your report
-                            </p>
+
                             <div
-                                class="p-2 bg-white rounded border border-gray-200"
+                                class="p-2 bg-white rounded-xl border-2 border-[#D7DFEA]"
                             >
                                 <canvas
                                     ref="qrCodeCanvas"
                                     width="180"
                                     height="180"
-                                    class="w-full h-full"
+                                    class="w-full h-full mb-2"
                                 ></canvas>
                                 <div
                                     v-if="qrError"
@@ -225,10 +211,9 @@ onMounted(() => {
                                 >
                                     QR Code Error: {{ qrError }}
                                 </div>
+                                <p class="text-xs text-center mb-2 text-gray-500">Scan to track your report</p>
                             </div>
-                            <p class="text-xs text-gray-600 mt-2">
-                                {{ trackingCode }}
-                            </p>
+
                         </div>
 
                         <!-- Important notice -->
@@ -279,7 +264,7 @@ onMounted(() => {
                             <button
                                 @click="downloadQRCode"
                                 type="button"
-                                class="flex-1 inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                class="flex-1 inline-flex items-center justify-center px-4 py-2 border border-[#0A7EB8] text-sm font-medium rounded-lg shadow-sm text-blue-500  hover:bg-[#0A7EB8] hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
                             >
                                 <svg
                                     class="-ml-1 mr-2 h-4 w-4"

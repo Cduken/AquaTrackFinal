@@ -20,14 +20,14 @@
                                 {{ currentDate }}
                             </p>
                         </div>
-                        <div
-                            class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-sm"
-                        >
-                            <v-icon
-                                name="bi-person-circle"
-                                class="text-white text-xl"
-                            />
-                        </div>
+                        <!-- <div
+                                class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-sm"
+                            >
+                                <v-icon
+                                    name="bi-person-circle"
+                                    class="text-white text-xl"
+                                />
+                            </div> -->
                     </div>
                 </div>
             </div>
@@ -271,9 +271,7 @@
                             <span
                                 class="text-sm text-gray-500 bg-gray-100 px-3 py-1.5 rounded-full"
                             >
-                                {{
-                                    dashboardData.recentActivity?.length || 0
-                                }}
+                                {{ dashboardData.recentActivity?.length || 0 }}
                                 activities
                             </span>
                             <button
@@ -297,15 +295,29 @@
                             class="group p-4 rounded-xl border border-gray-100 hover:border-blue-200 hover:bg-blue-50/20 transition-all duration-200"
                         >
                             <div class="flex items-start gap-4">
-                                <div
-                                    :class="getActivityIconContainer(activity)"
-                                    class="p-3 rounded-xl transition-colors duration-200"
-                                >
-                                    <v-icon
-                                        :name="getActivityIcon(activity)"
-                                        :class="getActivityIconColor(activity)"
-                                        class="text-lg"
-                                    />
+                                <!-- Cusomer Avatar -->
+
+                                <!-- Customer Avatar -->
+                                <div class="flex-shrink-0">
+                                    <div
+                                        class="w-12 h-12 rounded-xl flex items-center justify-center overflow-hidden border border-gray-200 bg-gray-50"
+                                    >
+                                        <img
+                                            v-if="activity.customer_avatar"
+                                            :src="activity.customer_avatar"
+                                            :alt="activity.customer_name"
+                                            class="w-full h-full object-cover"
+                                        />
+                                        <div
+                                            v-else
+                                            class="w-full h-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center"
+                                        >
+                                            <v-icon
+                                                name="bi-person-fill"
+                                                class="text-white text-lg"
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <div
@@ -355,9 +367,7 @@
                                                     name="bi-speedometer2"
                                                     class="text-gray-400"
                                                 />
-                                                {{
-                                                    activity.consumption || 0
-                                                }}
+                                                {{ activity.consumption || 0 }}
                                                 m³
                                             </span>
                                             <span
@@ -368,7 +378,7 @@
                                                     name="bi-hash"
                                                     class="text-gray-400"
                                                 />
-                                                #{{ activity.serial_number }}
+                                                {{ activity.serial_number }}
                                             </span>
                                             <span
                                                 class="flex items-center gap-1"
@@ -386,15 +396,15 @@
                                             </span>
                                         </div>
 
-                                        <div
-                                            v-if="activity.is_high_consumption"
-                                            class="flex items-center gap-1 text-red-500 text-sm font-medium"
-                                        >
-                                            <v-icon
-                                                name="bi-exclamation-triangle"
-                                            />
-                                            High Usage
-                                        </div>
+                                        <!-- <div
+                                                v-if="activity.is_high_consumption"
+                                                class="flex items-center gap-1 text-red-500 text-sm font-medium"
+                                            >
+                                                <v-icon
+                                                    name="bi-exclamation-triangle"
+                                                />
+                                                High Usage
+                                            </div> -->
                                     </div>
                                 </div>
                             </div>

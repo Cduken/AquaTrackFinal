@@ -1,52 +1,30 @@
-//TrackReportModal.vue
+// TrackReportModal.vue
 <script setup>
 import { useForm } from "@inertiajs/vue3";
 import { ref, watch, nextTick, onMounted, onUnmounted } from "vue";
 import axios from "axios";
 import QRCode from "qrcode";
-import { OhVueIcon, addIcons } from "oh-vue-icons";
 import { computed } from "vue";
 import html2canvas from "html2canvas";
 import jsQR from "jsqr";
 import {
-    FaSearch,
-    IoClose,
-    HiStatusOnline,
-    BiCalendarDate,
-    MdDescriptionOutlined,
-    FaMapMarkerAlt,
-    FaQrcode,
-    BiDownload,
-    BiImages,
-    BiExclamationTriangle,
-    BiPlayCircleFill,
-    BiZoomIn,
-    FaCamera,
-    BiArrowLeft,
-    BiWater,
-    FaWater,
-    BiDroplet,
-} from "oh-vue-icons/icons";
-
-addIcons(
-    FaSearch,
-    IoClose,
-    HiStatusOnline,
-    BiCalendarDate,
-    MdDescriptionOutlined,
-    FaMapMarkerAlt,
-    FaQrcode,
-    BiDownload,
-    BiImages,
-    BiExclamationTriangle,
-    BiPlayCircleFill,
-    BiZoomIn,
-    FaCamera,
-    BiArrowLeft,
-    BiWater,
-    FaWater,
-    BiDroplet
-);
+    Search,
+    X,
+    CheckCircle,
+    Calendar,
+    MapPin,
+    Download,
+    Image,
+    AlertTriangle,
+    Play,
+    ZoomIn,
+    Camera,
+    ArrowLeft,
+    Droplet,
+    QrCode,
+    User,
+    FileText,
+} from "lucide-vue-next";
 
 const props = defineProps({
     show: { type: Boolean, default: false },
@@ -73,25 +51,23 @@ const scanning = ref(false);
 const scannerError = ref(null);
 
 // Media modal state
-const mediaModal = ref({ show: false, src: "", type: "image" });
+const mediaModal = ref({
+    show: false,
+    src: "",
+    type: "image",
+    currentIndex: 0,
+    allImages: [],
+});
 
 const form = useForm({ tracking_code: props.initialTrackingCode });
 
 onMounted(() => {
-    console.log(
-        "Modal mounted, initialTrackingCode:",
-        props.initialTrackingCode
-    );
     if (props.show) {
         modalVisible.value = true;
         if (props.initialTrackingCode) {
             form.tracking_code = props.initialTrackingCode;
             trackReport();
         }
-    }
-    if (props.isDeleted && props.deletionReason) {
-        errorMessage.value = props.deletionReason;
-        reportDetails.value = null;
     }
 });
 
@@ -100,7 +76,6 @@ onUnmounted(() => stopCamera());
 watch(
     () => props.show,
     (newVal) => {
-        console.log("Show prop changed to:", newVal);
         modalVisible.value = newVal;
         if (newVal && props.initialTrackingCode) {
             form.tracking_code = props.initialTrackingCode;
@@ -109,20 +84,9 @@ watch(
     }
 );
 
-watch(
-    () => props.isDeleted,
-    (newVal) => {
-        if (newVal && props.deletionReason) {
-            errorMessage.value = props.deletionReason;
-            reportDetails.value = null;
-        }
-    }
-);
-
 const trackReport = async () => {
     if (!form.tracking_code || !form.tracking_code.trim()) {
         errorMessage.value = "Please enter a valid tracking code.";
-        console.log("Invalid tracking code:", form.tracking_code);
         return;
     }
 
@@ -130,13 +94,11 @@ const trackReport = async () => {
     showLoadingDelay.value = true;
     errorMessage.value = null;
     reportDetails.value = null;
-    console.log("Tracking report with code:", form.tracking_code);
 
     try {
         const response = await axios.get(route("reports.find"), {
             params: { tracking_code: form.tracking_code },
         });
-        console.log("API Response:", response.data);
 
         if (response.data.success === false) {
             if (response.data.deleted) {
@@ -158,21 +120,12 @@ const trackReport = async () => {
                     reportDetails.value.tracking_code,
                 ];
             }
-            console.log("Report details loaded:", reportDetails.value);
         } else {
-            errorMessage.value =
-                "Unexpected response structure. Response: " +
-                JSON.stringify(response.data);
+            errorMessage.value = "Unexpected response structure.";
         }
     } catch (error) {
         console.error("Track report error:", error);
         if (error.response) {
-            console.log(
-                "Response status:",
-                error.response.status,
-                "Data:",
-                error.response.data
-            );
             if (error.response.status === 404) {
                 errorMessage.value =
                     "Report not found with this tracking code.";
@@ -181,13 +134,10 @@ const trackReport = async () => {
                     error.response.data.reason ||
                     "This report has been deleted.";
             } else {
-                errorMessage.value = `Search failed. Status: ${
-                    error.response.status
-                }, Message: ${error.response.data.message || "Unknown error"}`;
+                errorMessage.value = "Search failed. Please try again.";
             }
         } else {
             errorMessage.value = "Network error. Please check your connection.";
-            console.log("Network error details:", error.message);
         }
     } finally {
         isLoading.value = false;
@@ -202,9 +152,7 @@ const startQrScanner = async () => {
         showQrScanner.value = true;
 
         stream.value = await navigator.mediaDevices.getUserMedia({
-            video: {
-                facingMode: "environment",
-            },
+            video: { facingMode: "environment" },
         });
 
         await nextTick();
@@ -216,7 +164,6 @@ const startQrScanner = async () => {
             scanQrCode();
         }
     } catch (error) {
-        console.error("Camera access error:", error);
         scannerError.value = "Camera access denied. Please check permissions.";
         showQrScanner.value = false;
     }
@@ -278,12 +225,9 @@ const generateQRCode = () => {
         qrCodeCanvas.value,
         reportDetails.value.tracking_code,
         {
-            width: 140,
+            width: 120,
             margin: 1,
-            color: {
-                dark: "#000000", // Changed to black
-                light: "#ffffff",
-            },
+            color: { dark: "#000000", light: "#ffffff" },
         },
         (error) => {
             if (error) console.error("QR Code generation error:", error);
@@ -296,8 +240,6 @@ const resetModal = () => {
     reportDetails.value = null;
     errorMessage.value = null;
     mediaModal.value.show = false;
-    mediaModal.value.src = "";
-    mediaModal.value.type = "image";
 };
 
 const resetForm = () => {
@@ -305,8 +247,6 @@ const resetForm = () => {
     reportDetails.value = null;
     errorMessage.value = null;
     mediaModal.value.show = false;
-    mediaModal.value.src = "";
-    mediaModal.value.type = "image";
 };
 
 watch(
@@ -330,12 +270,50 @@ const closeModal = () => {
     }, 200);
 };
 
-const openMediaModal = (src, type) => {
-    mediaModal.value = {
-        show: true,
-        src,
-        type,
-    };
+const openMediaModal = (src, type, index = 0) => {
+    if (type === "image") {
+        const images = reportDetails.value.photos
+            .filter((media) => !isVideoFile(media))
+            .map((media) => "/storage/" + media.path);
+
+        mediaModal.value = {
+            show: true,
+            src: src,
+            type: "image",
+            currentIndex: images.indexOf(src),
+            allImages: images,
+        };
+    } else {
+        mediaModal.value = {
+            show: true,
+            src: src,
+            type: "video",
+            currentIndex: 0,
+            allImages: [],
+        };
+    }
+};
+
+const nextImage = () => {
+    if (mediaModal.value.allImages.length > 0) {
+        mediaModal.value.currentIndex =
+            (mediaModal.value.currentIndex + 1) %
+            mediaModal.value.allImages.length;
+        mediaModal.value.src =
+            mediaModal.value.allImages[mediaModal.value.currentIndex];
+    }
+};
+
+const prevImage = () => {
+    if (mediaModal.value.allImages.length > 0) {
+        mediaModal.value.currentIndex =
+            (mediaModal.value.currentIndex -
+                1 +
+                mediaModal.value.allImages.length) %
+            mediaModal.value.allImages.length;
+        mediaModal.value.src =
+            mediaModal.value.allImages[mediaModal.value.currentIndex];
+    }
 };
 
 const closeMediaModal = () => {
@@ -344,6 +322,26 @@ const closeMediaModal = () => {
         video.pause();
     });
 };
+
+const handleKeydown = (event) => {
+    if (mediaModal.value.show && mediaModal.value.type === "image") {
+        if (event.key === "Escape") {
+            closeMediaModal();
+        } else if (event.key === "ArrowRight") {
+            nextImage();
+        } else if (event.key === "ArrowLeft") {
+            prevImage();
+        }
+    }
+};
+
+onMounted(() => {
+    window.addEventListener("keydown", handleKeydown);
+});
+
+onUnmounted(() => {
+    window.removeEventListener("keydown", handleKeydown);
+});
 
 const getVideoMimeType = (src) => {
     const extension = src.split(".").pop().toLowerCase();
@@ -356,44 +354,6 @@ const getVideoMimeType = (src) => {
             return "video/ogg";
         default:
             return "video/mp4";
-    }
-};
-
-const downloadReportAsImage = async () => {
-    try {
-        if (!modalRef.value || !reportDetails.value) return;
-
-        isLoading.value = true;
-
-        const downloadBtn = modalRef.value.querySelector(".download-btn");
-        const resetBtn = modalRef.value.querySelector(".reset-btn");
-        const trackBtn = modalRef.value.querySelector(".track-btn");
-
-        if (downloadBtn) downloadBtn.style.visibility = "hidden";
-        if (resetBtn) resetBtn.style.visibility = "hidden";
-        if (trackBtn) trackBtn.style.visibility = "hidden";
-
-        const canvas = await html2canvas(modalRef.value, {
-            scale: 2,
-            logging: false,
-            useCORS: true,
-            scrollY: -window.scrollY,
-            windowWidth: modalRef.value.scrollWidth,
-            windowHeight: modalRef.value.scrollHeight,
-        });
-
-        const link = document.createElement("a");
-        link.download = `water-report-${reportDetails.value.tracking_code}.png`;
-        link.href = canvas.toDataURL("image/png");
-        link.click();
-
-        if (downloadBtn) downloadBtn.style.visibility = "visible";
-        if (resetBtn) resetBtn.style.visibility = "visible";
-        if (trackBtn) trackBtn.style.visibility = "visible";
-    } catch (error) {
-        console.error("Error generating report image:", error);
-    } finally {
-        isLoading.value = false;
     }
 };
 
@@ -434,11 +394,10 @@ const isVideoFile = (media) => {
     <Transition name="modal-backdrop">
         <div
             v-if="modalVisible"
-            class="fixed inset-0 z-[500] flex items-center justify-center p-3"
+            class="fixed inset-0 z-[500] flex items-center justify-center p-4"
         >
-            <!-- Softer background -->
             <div
-                class="fixed inset-0 bg-black/80 transition-all duration-300"
+                class="fixed inset-0 bg-black/80"
                 @click="closeModal"
             ></div>
 
@@ -446,38 +405,36 @@ const isVideoFile = (media) => {
                 <div
                     v-if="modalVisible"
                     ref="modalRef"
-                    class="relative w-full max-w-4xl max-h-[95vh] bg-white rounded-2xl shadow-2xl overflow-hidden transform transition-all duration-300 border border-gray-200"
-                    @click.stop
+                    class="relative w-full max-w-5xl max-h-[100vh] bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100"
                 >
-                    <!-- Header with softer gradient -->
-                    <div
-                        class="bg-gradient-to-r from-blue-950 to-blue-900 px-6 py-4 relative overflow-hidden"
-                    >
-                        <div class="flex items-center justify-between relative z-10">
+                    <!-- Header -->
+                    <div class="px-6 py-5 border-b border-gray-100 bg-white">
+                        <div class="flex items-center justify-between">
                             <div class="flex items-center space-x-3">
                                 <div
-                                    class="p-2 bg-white/20 rounded-xl border border-white/30 backdrop-blur-sm"
+                                    class="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-sm"
                                 >
-                                    <v-icon
-                                        name="bi-droplet"
-                                        class="text-white"
-                                        scale="1.1"
-                                    />
+                                    <Droplet :size="20" class="text-white" />
                                 </div>
                                 <div>
-                                    <h3 class="text-lg font-bold text-white">
-                                        Water Report Tracker
+                                    <h3
+                                        class="text-xl font-semibold text-gray-900"
+                                    >
+                                        Track Water Report
                                     </h3>
-                                    <p class="text-blue-100 text-sm">
-                                        Track your water issue reports
+                                    <p class="text-sm text-gray-500">
+                                        Find and monitor your submitted reports
                                     </p>
                                 </div>
                             </div>
                             <button
                                 @click="closeModal"
-                                class="p-2 hover:bg-white/20 rounded-xl text-white/80 hover:text-white transition-all backdrop-blur-sm"
+                                class="p-2 hover:bg-gray-100 rounded-xl transition-colors"
                             >
-                                <v-icon name="io-close" scale="1.2" />
+                                <X
+                                    :size="20"
+                                    class="text-gray-400 hover:text-gray-600"
+                                />
                             </button>
                         </div>
                     </div>
@@ -485,126 +442,132 @@ const isVideoFile = (media) => {
                     <div class="max-h-[calc(95vh-140px)] overflow-y-auto">
                         <div class="p-6 space-y-6">
                             <!-- Search Section -->
-                            <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
-                                <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                                    <v-icon
-                                        name="fa-search"
-                                        class="text-blue-500 mr-2"
-                                        scale="0.9"
-                                    />
-                                    Search Report
-                                </h4>
+                            <div
+                                class="bg-gradient-to-br from-gray-50 to-blue-50 rounded-2xl p-6 border border-gray-200"
+                            >
+                                <div class="flex items-center space-x-3 mb-4">
+                                    <div
+                                        class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center"
+                                    >
+                                        <Search :size="16" class="text-white" />
+                                    </div>
+                                    <div>
+                                        <h4
+                                            class="text-lg font-semibold text-gray-900"
+                                        >
+                                            Search Report
+                                        </h4>
+                                        <p class="text-sm text-gray-600">
+                                            Enter your tracking code to find
+                                            your report
+                                        </p>
+                                    </div>
+                                </div>
+
                                 <form
                                     @submit.prevent="trackReport"
                                     class="space-y-4"
                                 >
-                                    <div class="space-y-2">
+                                    <div class="space-y-3">
                                         <label
-                                            class="block text-sm font-semibold text-gray-700"
+                                            class="block text-sm font-medium text-gray-700"
+                                            >Tracking Code</label
                                         >
-                                            Tracking Code
-                                        </label>
                                         <div class="relative">
                                             <input
                                                 v-model="form.tracking_code"
                                                 type="text"
                                                 required
-                                                class="w-full h-12 pl-12 pr-14 text-base bg-gray-50 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:bg-white transition-all placeholder:text-gray-400 font-mono focus:ring-2 focus:ring-blue-500/20"
+                                                class="w-full h-12 pl-11 pr-12 text-sm bg-white border border-gray-300 rounded-xl focus:border-blue-500 focus:ring-3 focus:ring-blue-500/20 transition-all placeholder:text-gray-400 font-mono shadow-sm"
                                                 placeholder="Enter tracking code"
                                             />
                                             <div
-                                                class="absolute left-3 top-1/2 -translate-y-1/2 p-1.5 bg-blue-500 rounded-lg"
+                                                class="absolute left-3 top-1/2 -translate-y-1/2"
                                             >
-                                                <v-icon
-                                                    name="fa-qrcode"
-                                                    scale="0.9"
-                                                    class="text-white"
+                                                <QrCode
+                                                    :size="18"
+                                                    class="text-gray-400"
                                                 />
                                             </div>
                                             <button
                                                 type="button"
                                                 @click="startQrScanner"
-                                                class="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all hover:scale-105 shadow-sm"
+                                                class="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
                                                 title="Scan QR Code"
                                             >
-                                                <v-icon
-                                                    name="fa-camera"
-                                                    scale="0.85"
-                                                />
+                                                <Camera :size="18" />
                                             </button>
                                         </div>
-                                        <Transition name="error-slide">
-                                            <div
-                                                v-if="
-                                                    errorMessage || props.isDeleted
-                                                "
-                                                class="flex items-center space-x-2 p-3 bg-red-50 border border-red-200 rounded-lg"
-                                            >
-                                                <v-icon
-                                                    name="io-close"
-                                                    class="text-red-500"
-                                                    scale="0.8"
-                                                />
-                                                <span
-                                                    class="text-red-700 text-sm font-medium"
-                                                >
-                                                    {{
-                                                        errorMessage ||
-                                                        props.deletionReason
-                                                    }}
-                                                </span>
-                                            </div>
-                                        </Transition>
                                     </div>
+
+                                    <Transition name="error-slide">
+                                        <div
+                                            v-if="errorMessage"
+                                            class="flex items-center space-x-3 p-4 bg-red-50 border border-red-200 rounded-xl"
+                                        >
+                                            <AlertTriangle
+                                                :size="18"
+                                                class="text-red-500 flex-shrink-0"
+                                            />
+                                            <span
+                                                class="text-red-700 text-sm font-medium"
+                                                >{{ errorMessage }}</span
+                                            >
+                                        </div>
+                                    </Transition>
+
                                     <button
                                         type="submit"
                                         :disabled="
-                                            isLoading || !form.tracking_code.trim()
+                                            isLoading ||
+                                            !form.tracking_code.trim()
                                         "
-                                        class="w-full py-3 bg-gradient-to-r bg-blue-900 hover:from-blue-950 hover:to-blue-900 disabled:from-gray-400 disabled:to-gray-500 text-white font-semibold rounded-xl transition-all hover:shadow-md disabled:shadow-none disabled:cursor-not-allowed flex items-center justify-center space-x-2 shadow-sm"
+                                        class="w-full h-12 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-gray-300 disabled:to-gray-400 text-white font-medium rounded-xl transition-all flex items-center justify-center space-x-2 shadow-sm hover:shadow-md disabled:shadow-none"
                                     >
-                                        <v-icon name="fa-search" scale="0.8" />
+                                        <Search :size="18" />
                                         <span class="text-sm">{{
-                                            isLoading ? "Searching..." : "Track Report"
+                                            isLoading
+                                                ? "Searching..."
+                                                : "Track Report"
                                         }}</span>
                                     </button>
                                 </form>
                             </div>
 
-                            <Transition name="loading-bounce">
+                            <!-- Loading State -->
+                            <Transition name="loading-fade">
                                 <div
-                                    v-if="isLoading || showLoadingDelay"
+                                    v-if="isLoading"
                                     class="flex flex-col items-center justify-center py-12 space-y-4"
                                 >
                                     <div class="relative">
                                         <div
-                                            class="w-16 h-16 border-4 border-gray-200 rounded-full"
+                                            class="w-16 h-16 border-4 border-blue-100 rounded-full"
                                         ></div>
                                         <div
-                                            class="absolute inset-0 w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"
+                                            class="absolute inset-0 w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"
                                         ></div>
                                     </div>
                                     <div class="text-center">
                                         <h4
                                             class="text-base font-semibold text-gray-700"
                                         >
-                                            Searching...
+                                            Searching for report
                                         </h4>
                                         <p class="text-sm text-gray-500">
-                                            Please wait while we find your report
+                                            Please wait while we find your
+                                            report details
                                         </p>
                                     </div>
                                 </div>
                             </Transition>
 
+                            <!-- Report Details -->
                             <Transition name="content-slide">
-                                <div
-                                    v-if="reportDetails && !props.isDeleted"
-                                    class="space-y-6"
-                                >
-                                    <!-- Success Banner -->
+                                <div v-if="reportDetails" class="space-y-6">
+                                    <!-- Status Header -->
                                     <div
-                                        class="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-4 border border-green-200 shadow-sm"
+                                        class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-200"
                                     >
                                         <div
                                             class="flex items-center justify-between"
@@ -613,17 +576,16 @@ const isVideoFile = (media) => {
                                                 class="flex items-center space-x-3"
                                             >
                                                 <div
-                                                    class="p-2 bg-green-100 rounded-lg"
+                                                    class="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center"
                                                 >
-                                                    <v-icon
-                                                        name="hi-status-online"
-                                                        class="text-green-600"
-                                                        scale="1.1"
+                                                    <CheckCircle
+                                                        :size="20"
+                                                        class="text-white"
                                                     />
                                                 </div>
                                                 <div>
                                                     <h4
-                                                        class="text-lg font-bold text-gray-800"
+                                                        class="text-lg font-semibold text-gray-900"
                                                     >
                                                         Report Found
                                                     </h4>
@@ -633,16 +595,15 @@ const isVideoFile = (media) => {
                                                         Tracking Code:
                                                         <span
                                                             class="font-mono font-semibold text-blue-600"
-                                                        >
-                                                            {{
+                                                            >{{
                                                                 reportDetails.tracking_code
-                                                            }}
-                                                        </span>
+                                                            }}</span
+                                                        >
                                                     </p>
                                                 </div>
                                             </div>
                                             <span
-                                                class="px-3 py-1 rounded-lg text-sm font-semibold shadow-sm"
+                                                class="px-4 py-2 rounded-lg text-sm font-semibold"
                                                 :class="{
                                                     'bg-green-100 text-green-700 border border-green-200':
                                                         reportDetails.status ===
@@ -660,33 +621,33 @@ const isVideoFile = (media) => {
                                         </div>
                                     </div>
 
+                                    <!-- Main Content Grid -->
                                     <div
-                                        class="grid grid-cols-1 lg:grid-cols-4 gap-6"
+                                        class="grid grid-cols-1 lg:grid-cols-3 gap-6"
                                     >
-                                        <div class="lg:col-span-3 space-y-4">
-                                            <!-- Reporter & Priority Cards -->
+                                        <!-- Left Column - Basic Info -->
+                                        <div class="lg:col-span-2 space-y-6">
+                                            <!-- Reporter & Priority -->
                                             <div
                                                 class="grid grid-cols-1 md:grid-cols-2 gap-4"
                                             >
                                                 <div
-                                                    class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm"
+                                                    class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm"
                                                 >
                                                     <div
-                                                        class="flex items-center space-x-2 mb-2"
+                                                        class="flex items-center space-x-2 mb-3"
                                                     >
-                                                        <v-icon
-                                                            name="bi-droplet"
+                                                        <User
+                                                            :size="16"
                                                             class="text-blue-500"
-                                                            scale="0.8"
                                                         />
                                                         <span
-                                                            class="text-xs font-semibold text-gray-500 uppercase"
+                                                            class="text-xs font-semibold text-gray-500 uppercase tracking-wide"
+                                                            >Reporter</span
                                                         >
-                                                            Reporter
-                                                        </span>
                                                     </div>
                                                     <p
-                                                        class="font-semibold text-gray-800"
+                                                        class="font-semibold text-gray-900 text-lg"
                                                     >
                                                         {{
                                                             reportDetails.reporter_name
@@ -694,24 +655,22 @@ const isVideoFile = (media) => {
                                                     </p>
                                                 </div>
                                                 <div
-                                                    class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm"
+                                                    class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm"
                                                 >
                                                     <div
-                                                        class="flex items-center space-x-2 mb-2"
+                                                        class="flex items-center space-x-2 mb-3"
                                                     >
-                                                        <v-icon
-                                                            name="bi-exclamation-triangle"
+                                                        <AlertTriangle
+                                                            :size="16"
                                                             class="text-amber-500"
-                                                            scale="0.8"
                                                         />
                                                         <span
-                                                            class="text-xs font-semibold text-gray-500 uppercase"
+                                                            class="text-xs font-semibold text-gray-500 uppercase tracking-wide"
+                                                            >Priority</span
                                                         >
-                                                            Priority
-                                                        </span>
                                                     </div>
                                                     <span
-                                                        class="inline-flex px-2 py-1 rounded-lg text-sm font-semibold shadow-sm"
+                                                        class="inline-flex px-3 py-1.5 rounded-lg text-sm font-semibold"
                                                         :class="{
                                                             'bg-red-100 text-red-700 border border-red-200':
                                                                 reportDetails.priority ===
@@ -729,26 +688,24 @@ const isVideoFile = (media) => {
                                                 </div>
                                             </div>
 
-                                            <!-- Description Card -->
+                                            <!-- Description -->
                                             <div
-                                                class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm"
+                                                class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm"
                                             >
                                                 <div
-                                                    class="flex items-center space-x-2 mb-3"
+                                                    class="flex items-center space-x-2 mb-4"
                                                 >
-                                                    <v-icon
-                                                        name="md-description-outlined"
+                                                    <FileText
+                                                        :size="16"
                                                         class="text-blue-500"
-                                                        scale="0.8"
                                                     />
                                                     <span
-                                                        class="text-xs font-semibold text-gray-500 uppercase"
+                                                        class="text-xs font-semibold text-gray-500 uppercase tracking-wide"
+                                                        >Issue Description</span
                                                     >
-                                                        Issue Description
-                                                    </span>
                                                 </div>
                                                 <p
-                                                    class="text-gray-700 text-sm leading-relaxed whitespace-pre-line"
+                                                    class="text-gray-700 leading-relaxed whitespace-pre-line"
                                                 >
                                                     {{
                                                         reportDetails.description
@@ -756,27 +713,23 @@ const isVideoFile = (media) => {
                                                 </p>
                                             </div>
 
-                                            <!-- Location Card -->
+                                            <!-- Location -->
                                             <div
-                                                class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm"
+                                                class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm"
                                             >
                                                 <div
-                                                    class="flex items-center space-x-2 mb-3"
+                                                    class="flex items-center space-x-2 mb-4"
                                                 >
-                                                    <v-icon
-                                                        name="fa-map-marker-alt"
+                                                    <MapPin
+                                                        :size="16"
                                                         class="text-blue-500"
-                                                        scale="0.8"
                                                     />
                                                     <span
-                                                        class="text-xs font-semibold text-gray-500 uppercase"
+                                                        class="text-xs font-semibold text-gray-500 uppercase tracking-wide"
+                                                        >Location Details</span
                                                     >
-                                                        Location Details
-                                                    </span>
                                                 </div>
-                                                <p
-                                                    class="text-gray-700 text-sm"
-                                                >
+                                                <p class="text-gray-700">
                                                     {{ reportDetails.purok }},
                                                     {{
                                                         reportDetails.barangay
@@ -784,34 +737,35 @@ const isVideoFile = (media) => {
                                                     {{
                                                         reportDetails.municipality
                                                     }},
-                                                    {{
-                                                        reportDetails.province
-                                                    }},
+                                                    {{ reportDetails.province }}
+                                                </p>
+                                                <p
+                                                    class="text-sm text-gray-500 mt-1"
+                                                >
+                                                    Zone:
                                                     {{ reportDetails.zone }}
                                                 </p>
                                             </div>
 
-                                            <!-- Media Card -->
+                                            <!-- Media -->
                                             <div
                                                 v-if="
                                                     reportDetails.photos &&
                                                     reportDetails.photos.length
                                                 "
-                                                class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm"
+                                                class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm"
                                             >
                                                 <div
-                                                    class="flex items-center space-x-2 mb-3"
+                                                    class="flex items-center space-x-2 mb-4"
                                                 >
-                                                    <v-icon
-                                                        name="bi-images"
+                                                    <Image
+                                                        :size="16"
                                                         class="text-blue-500"
-                                                        scale="0.8"
                                                     />
                                                     <span
-                                                        class="text-xs font-semibold text-gray-500 uppercase"
+                                                        class="text-xs font-semibold text-gray-500 uppercase tracking-wide"
+                                                        >Media Evidence</span
                                                     >
-                                                        Media Evidence
-                                                    </span>
                                                 </div>
                                                 <div
                                                     class="grid grid-cols-3 sm:grid-cols-4 gap-3"
@@ -821,7 +775,19 @@ const isVideoFile = (media) => {
                                                             media, index
                                                         ) in reportDetails.photos"
                                                         :key="index"
-                                                        class="relative group aspect-square rounded-lg overflow-hidden border-2 border-gray-200 hover:border-blue-300 transition-all hover:shadow-md"
+                                                        class="relative group aspect-square rounded-lg overflow-hidden border border-gray-200 hover:border-blue-300 transition-all hover:shadow-md cursor-pointer bg-gray-50"
+                                                        @click="
+                                                            openMediaModal(
+                                                                '/storage/' +
+                                                                    media.path,
+                                                                isVideoFile(
+                                                                    media
+                                                                )
+                                                                    ? 'video'
+                                                                    : 'image',
+                                                                index
+                                                            )
+                                                        "
                                                     >
                                                         <template
                                                             v-if="
@@ -831,40 +797,20 @@ const isVideoFile = (media) => {
                                                             "
                                                         >
                                                             <div
-                                                                class="w-full h-full bg-gray-600 flex items-center justify-center"
+                                                                class="w-full h-full bg-gray-800 flex items-center justify-center relative"
                                                             >
-                                                                <video
-                                                                    class="absolute inset-0 w-full h-full object-cover"
-                                                                >
-                                                                    <source
-                                                                        :src="
-                                                                            '/storage/' +
-                                                                            media.path
-                                                                        "
-                                                                        :type="
-                                                                            media.mime_type
-                                                                        "
-                                                                    />
-                                                                </video>
                                                                 <div
-                                                                    class="absolute inset-0 bg-black/40 flex items-center justify-center"
+                                                                    class="absolute inset-0 bg-black/30 flex items-center justify-center"
                                                                 >
-                                                                    <v-icon
-                                                                        name="bi-play-circle-fill"
-                                                                        class="text-white text-xl"
+                                                                    <Play
+                                                                        :size="
+                                                                            24
+                                                                        "
+                                                                        class="text-white"
+                                                                        fill="currentColor"
                                                                     />
                                                                 </div>
                                                             </div>
-                                                            <button
-                                                                @click="
-                                                                    openMediaModal(
-                                                                        '/storage/' +
-                                                                            media.path,
-                                                                        'video'
-                                                                    )
-                                                                "
-                                                                class="absolute inset-0"
-                                                            ></button>
                                                         </template>
                                                         <template v-else>
                                                             <img
@@ -872,7 +818,7 @@ const isVideoFile = (media) => {
                                                                     '/storage/' +
                                                                     media.path
                                                                 "
-                                                                class="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                                                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                                             />
                                                             <div
                                                                 class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center"
@@ -880,71 +826,52 @@ const isVideoFile = (media) => {
                                                                 <div
                                                                     class="opacity-0 group-hover:opacity-100 transition-opacity"
                                                                 >
-                                                                    <v-icon
-                                                                        name="bi-zoom-in"
-                                                                        class="text-white bg-black/50 p-1 rounded-full"
+                                                                    <ZoomIn
+                                                                        :size="
+                                                                            20
+                                                                        "
+                                                                        class="text-white bg-black/50 p-1.5 rounded-full"
                                                                     />
                                                                 </div>
                                                             </div>
-                                                            <a
-                                                                :href="
-                                                                    '/storage/' +
-                                                                    media.path
-                                                                "
-                                                                target="_blank"
-                                                                class="absolute inset-0"
-                                                            ></a>
                                                         </template>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <!-- QR Code & Actions Sidebar -->
-                                        <div class="space-y-4">
+                                        <!-- Right Column - QR Code -->
+                                        <div class="space-y-6">
                                             <div
-                                                class="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-4 text-white shadow-md"
+                                                class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm"
                                             >
                                                 <div
-                                                    class="flex items-center space-x-2 mb-3"
+                                                    class="flex items-center space-x-2 mb-4"
                                                 >
-                                                    <v-icon
-                                                        name="fa-qrcode"
-                                                        class="text-gray-200"
-                                                        scale="0.9"
+                                                    <QrCode
+                                                        :size="16"
+                                                        class="text-blue-500"
                                                     />
                                                     <span
-                                                        class="text-sm font-semibold"
+                                                        class="text-xs font-semibold text-gray-500 uppercase tracking-wide"
+                                                        >Tracking QR</span
                                                     >
-                                                        Quick Access QR
-                                                    </span>
                                                 </div>
                                                 <div
-                                                    class="bg-white p-3 rounded-lg mb-3 shadow-sm"
+                                                    class="flex justify-center p-4 bg-gray-50 rounded-lg"
                                                 >
                                                     <canvas
                                                         ref="qrCodeCanvas"
-                                                        class="w-full max-w-[140px] mx-auto"
+                                                        class="rounded-lg"
                                                     ></canvas>
                                                 </div>
                                                 <p
-                                                    class="text-xs text-gray-300 text-center"
+                                                    class="text-xs text-gray-500 text-center mt-3"
                                                 >
-                                                    Scan to view this report
+                                                    Scan this QR code to quickly
+                                                    access this report
                                                 </p>
                                             </div>
-                                            <button
-                                                @click="downloadReportAsImage"
-                                                class="download-btn w-full py-2.5 bg-blue-950 text-white font-semibold rounded-xl transition-all hover:shadow-md hover:scale-[1.02] flex items-center justify-center space-x-2 shadow-sm"
-                                            >
-                                                <v-icon
-                                                    name="bi-download"
-                                                    scale="0.9"
-                                                />
-                                                <span class="text-sm"
-                                                    >Download Report</span
-                                                >
-                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -952,26 +879,33 @@ const isVideoFile = (media) => {
                         </div>
                     </div>
 
-                    <!-- Footer Actions -->
-                    <div
-                        class="border-t border-gray-200 px-6 py-3 bg-gray-50/80 backdrop-blur-sm"
-                    >
+                    <!-- Footer -->
+                    <div class="border-t border-gray-100 px-6 py-4 bg-gray-50">
                         <div class="flex justify-between items-center">
                             <button
-                                v-if="reportDetails || props.isDeleted"
+                                v-if="reportDetails"
                                 @click="resetForm"
-                                class="reset-btn flex items-center space-x-2 px-4 py-2 border-2 border-gray-300 hover:border-blue-300 bg-white hover:bg-gray-50 text-gray-700 font-medium rounded-lg transition-all shadow-sm"
+                                class="flex items-center space-x-2 px-4 py-2.5 border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 font-medium rounded-xl transition-all shadow-sm"
                             >
-                                <v-icon name="bi-arrow-left" scale="0.8" />
+                                <ArrowLeft :size="16" />
                                 <span class="text-sm">Search Again</span>
                             </button>
                             <button
                                 v-else
                                 @click="closeModal"
-                                class="flex items-center space-x-2 px-4 py-2 border-2 border-gray-300 hover:border-blue-300 bg-white hover:bg-gray-50 text-gray-700 font-medium rounded-lg transition-all shadow-sm"
+                                class="flex items-center space-x-2 px-4 py-2.5 border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 font-medium rounded-xl transition-all shadow-sm"
                             >
-                                <v-icon name="io-close" scale="0.8" />
+                                <X :size="16" />
                                 <span class="text-sm">Cancel</span>
+                            </button>
+
+                            <button
+                                v-if="reportDetails"
+                                @click="downloadReportAsImage"
+                                class="flex items-center space-x-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-all shadow-sm download-btn"
+                            >
+                                <Download :size="16" />
+                                <span class="text-sm">Download Report</span>
                             </button>
                         </div>
                     </div>
@@ -984,53 +918,49 @@ const isVideoFile = (media) => {
     <Transition name="modal-backdrop">
         <div
             v-if="showQrScanner"
-            class="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-gray-800/80 backdrop-blur-sm"
+            class="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
         >
             <div
                 class="relative w-full max-w-sm bg-white rounded-2xl overflow-hidden shadow-2xl border border-gray-200"
             >
-                <div
-                    class="bg-gradient-to-r from-blue-950 to-blue-900 px-4 py-3"
-                >
+                <div class="px-5 py-4 border-b border-gray-200 bg-white">
                     <div class="flex items-center justify-between">
-                        <h3
-                            class="text-base font-semibold text-white flex items-center space-x-2"
-                        >
-                            <v-icon
-                                name="fa-camera"
-                                class="text-white"
-                                scale="0.9"
-                            />
-                            <span>Scan QR Code</span>
-                        </h3>
+                        <div class="flex items-center space-x-3">
+                            <Camera :size="20" class="text-blue-600" />
+                            <h3 class="text-lg font-semibold text-gray-900">
+                                Scan QR Code
+                            </h3>
+                        </div>
                         <button
                             @click="closeQrScanner"
-                            class="text-white/80 hover:text-white p-1 rounded-lg transition-all"
+                            class="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                         >
-                            <v-icon name="io-close" scale="1.1" />
+                            <X
+                                :size="18"
+                                class="text-gray-400 hover:text-gray-600"
+                            />
                         </button>
                     </div>
                 </div>
 
-                <div class="p-4">
+                <div class="p-5">
                     <div
                         v-if="scannerError"
-                        class="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg"
+                        class="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl"
                     >
                         <p
-                            class="text-red-600 text-sm flex items-center space-x-2"
+                            class="text-red-700 text-sm flex items-center space-x-2"
                         >
-                            <v-icon
-                                name="bi-exclamation-triangle"
-                                class="text-red-500"
-                                scale="0.8"
+                            <AlertTriangle
+                                :size="16"
+                                class="text-red-500 flex-shrink-0"
                             />
                             <span>{{ scannerError }}</span>
                         </p>
                     </div>
 
                     <div
-                        class="relative bg-gray-900 rounded-xl overflow-hidden aspect-square border-2 border-gray-300"
+                        class="relative bg-black rounded-xl overflow-hidden aspect-square border-2 border-gray-300"
                     >
                         <video
                             ref="videoRef"
@@ -1039,35 +969,33 @@ const isVideoFile = (media) => {
                             muted
                             class="w-full h-full object-cover"
                         ></video>
-
                         <div
                             class="absolute inset-0 flex items-center justify-center"
                         >
                             <div
-                                class="w-40 h-40 border-2 border-white/30 rounded-xl relative"
+                                class="w-48 h-48 border-2 border-white/50 rounded-xl relative"
                             >
                                 <div
-                                    class="absolute -top-1 -left-1 w-6 h-6 border-l-3 border-t-3 border-blue-400 rounded-tl-xl"
+                                    class="absolute -top-1 -left-1 w-5 h-5 border-l-2 border-t-2 border-white rounded-tl"
                                 ></div>
                                 <div
-                                    class="absolute -top-1 -right-1 w-6 h-6 border-r-3 border-t-3 border-blue-400 rounded-tr-xl"
+                                    class="absolute -top-1 -right-1 w-5 h-5 border-r-2 border-t-2 border-white rounded-tr"
                                 ></div>
                                 <div
-                                    class="absolute -bottom-1 -left-1 w-6 h-6 border-l-3 border-b-3 border-blue-400 rounded-bl-xl"
+                                    class="absolute -bottom-1 -left-1 w-5 h-5 border-l-2 border-b-2 border-white rounded-bl"
                                 ></div>
                                 <div
-                                    class="absolute -bottom-1 -right-1 w-6 h-6 border-r-3 border-b-3 border-blue-400 rounded-br-xl"
+                                    class="absolute -bottom-1 -right-1 w-5 h-5 border-r-2 border-b-2 border-white rounded-br"
                                 ></div>
                                 <div
-                                    class="absolute inset-x-0 top-0 h-px bg-blue-400 animate-scan-line"
+                                    class="absolute inset-x-0 top-0 h-0.5 bg-blue-400 animate-scan-line"
                                 ></div>
                             </div>
                         </div>
-
                         <canvas ref="canvasRef" class="hidden"></canvas>
                     </div>
 
-                    <p class="mt-3 text-xs text-gray-600 text-center">
+                    <p class="mt-4 text-sm text-gray-600 text-center">
                         Position QR code within the frame to scan
                     </p>
                 </div>
@@ -1079,41 +1007,73 @@ const isVideoFile = (media) => {
     <Transition name="modal-backdrop">
         <div
             v-if="mediaModal.show"
-            class="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-gray-800/90 backdrop-blur-sm"
+            class="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm"
+            @click="closeMediaModal"
         >
-            <div class="relative w-full max-w-4xl">
-                <button
-                    @click="closeMediaModal"
-                    class="absolute -top-10 right-0 p-2 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-xl transition-all backdrop-blur-sm"
-                >
-                    <v-icon name="io-close" scale="1.2" />
-                </button>
+            <button
+                @click.stop="closeMediaModal"
+                class="absolute top-6 right-6 text-white hover:text-gray-300 transition-colors p-3 rounded-full hover:bg-white/10 z-10"
+            >
+                <X :size="24" />
+            </button>
 
+            <button
+                v-if="
+                    mediaModal.type === 'image' &&
+                    mediaModal.allImages.length > 1
+                "
+                @click.stop="prevImage"
+                class="absolute left-6 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300 transition-colors p-4 rounded-full hover:bg-white/10 z-10"
+            >
+                <ArrowLeft :size="24" />
+            </button>
+
+            <button
+                v-if="
+                    mediaModal.type === 'image' &&
+                    mediaModal.allImages.length > 1
+                "
+                @click.stop="nextImage"
+                class="absolute right-6 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300 transition-colors p-4 rounded-full hover:bg-white/10 z-10"
+            >
+                <ArrowLeft :size="24" class="rotate-180" />
+            </button>
+
+            <div
+                v-if="
+                    mediaModal.type === 'image' &&
+                    mediaModal.allImages.length > 1
+                "
+                class="absolute top-6 left-1/2 transform -translate-x-1/2 text-white bg-black/50 px-4 py-2 rounded-full text-sm z-10"
+            >
+                {{ mediaModal.currentIndex + 1 }} /
+                {{ mediaModal.allImages.length }}
+            </div>
+
+            <div
+                class="relative w-full max-w-6xl max-h-[90vh] mx-4"
+                @click.stop
+            >
                 <div
-                    class="bg-white rounded-xl overflow-hidden shadow-2xl border border-gray-200"
+                    v-if="mediaModal.type === 'video'"
+                    class="aspect-video w-full"
                 >
-                    <div
-                        v-if="mediaModal.type === 'video'"
-                        class="aspect-video w-full"
+                    <video
+                        controls
+                        autoplay
+                        class="w-full h-full rounded-2xl shadow-2xl"
                     >
-                        <video
-                            controls
-                            autoplay
-                            class="w-full h-full rounded-xl"
-                        >
-                            <source
-                                :src="mediaModal.src"
-                                :type="getVideoMimeType(mediaModal.src)"
-                            />
-                            Your browser does not support the video tag.
-                        </video>
-                    </div>
-                    <img
-                        v-else
-                        :src="mediaModal.src"
-                        class="max-h-[80vh] w-full object-contain rounded-xl"
-                    />
+                        <source
+                            :src="mediaModal.src"
+                            :type="getVideoMimeType(mediaModal.src)"
+                        />
+                    </video>
                 </div>
+                <img
+                    v-else
+                    :src="mediaModal.src"
+                    class="max-h-[80vh] w-full object-contain rounded-2xl shadow-2xl"
+                />
             </div>
         </div>
     </Transition>
@@ -1122,7 +1082,7 @@ const isVideoFile = (media) => {
 <style scoped>
 .modal-backdrop-enter-active,
 .modal-backdrop-leave-active {
-    transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+    transition: opacity 0.3s ease;
 }
 
 .modal-backdrop-enter-from,
@@ -1132,46 +1092,46 @@ const isVideoFile = (media) => {
 
 .modal-content-enter-active,
 .modal-content-leave-active {
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .modal-content-enter-from,
 .modal-content-leave-to {
     opacity: 0;
-    transform: translateY(-15px) scale(0.96);
+    transform: scale(0.95) translateY(-10px);
 }
 
 .content-slide-enter-active,
 .content-slide-leave-active {
-    transition: all 0.35s ease-out;
+    transition: all 0.4s ease;
 }
 
 .content-slide-enter-from,
 .content-slide-leave-to {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(20px);
 }
 
-.loading-bounce-enter-active,
-.loading-bounce-leave-active {
-    transition: all 0.25s ease;
+.loading-fade-enter-active,
+.loading-fade-leave-active {
+    transition: all 0.3s ease;
 }
 
-.loading-bounce-enter-from,
-.loading-bounce-leave-to {
+.loading-fade-enter-from,
+.loading-fade-leave-to {
     opacity: 0;
-    transform: scale(0.94);
+    transform: scale(0.9);
 }
 
 .error-slide-enter-active,
 .error-slide-leave-active {
-    transition: all 0.25s ease;
+    transition: all 0.3s ease;
 }
 
 .error-slide-enter-from,
 .error-slide-leave-to {
     opacity: 0;
-    transform: translateX(-8px);
+    transform: translateX(-10px);
 }
 
 @keyframes scan-line {
@@ -1189,23 +1149,7 @@ const isVideoFile = (media) => {
 }
 
 .animate-scan-line {
-    animation: scan-line 2s linear infinite;
-}
-
-.border-l-3 {
-    border-left-width: 3px;
-}
-
-.border-t-3 {
-    border-top-width: 3px;
-}
-
-.border-r-3 {
-    border-right-width: 3px;
-}
-
-.border-b-3 {
-    border-bottom-width: 3px;
+    animation: scan-line 2s ease-in-out infinite;
 }
 
 .group:hover .group-hover\:scale-105 {
@@ -1214,9 +1158,5 @@ const isVideoFile = (media) => {
 
 .group:hover .group-hover\:opacity-100 {
     opacity: 1;
-}
-
-.group:hover .group-hover\:opacity-0 {
-    opacity: 0;
 }
 </style>

@@ -103,7 +103,8 @@ class StaffReadingController extends Controller
             'date_installed' => $user->date_installed ?? 'Not available',
             'brand' => $user->brand ?? 'Not specified',
             'serial_number' => $user->serial_number ?? 'N/A',
-            'size' => $user->size ?? 'N/A'
+            'size' => $user->size ?? 'N/A',
+            'avatar_url' => $user->avatar ? Storage::url($user->avatar) : null
         ]);
     }
 

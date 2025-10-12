@@ -231,10 +231,11 @@ class StaffReadingController extends Controller
             $readingDate
         );
 
-        // Validate that current reading is greater than previous reading
-        if ($validated['reading'] <= $previousReadingValue) {
+        // For new users (previous reading is 0), allow any reading >= 0
+        // For existing users, current reading must be >= previous reading
+        if ($previousReadingValue > 0 && $validated['reading'] < $previousReadingValue) {
             return response()->json([
-                'error' => 'Current reading must be greater than previous reading'
+                'error' => 'Current reading must be greater than or equal to previous reading'
             ], 422);
         }
 
@@ -255,8 +256,8 @@ class StaffReadingController extends Controller
             'amount' => $amount,
             'status' => 'Pending',
             'due_date' => $dueDate,
-            'created_at' => now(), // Ensure accurate timestamp
-            'updated_at' => now(), // Ensure accurate timestamp
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
         return response()->json([
@@ -285,7 +286,7 @@ class StaffReadingController extends Controller
             return $previousReading->reading;
         }
 
-        // If no previous reading found, this might be the first reading
+        // If no previous reading found, this is the first reading - return 0
         return 0;
     }
 

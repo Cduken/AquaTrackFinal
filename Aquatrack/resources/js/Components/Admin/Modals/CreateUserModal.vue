@@ -600,7 +600,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, watch, onMounted } from "vue";
 import { OhVueIcon, addIcons } from "oh-vue-icons";
 import {
     HiUser,
@@ -725,6 +725,21 @@ const updateGeneratedPassword = () => {
     // For visual feedback only
 };
 
+watch(
+    () => props.show,
+    (newVal, oldVal) => {
+        // When modal changes from open to closed, reset the form
+        if (oldVal === true && newVal === false) {
+            resetForm();
+            isSubmitting.value = false;
+        }
+    }
+);
+
+onMounted(() => {
+    resetForm();
+});
+
 const resetForm = () => {
     userData.value = {
         name: "",
@@ -747,72 +762,87 @@ const resetForm = () => {
 const handleSubmit = async () => {
     isSubmitting.value = true;
 
-    // Validate required fields based on role
-    if (userData.value.role === "customer") {
-        if (userData.value.serial_number.length !== 9) {
-            alert("Serial number must be exactly 9 digits");
-            isSubmitting.value = false;
-            return;
+    try {
+        // Validate required fields based on role
+        if (userData.value.role === "customer") {
+            if (userData.value.serial_number.length !== 9) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Validation Error",
+                    text: "Serial number must be exactly 9 digits",
+                });
+                isSubmitting.value = false;
+                return;
+            }
+
+            if (
+                !userData.value.accountNumber ||
+                !userData.value.date_installed ||
+                !userData.value.brand ||
+                !userData.value.size ||
+                !userData.value.zone ||
+                !userData.value.barangay
+            ) {
+                alert("Please fill all required customer fields");
+                isSubmitting.value = false;
+                return;
+            }
+        } else if (userData.value.role === "staff") {
+            // Validate staff fields
+            if (!userData.value.email) {
+                alert("Email is required for staff members");
+                isSubmitting.value = false;
+                return;
+            }
         }
 
-        if (
-            !userData.value.accountNumber ||
-            !userData.value.date_installed ||
-            !userData.value.brand ||
-            !userData.value.size ||
-            !userData.value.zone ||
-            !userData.value.barangay
-        ) {
-            alert("Please fill all required customer fields");
-            isSubmitting.value = false;
-            return;
+        // Show spinner for 2 seconds before proceeding
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+
+        // Prepare data - explicitly set customer fields to null for staff
+        const submitData = {
+            name: userData.value.name,
+            lastname: userData.value.lastname,
+            email: userData.value.email,
+            phone: userData.value.phone.replace(/\D/g, ""),
+            role: userData.value.role,
+        };
+
+        // Handle fields based on role
+        if (userData.value.role === "customer") {
+            submitData.account_number = userData.value.accountNumber;
+            submitData.zone = userData.value.zone;
+            submitData.barangay = userData.value.barangay;
+            submitData.date_installed = userData.value.date_installed;
+            submitData.brand = userData.value.brand;
+            submitData.serial_number = userData.value.serial_number;
+            submitData.size = userData.value.size;
+        } else {
+            // For staff, don't send account_number at all instead of sending null
+            submitData.zone = null;
+            submitData.barangay = null;
+            submitData.date_installed = null;
+            submitData.brand = null;
+            submitData.serial_number = null;
+            submitData.size = null;
+            // Don't include account_number for staff
         }
-    } else if (userData.value.role === "staff") {
-        // Validate staff fields
-        if (!userData.value.email) {
-            alert("Email is required for staff members");
-            isSubmitting.value = false;
-            return;
-        }
+
+        console.log("Submitting data:", submitData); // Debug log
+
+        emit("submit", submitData);
+        // resetForm();
+        // isSubmitting.value = false;
+    } catch (error) {
+        console.error("Error in handleSubmit:", error);
+        Swal.fire({
+            icon: "error",
+            title: "Submission Error",
+            text: "An error occurred while submitting the form",
+        });
+    } finally {
+        isSubmitting.value = false;
     }
-
-    // Show spinner for 2 seconds before proceeding
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    // Prepare data - explicitly set customer fields to null for staff
-    const submitData = {
-        name: userData.value.name,
-        lastname: userData.value.lastname,
-        email: userData.value.email,
-        phone: userData.value.phone.replace(/\D/g, ""),
-        role: userData.value.role,
-    };
-
-    // Handle fields based on role
-    if (userData.value.role === "customer") {
-        submitData.account_number = userData.value.accountNumber;
-        submitData.zone = userData.value.zone;
-        submitData.barangay = userData.value.barangay;
-        submitData.date_installed = userData.value.date_installed;
-        submitData.brand = userData.value.brand;
-        submitData.serial_number = userData.value.serial_number;
-        submitData.size = userData.value.size;
-    } else {
-        // For staff, don't send account_number at all instead of sending null
-        submitData.zone = null;
-        submitData.barangay = null;
-        submitData.date_installed = null;
-        submitData.brand = null;
-        submitData.serial_number = null;
-        submitData.size = null;
-        // Don't include account_number for staff
-    }
-
-    console.log('Submitting data:', submitData); // Debug log
-
-    emit("submit", submitData);
-    resetForm();
-    isSubmitting.value = false;
 };
 </script>
 

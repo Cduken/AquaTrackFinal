@@ -1005,15 +1005,28 @@ const submitCreateUser = (userData) => {
          * @param {Object} errors - Validation errors
          */
         onError: (errors) => {
+            console.log("Error details:", errors); // Debug log
+
             let errorMessage =
                 "Failed to create user. Please check the form and try again.";
 
-            if (errors.email) {
-                errorMessage = errors.email;
-            } else if (errors.name) {
-                errorMessage = errors.name;
-            } else if (errors.lastname) {
-                errorMessage = errors.lastname;
+            // Handle Laravel validation errors
+            if (errors && typeof errors === "object") {
+                // Get the first error message from the validation errors
+                const firstErrorKey = Object.keys(errors)[0];
+                if (firstErrorKey && errors[firstErrorKey]) {
+                    errorMessage = Array.isArray(errors[firstErrorKey])
+                        ? errors[firstErrorKey][0]
+                        : errors[firstErrorKey];
+                }
+            }
+            // Handle server error messages
+            else if (errors && errors.message) {
+                errorMessage = errors.message;
+            }
+            // Handle string errors
+            else if (typeof errors === "string") {
+                errorMessage = errors;
             }
 
             Swal.fire({

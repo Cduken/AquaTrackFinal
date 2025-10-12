@@ -3,7 +3,12 @@
 import AdminLayout from "@/Layouts/AdminLayout.vue";
 import StatCard from "@/Components/Admin/Dashboard/StatCard.vue";
 import ActivityItem from "@/Components/Admin/Dashboard/ActivityItem.vue";
-import { ref, onMounted, computed, watch, h, resolveComponent } from "vue";
+import DashboardSection from "@/Components/Admin/Dashboard/DashboardSection.vue";
+import EmptyState from "@/Components/Admin/Dashboard/EmptyState.vue";
+import ReportItem from "@/Components/Admin/Dashboard/ReportItem.vue";
+import StatusItem from "@/Components/Admin/Dashboard/StatusItem.vue";
+import CustomerItem from "@/Components/Admin/Dashboard/CustomerItem.vue";
+import { ref, onMounted, computed, watch } from "vue";
 import { usePage, Link, router } from "@inertiajs/vue3";
 import Chart from "chart.js/auto";
 import {
@@ -15,7 +20,7 @@ import {
     createWaterChartConfig,
     createDoughnutChartConfig,
 } from "@/utils/chartConfig";
-import { History, ChevronRight, RefreshCw, AlertCircle } from "lucide-vue-next";
+import { RefreshCw } from "lucide-vue-next";
 
 // Reactive state
 const state = ref({
@@ -142,6 +147,19 @@ const reportStatusData = computed(() => ({
     colors: ["#F59E0B", "#3B82F6", "#10B981"],
 }));
 
+const hasReportStatusData = computed(() => {
+    return reportStatusData.value.data.some((count) => count > 0);
+});
+
+const hasAreaData = computed(() => {
+    return (
+        dashboardData.value.consumptionByArea.length > 0 &&
+        dashboardData.value.consumptionByArea.some(
+            (item) => item.consumption > 0
+        )
+    );
+});
+
 // Methods
 const refreshData = async () => {
     state.value.isLoading = true;
@@ -192,42 +210,43 @@ const initializeConsumptionChart = () => {
 };
 
 const initializeAreaChart = () => {
-    if (!areaChart.value || dashboardData.value.consumptionByArea.length === 0)
-        return;
+    if (!areaChart.value) return;
 
     destroyChart("area");
 
-    state.value.chartInstances.area = new Chart(areaChart.value, {
-        ...createDoughnutChartConfig(
-            dashboardData.value.consumptionByArea.map((item) => item.name),
-            dashboardData.value.consumptionByArea.map(
-                (item) => item.consumption
+    if (hasAreaData.value) {
+        state.value.chartInstances.area = new Chart(areaChart.value, {
+            ...createDoughnutChartConfig(
+                dashboardData.value.consumptionByArea.map((item) => item.name),
+                dashboardData.value.consumptionByArea.map(
+                    (item) => item.consumption
+                ),
+                ["#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6"]
             ),
-            ["#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6"]
-        ),
-        options: {
-            ...createDoughnutChartConfig().options,
-            plugins: {
-                ...createDoughnutChartConfig().options.plugins,
-                tooltip: {
-                    callbacks: {
-                        label: (context) => {
-                            const total =
-                                dashboardData.value.consumptionByArea.reduce(
-                                    (sum, item) => sum + item.consumption,
-                                    0
-                                );
-                            const percentage = (
-                                (context.parsed / total) *
-                                100
-                            ).toFixed(1);
-                            return `${context.label}: ${context.parsed} reports (${percentage}%)`;
+            options: {
+                ...createDoughnutChartConfig().options,
+                plugins: {
+                    ...createDoughnutChartConfig().options.plugins,
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => {
+                                const total =
+                                    dashboardData.value.consumptionByArea.reduce(
+                                        (sum, item) => sum + item.consumption,
+                                        0
+                                    );
+                                const percentage = (
+                                    (context.parsed / total) *
+                                    100
+                                ).toFixed(1);
+                                return `${context.label}: ${context.parsed} reports (${percentage}%)`;
+                            },
                         },
                     },
                 },
             },
-        },
-    });
+        });
+    }
 };
 
 const initializeReportStatusChart = () => {
@@ -235,14 +254,16 @@ const initializeReportStatusChart = () => {
 
     destroyChart("reportStatus");
 
-    state.value.chartInstances.reportStatus = new Chart(
-        reportStatusChart.value,
-        createDoughnutChartConfig(
-            reportStatusData.value.labels,
-            reportStatusData.value.data,
-            reportStatusData.value.colors
-        )
-    );
+    if (hasReportStatusData.value) {
+        state.value.chartInstances.reportStatus = new Chart(
+            reportStatusChart.value,
+            createDoughnutChartConfig(
+                reportStatusData.value.labels,
+                reportStatusData.value.data,
+                reportStatusData.value.colors
+            )
+        );
+    }
 };
 
 const destroyChart = (chartName) => {
@@ -256,280 +277,6 @@ const destroyAllCharts = () => {
     Object.keys(state.value.chartInstances).forEach((chartName) => {
         destroyChart(chartName);
     });
-};
-
-const DashboardSection = {
-    props: {
-        title: String,
-        action: Object,
-        badge: [String, Number],
-        padding: {
-            type: Boolean,
-            default: true,
-        },
-    },
-    setup(props, { slots }) {
-        return () =>
-            h(
-                "div",
-                {
-                    class: `bg-white rounded-xl border border-gray-200 ${
-                        props.padding ? "p-6" : "p-4"
-                    }`,
-                },
-                [
-                    // Header
-                    h(
-                        "div",
-                        { class: "flex items-center justify-between mb-4" },
-                        [
-                            h("div", { class: "flex items-center gap-2" }, [
-                                h(
-                                    "h2",
-                                    {
-                                        class: "text-lg font-semibold text-gray-900",
-                                    },
-                                    props.title
-                                ),
-                                props.badge &&
-                                    h(
-                                        "span",
-                                        {
-                                            class: "text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full",
-                                        },
-                                        `${props.badge} new`
-                                    ),
-                            ]),
-                            props.action &&
-                                h(
-                                    Link,
-                                    {
-                                        href: props.action.href,
-                                        class: "text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors flex items-center gap-1",
-                                    },
-                                    [
-                                        props.action.label,
-                                        h(ChevronRight, { class: "w-4 h-4" }),
-                                    ]
-                                ),
-                        ]
-                    ),
-                    // Content
-                    slots.default?.(),
-                ]
-            );
-    },
-};
-
-
-// Report Item Component
-const ReportItem = {
-    props: {
-        report: Object,
-    },
-    setup(props) {
-        return () =>
-            h(
-                "div",
-                {
-                    class: "flex items-center justify-between p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors group",
-                },
-                [
-                    // Customer Info
-                    h(
-                        "div",
-                        { class: "flex items-center gap-4 flex-1 min-w-0" },
-                        [
-                            h("div", { class: "flex-shrink-0" }, [
-                                h(
-                                    "div",
-                                    {
-                                        class: "w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center group-hover:bg-blue-100 transition-colors",
-                                    },
-                                    [
-                                        h(
-                                            "span",
-                                            {
-                                                class: "text-sm font-semibold text-blue-600",
-                                            },
-                                            props.report.customer?.charAt(0) ||
-                                                "U"
-                                        ),
-                                    ]
-                                ),
-                            ]),
-                            h("div", { class: "min-w-0 flex-1" }, [
-                                h(
-                                    "p",
-                                    {
-                                        class: "text-sm font-medium text-gray-900 truncate",
-                                    },
-                                    props.report.customer || "Unknown Customer"
-                                ),
-                                h(
-                                    "p",
-                                    {
-                                        class: "text-xs text-gray-500 truncate mt-1",
-                                    },
-                                    `${props.report.type} • ${props.report.zone}`
-                                ),
-                            ]),
-                        ]
-                    ),
-                    // Status & Priority
-                    h(
-                        "div",
-                        { class: "flex items-center gap-3 flex-shrink-0" },
-                        [
-                            h(
-                                "span",
-                                {
-                                    class: [
-                                        "px-3 py-1 text-xs font-medium rounded-full border",
-                                        getStatusConfig(props.report.status)
-                                            .color,
-                                    ],
-                                },
-                                getStatusConfig(props.report.status).text
-                            ),
-                            props.report.priority &&
-                                h(
-                                    "span",
-                                    {
-                                        class: [
-                                            "px-2 py-1 text-xs font-medium rounded-full",
-                                            getPriorityColor(
-                                                props.report.priority
-                                            ),
-                                        ],
-                                    },
-                                    props.report.priority
-                                ),
-                        ]
-                    ),
-                ]
-            );
-    },
-};
-
-// Status Item Component
-const StatusItem = {
-    props: {
-        status: String,
-        count: Number,
-        color: String,
-    },
-    setup(props) {
-        return () =>
-            h("div", { class: "flex items-center justify-between text-sm" }, [
-                h("div", { class: "flex items-center gap-2" }, [
-                    h("div", {
-                        class: "w-3 h-3 rounded-full",
-                        style: { backgroundColor: props.color },
-                    }),
-                    h("span", { class: "text-gray-600" }, props.status),
-                ]),
-                h(
-                    "span",
-                    { class: "font-semibold text-gray-900" },
-                    props.count
-                ),
-            ]);
-    },
-};
-
-// Customer Item Component
-const CustomerItem = {
-    props: {
-        customer: Object,
-    },
-    setup(props) {
-        return () =>
-            h("div", { class: "flex items-center gap-3 group" }, [
-                h(
-                    "div",
-                    {
-                        class: "w-8 h-8 bg-blue-50 rounded-full flex items-center justify-center group-hover:bg-blue-100 transition-colors",
-                    },
-                    [
-                        h(
-                            "span",
-                            { class: "text-sm font-medium text-blue-600" },
-                            props.customer.name?.charAt(0) || "U"
-                        ),
-                    ]
-                ),
-                h("div", { class: "flex-1 min-w-0" }, [
-                    h(
-                        "p",
-                        { class: "text-sm font-medium text-gray-900 truncate" },
-                        props.customer.name || "Unknown User"
-                    ),
-                    h(
-                        "p",
-                        { class: "text-xs text-gray-500 truncate" },
-                        props.customer.email || "No email"
-                    ),
-                ]),
-                h(
-                    "div",
-                    { class: "text-xs text-gray-400 whitespace-nowrap" },
-                    props.customer.joined || "Recently"
-                ),
-            ]);
-    },
-};
-
-// Empty State Component
-const EmptyState = {
-    props: {
-        icon: String,
-        title: String,
-        description: String,
-        size: {
-            type: String,
-            default: "md",
-        },
-        class: String,
-    },
-    setup(props) {
-        const sizes = {
-            sm: "py-6",
-            md: "py-12",
-            lg: "py-16",
-        };
-
-        const iconSize = {
-            sm: "w-8 h-8",
-            md: "w-12 h-12",
-            lg: "w-16 h-16",
-        };
-
-        return () =>
-            h(
-                "div",
-                {
-                    class: `text-center text-gray-500 ${sizes[props.size]} ${
-                        props.class
-                    }`,
-                },
-                [
-                    props.icon &&
-                        h(resolveComponent(props.icon), {
-                            class: `mx-auto text-gray-300 mb-3 ${
-                                iconSize[props.size]
-                            }`,
-                        }),
-                    h("p", { class: "text-sm" }, props.title),
-                    props.description &&
-                        h(
-                            "p",
-                            { class: "text-xs text-gray-400 mt-1" },
-                            props.description
-                        ),
-                ]
-            );
-    },
 };
 
 // Lifecycle
@@ -683,8 +430,15 @@ watch(
             <div class="space-y-6">
                 <!-- Report Status -->
                 <DashboardSection title="Report Status">
-                    <div class="h-48 mb-4">
+                    <div class="h-48 mb-4 relative">
                         <canvas ref="reportStatusChart"></canvas>
+                        <EmptyState
+                            v-if="!hasReportStatusData"
+                            title="No status data"
+                            description="Report status data will appear here"
+                            size="sm"
+                            class="absolute inset-0 flex items-center justify-center bg-white"
+                        />
                     </div>
                     <div class="space-y-3">
                         <StatusItem
@@ -718,8 +472,15 @@ watch(
 
                 <!-- Reports by Zone -->
                 <DashboardSection title="Reports by Zone">
-                    <div class="h-48">
+                    <div class="h-48 relative">
                         <canvas ref="areaChart"></canvas>
+                        <EmptyState
+                            v-if="!hasAreaData"
+                            title="No zone data"
+                            description="Zone consumption data will appear here"
+                            size="sm"
+                            class="absolute inset-0 flex items-center justify-center bg-white"
+                        />
                     </div>
                 </DashboardSection>
             </div>

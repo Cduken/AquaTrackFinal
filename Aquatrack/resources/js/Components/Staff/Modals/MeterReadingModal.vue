@@ -918,7 +918,7 @@ const isFormValid = computed(() => {
         newReading.value.reading_date &&
         newReading.value.reading !== "" &&
         current >= previous &&
-        (!hasPreviousReadings.value || previous > 0) // If no previous readings, ensure previous is provided
+        previous >= 0
     );
 });
 
@@ -1014,16 +1014,6 @@ const submitReading = async () => {
             icon: "error",
             title: "Invalid Reading",
             text: "Current reading cannot be less than previous reading",
-        });
-        return;
-    }
-
-    // Additional validation for initial reading
-    if (!hasPreviousReadings.value && previous <= 0) {
-        Swal.fire({
-            icon: "error",
-            title: "Invalid Previous Reading",
-            text: "Previous reading must be greater than 0 for initial reading",
         });
         return;
     }

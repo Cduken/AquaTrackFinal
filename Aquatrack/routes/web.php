@@ -18,6 +18,7 @@ use App\Http\Controllers\Staff\StaffReadingController;
 use App\Models\User;
 use Illuminate\Container\Attributes\Auth;
 use Illuminate\Foundation\Application;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -179,5 +180,4 @@ Route::get('/reports/create', [ReportController::class, 'create'])->name('report
 Route::get('/debug/customers', function () {
     return User::where('role', 'customer')->get();
 });
-
 require __DIR__ . '/auth.php';

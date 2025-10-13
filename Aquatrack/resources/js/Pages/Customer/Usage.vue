@@ -56,7 +56,7 @@
             <!-- Main Content -->
             <div class="p-6">
                 <!-- Stats Overview Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <!-- <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                     <div
                         class="bg-blue-50 dark:bg-blue-900/20 p-5 rounded-xl border border-blue-100 dark:border-blue-800/30"
                     >
@@ -148,7 +148,7 @@
                             </span>
                         </p>
                     </div>
-                </div>
+                </div> -->
 
                 <!-- Chart Section -->
                 <div

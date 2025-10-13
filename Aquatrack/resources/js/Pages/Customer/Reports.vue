@@ -4,21 +4,21 @@
             class="w-full bg-white shadow-xl rounded-xl overflow-hidden border border-gray-100"
         >
             <!-- Header Section - Redesigned to match announcement style -->
-           <div class=" px-6 py-5">
+           <div class=" px-6 py-4">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
                         <h1 class="text-2xl md:text-3xl font-bold text-black">
-                            My Water Reports
+                            Water Reports
                         </h1>
                         <p class="text-black-400 mt-1">
-                            Track and manage your water quality reports
+                            Track and manage your water reports
                         </p>
                     </div>
                 </div>
             </div>
 
             <!-- Stats Overview - Redesigned to match announcement style -->
-            <div
+            <!-- <div
                 class="grid grid-cols-1 md:grid-cols-4 gap-4 p-6 border-b border-gray-200"
             >
                 <div
@@ -45,10 +45,7 @@
                             </h3>
                         </div>
 
-                        <!-- <div>
-                            <p class="text-sm font-medium text-gray-600">Total Reports</p>
-                            <p class="text-2xl font-bold text-gray-900">{{ reports.total || 0 }}</p>
-                        </div> -->
+
                     </div>
                 </div>
                 <div
@@ -123,7 +120,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> -->
 
             <!-- Content Section -->
             <div class="p-6">
@@ -150,7 +147,7 @@
                     </div>
                     <button
                         @click="showAddModal = true"
-                        class="inline-flex items-center justify-center px-5 py-3 bg-blue-600 text-white border border-transparent rounded-xl font-semibold text-sm uppercase tracking-widest hover:bg-blue-700 active:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                        class="inline-flex items-center justify-center px-5 py-3 bg-blue-600 text-white border border-transparent rounded-lg font-semibold text-sm uppercase tracking-widest hover:bg-blue-700 active:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl"
                     >
                         <v-icon name="bi-plus-lg" class="mr-2" />
                         Submit New Report

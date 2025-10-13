@@ -36,14 +36,14 @@
                             </h3>
                         </div>
                     </div>
-                    <div class="mt-4">
+                    <!-- <div class="mt-4">
                         <div
                             class="flex items-center text-sm text-blue-600 dark:text-blue-400"
                         >
                             <v-icon name="bi-list-ul" class="w-4 h-4 mr-1" />
                             <span>All system notifications</span>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
 
                 <!-- Unread Notifications Card -->
@@ -67,14 +67,14 @@
                             </h3>
                         </div>
                     </div>
-                    <div class="mt-4">
+                    <!-- <div class="mt-4">
                         <div
                             class="flex items-center text-sm text-green-600 dark:text-green-400"
                         >
                             <v-icon name="bi-arrow-up" class="w-4 h-4 mr-1" />
                             <span>{{ unreadPercentage }}% of total</span>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
 
                 <!-- Recent Notifications Card -->
@@ -98,14 +98,14 @@
                             </h3>
                         </div>
                     </div>
-                    <div class="mt-4">
+                    <!-- <div class="mt-4">
                         <div
                             class="flex items-center text-sm text-purple-600 dark:text-purple-400"
                         >
                             <v-icon name="bi-calendar" class="w-4 h-4 mr-1" />
                             <span>Last 7 days</span>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
 
                 <!-- Read Notifications Card -->
@@ -132,14 +132,14 @@
                             </h3>
                         </div>
                     </div>
-                    <div class="mt-4">
+                    <!-- <div class="mt-4">
                         <div
                             class="flex items-center text-sm text-orange-600 dark:text-orange-400"
                         >
                             <v-icon name="bi-eye" class="w-4 h-4 mr-1" />
                             <span>Already viewed</span>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
             </div>
 

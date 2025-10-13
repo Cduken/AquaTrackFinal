@@ -3,7 +3,7 @@
         <div class="min-h-screen bg-gray-50/40">
             <!-- Header -->
             <div class=" ">
-                <div class="py-4">
+                <div class="py-2">
                     <div class="flex items-center justify-between">
                         <div>
                             <h1 class="text-xl font-semibold text-gray-900">
@@ -63,7 +63,7 @@
                             Monthly Usage
                         </h3>
                         <p class="text-2xl font-semibold text-gray-900 mb-2">
-                            {{ monthlyUsage }}
+                            {{ monthlyUsage }}m³
                         </p>
                         <div class="flex items-center">
                             <div class="flex items-center text-xs font-medium px-2 py-1 rounded-full"

@@ -9,7 +9,7 @@ use Inertia\Inertia;
 
 class CustomerAnnouncementsController extends Controller
 {
-     public function index()
+    public function index()
     {
         $announcements = Announcements::where('status', 'active')
             ->orderBy('created_at', 'desc')
@@ -23,6 +23,8 @@ class CustomerAnnouncementsController extends Controller
                     'status' => ucfirst($announcement->status),
                     'start_date' => $announcement->start_date?->format('Y-m-d'),
                     'end_date' => $announcement->end_date?->format('Y-m-d'),
+                    'created_at' => $announcement->created_at->toISOString(), // Add this line
+                    'author' => $announcement->author ?? 'ClarinWaterDistrict',
                 ];
             });
 

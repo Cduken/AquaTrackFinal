@@ -273,14 +273,14 @@ const userPercentage = computed(() => {
                             </h3>
                         </div>
                     </div>
-                    <div class="mt-4">
+                    <!-- <div class="mt-4">
                         <div
                             class="flex items-center text-sm text-blue-600 dark:text-blue-400"
                         >
                             <v-icon name="bi-list-ul" class="w-4 h-4 mr-1" />
                             <span>All system activities</span>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
 
                 <!-- Created Events Card -->
@@ -304,7 +304,7 @@ const userPercentage = computed(() => {
                             </h3>
                         </div>
                     </div>
-                    <div class="mt-4">
+                    <!-- <div class="mt-4">
                         <div
                             class="flex items-center text-sm text-green-600 dark:text-green-400"
                         >
@@ -314,7 +314,7 @@ const userPercentage = computed(() => {
                             />
                             <span>{{ createdPercentage }}% of total</span>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
 
                 <!-- Updated Events Card -->
@@ -338,7 +338,7 @@ const userPercentage = computed(() => {
                             </h3>
                         </div>
                     </div>
-                    <div class="mt-4">
+                    <!-- <div class="mt-4">
                         <div
                             class="flex items-center text-sm text-yellow-600 dark:text-yellow-400"
                         >
@@ -348,7 +348,7 @@ const userPercentage = computed(() => {
                             />
                             <span>{{ updatedPercentage }}% of total</span>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
 
                 <!-- User Activities Card -->
@@ -372,7 +372,7 @@ const userPercentage = computed(() => {
                             </h3>
                         </div>
                     </div>
-                    <div class="mt-4">
+                    <!-- <div class="mt-4">
                         <div
                             class="flex items-center text-sm text-purple-600 dark:text-purple-400"
                         >
@@ -382,7 +382,7 @@ const userPercentage = computed(() => {
                             />
                             <span>{{ userPercentage }}% of total</span>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
             </div>
 

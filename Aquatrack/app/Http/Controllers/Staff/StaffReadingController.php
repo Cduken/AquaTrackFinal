@@ -197,73 +197,134 @@ class StaffReadingController extends Controller
 
     public function storeReading(Request $request)
     {
-        $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'billing_month' => 'required|string',
-            'reading_date' => 'required|date',
-            'reading' => 'required|numeric|min:0',
-            'previous_reading' => 'nullable|numeric|min:0',
-        ]);
+        Log::info('=== STORE READING START ===');
+        Log::info('Request data:', $request->all());
 
-        // Parse the reading date to get year
-        $readingDate = Carbon::parse($validated['reading_date']);
-        $readingYear = $readingDate->format('Y');
+        try {
+            $validated = $request->validate([
+                'user_id' => 'required|exists:users,id',
+                'billing_month' => 'required|string',
+                'reading_date' => 'required|date',
+                'reading' => 'required|numeric|min:0',
+                'previous_reading' => 'nullable|numeric|min:0',
+            ]);
 
-        // Check if reading already exists for this month and year
-        $existingReading = MeterReading::where('user_id', $validated['user_id'])
-            ->where('billing_month', $validated['billing_month'])
-            ->whereYear('reading_date', $readingYear)
-            ->first();
+            Log::info('Validation passed:', $validated);
 
-        if ($existingReading) {
+            // Parse the reading date to get year
+            $readingDate = Carbon::parse($validated['reading_date']);
+            $readingYear = $readingDate->format('Y');
+
+            // Check if reading already exists for this month and year
+            $existingReading = MeterReading::where('user_id', $validated['user_id'])
+                ->where('billing_month', $validated['billing_month'])
+                ->whereYear('reading_date', $readingYear)
+                ->first();
+
+            if ($existingReading) {
+                return response()->json([
+                    'error' => 'A reading already exists for this billing month and year'
+                ], 422);
+            }
+
+            // Fetch the user to get the zone
+            $user = User::findOrFail($validated['user_id']);
+            Log::info('User found:', ['id' => $user->id, 'zone' => $user->zone]);
+
+            // Determine the correct previous reading
+            $previousReadingValue = $this->determinePreviousReading(
+                $validated['user_id'],
+                $validated['previous_reading'] ?? null,
+                $readingDate
+            );
+
+            Log::info('Previous reading determined:', ['value' => $previousReadingValue]);
+
+            // For new users (previous reading is 0), allow any reading >= 0
+            // For existing users, current reading must be >= previous reading
+            if ($previousReadingValue > 0 && $validated['reading'] < $previousReadingValue) {
+                return response()->json([
+                    'error' => 'Current reading must be greater than or equal to previous reading'
+                ], 422);
+            }
+
+            $consumption = $validated['reading'] - $previousReadingValue;
+            $amount = $this->calculateBillAmount($consumption);
+
+            Log::info('Calculated values:', ['consumption' => $consumption, 'amount' => $amount]);
+
+            // **FIXED: Calculate due date with proper error handling**
+            $dueDate = $this->getDueDate($user, $validated['reading_date']);
+            Log::info('Due date calculated:', ['due_date' => $dueDate]);
+
+            // **FIXED: Ensure due_date is NEVER null with proper fallback**
+            if (empty($dueDate) || $dueDate === null || $dueDate === 'NULL' || $dueDate === 'null') {
+                Log::warning('Primary due date calculation failed, using fallback');
+                $dueDate = $this->calculateFallbackDueDate($user, $validated['reading_date']);
+                Log::info('Fallback due date:', ['fallback_due_date' => $dueDate]);
+            }
+
+            // **FIXED: Final safety check - if still empty, use reading date + 15 days**
+            if (empty($dueDate)) {
+                Log::error('All due date calculations failed, using ultimate fallback');
+                $dueDate = Carbon::parse($validated['reading_date'])->addDays(15)->format('Y-m-d');
+                Log::info('Ultimate fallback due date:', ['due_date' => $dueDate]);
+            }
+
+            Log::info('Final data to be inserted:', [
+                'user_id' => $validated['user_id'],
+                'staff_id' => Auth::id(),
+                'billing_month' => $validated['billing_month'],
+                'reading_date' => $validated['reading_date'],
+                'previous_reading' => $previousReadingValue,
+                'reading' => $validated['reading'],
+                'consumption' => $consumption,
+                'amount' => $amount,
+                'status' => 'Pending',
+                'due_date' => $dueDate,
+            ]);
+
+            // **Create the reading with explicit due_date**
+            $newReading = MeterReading::create([
+                'user_id' => $validated['user_id'],
+                'staff_id' => Auth::id(),
+                'billing_month' => $validated['billing_month'],
+                'reading_date' => $validated['reading_date'],
+                'previous_reading' => $previousReadingValue,
+                'reading' => $validated['reading'],
+                'consumption' => $consumption,
+                'amount' => $amount,
+                'status' => 'Pending',
+                'due_date' => $dueDate ?? Carbon::parse($validated['reading_date'])->addDays(15)->format('Y-m-d'),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            Log::info('Reading created successfully:', [
+                'id' => $newReading->id,
+                'due_date' => $newReading->due_date
+            ]);
+
+            // **Verify the reading was created with due_date**
+            $createdReading = MeterReading::find($newReading->id);
+            Log::info('Verified reading from database:', [
+                'id' => $createdReading->id,
+                'due_date' => $createdReading->due_date
+            ]);
+
             return response()->json([
-                'error' => 'A reading already exists for this billing month and year'
-            ], 422);
-        }
+                'message' => 'Reading saved successfully',
+                'reading' => $newReading,
+                'due_date_stored' => $createdReading->due_date // Return the actual stored due_date
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error in storeReading: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
 
-        // Fetch the user to get the zone
-        $user = User::findOrFail($validated['user_id']);
-
-        // Determine the correct previous reading
-        $previousReadingValue = $this->determinePreviousReading(
-            $validated['user_id'],
-            $validated['previous_reading'] ?? null,
-            $readingDate
-        );
-
-        // For new users (previous reading is 0), allow any reading >= 0
-        // For existing users, current reading must be >= previous reading
-        if ($previousReadingValue > 0 && $validated['reading'] < $previousReadingValue) {
             return response()->json([
-                'error' => 'Current reading must be greater than or equal to previous reading'
-            ], 422);
+                'error' => 'Failed to save reading: ' . $e->getMessage()
+            ], 500);
         }
-
-        $consumption = $validated['reading'] - $previousReadingValue;
-        $amount = $this->calculateBillAmount($consumption);
-
-        // Calculate due date based on user's zone and reading date
-        $dueDate = $this->getDueDate($user, $validated['reading_date']);
-
-        $newReading = MeterReading::create([
-            'user_id' => $validated['user_id'],
-            'staff_id' => Auth::id(),
-            'billing_month' => $validated['billing_month'],
-            'reading_date' => $validated['reading_date'],
-            'previous_reading' => $previousReadingValue,
-            'reading' => $validated['reading'],
-            'consumption' => $consumption,
-            'amount' => $amount,
-            'status' => 'Pending',
-            'due_date' => $dueDate,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        return response()->json([
-            'message' => 'Reading saved successfully',
-            'reading' => $newReading
-        ]);
     }
 
     /**
@@ -326,47 +387,164 @@ class StaffReadingController extends Controller
     /**
      * Get the due date based on the user's zone and reading date.
      */
+    /**
+     * Get the due date based on the user's zone and reading date.
+     */
     private function getDueDate($user, $readingDate)
     {
-        // Extract numeric zone, default to 1 if invalid
-        $zone = $user->zone ? (int) preg_replace('/[^0-9]/', '', $user->zone) : 1;
-        if ($zone < 1 || $zone > 12) {
-            $zone = 1; // Fallback to Zone 1
+        try {
+            Log::info('getDueDate called with:', [
+                'user_zone' => $user->zone,
+                'reading_date' => $readingDate
+            ]);
+
+            $zone = $user->zone;
+
+            // Handle null or empty zone
+            if ($zone === null || $zone === '' || $zone === 'NULL' || $zone === 'null') {
+                Log::warning('Zone is null or empty, using default zone 1');
+                $zoneNumber = 1;
+            } else {
+                // Convert to string for consistent processing
+                $zoneString = (string) $zone;
+
+                // Extract numbers - handle formats like "Zone 1", "1", "zone1", "ZONE 1", etc.
+                preg_match('/(\d+)/', $zoneString, $matches);
+
+                if (isset($matches[1])) {
+                    $zoneNumber = (int) $matches[1];
+                    Log::info('Zone number extracted:', ['zone_number' => $zoneNumber]);
+                } else {
+                    Log::warning('Cannot extract zone number from: "' . $zoneString . '", using default zone 1');
+                    $zoneNumber = 1;
+                }
+            }
+
+            // Ensure zone is between 1-12
+            if ($zoneNumber < 1 || $zoneNumber > 12) {
+                Log::warning('Zone ' . $zoneNumber . ' out of range, using default zone 1');
+                $zoneNumber = 1;
+            }
+
+            // Define due dates strictly per zone rules
+            $dueDayMap = [
+                1 => 15,  // Zone 1: 15th
+                2 => 16,  // Zone 2: 16th
+                3 => 16,  // Zone 3: 16th
+                4 => 17,  // Zone 4: 17th
+                5 => 18,  // Zone 5: 18th
+                6 => 19,  // Zone 6: 19th
+                7 => 19,  // Zone 7: 19th
+                8 => 20,  // Zone 8: 20th
+                9 => 21,  // Zone 9: 21st
+                10 => 22, // Zone 10: 22nd
+                11 => 23, // Zone 11: 23rd
+                12 => 23, // Zone 12: 23rd
+            ];
+
+            $dueDay = $dueDayMap[$zoneNumber] ?? 15;
+            $readingDate = Carbon::parse($readingDate);
+
+            Log::info('Due day calculation:', [
+                'zone_number' => $zoneNumber,
+                'due_day' => $dueDay,
+                'reading_date' => $readingDate->toDateString()
+            ]);
+
+            // Create due date in the SAME MONTH as the reading date
+            $dueDate = $readingDate->copy()->day($dueDay);
+
+            // If the reading date is after the due day of the current month, set to next month's due day
+            if ($readingDate->day > $dueDay) {
+                Log::info('Reading date after due day, moving to next month');
+                $dueDate = $dueDate->addMonth();
+            }
+
+            // Adjust for weekends (move to next working day)
+            $originalDueDate = $dueDate->copy();
+            while ($dueDate->isWeekend()) {
+                $dueDate = $dueDate->addDay();
+            }
+
+            if ($originalDueDate != $dueDate) {
+                Log::info('Due date adjusted for weekend', [
+                    'original' => $originalDueDate->toDateString(),
+                    'adjusted' => $dueDate->toDateString()
+                ]);
+            }
+
+            $finalDueDate = $dueDate->toDateString();
+            Log::info('Final due date:', ['due_date' => $finalDueDate]);
+
+            return $finalDueDate;
+        } catch (\Exception $e) {
+            Log::error('Error calculating due date: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            // Return null to trigger fallback
+            return null;
         }
+    }
 
-        // Define due dates strictly per zone rules
-        $dueDayMap = [
-            1 => 15,  // Zone 1: 15th
-            2 => 16,  // Zone 2: 16th
-            3 => 16,  // Zone 3: 16th
-            4 => 17,  // Zone 4: 17th
-            5 => 18,  // Zone 5: 18th
-            6 => 19,  // Zone 6: 19th
-            7 => 19,  // Zone 7: 19th
-            8 => 20,  // Zone 8: 20th
-            9 => 21,  // Zone 9: 21st
-            10 => 22, // Zone 10: 22nd
-            11 => 23, // Zone 11: 23rd
-            12 => 23, // Zone 12: 23rd
-        ];
+    /**
+     * Fallback due date calculation when primary method fails
+     */
+    private function calculateFallbackDueDate($user, $readingDate)
+    {
+        try {
+            $readingDate = Carbon::parse($readingDate);
 
-        $dueDay = $dueDayMap[$zone] ?? 15; // Default to 15 if zone not found
-        $readingDate = Carbon::parse($readingDate);
+            // Extract zone number from user zone
+            $zone = $user->zone;
+            $zoneNumber = 1; // default
 
-        // Create due date in the SAME MONTH as the reading date
-        $dueDate = $readingDate->copy()->day($dueDay);
+            if ($zone !== null && $zone !== '' && $zone !== 'NULL' && $zone !== 'null') {
+                preg_match('/(\d+)/', (string)$zone, $matches);
+                if (isset($matches[1])) {
+                    $zoneNumber = (int)$matches[1];
+                }
+            }
 
-        // If the reading date is after the due day of the current month, set to next month's due day
-        if ($readingDate->day > $dueDay) {
-            $dueDate = $dueDate->addMonth();
+            // Ensure zone is between 1-12
+            $zoneNumber = max(1, min(12, $zoneNumber));
+
+            // Simple due date mapping
+            $dueDayMap = [
+                1 => 15,
+                2 => 16,
+                3 => 16,
+                4 => 17,
+                5 => 18,
+                6 => 19,
+                7 => 19,
+                8 => 20,
+                9 => 21,
+                10 => 22,
+                11 => 23,
+                12 => 23,
+            ];
+
+            $dueDay = $dueDayMap[$zoneNumber] ?? 15;
+
+            // Create due date in current month
+            $dueDate = $readingDate->copy()->day($dueDay);
+
+            // If reading date is after due day, move to next month
+            if ($readingDate->day > $dueDay) {
+                $dueDate = $dueDate->addMonth();
+            }
+
+            // Adjust for weekends
+            while ($dueDate->isWeekend()) {
+                $dueDate = $dueDate->addDay();
+            }
+
+            return $dueDate->toDateString(); // This always returns string
+
+        } catch (\Exception $e) {
+            Log::error('Fallback due date calculation failed: ' . $e->getMessage());
+            // Ultimate fallback: 15 days from reading date - ALWAYS returns string
+            return Carbon::parse($readingDate)->addDays(15)->toDateString();
         }
-
-        // Adjust for weekends (move to next working day)
-        while ($dueDate->isWeekend()) {
-            $dueDate = $dueDate->addDay();
-        }
-
-        return $dueDate->toDateString();
     }
 
     // In StaffReadingController

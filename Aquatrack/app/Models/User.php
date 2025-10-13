@@ -76,9 +76,6 @@ class User extends Authenticatable
      *
      * @return string|null
      */
-
-
-    // app/Models/User.php
     public function getAvatarUrlAttribute()
     {
         if (!$this->avatar) {
@@ -94,24 +91,40 @@ class User extends Authenticatable
         return asset('storage/' . $this->avatar);
     }
 
+    /**
+     * Account Number Mutator - FIXED to preserve letters
+     */
     public function setAccountNumberAttribute($value)
     {
-        // Clean the input - remove any non-numeric characters
-        $clean = preg_replace('/[^0-9]/', '', $value);
+        // Remove any non-alphanumeric characters except dashes
+        $clean = preg_replace('/[^A-Z0-9-]/i', '', $value);
 
-        // Format as XXX-XX-XXX if needed, or store as plain numbers
-        if (strlen($clean) >= 8) {
-            $this->attributes['account_number'] = substr($clean, 0, 3) . '-'
-                . substr($clean, 3, 2) . '-'
-                . substr($clean, 5);
+        // If the value already contains dashes, use as-is
+        if (strpos($clean, '-') !== false) {
+            $this->attributes['account_number'] = strtoupper($clean);
         } else {
-            $this->attributes['account_number'] = $clean;
+            // Format as XXX-XX-XXXX if no dashes present
+            $clean = strtoupper($clean);
+            if (strlen($clean) >= 8) {
+                $formatted = substr($clean, 0, 3) . '-' .
+                    substr($clean, 3, 2) . '-' .
+                    substr($clean, 5, 3);
+
+                // Add optional 9th character if present
+                if (strlen($clean) >= 9) {
+                    $formatted .= substr($clean, 8, 1);
+                }
+
+                $this->attributes['account_number'] = $formatted;
+            } else {
+                $this->attributes['account_number'] = $clean;
+            }
         }
     }
 
     public function getFormattedAccountNumberAttribute()
     {
-        return $this->account_number; // Already formatted from the mutator
+        return $this->account_number;
     }
 
     public function setPhoneAttribute($value)

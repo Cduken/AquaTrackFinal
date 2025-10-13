@@ -9,7 +9,10 @@
             ></div>
 
             <!-- Sliding panel container -->
-            <div class="fixed inset-y-0 right-0 w-full max-w-2xl flex">
+            <div
+                class="fixed inset-y-0 right-0 w-full max-w-2xl flex"
+                :class="{ 'max-w-full': isMaximized }"
+            >
                 <!-- Panel with transform class for animation -->
                 <div
                     class="relative w-full h-full transform transition-transform duration-300 ease-in-out"
@@ -31,35 +34,73 @@
                                     >Usage Details</span
                                 >
                             </div>
-                            <button
-                                @click="emit('close')"
-                                class="text-white hover:text-gray-200 transition-colors duration-200 p-1 rounded-full hover:bg-white/10"
-                            >
-                                <v-icon name="bi-x-lg" class="h-6 w-6" />
-                            </button>
+                            <div class="flex items-center space-x-2">
+                                <!-- Maximize/Minimize Button -->
+                                <button
+                                    @click="toggleMaximize"
+                                    class="text-white hover:text-gray-200 transition-colors duration-200 p-1 rounded-full hover:bg-white/10"
+                                    :title="
+                                        isMaximized ? 'Minimize' : 'Maximize'
+                                    "
+                                >
+                                    <v-icon
+                                        :name="
+                                            isMaximized
+                                                ? 'bi-fullscreen-exit'
+                                                : 'bi-fullscreen'
+                                        "
+                                        class="h-5 w-5"
+                                    />
+                                </button>
+                                <!-- Close Button -->
+                                <button
+                                    @click="emit('close')"
+                                    class="text-white hover:text-gray-200 transition-colors duration-200 p-1 rounded-full hover:bg-white/10"
+                                >
+                                    <v-icon name="bi-x-lg" class="h-6 w-6" />
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Content -->
-                        <div class="flex-1 overflow-y-auto p-6">
-                            <div v-if="usage" class="space-y-6">
+                        <div
+                            class="flex-1 overflow-y-auto p-6"
+                            :class="{ 'p-8': isMaximized }"
+                        >
+                            <div
+                                v-if="usage"
+                                class="space-y-6"
+                                :class="{ 'space-y-8': isMaximized }"
+                            >
                                 <!-- Billing Information -->
                                 <div>
                                     <h3
                                         class="text-lg font-semibold text-gray-900 dark:text-white mb-3"
+                                        :class="{ 'text-xl mb-4': isMaximized }"
                                     >
                                         Billing Information
                                     </h3>
                                     <div
                                         class="grid grid-cols-1 md:grid-cols-2 gap-4"
+                                        :class="{
+                                            'gap-6': isMaximized,
+                                            'md:grid-cols-3': isMaximized,
+                                        }"
                                     >
                                         <div>
                                             <p
                                                 class="text-sm text-gray-500 dark:text-gray-400"
+                                                :class="{
+                                                    'text-base': isMaximized,
+                                                }"
                                             >
                                                 Billing Month
                                             </p>
                                             <p
                                                 class="font-medium text-gray-900 dark:text-white"
+                                                :class="{
+                                                    'text-lg': isMaximized,
+                                                }"
                                             >
                                                 {{ usage.month }}
                                             </p>
@@ -67,14 +108,54 @@
                                         <div>
                                             <p
                                                 class="text-sm text-gray-500 dark:text-gray-400"
+                                                :class="{
+                                                    'text-base': isMaximized,
+                                                }"
                                             >
                                                 Amount Due
                                             </p>
                                             <p
                                                 class="font-bold text-gray-900 dark:text-white"
+                                                :class="{
+                                                    'text-xl': isMaximized,
+                                                }"
                                             >
                                                 ₱{{ usage.amount }}
                                             </p>
+                                        </div>
+                                        <div v-if="isMaximized">
+                                            <p
+                                                class="text-sm text-gray-500 dark:text-gray-400"
+                                                :class="{
+                                                    'text-base': isMaximized,
+                                                }"
+                                            >
+                                                Status
+                                            </p>
+                                            <span
+                                                :class="[
+                                                    statusClasses(usage.status),
+                                                    'inline-flex items-center px-3 py-1 rounded-full text-sm font-medium',
+                                                    {
+                                                        'px-4 py-1.5 text-base':
+                                                            isMaximized,
+                                                    },
+                                                ]"
+                                            >
+                                                <v-icon
+                                                    :name="
+                                                        usage.status === 'Paid'
+                                                            ? 'bi-check-circle-fill'
+                                                            : 'bi-clock-fill'
+                                                    "
+                                                    class="w-4 h-4 mr-1"
+                                                    :class="{
+                                                        'w-5 h-5 mr-2':
+                                                            isMaximized,
+                                                    }"
+                                                />
+                                                {{ usage.status }}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
@@ -87,24 +168,71 @@
                                 <div>
                                     <h3
                                         class="text-lg font-semibold text-gray-900 dark:text-white mb-3"
+                                        :class="{ 'text-xl mb-4': isMaximized }"
                                     >
                                         Consumption Details
                                     </h3>
                                     <div
                                         class="grid grid-cols-1 md:grid-cols-2 gap-4"
+                                        :class="{
+                                            'gap-6': isMaximized,
+                                            'md:grid-cols-3': isMaximized,
+                                        }"
                                     >
                                         <div>
                                             <p
                                                 class="text-sm text-gray-500 dark:text-gray-400"
+                                                :class="{
+                                                    'text-base': isMaximized,
+                                                }"
                                             >
                                                 Previous Reading
                                             </p>
                                             <p
                                                 class="font-bold text-gray-900 dark:text-white"
+                                                :class="{
+                                                    'text-lg': isMaximized,
+                                                }"
                                             >
                                                 {{
                                                     previousReading || "N/A m³"
                                                 }}
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <p
+                                                class="text-sm text-gray-500 dark:text-gray-400"
+                                                :class="{
+                                                    'text-base': isMaximized,
+                                                }"
+                                            >
+                                                Current Reading
+                                            </p>
+                                            <p
+                                                class="font-bold text-gray-900 dark:text-white"
+                                                :class="{
+                                                    'text-lg': isMaximized,
+                                                }"
+                                            >
+                                                {{ currentReading || "N/A m³" }}
+                                            </p>
+                                        </div>
+                                        <div v-if="isMaximized">
+                                            <p
+                                                class="text-sm text-gray-500 dark:text-gray-400"
+                                                :class="{
+                                                    'text-base': isMaximized,
+                                                }"
+                                            >
+                                                Reading Date
+                                            </p>
+                                            <p
+                                                class="font-medium text-gray-900 dark:text-white"
+                                                :class="{
+                                                    'text-base': isMaximized,
+                                                }"
+                                            >
+                                                {{ readingDate }}
                                             </p>
                                         </div>
                                     </div>
@@ -114,7 +242,70 @@
                                     class="border-gray-200 dark:border-gray-600"
                                 />
 
-
+                                <!-- Additional Stats in Maximized View -->
+                                <div
+                                    v-if="isMaximized"
+                                    class="grid grid-cols-1 md:grid-cols-3 gap-6"
+                                >
+                                    <div
+                                        class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-700"
+                                    >
+                                        <p
+                                            class="text-sm text-blue-600 dark:text-blue-400 font-medium mb-1"
+                                        >
+                                            Previous Month
+                                        </p>
+                                        <p
+                                            class="text-xl font-bold text-blue-700 dark:text-blue-300"
+                                        >
+                                            {{ previousMonthUsage }}
+                                        </p>
+                                    </div>
+                                    <div
+                                        class="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-700"
+                                    >
+                                        <p
+                                            class="text-sm text-green-600 dark:text-green-400 font-medium mb-1"
+                                        >
+                                            6-Month Average
+                                        </p>
+                                        <p
+                                            class="text-xl font-bold text-green-700 dark:text-green-300"
+                                        >
+                                            {{ averageUsage }}
+                                        </p>
+                                    </div>
+                                    <div
+                                        :class="[
+                                            'p-4 rounded-lg border',
+                                            changePercentage >= 0
+                                                ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-700'
+                                                : 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700',
+                                        ]"
+                                    >
+                                        <p
+                                            class="text-sm font-medium mb-1"
+                                            :class="
+                                                changePercentage >= 0
+                                                    ? 'text-red-600 dark:text-red-400'
+                                                    : 'text-green-600 dark:text-green-400'
+                                            "
+                                        >
+                                            Change from Last Month
+                                        </p>
+                                        <p
+                                            class="text-xl font-bold"
+                                            :class="
+                                                changePercentage >= 0
+                                                    ? 'text-red-700 dark:text-red-300'
+                                                    : 'text-green-700 dark:text-green-300'
+                                            "
+                                        >
+                                            {{ changePercentage >= 0 ? "+" : ""
+                                            }}{{ changePercentage.toFixed(1) }}%
+                                        </p>
+                                    </div>
+                                </div>
 
                                 <hr
                                     class="border-gray-200 dark:border-gray-600"
@@ -123,28 +314,44 @@
                                 <!-- Water Consumption & Status -->
                                 <div
                                     class="grid grid-cols-1 md:grid-cols-2 gap-6"
+                                    :class="{
+                                        'md:grid-cols-3 gap-8': isMaximized,
+                                    }"
                                 >
                                     <div>
                                         <h4
                                             class="text-md font-medium text-gray-900 dark:text-white mb-2"
+                                            :class="{
+                                                'text-lg mb-3': isMaximized,
+                                            }"
                                         >
                                             Water Consumption
                                         </h4>
                                         <p
                                             class="text-2xl font-bold text-blue-600 dark:text-blue-400"
+                                            :class="{ 'text-3xl': isMaximized }"
                                         >
                                             {{ usage.usage }} m³
                                         </p>
                                     </div>
-                                    <div>
+                                    <div v-if="!isMaximized">
                                         <h4
                                             class="text-md font-medium text-gray-900 dark:text-white mb-2"
+                                            :class="{
+                                                'text-lg mb-3': isMaximized,
+                                            }"
                                         >
                                             Status
                                         </h4>
                                         <span
-                                            :class="statusClasses(usage.status)"
-                                            class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
+                                            :class="[
+                                                statusClasses(usage.status),
+                                                'inline-flex items-center px-3 py-1 rounded-full text-sm font-medium',
+                                                {
+                                                    'px-4 py-1.5 text-base':
+                                                        isMaximized,
+                                                },
+                                            ]"
                                         >
                                             <v-icon
                                                 :name="
@@ -153,9 +360,24 @@
                                                         : 'bi-clock-fill'
                                                 "
                                                 class="w-4 h-4 mr-1"
+                                                :class="{
+                                                    'w-5 h-5 mr-2': isMaximized,
+                                                }"
                                             />
                                             {{ usage.status }}
                                         </span>
+                                    </div>
+                                    <div v-if="isMaximized">
+                                        <h4
+                                            class="text-lg font-medium text-gray-900 dark:text-white mb-3"
+                                        >
+                                            Reading Date
+                                        </h4>
+                                        <p
+                                            class="text-xl text-gray-900 dark:text-white"
+                                        >
+                                            {{ readingDate }}
+                                        </p>
                                     </div>
                                 </div>
 
@@ -163,8 +385,9 @@
                                     class="border-gray-200 dark:border-gray-600"
                                 />
 
-                                <!-- Current Reading & Date -->
+                                <!-- Current Reading & Date - Only show in normal view -->
                                 <div
+                                    v-if="!isMaximized"
                                     class="grid grid-cols-1 md:grid-cols-2 gap-6"
                                 >
                                     <div>
@@ -208,11 +431,15 @@
                         <!-- Footer -->
                         <div
                             class="border-t border-gray-200 dark:border-gray-700 px-6 py-4 bg-gray-50 dark:bg-gray-700"
+                            :class="{ 'px-8 py-5': isMaximized }"
                         >
                             <div class="flex justify-between">
                                 <button
                                     @click="emit('close')"
                                     class="inline-flex items-center justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-600 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+                                    :class="{
+                                        'px-6 py-3 text-base': isMaximized,
+                                    }"
                                 >
                                     <v-icon name="bi-x-lg" class="mr-2" />
                                     Close
@@ -226,7 +453,6 @@
     </transition>
 </template>
 
-// In your customerusagemodal.vue component
 <script setup>
 import { ref, computed, onMounted, watch } from "vue";
 import axios from "axios";
@@ -247,8 +473,26 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["close"]);
+
+// State for maximize
+const isMaximized = ref(false);
+
 const previousReadings = ref([]);
 const loading = ref(false);
+
+// Reset maximize state when modal is closed
+watch(
+    () => props.show,
+    (newVal) => {
+        if (!newVal) {
+            isMaximized.value = false;
+        }
+    }
+);
+
+const toggleMaximize = () => {
+    isMaximized.value = !isMaximized.value;
+};
 
 // Fetch previous readings when modal opens
 watch(

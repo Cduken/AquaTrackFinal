@@ -128,98 +128,101 @@ class AdminUsersController extends Controller
     }
 
     // AdminUsersController.php - Update the store method validation
-    public function store(Request $request)
-    {
-        try {
-            // Convert empty strings to null for ALL optional fields
-            $request->merge([
-                'account_number' => $request->account_number === '' ? null : $request->account_number,
-                'zone' => $request->zone === '' ? null : $request->zone,
-                'barangay' => $request->barangay === '' ? null : $request->barangay,
-                'date_installed' => $request->date_installed === '' ? null : $request->date_installed,
-                'brand' => $request->brand === '' ? null : $request->brand,
-                'serial_number' => $request->serial_number === '' ? null : $request->serial_number,
-                'size' => $request->size === '' ? null : $request->size,
-                'email' => $request->email === '' ? null : $request->email,
-            ]);
+   public function store(Request $request)
+{
+    try {
+        // Convert empty strings to null for ALL optional fields
+        $request->merge([
+            'account_number' => $request->account_number === '' ? null : $request->account_number,
+            'zone' => $request->zone === '' ? null : $request->zone,
+            'barangay' => $request->barangay === '' ? null : $request->barangay,
+            'date_installed' => $request->date_installed === '' ? null : $request->date_installed,
+            'brand' => $request->brand === '' ? null : $request->brand,
+            'serial_number' => $request->serial_number === '' ? null : $request->serial_number,
+            'size' => $request->size === '' ? null : $request->size,
+            'email' => $request->email === '' ? null : $request->email,
+        ]);
 
-            // For staff, ensure account_number is completely omitted if null
-            if ($request->role === 'staff') {
-                $request->request->remove('account_number');
-            }
-
-            $validated = $request->validate([
-                'name' => 'required|string|max:255',
-                'lastname' => 'required|string|max:255',
-                'email' => $request->role === 'staff' ? 'required|string|email|max:255|unique:users' : 'nullable|string|email|max:255|unique:users',
-                'phone' => [
-                    'required',
-                    'string',
-                    'regex:/^(\+63\d{10}|09\d{9})$/',
-                    'unique:users',
-                ],
-                'role' => 'required|in:customer,staff,admin',
-                'account_number' => $request->role === 'customer' ? [
-                    'required',
-                    'string',
-                    'regex:/^\d{3}-\d{2}-\d{3}$/',
-                    'unique:users',
-                ] : 'nullable|string|regex:/^\d{3}-\d{2}-\d{3}$/',
-                'zone' => $request->role === 'customer' ? 'required|string' : 'nullable|string',
-                'barangay' => $request->role === 'customer' ? 'required|string' : 'nullable|string',
-                'date_installed' => $request->role === 'customer' ? 'required|date' : 'nullable|date',
-                'brand' => $request->role === 'customer' ? 'required|string|max:255' : 'nullable|string|max:255',
-                'serial_number' => $request->role === 'customer' ? 'required|string|size:9|regex:/^\d{9}$/|unique:users' : 'nullable|string|size:9|regex:/^\d{9}$/',
-                'size' => $request->role === 'customer' ? 'required|string|max:50' : 'nullable|string|max:50',
-                'enabled' => 'boolean',
-            ]);
-
-            $userData = [
-                'name' => $validated['name'],
-                'lastname' => $validated['lastname'],
-                'email' => $validated['email'] ?? null,
-                'phone' => $validated['phone'],
-                'zone' => $validated['zone'] ?? null,
-                'barangay' => $validated['barangay'] ?? null,
-                'date_installed' => $validated['date_installed'] ?? null,
-                'brand' => $validated['brand'] ?? null,
-                'serial_number' => $validated['serial_number'] ?? null,
-                'size' => $validated['size'] ?? null,
-                'password' => Hash::make('temporary_password'),
-                'enabled' => true,
-            ];
-
-            // Only include account_number if it's not null (for customers)
-            if (isset($validated['account_number']) && $validated['account_number'] !== null) {
-                $userData['account_number'] = $validated['account_number'];
-            }
-
-            $user = User::create($userData);
-
-            // Generate password based on role-specific logic
-            if ($validated['role'] === 'customer' && isset($validated['account_number'])) {
-                $password = strtoupper(substr($validated['lastname'], 0, 3)) . '_' . substr(preg_replace('/\D/', '', $validated['account_number']), 0, 3);
-            } else {
-                // For staff, use phone number for password generation
-                $password = strtoupper(substr($validated['lastname'], 0, 3)) . '_' . "STAFF";
-            }
-
-            $user->update(['password' => Hash::make($password)]);
-            $user->assignRole($validated['role']);
-
-            return redirect()->route('admin.users')->with([
-                'success' => 'User created successfully',
-                'generated_password' => $password,
-            ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            // This will properly return validation errors to Inertia
-            throw $e;
-        } catch (\Exception $e) {
-            Log::error('User creation failed: ' . $e->getMessage());
-            return back()->withErrors(['error' => 'Failed to create user. Please try again.']);
+        // For staff, ensure account_number is completely omitted if null
+        if ($request->role === 'staff') {
+            $request->request->remove('account_number');
         }
-    }
 
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'lastname' => 'required|string|max:255',
+            'email' => $request->role === 'staff' ? 'required|string|email|max:255|unique:users' : 'nullable|string|email|max:255|unique:users',
+            'phone' => [
+                'required',
+                'string',
+                'regex:/^(\+63\d{10}|09\d{9})$/',
+                'unique:users',
+            ],
+            'role' => 'required|in:customer,staff,admin',
+            'account_number' => $request->role === 'customer' ? [
+                'required',
+                'string',
+                'regex:/^[0-9]{3}-[0-9]{2}-[0-9]{3}[A-Za-z]?$/',
+                'unique:users',
+            ] : 'nullable|string|regex:/^[0-9]{3}-[0-9]{2}-[0-9]{3}[A-Za-z]?$/',
+            'zone' => $request->role === 'customer' ? 'required|string' : 'nullable|string',
+            'barangay' => $request->role === 'customer' ? 'required|string' : 'nullable|string',
+            'date_installed' => $request->role === 'customer' ? 'required|date' : 'nullable|date',
+            'brand' => $request->role === 'customer' ? 'required|string|max:255' : 'nullable|string|max:255',
+            'serial_number' => $request->role === 'customer' ? 'required|string|size:9|regex:/^\d{9}$/|unique:users' : 'nullable|string|size:9|regex:/^\d{9}$/',
+            'size' => $request->role === 'customer' ? 'required|string|max:50' : 'nullable|string|max:50',
+            'enabled' => 'boolean',
+        ], [
+            'account_number.regex' => 'The account number must be in the format 123-12-123 or 123-12-123A (8 or 9 characters)',
+        ]);
+
+        $userData = [
+            'name' => $validated['name'],
+            'lastname' => $validated['lastname'],
+            'email' => $validated['email'] ?? null,
+            'phone' => $validated['phone'],
+            'zone' => $validated['zone'] ?? null,
+            'barangay' => $validated['barangay'] ?? null,
+            'date_installed' => $validated['date_installed'] ?? null,
+            'brand' => $validated['brand'] ?? null,
+            'serial_number' => $validated['serial_number'] ?? null,
+            'size' => $validated['size'] ?? null,
+            'password' => Hash::make('temporary_password'),
+            'enabled' => true,
+        ];
+
+        // Only include account_number if it's not null (for customers)
+        if (isset($validated['account_number']) && $validated['account_number'] !== null) {
+            $userData['account_number'] = $validated['account_number'];
+        }
+
+        $user = User::create($userData);
+
+        // Generate password based on role-specific logic
+        if ($validated['role'] === 'customer' && isset($validated['account_number'])) {
+            // Extract last 3 characters from account number for password
+            $cleanAccountNumber = preg_replace('/[^A-Z0-9]/i', '', $validated['account_number']);
+            $accountPart = substr($cleanAccountNumber, -3);
+            $password = strtoupper(substr($validated['lastname'], 0, 3)) . '_' . $accountPart;
+        } else {
+            // For staff, use "STAFF" for password generation
+            $password = strtoupper(substr($validated['lastname'], 0, 3)) . '_' . "STAFF";
+        }
+
+        $user->update(['password' => Hash::make($password)]);
+        $user->assignRole($validated['role']);
+
+        return redirect()->route('admin.users')->with([
+            'success' => 'User created successfully',
+            'generated_password' => $password,
+        ]);
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        throw $e;
+    } catch (\Exception $e) {
+        Log::error('User creation failed: ' . $e->getMessage());
+        return back()->withErrors(['error' => 'Failed to create user. Please try again.']);
+    }
+}
     public function resetPassword(Request $request, User $user)
     {
         $validated = $request->validate([
@@ -232,6 +235,7 @@ class AdminUsersController extends Controller
             'success' => 'Password reset successfully'
         ]);
     }
+
 
     public function update(Request $request, User $user)
     {

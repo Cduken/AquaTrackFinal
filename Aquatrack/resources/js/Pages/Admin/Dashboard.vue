@@ -128,7 +128,7 @@ const statCards = computed(() => [
     {
         title: "Reports",
         value: dashboardData.value.totalReports.toLocaleString(),
-        description: `Resolution: ${dashboardData.value.resolutionRate}%`,
+        description: "Water issue reports",
         icon: "reports",
         iconBgColor: "bg-amber-50",
         iconColor: "text-amber-600",
@@ -451,6 +451,20 @@ watch(
                     </div>
                 </DashboardSection>
 
+                 <!-- Reports by Zone -->
+                <DashboardSection title="Reports by Zone">
+                    <div class="h-48 relative">
+                        <canvas ref="areaChart"></canvas>
+                        <EmptyState
+                            v-if="!hasAreaData"
+                            title="No zone data"
+                            description="Zone consumption data will appear here"
+                            size="sm"
+                            class="absolute inset-0 flex items-center justify-center bg-white"
+                        />
+                    </div>
+                </DashboardSection>
+
                 <!-- Recent Customers -->
                 <DashboardSection
                     title="Recent Customers"
@@ -470,19 +484,7 @@ watch(
                     </div>
                 </DashboardSection>
 
-                <!-- Reports by Zone -->
-                <DashboardSection title="Reports by Zone">
-                    <div class="h-48 relative">
-                        <canvas ref="areaChart"></canvas>
-                        <EmptyState
-                            v-if="!hasAreaData"
-                            title="No zone data"
-                            description="Zone consumption data will appear here"
-                            size="sm"
-                            class="absolute inset-0 flex items-center justify-center bg-white"
-                        />
-                    </div>
-                </DashboardSection>
+
             </div>
         </div>
 

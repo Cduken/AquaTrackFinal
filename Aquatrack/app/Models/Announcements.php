@@ -24,5 +24,7 @@ class Announcements extends Model
         'start_date' => 'date',
         'end_date' => 'date',
         'active' => 'boolean',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 }

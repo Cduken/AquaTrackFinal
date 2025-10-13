@@ -35,7 +35,7 @@
                             </h3>
                         </div>
                     </div>
-                    <div class="mt-4">
+                    <!-- <div class="mt-4">
                         <div
                             class="flex items-center text-sm text-blue-600 dark:text-blue-400"
                         >
@@ -45,7 +45,7 @@
                             />
                             <span>All system announcements</span>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
 
                 <!-- Active Announcements Card -->
@@ -69,7 +69,7 @@
                             </h3>
                         </div>
                     </div>
-                    <div class="mt-4">
+                    <!-- <div class="mt-4">
                         <div
                             class="flex items-center text-sm text-green-600 dark:text-green-400"
                         >
@@ -79,7 +79,7 @@
                             />
                             <span>{{ activePercentage }}% of total</span>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
 
                 <!-- Recent Announcements Card -->
@@ -103,18 +103,18 @@
                             </h3>
                         </div>
                     </div>
-                    <div class="mt-4">
+                    <!-- <div class="mt-4">
                         <div
                             class="flex items-center text-sm text-purple-600 dark:text-purple-400"
                         >
                             <v-icon name="hi-calendar" class="w-4 h-4 mr-1" />
                             <span>Last 7 days</span>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
 
                 <!-- Inactive Announcements Card -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
                     <div class="flex items-center">
                         <div
                             class="p-3 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400"
@@ -134,7 +134,7 @@
                             </h3>
                         </div>
                     </div>
-                    <div class="mt-4">
+                    <!-- <div class="mt-4">
                         <div
                             class="flex items-center text-sm text-orange-600 dark:text-orange-400"
                         >
@@ -144,7 +144,7 @@
                             />
                             <span>Not currently visible</span>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
             </div>
 

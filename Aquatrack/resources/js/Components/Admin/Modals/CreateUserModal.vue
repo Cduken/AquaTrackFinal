@@ -1,4 +1,3 @@
-//CreateUserModal.vue
 <template>
     <transition name="modal">
         <div v-if="show" class="fixed inset-0 z-[1000] overflow-hidden">
@@ -9,7 +8,7 @@
             ></div>
 
             <!-- Sliding panel container -->
-            <div class="fixed inset-y-0 right-0 w-full max-w-2xl flex">
+            <div class="fixed inset-y-0 right-0 w-full max-w-2xl flex" :class="{'max-w-full': isMaximized}">
                 <!-- Panel with transform class for animation -->
                 <div
                     class="relative w-full h-full transform transition-transform duration-300 ease-in-out"
@@ -31,28 +30,45 @@
                                     >Register New User</span
                                 >
                             </div>
-                            <button
-                                @click="$emit('close')"
-                                class="text-white hover:text-gray-200 transition-colors duration-200 p-1 rounded-full hover:bg-white/10"
-                            >
-                                <v-icon name="bi-x-lg" class="h-6 w-6" />
-                            </button>
+                            <div class="flex items-center space-x-2">
+                                <!-- Maximize/Minimize Button -->
+                                <button
+                                    @click="toggleMaximize"
+                                    class="text-white hover:text-gray-200 transition-colors duration-200 p-1 rounded-full hover:bg-white/10"
+                                    :title="isMaximized ? 'Minimize' : 'Maximize'"
+                                >
+                                    <v-icon
+                                        :name="isMaximized ? 'bi-fullscreen-exit' : 'bi-fullscreen'"
+                                        class="h-5 w-5"
+                                    />
+                                </button>
+                                <!-- Close Button -->
+                                <button
+                                    @click="$emit('close')"
+                                    class="text-white hover:text-gray-200 transition-colors duration-200 p-1 rounded-full hover:bg-white/10"
+                                >
+                                    <v-icon name="bi-x-lg" class="h-6 w-6" />
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Content -->
-                        <div class="flex-1 overflow-y-auto p-6">
+                        <div class="flex-1 overflow-y-auto p-6" :class="{'p-8': isMaximized}">
                             <form @submit.prevent="handleSubmit">
-                                <div class="space-y-6">
+                                <div class="space-y-6" :class="{'space-y-8': isMaximized}">
                                     <!-- Role Selection Section -->
                                     <div
                                         class="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 p-5 rounded-lg"
+                                        :class="{'p-6': isMaximized}"
                                     >
                                         <h3
                                             class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center"
+                                            :class="{'text-xl mb-5': isMaximized}"
                                         >
                                             <v-icon
                                                 name="hi-user-group"
                                                 class="mr-2"
+                                                :scale="isMaximized ? '1.2' : '1'"
                                             />
                                             User Type
                                         </h3>
@@ -65,13 +81,16 @@
                                                     v-model="userData.role"
                                                     value="staff"
                                                     class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                                                    :class="{'w-5 h-5': isMaximized}"
                                                 />
                                                 <span
                                                     class="text-gray-900 dark:text-white flex items-center gap-1"
+                                                    :class="{'text-base': isMaximized}"
                                                 >
                                                     <v-icon
                                                         name="hi-user-group"
                                                         class="w-4 h-4"
+                                                        :class="{'w-5 h-5': isMaximized}"
                                                     />
                                                     Staff
                                                 </span>
@@ -84,13 +103,16 @@
                                                     v-model="userData.role"
                                                     value="customer"
                                                     class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                                                    :class="{'w-5 h-5': isMaximized}"
                                                 />
                                                 <span
                                                     class="text-gray-900 dark:text-white flex items-center gap-1"
+                                                    :class="{'text-base': isMaximized}"
                                                 >
                                                     <v-icon
                                                         name="hi-user"
                                                         class="w-4 h-4"
+                                                        :class="{'w-5 h-5': isMaximized}"
                                                     />
                                                     Customer
                                                 </span>
@@ -101,22 +123,27 @@
                                     <!-- Personal Information Section -->
                                     <div
                                         class="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 p-5 rounded-lg"
+                                        :class="{'p-6': isMaximized}"
                                     >
                                         <h3
                                             class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center"
+                                            :class="{'text-xl mb-5': isMaximized}"
                                         >
                                             <v-icon
                                                 name="hi-user"
                                                 class="mr-2"
+                                                :scale="isMaximized ? '1.2' : '1'"
                                             />
                                             Personal Information
                                         </h3>
                                         <div
                                             class="grid grid-cols-1 md:grid-cols-2 gap-4"
+                                            :class="{'gap-6': isMaximized}"
                                         >
                                             <div>
                                                 <label
                                                     class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                                                    :class="{'text-base': isMaximized}"
                                                     >First Name</label
                                                 >
                                                 <div class="relative">
@@ -126,6 +153,7 @@
                                                         <v-icon
                                                             name="hi-user"
                                                             class="w-4 h-4 text-gray-500 dark:text-gray-400"
+                                                            :class="{'w-5 h-5': isMaximized}"
                                                         />
                                                     </div>
                                                     <input
@@ -133,6 +161,7 @@
                                                         type="text"
                                                         required
                                                         class="w-full p-2 pl-10 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500"
+                                                        :class="{'p-3 pl-12 text-base': isMaximized}"
                                                         placeholder="First name"
                                                     />
                                                 </div>
@@ -140,6 +169,7 @@
                                             <div>
                                                 <label
                                                     class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                                                    :class="{'text-base': isMaximized}"
                                                     >Last Name</label
                                                 >
                                                 <div class="relative">
@@ -149,6 +179,7 @@
                                                         <v-icon
                                                             name="hi-user"
                                                             class="w-4 h-4 text-gray-500 dark:text-gray-400"
+                                                            :class="{'w-5 h-5': isMaximized}"
                                                         />
                                                     </div>
                                                     <input
@@ -158,6 +189,7 @@
                                                         type="text"
                                                         required
                                                         class="w-full p-2 pl-10 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500"
+                                                        :class="{'p-3 pl-12 text-base': isMaximized}"
                                                         placeholder="Last name"
                                                         @input="
                                                             updateGeneratedPassword
@@ -170,6 +202,7 @@
                                             >
                                                 <label
                                                     class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                                                    :class="{'text-base': isMaximized}"
                                                     >Email</label
                                                 >
                                                 <div class="relative">
@@ -179,6 +212,7 @@
                                                         <v-icon
                                                             name="hi-mail"
                                                             class="w-4 h-4 text-gray-500 dark:text-gray-400"
+                                                            :class="{'w-5 h-5': isMaximized}"
                                                         />
                                                     </div>
                                                     <input
@@ -189,6 +223,7 @@
                                                             'staff'
                                                         "
                                                         class="w-full p-2 pl-10 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500"
+                                                        :class="{'p-3 pl-12 text-base': isMaximized}"
                                                         placeholder="name@company.com"
                                                     />
                                                 </div>
@@ -196,6 +231,7 @@
                                             <div>
                                                 <label
                                                     class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                                                    :class="{'text-base': isMaximized}"
                                                     >Phone</label
                                                 >
                                                 <div class="relative">
@@ -205,6 +241,7 @@
                                                         <v-icon
                                                             name="hi-phone"
                                                             class="w-4 h-4 text-gray-500 dark:text-gray-400"
+                                                            :class="{'w-5 h-5': isMaximized}"
                                                         />
                                                     </div>
                                                     <input
@@ -212,7 +249,8 @@
                                                         type="tel"
                                                         required
                                                         class="w-full p-2 pl-10 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500"
-                                                        placeholder="+12345678901"
+                                                        :class="{'p-3 pl-12 text-base': isMaximized}"
+                                                        placeholder="09123456789"
                                                         @input="
                                                             validatePhoneNumber
                                                         "
@@ -226,26 +264,32 @@
                                     <div
                                         v-if="userData.role === 'customer'"
                                         class="space-y-6"
+                                        :class="{'space-y-8': isMaximized}"
                                     >
                                         <!-- Equipment Information Section -->
                                         <div
                                             class="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 p-5 rounded-lg"
+                                            :class="{'p-6': isMaximized}"
                                         >
                                             <h3
                                                 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center"
+                                                :class="{'text-xl mb-5': isMaximized}"
                                             >
                                                 <v-icon
                                                     name="hi-cube"
                                                     class="mr-2"
+                                                    :scale="isMaximized ? '1.2' : '1'"
                                                 />
                                                 Equipment Information
                                             </h3>
                                             <div
                                                 class="grid grid-cols-1 md:grid-cols-2 gap-4"
+                                                :class="{'gap-6': isMaximized, 'md:grid-cols-3': isMaximized}"
                                             >
                                                 <div>
                                                     <label
                                                         class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                                                        :class="{'text-base': isMaximized}"
                                                         >Account Number</label
                                                     >
                                                     <div class="relative">
@@ -255,6 +299,7 @@
                                                             <v-icon
                                                                 name="hi-credit-card"
                                                                 class="w-4 h-4 text-gray-500 dark:text-gray-400"
+                                                                :class="{'w-5 h-5': isMaximized}"
                                                             />
                                                         </div>
                                                         <input
@@ -264,16 +309,26 @@
                                                             type="text"
                                                             required
                                                             class="w-full p-2 pl-10 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500"
-                                                            placeholder="123-45-678"
+                                                            :class="{'p-3 pl-12 text-base': isMaximized}"
+                                                            placeholder="Account Number"
                                                             @input="
                                                                 formatAccountNumber
                                                             "
+                                                            :maxlength="11"
                                                         />
                                                     </div>
+                                                    <p
+                                                        class="text-xs text-gray-500 mt-1"
+                                                        :class="{'text-sm': isMaximized}"
+                                                    >
+                                                        Format: XXX-XX-XXX or
+                                                        XXX-XX-XXXX
+                                                    </p>
                                                 </div>
                                                 <div>
                                                     <label
                                                         class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                                                        :class="{'text-base': isMaximized}"
                                                         >Date Installed</label
                                                     >
                                                     <div class="relative">
@@ -283,6 +338,7 @@
                                                             <v-icon
                                                                 name="hi-calendar"
                                                                 class="w-4 h-4 text-gray-500 dark:text-gray-400"
+                                                                :class="{'w-5 h-5': isMaximized}"
                                                             />
                                                         </div>
                                                         <input
@@ -292,12 +348,14 @@
                                                             type="date"
                                                             required
                                                             class="w-full p-2 pl-10 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500"
+                                                            :class="{'p-3 pl-12 text-base': isMaximized}"
                                                         />
                                                     </div>
                                                 </div>
                                                 <div>
                                                     <label
                                                         class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                                                        :class="{'text-base': isMaximized}"
                                                         >Brand</label
                                                     >
                                                     <div class="relative">
@@ -307,6 +365,7 @@
                                                             <v-icon
                                                                 name="hi-tag"
                                                                 class="w-4 h-4 text-gray-500 dark:text-gray-400"
+                                                                :class="{'w-5 h-5': isMaximized}"
                                                             />
                                                         </div>
                                                         <input
@@ -316,6 +375,7 @@
                                                             type="text"
                                                             required
                                                             class="w-full p-2 pl-10 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500"
+                                                            :class="{'p-3 pl-12 text-base': isMaximized}"
                                                             placeholder="Brand name"
                                                         />
                                                     </div>
@@ -323,6 +383,7 @@
                                                 <div>
                                                     <label
                                                         class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                                                        :class="{'text-base': isMaximized}"
                                                         >Serial Number</label
                                                     >
                                                     <div class="relative">
@@ -332,6 +393,7 @@
                                                             <v-icon
                                                                 name="hi-document-text"
                                                                 class="w-4 h-4 text-gray-500 dark:text-gray-400"
+                                                                :class="{'w-5 h-5': isMaximized}"
                                                             />
                                                         </div>
                                                         <input
@@ -341,6 +403,7 @@
                                                             type="text"
                                                             required
                                                             class="w-full p-2 pl-10 pr-12 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500"
+                                                            :class="{'p-3 pl-12 pr-14 text-base': isMaximized}"
                                                             placeholder="123456789"
                                                             @input="
                                                                 validateSerialNumber
@@ -349,6 +412,7 @@
                                                         />
                                                         <div
                                                             class="absolute inset-y-0 right-0 flex items-center pr-3 text-xs text-gray-500"
+                                                            :class="{'pr-4 text-sm': isMaximized}"
                                                         >
                                                             {{
                                                                 userData.serial_number
@@ -363,6 +427,7 @@
                                                 <div>
                                                     <label
                                                         class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                                                        :class="{'text-base': isMaximized}"
                                                         >Size</label
                                                     >
                                                     <div class="relative">
@@ -372,6 +437,7 @@
                                                             <v-icon
                                                                 name="hi-arrows-expand"
                                                                 class="w-4 h-4 text-gray-500 dark:text-gray-400"
+                                                                :class="{'w-5 h-5': isMaximized}"
                                                             />
                                                         </div>
                                                         <input
@@ -381,6 +447,7 @@
                                                             type="text"
                                                             required
                                                             class="w-full p-2 pl-10 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500"
+                                                            :class="{'p-3 pl-12 text-base': isMaximized}"
                                                             placeholder="Size"
                                                         />
                                                     </div>
@@ -391,22 +458,27 @@
                                         <!-- Location Section -->
                                         <div
                                             class="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 p-5 rounded-lg"
+                                            :class="{'p-6': isMaximized}"
                                         >
                                             <h3
                                                 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center"
+                                                :class="{'text-xl mb-5': isMaximized}"
                                             >
                                                 <v-icon
                                                     name="hi-location-marker"
                                                     class="mr-2"
+                                                    :scale="isMaximized ? '1.2' : '1'"
                                                 />
                                                 Location
                                             </h3>
                                             <div
                                                 class="grid grid-cols-1 md:grid-cols-2 gap-4"
+                                                :class="{'gap-6': isMaximized}"
                                             >
                                                 <div>
                                                     <label
                                                         class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                                                        :class="{'text-base': isMaximized}"
                                                         >Zone</label
                                                     >
                                                     <div class="relative">
@@ -416,6 +488,7 @@
                                                             <v-icon
                                                                 name="hi-location-marker"
                                                                 class="w-4 h-4 text-gray-500 dark:text-gray-400"
+                                                                :class="{'w-5 h-5': isMaximized}"
                                                             />
                                                         </div>
                                                         <select
@@ -427,6 +500,7 @@
                                                             "
                                                             required
                                                             class="w-full p-2 pl-10 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500"
+                                                            :class="{'p-3 pl-12 text-base': isMaximized}"
                                                         >
                                                             <option
                                                                 value=""
@@ -452,6 +526,7 @@
                                                 <div>
                                                     <label
                                                         class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                                                        :class="{'text-base': isMaximized}"
                                                         >Barangay</label
                                                     >
                                                     <div class="relative">
@@ -461,6 +536,7 @@
                                                             <v-icon
                                                                 name="hi-location-marker"
                                                                 class="w-4 h-4 text-gray-500 dark:text-gray-400"
+                                                                :class="{'w-5 h-5': isMaximized}"
                                                             />
                                                         </div>
                                                         <select
@@ -469,6 +545,7 @@
                                                             "
                                                             required
                                                             class="w-full p-2 pl-10 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500"
+                                                            :class="{'p-3 pl-12 text-base': isMaximized}"
                                                             :disabled="
                                                                 !userData.zone
                                                             "
@@ -504,6 +581,7 @@
                                         <div
                                             v-if="userData.lastname"
                                             class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 p-4 rounded-lg"
+                                            :class="{'p-5': isMaximized}"
                                         >
                                             <div
                                                 class="flex items-center gap-2"
@@ -511,22 +589,26 @@
                                                 <v-icon
                                                     name="hi-key"
                                                     class="w-5 h-5 text-blue-600 dark:text-blue-400"
+                                                    :class="{'w-6 h-6': isMaximized}"
                                                 />
                                                 <div>
                                                     <p
                                                         class="text-sm font-medium text-blue-700 dark:text-blue-300"
+                                                        :class="{'text-base': isMaximized}"
                                                     >
                                                         Generated Password
                                                         Preview
                                                     </p>
                                                     <p
                                                         class="text-sm text-gray-700 dark:text-gray-300 mt-1 font-mono"
+                                                        :class="{'text-base mt-2': isMaximized}"
                                                     >
                                                         {{
                                                             generatedPasswordPreview
                                                         }}_XXXX
                                                         <span
                                                             class="text-xs text-gray-500 dark:text-gray-400"
+                                                            :class="{'text-sm': isMaximized}"
                                                             >(XXXX will be
                                                             replaced with user
                                                             ID after
@@ -542,11 +624,13 @@
                                 <!-- Action Buttons -->
                                 <div
                                     class="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-200 dark:border-gray-600"
+                                    :class="{'mt-8 pt-6 space-x-4': isMaximized}"
                                 >
                                     <button
                                         type="button"
                                         @click="$emit('close')"
                                         class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 rounded-md transition-colors duration-200"
+                                        :class="{'px-6 py-3 text-base': isMaximized}"
                                     >
                                         Cancel
                                     </button>
@@ -554,6 +638,7 @@
                                         type="submit"
                                         :disabled="isSubmitting"
                                         class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-md transition-colors duration-200 flex items-center justify-center min-w-[120px]"
+                                        :class="{'px-6 py-3 text-base min-w-[140px]': isMaximized}"
                                     >
                                         <span
                                             v-if="isSubmitting"
@@ -561,6 +646,7 @@
                                         >
                                             <svg
                                                 class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                                                :class="{'h-5 w-5': isMaximized}"
                                                 xmlns="http://www.w3.org/2000/svg"
                                                 fill="none"
                                                 viewBox="0 0 24 24"
@@ -585,6 +671,7 @@
                                             <v-icon
                                                 name="hi-plus"
                                                 class="mr-1 w-4 h-4"
+                                                :class="{'w-5 h-5': isMaximized}"
                                             />
                                             Create User
                                         </span>
@@ -619,6 +706,7 @@ import {
     HiRefresh,
     HiPlus,
 } from "oh-vue-icons/icons";
+import { BiFullscreen, BiFullscreenExit } from "oh-vue-icons/icons";
 
 addIcons(
     HiUser,
@@ -635,7 +723,9 @@ addIcons(
     HiUserGroup,
     HiKey,
     HiRefresh,
-    HiPlus
+    HiPlus,
+    BiFullscreen,
+    BiFullscreenExit
 );
 
 const props = defineProps({
@@ -665,7 +755,11 @@ const userData = ref({
 
 const isSubmitting = ref(false);
 const filteredBarangays = ref([]);
-const rawAccountNumber = ref("");
+const isMaximized = ref(false);
+
+const toggleMaximize = () => {
+    isMaximized.value = !isMaximized.value;
+};
 
 const updateBarangays = () => {
     if (userData.value.zone && props.zones[userData.value.zone]) {
@@ -677,21 +771,42 @@ const updateBarangays = () => {
 };
 
 const formatAccountNumber = (e) => {
-    let value = e.target.value.replace(/\D/g, "");
-    rawAccountNumber.value = value;
+    let input = e.target.value.replace(/[^A-Z0-9-]/gi, "").toUpperCase();
 
-    if (value.length > 5) {
-        value =
-            value.substring(0, 3) +
+    // Remove existing dashes for processing
+    let cleanInput = input.replace(/-/g, "");
+
+    // Format based on length (supports 8-9 alphanumeric characters)
+    if (cleanInput.length >= 8) {
+        // Start with basic format: 123-12-123 (10 characters total)
+        let formatted =
+            cleanInput.slice(0, 3) +
             "-" +
-            value.substring(3, 5) +
+            cleanInput.slice(3, 5) +
             "-" +
-            value.substring(5, 8);
-    } else if (value.length > 3) {
-        value = value.substring(0, 3) + "-" + value.substring(3, 5);
+            cleanInput.slice(5, 8);
+
+        // Add optional 9th character if present (11 characters total)
+        if (cleanInput.length >= 9) {
+            formatted += cleanInput.slice(8, 9);
+        }
+
+        userData.value.accountNumber = formatted;
+    } else if (cleanInput.length > 5) {
+        // Partial format: 123-12-123 (without all digits)
+        userData.value.accountNumber =
+            cleanInput.slice(0, 3) +
+            "-" +
+            cleanInput.slice(3, 5) +
+            "-" +
+            cleanInput.slice(5);
+    } else if (cleanInput.length > 3) {
+        // Partial format: 123-12
+        userData.value.accountNumber =
+            cleanInput.slice(0, 3) + "-" + cleanInput.slice(3, 5);
+    } else {
+        userData.value.accountNumber = cleanInput;
     }
-
-    userData.value.accountNumber = value.substring(0, 11);
 };
 
 const validatePhoneNumber = (e) => {
@@ -728,10 +843,11 @@ const updateGeneratedPassword = () => {
 watch(
     () => props.show,
     (newVal, oldVal) => {
-        // When modal changes from open to closed, reset the form
+        // When modal changes from open to closed, reset the form and maximize state
         if (oldVal === true && newVal === false) {
             resetForm();
             isSubmitting.value = false;
+            isMaximized.value = false; // Reset to normal size when closing
         }
     }
 );
@@ -755,7 +871,6 @@ const resetForm = () => {
         serial_number: "",
         size: "",
     };
-    rawAccountNumber.value = "";
     filteredBarangays.value = [];
 };
 
@@ -765,6 +880,35 @@ const handleSubmit = async () => {
     try {
         // Validate required fields based on role
         if (userData.value.role === "customer") {
+            const cleanAccountNumber = userData.value.accountNumber.replace(
+                /-/g,
+                ""
+            );
+            if (
+                cleanAccountNumber.length < 8 ||
+                cleanAccountNumber.length > 9
+            ) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Validation Error",
+                    text: "Account number must be exactly 8 or 9 characters (format: XXX-XX-XXX or XXX-XX-XXXX)",
+                });
+                isSubmitting.value = false;
+                return;
+            }
+
+            // Validate the format matches our pattern
+            const accountNumberRegex = /^[0-9]{3}-[0-9]{2}-[0-9]{3}[A-Za-z]?$/;
+            if (!accountNumberRegex.test(userData.value.accountNumber)) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Validation Error",
+                    text: "Account number must be in format 123-12-123 or 123-12-123A",
+                });
+                isSubmitting.value = false;
+                return;
+            }
+
             if (userData.value.serial_number.length !== 9) {
                 Swal.fire({
                     icon: "error",
@@ -790,7 +934,11 @@ const handleSubmit = async () => {
         } else if (userData.value.role === "staff") {
             // Validate staff fields
             if (!userData.value.email) {
-                alert("Email is required for staff members");
+                Swal.fire({
+                    icon: "error",
+                    title: "Validation Error",
+                    text: "Email is required for staff members",
+                });
                 isSubmitting.value = false;
                 return;
             }
@@ -831,8 +979,6 @@ const handleSubmit = async () => {
         console.log("Submitting data:", submitData); // Debug log
 
         emit("submit", submitData);
-        // resetForm();
-        // isSubmitting.value = false;
     } catch (error) {
         console.error("Error in handleSubmit:", error);
         Swal.fire({

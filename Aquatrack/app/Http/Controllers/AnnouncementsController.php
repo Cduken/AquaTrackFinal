@@ -21,6 +21,7 @@ class AnnouncementsController extends Controller
                     'status' => ucfirst($announcement->status),
                     'start_date' => $announcement->start_date?->format('Y-m-d'),
                     'end_date' => $announcement->end_date?->format('Y-m-d'),
+
                 ];
             });
 

@@ -29,7 +29,7 @@ class LoginRequest extends FormRequest
         return [
             'role' => ['required', 'string', 'in:customer,admin,staff'],
             'email' => ['required_if:role,admin,staff', 'nullable', 'string', 'email'],
-            'account_number' => ['required_if:role,customer', 'nullable', 'string'], // Changed from serial_number
+            'account_number' => ['required_if:role,customer', 'nullable', 'string', 'regex:/^[0-9]{3}-[0-9]{2}-[0-9]{3}[A-Za-z]?$/'],
             'password' => ['required', 'string'],
         ];
     }
@@ -49,12 +49,25 @@ class LoginRequest extends FormRequest
             // Handle both formatted (123-45-678) and unformatted (12345678) account numbers
             $accountNumber = $this->account_number;
 
-            // If input contains dashes, use as-is, otherwise format it
-            if (strpos($accountNumber, '-') === false && strlen($accountNumber) >= 8) {
-                $accountNumber = substr($accountNumber, 0, 3) . '-' .
-                    substr($accountNumber, 3, 2) . '-' .
-                    substr($accountNumber, 5);
+            // If input doesn't contain dashes, format it
+            if (strpos($accountNumber, '-') === false) {
+                $cleanNumber = preg_replace('/[^A-Z0-9]/i', '', $accountNumber);
+
+                // Format based on length (8 or 9 alphanumeric characters)
+                if (strlen($cleanNumber) >= 8) {
+                    $accountNumber = substr($cleanNumber, 0, 3) . '-' .
+                        substr($cleanNumber, 3, 2) . '-' .
+                        substr($cleanNumber, 5, 3); // First 8 characters (10 with dashes)
+
+                    // Add optional letter for 9-character format (11 with dashes)
+                    if (strlen($cleanNumber) >= 9) {
+                        $accountNumber .= substr($cleanNumber, 8, 1); // 9th character (optional letter)
+                    }
+                }
             }
+
+            // Convert to uppercase for consistency
+            $accountNumber = strtoupper($accountNumber);
 
             $credentials = [
                 'account_number' => $accountNumber,

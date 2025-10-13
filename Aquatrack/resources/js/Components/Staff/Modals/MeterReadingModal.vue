@@ -8,7 +8,7 @@
             ></div>
 
             <!-- Sliding panel container -->
-            <div class="fixed inset-y-0 right-0 w-full max-w-2xl flex">
+            <div class="fixed inset-y-0 right-0 w-full max-w-2xl flex" :class="{ 'max-w-full': isMaximized }">
                 <!-- Panel with transform class for animation -->
                 <div
                     class="relative w-full h-full transform transition-transform duration-300 ease-in-out"
@@ -30,19 +30,34 @@
                                     >Meter Reading Card</span
                                 >
                             </div>
-                            <button
-                                @click="closeModal"
-                                class="text-white hover:text-gray-200 transition-colors duration-200 p-1 rounded-full hover:bg-white/10"
-                            >
-                                <v-icon name="bi-x-lg" class="h-6 w-6" />
-                            </button>
+                            <div class="flex items-center space-x-2">
+                                <!-- Maximize/Minimize Button -->
+                                <button
+                                    @click="toggleMaximize"
+                                    class="text-white hover:text-gray-200 transition-colors duration-200 p-1 rounded-full hover:bg-white/10"
+                                    :title="isMaximized ? 'Minimize' : 'Maximize'"
+                                >
+                                    <v-icon
+                                        :name="isMaximized ? 'bi-fullscreen-exit' : 'bi-fullscreen'"
+                                        class="h-5 w-5"
+                                    />
+                                </button>
+                                <!-- Close Button -->
+                                <button
+                                    @click="closeModal"
+                                    class="text-white hover:text-gray-200 transition-colors duration-200 p-1 rounded-full hover:bg-white/10"
+                                >
+                                    <v-icon name="bi-x-lg" class="h-6 w-6" />
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Content -->
-                        <div class="flex-1 overflow-y-auto p-6">
+                        <div class="flex-1 overflow-y-auto p-6" :class="{ 'p-8': isMaximized }">
                             <!-- Customer Summary Card -->
                             <div
                                 class="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 p-5 rounded-lg mb-6"
+                                :class="{ 'p-6': isMaximized }"
                             >
                                 <div class="flex items-start justify-between">
                                     <div class="flex items-center gap-4">
@@ -50,6 +65,7 @@
                                         <div class="flex-shrink-0">
                                             <div
                                                 class="w-14 h-14 rounded-xl flex items-center justify-center overflow-hidden border-2 border-white shadow-lg bg-gradient-to-br from-blue-500 to-blue-600"
+                                                :class="{ 'w-16 h-16': isMaximized }"
                                             >
                                                 <img
                                                     v-if="user.avatar_url"
@@ -68,6 +84,7 @@
                                                     <v-icon
                                                         name="bi-person-fill"
                                                         class="text-white text-xl"
+                                                        :class="{ 'text-2xl': isMaximized }"
                                                     />
                                                 </div>
                                             </div>
@@ -76,18 +93,21 @@
                                         <div>
                                             <h2
                                                 class="text-xl font-bold text-gray-800 dark:text-white"
+                                                :class="{ 'text-2xl': isMaximized }"
                                             >
                                                 {{ user.name }}
                                                 {{ user.lastname }}
                                             </h2>
                                             <p
                                                 class="text-gray-600 dark:text-gray-300 mt-1"
+                                                :class="{ 'text-base mt-2': isMaximized }"
                                             >
                                                 {{ user.address }}
                                             </p>
-                                            <div class="flex gap-4 mt-2">
+                                            <div class="flex gap-4 mt-2" :class="{ 'gap-6 mt-3': isMaximized }">
                                                 <span
                                                     class="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400"
+                                                    :class="{ 'text-base': isMaximized }"
                                                 >
                                                     <v-icon
                                                         name="bi-credit-card"
@@ -97,6 +117,7 @@
                                                 </span>
                                                 <span
                                                     class="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400"
+                                                    :class="{ 'text-base': isMaximized }"
                                                 >
                                                     <v-icon
                                                         name="bi-telephone"
@@ -110,6 +131,7 @@
                                     <div class="text-right">
                                         <div
                                             class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 mb-2"
+                                            :class="{ 'px-4 py-1.5 text-base': isMaximized }"
                                         >
                                             <v-icon
                                                 name="bi-check-circle"
@@ -119,6 +141,7 @@
                                         </div>
                                         <p
                                             class="text-xs text-gray-500 dark:text-gray-400"
+                                            :class="{ 'text-sm': isMaximized }"
                                         >
                                             Installed:
                                             {{
@@ -132,9 +155,10 @@
                             </div>
 
                             <!-- Meter Details Grid -->
-                            <div class="grid grid-cols-2 gap-3 mb-6">
+                            <div class="grid grid-cols-2 gap-3 mb-6" :class="{ 'gap-4': isMaximized, 'grid-cols-4': isMaximized }">
                                 <div
                                     class="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-100 dark:border-blue-700"
+                                    :class="{ 'p-4': isMaximized }"
                                 >
                                     <div
                                         class="flex items-center gap-2 text-blue-600 dark:text-blue-400 mb-1"
@@ -143,12 +167,13 @@
                                             name="bi-tag"
                                             class="text-blue-500"
                                         />
-                                        <span class="text-xs font-medium"
+                                        <span class="text-xs font-medium" :class="{ 'text-sm': isMaximized }"
                                             >Brand</span
                                         >
                                     </div>
                                     <div
                                         class="text-sm font-semibold text-gray-800 dark:text-white"
+                                        :class="{ 'text-base': isMaximized }"
                                     >
                                         {{ user.brand || "Not specified" }}
                                     </div>
@@ -156,6 +181,7 @@
 
                                 <div
                                     class="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-100 dark:border-blue-700"
+                                    :class="{ 'p-4': isMaximized }"
                                 >
                                     <div
                                         class="flex items-center gap-2 text-blue-600 dark:text-blue-400 mb-1"
@@ -164,12 +190,13 @@
                                             name="bi-upc-scan"
                                             class="text-blue-500"
                                         />
-                                        <span class="text-xs font-medium"
+                                        <span class="text-xs font-medium" :class="{ 'text-sm': isMaximized }"
                                             >Serial No.</span
                                         >
                                     </div>
                                     <div
                                         class="text-sm font-semibold text-gray-800 dark:text-white"
+                                        :class="{ 'text-base': isMaximized }"
                                     >
                                         {{ user.serial_number || "N/A" }}
                                     </div>
@@ -177,6 +204,7 @@
 
                                 <div
                                     class="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-100 dark:border-blue-700"
+                                    :class="{ 'p-4': isMaximized }"
                                 >
                                     <div
                                         class="flex items-center gap-2 text-blue-600 dark:text-blue-400 mb-1"
@@ -185,12 +213,13 @@
                                             name="bi-rulers"
                                             class="text-blue-500"
                                         />
-                                        <span class="text-xs font-medium"
+                                        <span class="text-xs font-medium" :class="{ 'text-sm': isMaximized }"
                                             >Size</span
                                         >
                                     </div>
                                     <div
                                         class="text-sm font-semibold text-gray-800 dark:text-white"
+                                        :class="{ 'text-base': isMaximized }"
                                     >
                                         {{ user.size || "N/A" }} mm
                                     </div>
@@ -198,6 +227,7 @@
 
                                 <div
                                     class="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-100 dark:border-blue-700"
+                                    :class="{ 'p-4': isMaximized }"
                                 >
                                     <div
                                         class="flex items-center gap-2 text-blue-600 dark:text-blue-400 mb-1"
@@ -206,12 +236,13 @@
                                             name="bi-calendar-check"
                                             class="text-blue-500"
                                         />
-                                        <span class="text-xs font-medium"
+                                        <span class="text-xs font-medium" :class="{ 'text-sm': isMaximized }"
                                             >Last Reading</span
                                         >
                                     </div>
                                     <div
                                         class="text-sm font-semibold text-gray-800 dark:text-white"
+                                        :class="{ 'text-base': isMaximized }"
                                     >
                                         {{ lastReadingDate || "No records" }}
                                     </div>
@@ -221,13 +252,16 @@
                             <!-- Meter Reading Form -->
                             <div
                                 class="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-5 mb-6"
+                                :class="{ 'p-6': isMaximized }"
                             >
                                 <h3
                                     class="text-lg font-semibold text-gray-800 dark:text-white mb-4 flex items-center"
+                                    :class="{ 'text-xl mb-5': isMaximized }"
                                 >
                                     <v-icon
                                         name="bi-speedometer2"
                                         class="mr-2"
+                                        :scale="isMaximized ? '1.1' : '1'"
                                     />
                                     New Meter Reading
                                 </h3>
@@ -236,6 +270,7 @@
                                 <div
                                     v-if="showYearTransitionWarning"
                                     class="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg border border-yellow-200 dark:border-yellow-600 mb-4 flex items-start gap-3"
+                                    :class="{ 'p-5': isMaximized }"
                                 >
                                     <div
                                         class="p-2 bg-yellow-100 dark:bg-yellow-800 rounded-lg mt-0.5"
@@ -248,11 +283,13 @@
                                     <div>
                                         <div
                                             class="font-medium text-yellow-800 dark:text-yellow-300"
+                                            :class="{ 'text-lg': isMaximized }"
                                         >
                                             Year Transition Detected
                                         </div>
                                         <p
                                             class="text-sm text-yellow-700 dark:text-yellow-400 mt-1"
+                                            :class="{ 'text-base mt-2': isMaximized }"
                                         >
                                             You're entering a reading for
                                             January after December. Please
@@ -264,10 +301,12 @@
 
                                 <div
                                     class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4"
+                                    :class="{ 'gap-6 mb-5': isMaximized, 'md:grid-cols-4': isMaximized }"
                                 >
                                     <div>
                                         <label
                                             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                                            :class="{ 'text-base': isMaximized }"
                                         >
                                             Previous Reading (m³)
                                         </label>
@@ -283,6 +322,7 @@
                                                     hasPreviousReadings
                                                         ? 'bg-gray-50 dark:bg-gray-600'
                                                         : 'bg-white dark:bg-gray-700',
+                                                    { 'p-3 pr-12 text-base': isMaximized }
                                                 ]"
                                                 :disabled="
                                                     hasPreviousReadings ||
@@ -295,18 +335,21 @@
                                             />
                                             <span
                                                 class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 text-sm"
+                                                :class="{ 'text-base right-4': isMaximized }"
                                                 >m³</span
                                             >
                                         </div>
                                         <p
                                             v-if="!hasPreviousReadings"
                                             class="text-xs text-gray-500 dark:text-gray-400 mt-1"
+                                            :class="{ 'text-sm': isMaximized }"
                                         >
                                             Enter the initial meter reading
                                         </p>
                                         <p
                                             v-else
                                             class="text-xs text-gray-500 dark:text-gray-400 mt-1"
+                                            :class="{ 'text-sm': isMaximized }"
                                         >
                                             Last recorded reading (automatically
                                             populated)
@@ -316,6 +359,7 @@
                                     <div>
                                         <label
                                             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                                            :class="{ 'text-base': isMaximized }"
                                         >
                                             Current Reading (m³)
                                         </label>
@@ -325,10 +369,13 @@
                                                 type="number"
                                                 step="0.01"
                                                 class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 pr-10"
-                                                :class="{
-                                                    'border-red-300 dark:border-red-500':
-                                                        readingError,
-                                                }"
+                                                :class="[
+                                                    {
+                                                        'border-red-300 dark:border-red-500':
+                                                            readingError,
+                                                        'p-3 pr-12 text-base': isMaximized
+                                                    }
+                                                ]"
                                                 :disabled="isSubmitting"
                                                 @input="
                                                     calculateConsumptionAndAmount
@@ -337,18 +384,21 @@
                                             />
                                             <span
                                                 class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 text-sm"
+                                                :class="{ 'text-base right-4': isMaximized }"
                                                 >m³</span
                                             >
                                         </div>
                                         <p
                                             v-if="readingError"
                                             class="text-xs text-red-500 dark:text-red-400 mt-1"
+                                            :class="{ 'text-sm': isMaximized }"
                                         >
                                             {{ readingError }}
                                         </p>
                                         <p
                                             v-else
                                             class="text-xs text-gray-500 dark:text-gray-400 mt-1"
+                                            :class="{ 'text-sm': isMaximized }"
                                         >
                                             Must be higher than previous reading
                                         </p>
@@ -357,6 +407,7 @@
                                     <div>
                                         <label
                                             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                                            :class="{ 'text-base': isMaximized }"
                                         >
                                             Consumption (m³)
                                         </label>
@@ -366,15 +417,18 @@
                                                 type="number"
                                                 step="0.01"
                                                 class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-600 text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 pr-10"
+                                                :class="{ 'p-3 pr-12 text-base': isMaximized }"
                                                 disabled
                                             />
                                             <span
                                                 class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 text-sm"
+                                                :class="{ 'text-base right-4': isMaximized }"
                                                 >m³</span
                                             >
                                         </div>
                                         <p
                                             class="text-xs text-gray-500 dark:text-gray-400 mt-1"
+                                            :class="{ 'text-sm': isMaximized }"
                                         >
                                             Calculated automatically
                                         </p>
@@ -383,6 +437,7 @@
                                     <div>
                                         <label
                                             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                                            :class="{ 'text-base': isMaximized }"
                                         >
                                             Amount (₱)
                                         </label>
@@ -392,15 +447,18 @@
                                                 type="number"
                                                 step="0.01"
                                                 class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-600 text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 pr-10"
+                                                :class="{ 'p-3 pr-12 text-base': isMaximized }"
                                                 disabled
                                             />
                                             <span
                                                 class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 text-sm"
+                                                :class="{ 'text-base right-4': isMaximized }"
                                                 >₱</span
                                             >
                                         </div>
                                         <p
                                             class="text-xs text-gray-500 dark:text-gray-400 mt-1"
+                                            :class="{ 'text-sm': isMaximized }"
                                         >
                                             Based on consumption rate
                                         </p>
@@ -411,6 +469,7 @@
                                 <div
                                     v-if="newReading.consumption > 0"
                                     class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-700"
+                                    :class="{ 'p-5': isMaximized }"
                                 >
                                     <div
                                         class="flex items-center justify-between"
@@ -418,11 +477,13 @@
                                         <div>
                                             <div
                                                 class="text-sm text-blue-700 dark:text-blue-300 font-medium"
+                                                :class="{ 'text-base': isMaximized }"
                                             >
                                                 Billing Summary
                                             </div>
                                             <div
                                                 class="text-xl font-bold text-blue-800 dark:text-blue-200 mt-1"
+                                                :class="{ 'text-2xl mt-2': isMaximized }"
                                             >
                                                 ₱{{
                                                     newReading.amount.toFixed(2)
@@ -430,6 +491,7 @@
                                             </div>
                                             <div
                                                 class="text-sm text-blue-600 dark:text-blue-400 mt-1"
+                                                :class="{ 'text-base mt-2': isMaximized }"
                                             >
                                                 {{ newReading.consumption }} m³
                                                 consumption
@@ -437,10 +499,12 @@
                                         </div>
                                         <div
                                             class="p-2 bg-blue-100 dark:bg-blue-800 rounded-lg"
+                                            :class="{ 'p-3': isMaximized }"
                                         >
                                             <v-icon
                                                 name="bi-receipt"
                                                 class="text-blue-600 dark:text-blue-300 text-xl"
+                                                :class="{ 'text-2xl': isMaximized }"
                                             />
                                         </div>
                                     </div>
@@ -450,12 +514,14 @@
                             <!-- Previous Readings Section -->
                             <div
                                 class="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-5"
+                                :class="{ 'p-6': isMaximized }"
                             >
                                 <div
                                     class="flex items-center justify-between mb-4"
                                 >
                                     <h3
                                         class="text-lg font-semibold text-gray-800 dark:text-white"
+                                        :class="{ 'text-xl': isMaximized }"
                                     >
                                         Reading History
                                     </h3>
@@ -469,6 +535,7 @@
                                         <select
                                             v-model="selectedYear"
                                             class="p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                            :class="{ 'p-3 text-base': isMaximized }"
                                         >
                                             <option value="">All Years</option>
                                             <option
@@ -509,7 +576,7 @@
                                                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                                             ></path>
                                         </svg>
-                                        <span>Loading reading history...</span>
+                                        <span :class="{ 'text-base': isMaximized }">Loading reading history...</span>
                                     </div>
                                 </div>
 
@@ -520,13 +587,15 @@
                                             0
                                         "
                                         class="text-center py-8 text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-600 rounded-lg"
+                                        :class="{ 'py-10': isMaximized }"
                                     >
                                         <v-icon
                                             name="bi-clock-history"
                                             class="text-2xl mb-2 opacity-50"
+                                            :class="{ 'text-3xl mb-3': isMaximized }"
                                         />
-                                        <p>No previous readings found</p>
-                                        <p class="text-sm mt-1">
+                                        <p :class="{ 'text-lg': isMaximized }">No previous readings found</p>
+                                        <p class="text-sm mt-1" :class="{ 'text-base mt-2': isMaximized }">
                                             Start by submitting a new reading
                                             above
                                         </p>
@@ -535,6 +604,7 @@
                                     <div
                                         v-else
                                         class="space-y-3 max-h-[300px] overflow-y-auto"
+                                        :class="{ 'space-y-4 max-h-[400px]': isMaximized }"
                                     >
                                         <div
                                             v-for="(
@@ -542,16 +612,19 @@
                                             ) in filteredPreviousReadings"
                                             :key="reading.id"
                                             class="bg-gray-50 dark:bg-gray-600 p-3 rounded-lg border border-gray-200 dark:border-gray-500 hover:border-blue-200 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors group relative"
+                                            :class="{ 'p-4': isMaximized }"
                                         >
                                             <!-- Edit Button -->
                                             <button
                                                 @click="openEditModal(reading)"
                                                 class="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:border-blue-300 dark:hover:border-blue-500"
+                                                :class="{ 'top-4 right-4 p-2': isMaximized }"
                                                 title="Edit Reading"
                                             >
                                                 <v-icon
                                                     name="bi-pencil"
                                                     class="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 h-3.5 w-3.5"
+                                                    :class="{ 'h-4 w-4': isMaximized }"
                                                 />
                                             </button>
 
@@ -563,6 +636,7 @@
                                                 >
                                                     <div
                                                         class="p-2 bg-white dark:bg-gray-700 rounded-md border border-gray-200 dark:border-gray-600"
+                                                        :class="{ 'p-3': isMaximized }"
                                                     >
                                                         <v-icon
                                                             name="bi-droplet"
@@ -572,6 +646,7 @@
                                                     <div>
                                                         <div
                                                             class="font-medium text-gray-800 dark:text-white"
+                                                            :class="{ 'text-lg': isMaximized }"
                                                         >
                                                             {{
                                                                 reading.billing_month
@@ -580,6 +655,7 @@
                                                         </div>
                                                         <div
                                                             class="text-sm text-gray-600 dark:text-gray-300"
+                                                            :class="{ 'text-base': isMaximized }"
                                                         >
                                                             {{
                                                                 formatDate(
@@ -592,11 +668,13 @@
                                                 <div class="text-right">
                                                     <div
                                                         class="font-semibold text-blue-600 dark:text-blue-400"
+                                                        :class="{ 'text-lg': isMaximized }"
                                                     >
                                                         {{ reading.reading }} m³
                                                     </div>
                                                     <div
                                                         class="text-sm text-gray-600 dark:text-gray-400"
+                                                        :class="{ 'text-base': isMaximized }"
                                                     >
                                                         {{
                                                             reading.consumption
@@ -607,12 +685,14 @@
                                             </div>
                                             <div
                                                 class="flex justify-between items-center mt-2 pt-2 border-t border-gray-200 dark:border-gray-500"
+                                                :class="{ 'mt-3 pt-3': isMaximized }"
                                             >
                                                 <div
                                                     class="flex items-center gap-2"
                                                 >
                                                     <span
                                                         class="text-sm text-gray-600 dark:text-gray-400"
+                                                        :class="{ 'text-base': isMaximized }"
                                                         >Amount billed</span
                                                     >
                                                     <span
@@ -625,6 +705,7 @@
                                                                   'Pending'
                                                                 ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200'
                                                                 : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200',
+                                                            { 'px-3 py-1.5 text-sm': isMaximized }
                                                         ]"
                                                     >
                                                         {{ reading.status }}
@@ -632,6 +713,7 @@
                                                 </div>
                                                 <div
                                                     class="font-medium text-green-600 dark:text-green-400"
+                                                    :class="{ 'text-lg': isMaximized }"
                                                 >
                                                     ₱{{
                                                         reading.amount.toFixed(
@@ -649,12 +731,14 @@
                         <!-- Footer -->
                         <div
                             class="border-t border-gray-200 dark:border-gray-600 p-6 bg-white dark:bg-gray-800"
+                            :class="{ 'p-7': isMaximized }"
                         >
                             <div class="flex gap-3 justify-end">
                                 <button
                                     @click="closeModal"
                                     type="button"
                                     class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 rounded-md transition-colors duration-200"
+                                    :class="{ 'px-6 py-3 text-base': isMaximized }"
                                     :disabled="isSubmitting"
                                 >
                                     Cancel
@@ -663,6 +747,7 @@
                                     @click="submitReading"
                                     type="button"
                                     class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-md transition-colors duration-200 flex items-center min-w-[120px] justify-center"
+                                    :class="{ 'px-6 py-3 text-base min-w-[140px]': isMaximized }"
                                     :disabled="isSubmitting || !isFormValid"
                                 >
                                     <span
@@ -678,6 +763,7 @@
                                     <span v-else class="flex items-center">
                                         <svg
                                             class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                                            :class="{ 'h-5 w-5 mr-3': isMaximized }"
                                             xmlns="http://www.w3.org/2000/svg"
                                             fill="none"
                                             viewBox="0 0 24 24"
@@ -735,6 +821,9 @@ const props = defineProps({
 
 const emit = defineEmits(["close", "reading-submitted"]);
 
+// State for maximize
+const isMaximized = ref(false);
+
 const months = [
     "January",
     "February",
@@ -789,6 +878,20 @@ const showYearTransitionWarning = ref(false);
 // Edit modal state
 const showEditModal = ref(false);
 const selectedReading = ref(null);
+
+// Reset maximize state when modal is closed
+watch(
+    () => props.show,
+    (newVal) => {
+        if (!newVal) {
+            isMaximized.value = false;
+        }
+    }
+);
+
+const toggleMaximize = () => {
+    isMaximized.value = !isMaximized.value;
+};
 
 // Computed property to check if previous readings exist
 const hasPreviousReadings = computed(() => {

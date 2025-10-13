@@ -180,23 +180,43 @@ const verifyCode = async () => {
 };
 
 const formatAccountNumber = (event) => {
-    let input = event.target.value.replace(/\D/g, ""); // Remove non-digits
+    let input = event.target.value.replace(/[^A-Z0-9-]/gi, "").toUpperCase();
 
-    // Format as XXX-XX-XXX
-    if (input.length > 5) {
+    // Remove existing dashes for processing
+    let cleanInput = input.replace(/-/g, "");
+
+    // Format based on length (supports 8-9 alphanumeric characters)
+    if (cleanInput.length >= 8) {
+        // Start with basic format: 123-12-123 (10 characters total)
+        let formatted =
+            cleanInput.slice(0, 3) +
+            "-" +
+            cleanInput.slice(3, 5) +
+            "-" +
+            cleanInput.slice(5, 8);
+
+        // Add optional 9th character if present (11 characters total)
+        if (cleanInput.length >= 9) {
+            formatted += cleanInput.slice(8, 9);
+        }
+
+        form.account_number = formatted;
+    } else if (cleanInput.length > 5) {
+        // Partial format: 123-12-123 (without all digits)
         form.account_number =
-            input.slice(0, 3) +
+            cleanInput.slice(0, 3) +
             "-" +
-            input.slice(3, 5) +
+            cleanInput.slice(3, 5) +
             "-" +
-            input.slice(5, 8);
-    } else if (input.length > 3) {
-        form.account_number = input.slice(0, 3) + "-" + input.slice(3, 5);
+            cleanInput.slice(5);
+    } else if (cleanInput.length > 3) {
+        // Partial format: 123-12
+        form.account_number =
+            cleanInput.slice(0, 3) + "-" + cleanInput.slice(3, 5);
     } else {
-        form.account_number = input;
+        form.account_number = cleanInput;
     }
 };
-
 const submit = async () => {
     // Add 2-second delay before processing
     isSubmitting.value = true;
@@ -369,7 +389,6 @@ const submit = async () => {
                         </label>
                     </template>
 
-                    <!-- Serial Number for Customers -->
                     <template v-else>
                         <input
                             id="account_number"
@@ -380,13 +399,13 @@ const submit = async () => {
                             required
                             class="w-full px-4 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 peer"
                             placeholder=" "
-                            maxlength="10"
+                            :maxlength="11"
                         />
                         <label
                             for="account_number"
                             class="absolute left-3 top-3 text-gray-500 transition-all duration-200 transform peer-focus:-translate-y-5 peer-focus:scale-75 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 bg-white px-1"
                         >
-                            Account Number (XXX-XX-XXX)
+                            Account Number
                         </label>
                     </template>
                 </div>

@@ -23,12 +23,12 @@
                             </h3>
                         </div>
                     </div>
-                    <div class="mt-4">
+                    <!-- <div class="mt-4">
                         <div class="flex items-center text-sm text-blue-600 dark:text-blue-400">
                             <v-icon name="bi-list-ul" class="w-4 h-4 mr-1" />
                             <span>All system reports</span>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
 
                 <!-- Pending Reports Card -->
@@ -47,12 +47,12 @@
                             </h3>
                         </div>
                     </div>
-                    <div class="mt-4">
+                    <!-- <div class="mt-4">
                         <div class="flex items-center text-sm text-yellow-600 dark:text-yellow-400">
                             <v-icon name="bi-hourglass-split" class="w-4 h-4 mr-1" />
                             <span>{{ pendingPercentage }}% of total</span>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
 
                 <!-- In Progress Reports Card -->
@@ -70,12 +70,12 @@
                             </h3>
                         </div>
                     </div>
-                    <div class="mt-4">
+                    <!-- <div class="mt-4">
                         <div class="flex items-center text-sm text-blue-600 dark:text-blue-400">
                             <v-icon name="bi-gear" class="w-4 h-4 mr-1" />
                             <span>{{ inProgressPercentage }}% of total</span>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
 
                 <!-- Resolved Reports Card -->
@@ -94,12 +94,12 @@
                             </h3>
                         </div>
                     </div>
-                    <div class="mt-4">
+                    <!-- <div class="mt-4">
                         <div class="flex items-center text-sm text-green-600 dark:text-green-400">
                             <v-icon name="bi-check-lg" class="w-4 h-4 mr-1" />
                             <span>{{ resolvedPercentage }}% of total</span>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
             </div>
 

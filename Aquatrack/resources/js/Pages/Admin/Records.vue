@@ -35,14 +35,14 @@
                             </h3>
                         </div>
                     </div>
-                    <div class="mt-4">
+                    <!-- <div class="mt-4">
                         <div
                             class="flex items-center text-sm text-blue-600 dark:text-blue-400"
                         >
                             <v-icon name="bi-list-ul" class="w-4 h-4 mr-1" />
                             <span>All customer records</span>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
 
                 <!-- Paid Records Card -->
@@ -66,14 +66,14 @@
                             </h3>
                         </div>
                     </div>
-                    <div class="mt-4">
+                    <!-- <div class="mt-4">
                         <div
                             class="flex items-center text-sm text-green-600 dark:text-green-400"
                         >
                             <v-icon name="bi-cash" class="w-4 h-4 mr-1" />
                             <span>{{ paidPercentage }}% of total</span>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
 
                 <!-- Pending Records Card -->
@@ -97,7 +97,7 @@
                             </h3>
                         </div>
                     </div>
-                    <div class="mt-4">
+                    <!-- <div class="mt-4">
                         <div
                             class="flex items-center text-sm text-yellow-600 dark:text-yellow-400"
                         >
@@ -107,7 +107,7 @@
                             />
                             <span>{{ pendingPercentage }}% of total</span>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
 
                 <!-- Overdue Records Card -->
@@ -134,14 +134,14 @@
                             </h3>
                         </div>
                     </div>
-                    <div class="mt-4">
+                    <!-- <div class="mt-4">
                         <div
                             class="flex items-center text-sm text-red-600 dark:text-red-400"
                         >
                             <v-icon name="bi-alarm" class="w-4 h-4 mr-1" />
                             <span>{{ overduePercentage }}% of total</span>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
             </div>
 

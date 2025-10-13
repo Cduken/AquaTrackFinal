@@ -34,7 +34,7 @@
                             </h3>
                         </div>
                     </div>
-                    <div class="mt-4">
+                    <!-- <div class="mt-4">
                         <div
                             class="flex items-center text-sm text-green-600 dark:text-green-400"
                         >
@@ -44,7 +44,7 @@
                             />
                             <span>All registered users</span>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
 
                 <!-- Active Users Card -->
@@ -68,7 +68,7 @@
                             </h3>
                         </div>
                     </div>
-                    <div class="mt-4">
+                    <!-- <div class="mt-4">
                         <div
                             class="flex items-center text-sm text-green-600 dark:text-green-400"
                         >
@@ -78,7 +78,7 @@
                             />
                             <span>{{ activePercentage }}% of total</span>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
 
                 <!-- Admin Users Card -->
@@ -102,7 +102,7 @@
                             </h3>
                         </div>
                     </div>
-                    <div class="mt-4">
+                    <!-- <div class="mt-4">
                         <div
                             class="flex items-center text-sm text-gray-600 dark:text-gray-400"
                         >
@@ -112,11 +112,11 @@
                             />
                             <span>System administrators</span>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
 
                 <!-- Staff Users Card -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
                     <div class="flex items-center">
                         <div
                             class="p-3 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400"
@@ -136,14 +136,14 @@
                             </h3>
                         </div>
                     </div>
-                    <div class="mt-4">
+                    <!-- <div class="mt-4">
                         <div
                             class="flex items-center text-sm text-gray-600 dark:text-gray-400"
                         >
                             <v-icon name="hi-briefcase" class="w-4 h-4 mr-1" />
                             <span>Support team members</span>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
             </div>
 

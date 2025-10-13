@@ -9,7 +9,10 @@
             ></div>
 
             <!-- Sliding panel container -->
-            <div class="fixed inset-y-0 right-0 w-full max-w-2xl flex">
+            <div
+                class="fixed inset-y-0 right-0 w-full max-w-2xl flex"
+                :class="{ 'max-w-full': isMaximized }"
+            >
                 <!-- Panel with transform class for animation -->
                 <div
                     class="relative w-full h-full transform transition-transform duration-300 ease-in-out"
@@ -29,17 +32,44 @@
                                     >Edit User</span
                                 >
                             </div>
-                            <button
-                                @click="emit('close')"
-                                class="text-white hover:text-gray-200 transition-colors duration-200 p-1 rounded-full hover:bg-white/10"
-                            >
-                                <v-icon name="bi-x-lg" class="h-6 w-6" />
-                            </button>
+                            <div class="flex items-center space-x-2">
+                                <!-- Maximize/Minimize Button -->
+                                <button
+                                    @click="toggleMaximize"
+                                    class="text-white hover:text-gray-200 transition-colors duration-200 p-1 rounded-full hover:bg-white/10"
+                                    :title="
+                                        isMaximized ? 'Minimize' : 'Maximize'
+                                    "
+                                >
+                                    <v-icon
+                                        :name="
+                                            isMaximized
+                                                ? 'bi-fullscreen-exit'
+                                                : 'bi-fullscreen'
+                                        "
+                                        class="h-5 w-5"
+                                    />
+                                </button>
+                                <!-- Close Button -->
+                                <button
+                                    @click="emit('close')"
+                                    class="text-white hover:text-gray-200 transition-colors duration-200 p-1 rounded-full hover:bg-white/10"
+                                >
+                                    <v-icon name="bi-x-lg" class="h-6 w-6" />
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Content -->
-                        <div class="flex-1 overflow-y-auto p-4">
-                            <div v-if="user" class="space-y-4">
+                        <div
+                            class="flex-1 overflow-y-auto p-4"
+                            :class="{ 'p-8': isMaximized }"
+                        >
+                            <div
+                                v-if="user"
+                                class="space-y-4"
+                                :class="{ 'space-y-6': isMaximized }"
+                            >
                                 <!-- Loading State -->
                                 <div
                                     v-if="editLoading"
@@ -63,22 +93,32 @@
                                 <!-- Profile Information -->
                                 <div
                                     class="bg-gray-50 border border-gray-200 p-4 rounded-lg shadow-sm"
+                                    :class="{ 'p-6': isMaximized }"
                                 >
                                     <h3
                                         class="text-md font-semibold text-gray-900 mb-3 flex items-center"
+                                        :class="{ 'text-lg mb-4': isMaximized }"
                                     >
                                         <v-icon
                                             name="bi-person-badge"
                                             class="mr-2 text-blue-600"
+                                            :scale="isMaximized ? '1.1' : '1'"
                                         />
                                         Profile Information
                                     </h3>
                                     <div
                                         class="grid grid-cols-1 md:grid-cols-2 gap-4"
+                                        :class="{
+                                            'gap-6': isMaximized,
+                                            'md:grid-cols-3': isMaximized,
+                                        }"
                                     >
                                         <div>
                                             <label
                                                 class="block text-sm font-medium text-gray-700 mb-1"
+                                                :class="{
+                                                    'text-base': isMaximized,
+                                                }"
                                                 >First Name</label
                                             >
                                             <input
@@ -88,11 +128,16 @@
                                                 :class="{
                                                     'border-red-500':
                                                         editErrors.name,
+                                                    'px-4 py-3 text-base':
+                                                        isMaximized,
                                                 }"
                                             />
                                             <p
                                                 v-if="editErrors.name"
                                                 class="text-red-500 text-xs mt-1"
+                                                :class="{
+                                                    'text-sm': isMaximized,
+                                                }"
                                             >
                                                 {{ editErrors.name }}
                                             </p>
@@ -100,6 +145,9 @@
                                         <div>
                                             <label
                                                 class="block text-sm font-medium text-gray-700 mb-1"
+                                                :class="{
+                                                    'text-base': isMaximized,
+                                                }"
                                                 >Last Name</label
                                             >
                                             <input
@@ -109,11 +157,16 @@
                                                 :class="{
                                                     'border-red-500':
                                                         editErrors.lastname,
+                                                    'px-4 py-3 text-base':
+                                                        isMaximized,
                                                 }"
                                             />
                                             <p
                                                 v-if="editErrors.lastname"
                                                 class="text-red-500 text-xs mt-1"
+                                                :class="{
+                                                    'text-sm': isMaximized,
+                                                }"
                                             >
                                                 {{ editErrors.lastname }}
                                             </p>
@@ -121,6 +174,9 @@
                                         <div>
                                             <label
                                                 class="block text-sm font-medium text-gray-700 mb-1"
+                                                :class="{
+                                                    'text-base': isMaximized,
+                                                }"
                                                 >Email</label
                                             >
                                             <input
@@ -130,11 +186,16 @@
                                                 :class="{
                                                     'border-red-500':
                                                         editErrors.email,
+                                                    'px-4 py-3 text-base':
+                                                        isMaximized,
                                                 }"
                                             />
                                             <p
                                                 v-if="editErrors.email"
                                                 class="text-red-500 text-xs mt-1"
+                                                :class="{
+                                                    'text-sm': isMaximized,
+                                                }"
                                             >
                                                 {{ editErrors.email }}
                                             </p>
@@ -142,6 +203,9 @@
                                         <div>
                                             <label
                                                 class="block text-sm font-medium text-gray-700 mb-1"
+                                                :class="{
+                                                    'text-base': isMaximized,
+                                                }"
                                                 >Phone</label
                                             >
                                             <input
@@ -151,12 +215,17 @@
                                                 :class="{
                                                     'border-red-500':
                                                         editErrors.phone,
+                                                    'px-4 py-3 text-base':
+                                                        isMaximized,
                                                 }"
                                                 placeholder="09XXXXXXXXX or +63XXXXXXXXXX"
                                             />
                                             <p
                                                 v-if="editErrors.phone"
                                                 class="text-red-500 text-xs mt-1"
+                                                :class="{
+                                                    'text-sm': isMaximized,
+                                                }"
                                             >
                                                 {{ editErrors.phone }}
                                             </p>
@@ -167,22 +236,32 @@
                                 <!-- Account Information -->
                                 <div
                                     class="bg-gray-50 border border-gray-200 p-4 rounded-lg shadow-sm"
+                                    :class="{ 'p-6': isMaximized }"
                                 >
                                     <h3
                                         class="text-md font-semibold text-gray-900 mb-3 flex items-center"
+                                        :class="{ 'text-lg mb-4': isMaximized }"
                                     >
                                         <v-icon
                                             name="bi-info-circle"
                                             class="mr-2 text-blue-600"
+                                            :scale="isMaximized ? '1.1' : '1'"
                                         />
                                         Account Information
                                     </h3>
                                     <div
                                         class="grid grid-cols-1 md:grid-cols-2 gap-4"
+                                        :class="{
+                                            'gap-6': isMaximized,
+                                            'md:grid-cols-3': isMaximized,
+                                        }"
                                     >
                                         <div>
                                             <label
                                                 class="block text-sm font-medium text-gray-700 mb-1"
+                                                :class="{
+                                                    'text-base': isMaximized,
+                                                }"
                                                 >Account Number</label
                                             >
                                             <input
@@ -191,12 +270,19 @@
                                                 "
                                                 type="text"
                                                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-100"
+                                                :class="{
+                                                    'px-4 py-3 text-base':
+                                                        isMaximized,
+                                                }"
                                                 placeholder="XXX-XX-XXX"
                                                 readonly
                                             />
 
                                             <p
                                                 class="text-xs text-gray-500 mt-1"
+                                                :class="{
+                                                    'text-sm': isMaximized,
+                                                }"
                                             >
                                                 Account number cannot be changed
                                             </p>
@@ -204,6 +290,9 @@
                                         <div>
                                             <label
                                                 class="block text-sm font-medium text-gray-700 mb-1"
+                                                :class="{
+                                                    'text-base': isMaximized,
+                                                }"
                                                 >Password Reset</label
                                             >
                                             <div
@@ -213,11 +302,18 @@
                                                     @click="resetPassword"
                                                     :disabled="resetLoading"
                                                     class="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 disabled:opacity-50 transition-colors duration-200"
+                                                    :class="{
+                                                        'px-6 py-3 text-base':
+                                                            isMaximized,
+                                                    }"
                                                 >
                                                     <v-icon
                                                         v-if="resetLoading"
                                                         name="bi-arrow-repeat"
                                                         class="animate-spin mr-1"
+                                                        :class="{
+                                                            'mr-2': isMaximized,
+                                                        }"
                                                     />
                                                     {{
                                                         resetLoading
@@ -228,6 +324,9 @@
                                             </div>
                                             <p
                                                 class="text-xs text-gray-500 mt-1"
+                                                :class="{
+                                                    'text-sm': isMaximized,
+                                                }"
                                             >
                                                 Reset user's password to default
                                             </p>
@@ -238,22 +337,32 @@
                                 <!-- Water Meter Information -->
                                 <div
                                     class="bg-gray-50 border border-gray-200 p-4 rounded-lg shadow-sm"
+                                    :class="{ 'p-6': isMaximized }"
                                 >
                                     <h3
                                         class="text-md font-semibold text-gray-900 mb-3 flex items-center"
+                                        :class="{ 'text-lg mb-4': isMaximized }"
                                     >
                                         <v-icon
                                             name="bi-droplet"
                                             class="mr-2 text-blue-600"
+                                            :scale="isMaximized ? '1.1' : '1'"
                                         />
                                         Water Meter Information
                                     </h3>
                                     <div
                                         class="grid grid-cols-1 md:grid-cols-2 gap-4"
+                                        :class="{
+                                            'gap-6': isMaximized,
+                                            'md:grid-cols-3': isMaximized,
+                                        }"
                                     >
                                         <div>
                                             <label
                                                 class="block text-sm font-medium text-gray-700 mb-1"
+                                                :class="{
+                                                    'text-base': isMaximized,
+                                                }"
                                                 >Serial Number</label
                                             >
                                             <div class="relative">
@@ -267,18 +376,24 @@
                                                     :class="{
                                                         'border-red-500':
                                                             editErrors.serial_number,
+                                                        'px-4 py-3 text-base pr-14':
+                                                            isMaximized,
                                                     }"
                                                     @input="restrictToNumbers"
                                                 />
                                                 <span
                                                     class="absolute right-3 top-1/2 transform -translate-y-1/2 text-xs"
-                                                    :class="
+                                                    :class="[
                                                         editFormData
                                                             .serial_number
                                                             .length === 9
                                                             ? 'text-green-500'
-                                                            : 'text-gray-500'
-                                                    "
+                                                            : 'text-gray-500',
+                                                        {
+                                                            'text-sm right-4':
+                                                                isMaximized,
+                                                        },
+                                                    ]"
                                                 >
                                                     {{
                                                         editFormData
@@ -290,6 +405,9 @@
                                             <p
                                                 v-if="editErrors.serial_number"
                                                 class="text-red-500 text-xs mt-1"
+                                                :class="{
+                                                    'text-sm': isMaximized,
+                                                }"
                                             >
                                                 {{ editErrors.serial_number }}
                                             </p>
@@ -297,6 +415,9 @@
                                         <div>
                                             <label
                                                 class="block text-sm font-medium text-gray-700 mb-1"
+                                                :class="{
+                                                    'text-base': isMaximized,
+                                                }"
                                                 >Meter Size</label
                                             >
                                             <input
@@ -306,11 +427,16 @@
                                                 :class="{
                                                     'border-red-500':
                                                         editErrors.size,
+                                                    'px-4 py-3 text-base':
+                                                        isMaximized,
                                                 }"
                                             />
                                             <p
                                                 v-if="editErrors.size"
                                                 class="text-red-500 text-xs mt-1"
+                                                :class="{
+                                                    'text-sm': isMaximized,
+                                                }"
                                             >
                                                 {{ editErrors.size }}
                                             </p>
@@ -318,6 +444,9 @@
                                         <div>
                                             <label
                                                 class="block text-sm font-medium text-gray-700 mb-1"
+                                                :class="{
+                                                    'text-base': isMaximized,
+                                                }"
                                                 >Brand</label
                                             >
                                             <input
@@ -327,11 +456,16 @@
                                                 :class="{
                                                     'border-red-500':
                                                         editErrors.brand,
+                                                    'px-4 py-3 text-base':
+                                                        isMaximized,
                                                 }"
                                             />
                                             <p
                                                 v-if="editErrors.brand"
                                                 class="text-red-500 text-xs mt-1"
+                                                :class="{
+                                                    'text-sm': isMaximized,
+                                                }"
                                             >
                                                 {{ editErrors.brand }}
                                             </p>
@@ -339,6 +473,9 @@
                                         <div>
                                             <label
                                                 class="block text-sm font-medium text-gray-700 mb-1"
+                                                :class="{
+                                                    'text-base': isMaximized,
+                                                }"
                                                 >Date Installed</label
                                             >
                                             <input
@@ -350,11 +487,16 @@
                                                 :class="{
                                                     'border-red-500':
                                                         editErrors.date_installed,
+                                                    'px-4 py-3 text-base':
+                                                        isMaximized,
                                                 }"
                                             />
                                             <p
                                                 v-if="editErrors.date_installed"
                                                 class="text-red-500 text-xs mt-1"
+                                                :class="{
+                                                    'text-sm': isMaximized,
+                                                }"
                                             >
                                                 {{ editErrors.date_installed }}
                                             </p>
@@ -365,22 +507,29 @@
                                 <!-- Location Information -->
                                 <div
                                     class="bg-gray-50 border border-gray-200 p-4 rounded-lg shadow-sm"
+                                    :class="{ 'p-6': isMaximized }"
                                 >
                                     <h3
                                         class="text-md font-semibold text-gray-900 mb-3 flex items-center"
+                                        :class="{ 'text-lg mb-4': isMaximized }"
                                     >
                                         <v-icon
                                             name="bi-geo-alt"
                                             class="mr-2 text-blue-600"
+                                            :scale="isMaximized ? '1.1' : '1'"
                                         />
                                         Location Information
                                     </h3>
                                     <div
                                         class="grid grid-cols-1 md:grid-cols-2 gap-4"
+                                        :class="{ 'gap-6': isMaximized }"
                                     >
                                         <div>
                                             <label
                                                 class="block text-sm font-medium text-gray-700 mb-1"
+                                                :class="{
+                                                    'text-base': isMaximized,
+                                                }"
                                                 >Zone</label
                                             >
                                             <select
@@ -389,6 +538,8 @@
                                                 :class="{
                                                     'border-red-500':
                                                         editErrors.zone,
+                                                    'px-4 py-3 text-base':
+                                                        isMaximized,
                                                 }"
                                             >
                                                 <option
@@ -404,6 +555,9 @@
                                             <p
                                                 v-if="editErrors.zone"
                                                 class="text-red-500 text-xs mt-1"
+                                                :class="{
+                                                    'text-sm': isMaximized,
+                                                }"
                                             >
                                                 {{ editErrors.zone }}
                                             </p>
@@ -411,6 +565,9 @@
                                         <div>
                                             <label
                                                 class="block text-sm font-medium text-gray-700 mb-1"
+                                                :class="{
+                                                    'text-base': isMaximized,
+                                                }"
                                                 >Barangay</label
                                             >
                                             <select
@@ -419,6 +576,8 @@
                                                 :class="{
                                                     'border-red-500':
                                                         editErrors.barangay,
+                                                    'px-4 py-3 text-base':
+                                                        isMaximized,
                                                 }"
                                             >
                                                 <option
@@ -434,6 +593,9 @@
                                             <p
                                                 v-if="editErrors.barangay"
                                                 class="text-red-500 text-xs mt-1"
+                                                :class="{
+                                                    'text-sm': isMaximized,
+                                                }"
                                             >
                                                 {{ editErrors.barangay }}
                                             </p>
@@ -446,11 +608,13 @@
                         <!-- Footer -->
                         <div
                             class="border-t border-gray-200 px-4 py-3 bg-gray-50 flex justify-end space-x-3"
+                            :class="{ 'px-6 py-4': isMaximized }"
                         >
                             <button
                                 @click="emit('close')"
                                 type="button"
                                 class="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+                                :class="{ 'px-6 py-3 text-base': isMaximized }"
                             >
                                 Cancel
                             </button>
@@ -459,11 +623,13 @@
                                 :disabled="editLoading"
                                 type="button"
                                 class="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition-colors duration-200"
+                                :class="{ 'px-6 py-3 text-base': isMaximized }"
                             >
                                 <v-icon
                                     v-if="editLoading"
                                     name="bi-arrow-repeat"
                                     class="animate-spin mr-2"
+                                    :class="{ 'mr-3': isMaximized }"
                                 />
                                 {{ editLoading ? "Saving..." : "Save Changes" }}
                             </button>
@@ -497,6 +663,9 @@ const props = defineProps({
 
 const emit = defineEmits(["close", "saved"]);
 
+// State for maximize
+const isMaximized = ref(false);
+
 const editLoading = ref(false);
 const resetLoading = ref(false);
 const editErrorMessage = ref("");
@@ -515,6 +684,20 @@ const editFormData = reactive({
     zone: "",
     barangay: "",
 });
+
+// Reset maximize state when modal is closed
+watch(
+    () => props.show,
+    (newVal) => {
+        if (!newVal) {
+            isMaximized.value = false;
+        }
+    }
+);
+
+const toggleMaximize = () => {
+    isMaximized.value = !isMaximized.value;
+};
 
 // Watch for user changes and populate form
 watch(

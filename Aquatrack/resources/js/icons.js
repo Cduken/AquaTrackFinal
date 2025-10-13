@@ -168,7 +168,8 @@ import {
     BiCheck,
     BiSend,
     BiRecordCircle,
-    BiExclamationTriangle,
+    BiFullscreen,
+    BiFullscreenExit,
 } from "oh-vue-icons/icons";
 
 // Heroicons
@@ -321,7 +322,7 @@ addIcons(
     BiCalendarCheckFill, BiHddNetwork, BiArrowBarRight, BiExclamationCircleFill, BiListUl, BiCash,
     BiExclamationOctagon, BiAlarm, BiCheckLg, BiCalendarX, BiArrowLeftRight, BiCashCoin, BiArrowClockwise, BiGlobe,
     BiCamera, BiCameraVideo, BiCameraVideoOff, BiMegaphone, BiEnvelopeOpen, BiCalendarEvent, BiPlay, BiStars,
-    BiCheck, BiSend, BiRecordCircle,
+    BiCheck, BiSend, BiRecordCircle, BiFullscreen, BiFullscreenExit,
 
     // Heroicons
     HiSolidUser, HiUser, HiUserGroup, HiCog, HiSolidUsers, HiSolidSpeakerphone, HiSolidUserAdd, HiX, HiMail,

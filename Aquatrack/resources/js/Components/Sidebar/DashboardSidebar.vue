@@ -1,7 +1,7 @@
 <template>
     <aside
         :class="[
-            'fixed top-0 left-0 z-50 h-screen bg-blue-800 border-r shadow-lg dark:bg-gradient-to-b dark:from-blue-800 dark:to-blue-700 dark:border-blue-700 transition-all duration-300 ease-in-out',
+            'fixed top-0 left-0 z-50 h-screen bg-blue-950 border-r shadow-lg dark:bg-gradient-to-b dark:from-blue-800 dark:to-blue-700 dark:border-blue-700 transition-all duration-300 ease-in-out',
             isOpen ? 'w-[260px]' : 'w-[70px]',
             isMobileMenuOpen
                 ? 'translate-x-0'
@@ -59,9 +59,9 @@
                         :title="!isOpen ? link.name : ''"
                         class="flex items-center text-white px-3 py-3 text-sm font-medium rounded-xl transition-all duration-200 group relative"
                         :class="{
-                            'bg-blue-600 text-white shadow-md transform scale-[1.02]':
+                            'bg-blue-900 text-white shadow-md transform scale-[1.02]':
                                 isActive(link.url),
-                            'text-blue-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-700 dark:hover:text-blue-400':
+                            'text-blue-700 dark:text-gray-200 hover:bg-gray-500 dark:hover:bg-gray-700 hover:text-gray-300 dark:hover:text-blue-400':
                                 !isActive(link.url),
                         }"
                         @click="handleLinkClick"
@@ -77,7 +77,7 @@
                             class="w-5 h-5 transition-all duration-200 flex-shrink-0"
                             :class="{
                                 'text-white': isActive(link.url),
-                                'text-white dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-blue-400':
+                                'text-white dark:text-gray-400 group-hover:text-white dark:group-hover:text-blue-400':
                                     !isActive(link.url),
                             }"
                         />

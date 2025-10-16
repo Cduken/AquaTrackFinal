@@ -688,6 +688,7 @@
 
 <script setup>
 import { ref, computed, watch, onMounted } from "vue";
+import Swal from "sweetalert2";
 import { OhVueIcon, addIcons } from "oh-vue-icons";
 import {
     HiUser,
@@ -727,6 +728,8 @@ addIcons(
     BiFullscreen,
     BiFullscreenExit
 );
+
+
 
 const props = defineProps({
     show: Boolean,

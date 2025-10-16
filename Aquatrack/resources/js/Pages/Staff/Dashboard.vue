@@ -1,306 +1,387 @@
+//Pages/Staff/Dashboard.vue
 <template>
     <StaffLayout>
-        <div class="min-h-screen bg-gray-50/30 p-6">
-            <!-- Header Section -->
-            <div class="mb-8">
+        <div class="min-h-screen p-4">
+            <!-- Compact Header -->
+            <div class="mb-6">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                        <h1 class="text-2xl font-bold text-gray-900">
                             Good {{ timeOfDay }},
-                            {{ dashboardData.staffName || "Staff" }}!
+                            {{ dashboardData.staffName || "Staff" }}
                         </h1>
-                        <p class="text-gray-600 text-lg">
-                            Here's your performance summary for today
+                        <p class="text-sm text-gray-600 mt-0.5">
+                            {{ currentDate }}
                         </p>
                     </div>
-                    <div class="flex items-center gap-4">
-                        <div class="text-right">
-                            <p class="text-sm text-gray-500">Today's Date</p>
-                            <p class="text-lg font-semibold text-gray-800">
-                                {{ currentDate }}
-                            </p>
-                        </div>
-                        <!-- <div
-                                class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-sm"
-                            >
-                                <v-icon
-                                    name="bi-person-circle"
-                                    class="text-white text-xl"
-                                />
-                            </div> -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- Main Metrics Grid -->
-            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
-                <!-- Today's Readings Card -->
-                <div
-                    class="group relative bg-white rounded-2xl p-6 shadow-xs border border-gray-100 hover:shadow-sm transition-all duration-300"
-                >
-                    <div class="relative">
-                        <div class="flex items-center justify-between mb-6">
-                            <div class="p-3 bg-blue-50 rounded-xl">
-                                <v-icon
-                                    name="bi-droplet"
-                                    class="text-blue-600 text-xl"
-                                />
-                            </div>
-                            <span
-                                class="text-xs font-medium text-blue-600 bg-blue-50 px-3 py-1.5 rounded-full"
-                            >
-                                Today
-                            </span>
-                        </div>
-                        <div>
-                            <h3 class="text-4xl font-bold text-gray-900 mb-2">
-                                {{ dashboardData.todaysReadings || 0 }}
-                            </h3>
-                            <p class="text-gray-600 font-medium">
-                                Meter Readings
-                            </p>
-                            <div class="flex items-center gap-2 mt-3">
+                    <div class="flex items-center gap-2">
+                        <div
+                            class="px-3 py-1.5 bg-white rounded-lg shadow-sm border border-gray-200"
+                        >
+                            <div class="flex items-center gap-2">
                                 <div
-                                    class="w-full bg-gray-100 rounded-full h-1.5"
+                                    class="w-2 h-2 bg-green-500 rounded-full animate-pulse"
+                                ></div>
+                                <span class="text-xs font-medium text-gray-700"
+                                    >Active</span
                                 >
-                                    <div
-                                        class="bg-blue-500 h-1.5 rounded-full transition-all duration-1000"
-                                        :style="{
-                                            width: `${Math.min(
-                                                ((dashboardData.todaysReadings ||
-                                                    0) /
-                                                    50) *
-                                                    100,
-                                                100
-                                            )}%`,
-                                        }"
-                                    ></div>
-                                </div>
-                                <span
-                                    class="text-sm text-gray-500 whitespace-nowrap"
-                                >
-                                    {{
-                                        Math.round(
-                                            ((dashboardData.todaysReadings ||
-                                                0) /
-                                                50) *
-                                                100
-                                        )
-                                    }}%
-                                </span>
                             </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Weekly Readings Card -->
-                <div
-                    class="group relative bg-white rounded-2xl p-6 shadow-xs border border-gray-100 hover:shadow-sm transition-all duration-300"
-                >
-                    <div class="relative">
-                        <div class="flex items-center justify-between mb-6">
-                            <div class="p-3 bg-blue-50 rounded-xl">
-                                <v-icon
-                                    name="bi-calendar-week"
-                                    class="text-blue-600 text-xl"
-                                />
-                            </div>
-                            <span
-                                class="text-xs font-medium text-blue-600 bg-blue-50 px-3 py-1.5 rounded-full"
-                            >
-                                This Week
-                            </span>
-                        </div>
-                        <div>
-                            <h3 class="text-4xl font-bold text-gray-900 mb-2">
-                                {{ dashboardData.weeklyReadings || 0 }}
-                            </h3>
-                            <p class="text-gray-600 font-medium">
-                                Total Readings
-                            </p>
-                            <p
-                                class="text-sm text-blue-500 mt-2 flex items-center gap-1"
-                            >
-                                <v-icon name="bi-arrow-up" class="text-sm" />
-                                Weekly progress
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Monthly Readings Card -->
-                <div
-                    class="group relative bg-white rounded-2xl p-6 shadow-xs border border-gray-100 hover:shadow-sm transition-all duration-300"
-                >
-                    <div class="relative">
-                        <div class="flex items-center justify-between mb-6">
-                            <div class="p-3 bg-blue-50 rounded-xl">
-                                <v-icon
-                                    name="bi-calendar-month"
-                                    class="text-blue-600 text-xl"
-                                />
-                            </div>
-                            <span
-                                class="text-xs font-medium text-blue-600 bg-blue-50 px-3 py-1.5 rounded-full"
-                            >
-                                This Month
-                            </span>
-                        </div>
-                        <div>
-                            <h3 class="text-4xl font-bold text-gray-900 mb-2">
-                                {{ dashboardData.monthlyReadings || 0 }}
-                            </h3>
-                            <p class="text-gray-600 font-medium">
-                                Monthly Total
-                            </p>
-                            <p
-                                class="text-sm text-blue-500 mt-2 flex items-center gap-1"
-                            >
-                                <v-icon name="bi-graph-up" class="text-sm" />
-                                Current month
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Performance Card -->
-                <div
-                    class="group relative bg-white rounded-2xl p-6 shadow-xs border border-gray-100 hover:shadow-sm transition-all duration-300"
-                >
-                    <div class="relative">
-                        <div class="flex items-center justify-between mb-6">
-                            <div class="p-3 bg-blue-50 rounded-xl">
-                                <v-icon
-                                    name="bi-graph-up"
-                                    class="text-blue-600 text-xl"
-                                />
-                            </div>
-                            <span
-                                class="text-xs font-medium text-blue-600 bg-blue-50 px-3 py-1.5 rounded-full"
-                            >
-                                Performance
-                            </span>
-                        </div>
-                        <div>
-                            <h3 class="text-4xl font-bold text-gray-900 mb-2">
-                                {{
-                                    Math.round(
-                                        ((dashboardData.todaysReadings || 0) /
-                                            50) *
-                                            100
-                                    )
-                                }}%
-                            </h3>
-                            <p class="text-gray-600 font-medium">
-                                Daily Target
-                            </p>
-                            <p class="text-sm text-gray-500 mt-1">
-                                50 readings goal
-                            </p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Status Overview Cards -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <!-- Compact Metrics Grid -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+                <!-- Today's Readings -->
                 <div
-                    v-for="status in statusTypes"
-                    :key="status.type"
-                    class="bg-white rounded-2xl p-6 shadow-xs border border-gray-100 transition-all duration-300 hover:shadow-sm"
+                    class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
                 >
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm font-medium text-gray-600 mb-1">
-                                {{ status.label }}
-                            </p>
-                            <h3 class="text-3xl font-bold text-gray-900">
-                                {{
-                                    dashboardData.statusCounts?.[status.type] ||
-                                    0
-                                }}
-                            </h3>
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="p-2 bg-blue-50 rounded-lg">
+                            <Droplets class="w-4 h-4 text-blue-600" />
                         </div>
-                        <div :class="status.iconBg" class="p-3 rounded-xl">
-                            <v-icon
-                                :name="status.icon"
-                                :class="status.iconColor"
-                                class="text-xl"
-                            />
+                        <span
+                            class="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full"
+                        >
+                            Today
+                        </span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900">
+                        {{ dashboardData.todaysReadings || 0 }}
+                    </h3>
+                    <p class="text-xs text-gray-600 mt-1">Meter Readings</p>
+                    <div class="mt-3 flex items-center gap-2">
+                        <div class="flex-1 bg-gray-100 rounded-full h-1">
+                            <div
+                                class="bg-blue-500 h-1 rounded-full transition-all duration-500"
+                                :style="{
+                                    width: `${Math.min(
+                                        ((dashboardData.todaysReadings || 0) /
+                                            dashboardData.dailyTarget) *
+                                            100,
+                                        100
+                                    )}%`,
+                                }"
+                            ></div>
+                        </div>
+                        <span class="text-xs text-gray-500">
+                            {{
+                                Math.round(
+                                    ((dashboardData.todaysReadings || 0) /
+                                        dashboardData.dailyTarget) *
+                                        100
+                                )
+                            }}%
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Weekly -->
+                <div
+                    class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
+                >
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="p-2 bg-purple-50 rounded-lg">
+                            <CalendarDays class="w-4 h-4 text-purple-600" />
+                        </div>
+                        <span
+                            class="text-xs font-medium text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full"
+                        >
+                            Week
+                        </span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900">
+                        {{ dashboardData.weeklyReadings || 0 }}
+                    </h3>
+                    <p class="text-xs text-gray-600 mt-1">Total Readings</p>
+                    <div
+                        class="mt-3 flex items-center gap-1"
+                        :class="
+                            dashboardData.weeklyTrend >= 0
+                                ? 'text-green-600'
+                                : 'text-red-600'
+                        "
+                    >
+                        <TrendingUp
+                            v-if="dashboardData.weeklyTrend >= 0"
+                            class="w-3 h-3"
+                        />
+                        <TrendingDown v-else class="w-3 h-3" />
+                        <span class="text-xs font-medium">
+                            {{ dashboardData.weeklyTrend >= 0 ? "+" : ""
+                            }}{{ dashboardData.weeklyTrend }}% vs last week
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Monthly -->
+                <div
+                    class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
+                >
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="p-2 bg-emerald-50 rounded-lg">
+                            <Calendar class="w-4 h-4 text-emerald-600" />
+                        </div>
+                        <span
+                            class="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full"
+                        >
+                            Month
+                        </span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900">
+                        {{ dashboardData.monthlyReadings || 0 }}
+                    </h3>
+                    <p class="text-xs text-gray-600 mt-1">Monthly Total</p>
+                    <div
+                        class="mt-3 flex items-center gap-1"
+                        :class="
+                            dashboardData.monthlyTrend >= 0
+                                ? 'text-green-600'
+                                : 'text-red-600'
+                        "
+                    >
+                        <TrendingUp
+                            v-if="dashboardData.monthlyTrend >= 0"
+                            class="w-3 h-3"
+                        />
+                        <TrendingDown v-else class="w-3 h-3" />
+                        <span class="text-xs font-medium">
+                            {{ dashboardData.monthlyTrend >= 0 ? "+" : ""
+                            }}{{ dashboardData.monthlyTrend }}% vs last month
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Performance -->
+                <div
+                    class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-4 shadow-sm text-white hover:shadow-md transition-shadow"
+                >
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="p-2 bg-white/20 rounded-lg">
+                            <Target class="w-4 h-4" />
+                        </div>
+                        <span
+                            class="text-xs font-medium bg-white/20 px-2 py-0.5 rounded-full"
+                        >
+                            Goal
+                        </span>
+                    </div>
+                    <h3 class="text-2xl font-bold">
+                        {{
+                            Math.round(
+                                ((dashboardData.todaysReadings || 0) /
+                                    dashboardData.dailyTarget) *
+                                    100
+                            )
+                        }}%
+                    </h3>
+                    <p class="text-xs text-blue-100 mt-1">Daily Target</p>
+                    <p class="text-xs text-blue-200 mt-2">
+                        {{ dashboardData.dailyTarget }} readings goal
+                    </p>
+                </div>
+            </div>
+
+            <!-- Analytics and Status Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+                <!-- Weekly Trend Chart Card -->
+                <div
+                    class="bg-white rounded-xl p-4 shadow-sm border border-gray-100"
+                >
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-sm font-semibold text-gray-900">
+                            Weekly Trend
+                        </h3>
+                        <Activity class="w-4 h-4 text-gray-400" />
+                    </div>
+                    <div class="flex items-end justify-between h-20 gap-1">
+                        <div
+                            v-for="(
+                                day, index
+                            ) in dashboardData.weeklyChartData || []"
+                            :key="index"
+                            class="flex-1 bg-blue-100 rounded-t transition-all hover:bg-blue-200"
+                            :style="{ height: `${day.percentage}%` }"
+                            :title="`${day.day}: ${day.readings} readings`"
+                        ></div>
+                    </div>
+                    <div
+                        class="flex items-center justify-between mt-2 text-xs text-gray-500"
+                    >
+                        <span
+                            v-for="day in dashboardData.weeklyChartData || []"
+                            :key="day.day"
+                        >
+                            {{ day.day }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Status Overview - Compact -->
+                <div
+                    class="bg-white rounded-xl p-4 shadow-sm border border-gray-100"
+                >
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-sm font-semibold text-gray-900">
+                            Status Overview
+                        </h3>
+                        <PieChart class="w-4 h-4 text-gray-400" />
+                    </div>
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <div
+                                    class="w-2 h-2 bg-green-500 rounded-full"
+                                ></div>
+                                <span class="text-xs text-gray-600">Paid</span>
+                            </div>
+                            <span class="text-sm font-semibold text-gray-900">
+                                {{ dashboardData.statusCounts?.paid || 0 }}
+                            </span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <div
+                                    class="w-2 h-2 bg-yellow-500 rounded-full"
+                                ></div>
+                                <span class="text-xs text-gray-600"
+                                    >Pending</span
+                                >
+                            </div>
+                            <span class="text-sm font-semibold text-gray-900">
+                                {{ dashboardData.statusCounts?.pending || 0 }}
+                            </span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <div
+                                    class="w-2 h-2 bg-red-500 rounded-full"
+                                ></div>
+                                <span class="text-xs text-gray-600"
+                                    >Overdue</span
+                                >
+                            </div>
+                            <span class="text-sm font-semibold text-gray-900">
+                                {{ dashboardData.statusCounts?.overdue || 0 }}
+                            </span>
                         </div>
                     </div>
-                    <div class="mt-4">
-                        <div class="w-full bg-gray-100 rounded-full h-1.5">
+                    <div class="mt-3 pt-3 border-t border-gray-100">
+                        <div
+                            class="flex gap-1 h-2 rounded-full overflow-hidden"
+                        >
                             <div
-                                class="h-1.5 rounded-full transition-all duration-1000"
-                                :class="status.progressColor"
+                                class="bg-green-500"
                                 :style="{
-                                    width: `${getStatusPercentage(
-                                        status.type
-                                    )}%`,
+                                    width: `${getStatusPercentage('paid')}%`,
+                                }"
+                            ></div>
+                            <div
+                                class="bg-yellow-500"
+                                :style="{
+                                    width: `${getStatusPercentage('pending')}%`,
+                                }"
+                            ></div>
+                            <div
+                                class="bg-red-500"
+                                :style="{
+                                    width: `${getStatusPercentage('overdue')}%`,
                                 }"
                             ></div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Recent Activity Section -->
-            <div
-                class="bg-white rounded-2xl shadow-xs border border-gray-100 overflow-hidden"
-            >
-                <div class="p-6 border-b border-gray-100">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <div class="p-2 bg-blue-50 rounded-lg">
-                                <v-icon
-                                    name="bi-activity"
-                                    class="text-blue-600 text-lg"
-                                />
+                <!-- Performance Metrics -->
+                <div
+                    class="bg-white rounded-xl p-4 shadow-sm border border-gray-100"
+                >
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-sm font-semibold text-gray-900">
+                            Performance
+                        </h3>
+                        <Zap class="w-4 h-4 text-gray-400" />
+                    </div>
+                    <div class="space-y-3">
+                        <div
+                            class="flex items-center justify-between p-2 bg-blue-50 rounded-lg"
+                        >
+                            <div class="flex items-center gap-2">
+                                <CheckCircle2 class="w-4 h-4 text-blue-600" />
+                                <span class="text-xs text-gray-700"
+                                    >Completion Rate</span
+                                >
                             </div>
-                            <div>
-                                <h2 class="text-xl font-semibold text-gray-900">
-                                    Recent Activity
-                                </h2>
-                                <p class="text-sm text-gray-500">
-                                    Latest meter readings and updates
-                                </p>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-4">
-                            <span
-                                class="text-sm text-gray-500 bg-gray-100 px-3 py-1.5 rounded-full"
-                            >
-                                {{ dashboardData.recentActivity?.length || 0 }}
-                                activities
+                            <span class="text-sm font-bold text-blue-600">
+                                {{ dashboardData.completionRate || 0 }}%
                             </span>
-                            <button
-                                class="p-2 hover:bg-gray-50 rounded-lg transition-colors duration-200"
-                            >
-                                <v-icon
-                                    name="bi-filter"
-                                    class="text-gray-400 hover:text-gray-600"
-                                />
-                            </button>
+                        </div>
+                        <div
+                            class="flex items-center justify-between p-2 bg-green-50 rounded-lg"
+                        >
+                            <div class="flex items-center gap-2">
+                                <Clock class="w-4 h-4 text-green-600" />
+                                <span class="text-xs text-gray-700"
+                                    >Avg. Reading Time</span
+                                >
+                            </div>
+                            <span class="text-sm font-bold text-green-600">
+                                {{ dashboardData.avgReadingTime || "0m" }}
+                            </span>
+                        </div>
+                        <div
+                            class="flex items-center justify-between p-2 bg-purple-50 rounded-lg"
+                        >
+                            <div class="flex items-center gap-2">
+                                <Award class="w-4 h-4 text-purple-600" />
+                                <span class="text-xs text-gray-700"
+                                    >Efficiency Score</span
+                                >
+                            </div>
+                            <span class="text-sm font-bold text-purple-600">
+                                {{ dashboardData.efficiencyScore || 0 }}/10
+                            </span>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <div class="p-6">
-                    <div class="space-y-3">
+            <!-- Recent Activity - Compact -->
+            <div
+                class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
+            >
+                <div
+                    class="px-4 py-3 border-b border-gray-100 flex items-center justify-between"
+                >
+                    <div class="flex items-center gap-2">
+                        <div class="p-1.5 bg-blue-50 rounded-lg">
+                            <ListChecks class="w-4 h-4 text-blue-600" />
+                        </div>
+                        <h2 class="text-sm font-semibold text-gray-900">
+                            Recent Activity
+                        </h2>
+                    </div>
+                    <span
+                        class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full"
+                    >
+                        {{ dashboardData.recentActivity?.length || 0 }}
+                        activities
+                    </span>
+                </div>
+
+                <div class="p-4">
+                    <div class="space-y-2">
                         <div
                             v-for="activity in dashboardData.recentActivity ||
                             []"
                             :key="activity.id"
-                            class="group p-4 rounded-xl border border-gray-100 hover:border-blue-200 hover:bg-blue-50/20 transition-all duration-200"
+                            class="group p-3 rounded-lg border border-gray-100 hover:border-blue-200 hover:bg-blue-50/30 transition-all"
                         >
-                            <div class="flex items-start gap-4">
-                                <!-- Cusomer Avatar -->
-
-                                <!-- Customer Avatar -->
+                            <div class="flex items-center gap-3">
                                 <div class="flex-shrink-0">
                                     <div
-                                        class="w-12 h-12 rounded-xl flex items-center justify-center overflow-hidden border border-gray-200 bg-gray-50"
+                                        class="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden border border-gray-200 bg-gradient-to-br from-blue-500 to-blue-600"
                                     >
                                         <img
                                             v-if="activity.customer_avatar"
@@ -308,103 +389,52 @@
                                             :alt="activity.customer_name"
                                             class="w-full h-full object-cover"
                                         />
-                                        <div
+                                        <User
                                             v-else
-                                            class="w-full h-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center"
-                                        >
-                                            <v-icon
-                                                name="bi-person-fill"
-                                                class="text-white text-lg"
-                                            />
-                                        </div>
+                                            class="w-5 h-5 text-white"
+                                        />
                                     </div>
                                 </div>
+
                                 <div class="flex-1 min-w-0">
                                     <div
-                                        class="flex items-center justify-between mb-3"
+                                        class="flex items-center justify-between mb-1"
                                     >
-                                        <div class="flex items-center gap-3">
-                                            <span
-                                                class="font-semibold text-gray-900 truncate"
-                                            >
-                                                {{
-                                                    activity.customer_name ||
-                                                    "Unknown Customer"
-                                                }}
-                                            </span>
-                                            <div
-                                                :class="
-                                                    getStatusBadgeClass(
-                                                        activity.status
-                                                    )
-                                                "
-                                                class="text-xs px-2.5 py-1 rounded-full font-medium"
-                                            >
-                                                {{ activity.status }}
-                                            </div>
-                                        </div>
                                         <span
-                                            class="text-xs text-gray-400 flex items-center gap-1 whitespace-nowrap"
+                                            class="font-semibold text-sm text-gray-900 truncate"
                                         >
-                                            <v-icon
-                                                name="bi-clock"
-                                                class="text-xs"
-                                            />
-                                            {{ activity.reading_time }}
+                                            {{
+                                                activity.customer_name ||
+                                                "Unknown"
+                                            }}
+                                        </span>
+                                        <span
+                                            :class="
+                                                getStatusBadgeClass(
+                                                    activity.status
+                                                )
+                                            "
+                                            class="text-xs px-2 py-0.5 rounded-full font-medium whitespace-nowrap ml-2"
+                                        >
+                                            {{ activity.status }}
                                         </span>
                                     </div>
 
                                     <div
-                                        class="flex items-center justify-between"
+                                        class="flex items-center gap-3 text-xs text-gray-600"
                                     >
-                                        <div
-                                            class="flex items-center gap-4 text-sm text-gray-600"
-                                        >
-                                            <span
-                                                class="flex items-center gap-1"
-                                            >
-                                                <v-icon
-                                                    name="bi-speedometer2"
-                                                    class="text-gray-400"
-                                                />
-                                                {{ activity.consumption || 0 }}
-                                                m³
-                                            </span>
-                                            <span
-                                                v-if="activity.serial_number"
-                                                class="flex items-center gap-1"
-                                            >
-                                                <v-icon
-                                                    name="bi-hash"
-                                                    class="text-gray-400"
-                                                />
-                                                {{ activity.serial_number }}
-                                            </span>
-                                            <span
-                                                class="flex items-center gap-1"
-                                            >
-                                                <v-icon
-                                                    name="bi-calendar"
-                                                    class="text-gray-400"
-                                                />
-                                                {{
-                                                    formatActivityDate(
-                                                        activity.reading_date,
-                                                        activity.reading_time
-                                                    )
-                                                }}
-                                            </span>
-                                        </div>
-
-                                        <!-- <div
-                                                v-if="activity.is_high_consumption"
-                                                class="flex items-center gap-1 text-red-500 text-sm font-medium"
-                                            >
-                                                <v-icon
-                                                    name="bi-exclamation-triangle"
-                                                />
-                                                High Usage
-                                            </div> -->
+                                        <span class="flex items-center gap-1">
+                                            <Gauge class="w-3 h-3" />
+                                            {{ activity.consumption || 0 }} m³
+                                        </span>
+                                        <span class="flex items-center gap-1">
+                                            <Hash class="w-3 h-3" />
+                                            {{ activity.serial_number }}
+                                        </span>
+                                        <span class="flex items-center gap-1">
+                                            <Clock class="w-3 h-3" />
+                                            {{ activity.reading_time }}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -416,22 +446,19 @@
                                 !dashboardData.recentActivity ||
                                 dashboardData.recentActivity.length === 0
                             "
-                            class="text-center py-12"
+                            class="text-center py-8"
                         >
                             <div
-                                class="flex flex-col items-center justify-center text-gray-400 max-w-sm mx-auto"
+                                class="flex flex-col items-center text-gray-400"
                             >
-                                <div class="p-4 bg-gray-50 rounded-2xl mb-4">
-                                    <v-icon name="bi-inbox" class="text-3xl" />
+                                <div class="p-3 bg-gray-50 rounded-xl mb-3">
+                                    <Inbox class="w-6 h-6" />
                                 </div>
-                                <p
-                                    class="text-lg font-semibold text-gray-500 mb-2"
-                                >
+                                <p class="text-sm font-medium text-gray-500">
                                     No recent activity
                                 </p>
-                                <p class="text-sm text-gray-400">
-                                    Activities will appear here once you start
-                                    recording meter readings
+                                <p class="text-xs text-gray-400 mt-1">
+                                    Activities will appear here
                                 </p>
                             </div>
                         </div>
@@ -445,10 +472,31 @@
 <script setup>
 import { ref, onMounted, computed } from "vue";
 import StaffLayout from "@/Layouts/StaffLayout.vue";
+import {
+    Droplets,
+    CalendarDays,
+    Calendar,
+    Target,
+    TrendingUp,
+    TrendingDown,
+    BarChart3,
+    Activity,
+    PieChart,
+    Zap,
+    CheckCircle2,
+    Clock,
+    ListChecks,
+    User,
+    Gauge,
+    Hash,
+    Inbox,
+    Award,
+} from "lucide-vue-next";
 
-const dashboardData = ref({});
+const dashboardData = ref({
+    dailyTarget: 50, // Default target
+});
 
-// Computed properties for dynamic content
 const timeOfDay = computed(() => {
     const hour = new Date().getHours();
     if (hour < 12) return "morning";
@@ -459,40 +507,12 @@ const timeOfDay = computed(() => {
 const currentDate = computed(() => {
     return new Date().toLocaleDateString("en-US", {
         weekday: "long",
-        year: "numeric",
-        month: "long",
+        month: "short",
         day: "numeric",
+        year: "numeric",
     });
 });
 
-const statusTypes = computed(() => [
-    {
-        type: "paid",
-        label: "Paid",
-        icon: "bi-check-circle-fill",
-        iconColor: "text-green-500",
-        iconBg: "bg-green-100",
-        progressColor: "bg-green-500",
-    },
-    {
-        type: "pending",
-        label: "Pending",
-        icon: "bi-hourglass-split",
-        iconColor: "text-yellow-500",
-        iconBg: "bg-yellow-100",
-        progressColor: "bg-yellow-500",
-    },
-    {
-        type: "overdue",
-        label: "Overdue",
-        icon: "bi-exclamation-triangle-fill",
-        iconColor: "text-red-500",
-        iconBg: "bg-red-100",
-        progressColor: "bg-red-500",
-    },
-]);
-
-// Helper functions
 const getStatusPercentage = (statusType) => {
     const total = Object.values(dashboardData.value.statusCounts || {}).reduce(
         (a, b) => a + b,
@@ -504,76 +524,13 @@ const getStatusPercentage = (statusType) => {
     );
 };
 
-const formatActivityDate = (dateString, timeString) => {
-    if (!dateString || !timeString) return "Unknown date";
-
-    const today = new Date().toDateString();
-    const activityDate = new Date(dateString).toDateString();
-
-    if (today === activityDate) {
-        return "Today";
-    }
-
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    if (yesterday.toDateString() === activityDate) {
-        return "Yesterday";
-    }
-
-    return new Date(dateString).toLocaleDateString();
-};
-
-const getActivityIcon = (activity) => {
-    if (activity.is_high_consumption) {
-        return "bi-exclamation-triangle-fill";
-    }
-    if (activity.status === "Paid") {
-        return "bi-check-circle-fill";
-    }
-    if (activity.status === "Overdue") {
-        return "bi-exclamation-circle-fill";
-    }
-    return "bi-clock-fill";
-};
-
-const getActivityIconColor = (activity) => {
-    if (activity.is_high_consumption) {
-        return "text-red-500";
-    }
-    if (activity.status === "Paid") {
-        return "text-green-500";
-    }
-    if (activity.status === "Overdue") {
-        return "text-red-500";
-    }
-    return "text-yellow-500";
-};
-
-const getActivityIconContainer = (activity) => {
-    if (activity.is_high_consumption) {
-        return "bg-red-100";
-    }
-    if (activity.status === "Paid") {
-        return "bg-green-100";
-    }
-    if (activity.status === "Overdue") {
-        return "bg-red-100";
-    }
-    return "bg-yellow-100";
-};
-
 const getStatusBadgeClass = (status) => {
-    switch (status) {
-        case "Paid":
-            return "bg-green-100 text-green-800 border border-green-200";
-        case "Pending":
-            return "bg-yellow-100 text-yellow-800 border border-yellow-200";
-        case "Overdue":
-            return "bg-red-100 text-red-800 border border-red-200";
-        default:
-            return "bg-gray-100 text-gray-800 border border-gray-200";
-    }
+    const classes = {
+        Paid: "bg-green-100 text-green-700",
+        Pending: "bg-yellow-100 text-yellow-700",
+        Overdue: "bg-red-100 text-red-700",
+    };
+    return classes[status] || "bg-gray-100 text-gray-700";
 };
 
 const fetchDashboardData = async () => {
@@ -589,11 +546,13 @@ const fetchDashboardData = async () => {
             recentActivity: [],
             completedToday: 0,
             pendingCount: 0,
-            statusCounts: {
-                paid: 0,
-                pending: 0,
-                overdue: 0,
-            },
+            statusCounts: { paid: 0, pending: 0, overdue: 0 },
+            dailyTarget: 50,
+            weeklyTrend: 0,
+            monthlyTrend: 0,
+            completionRate: 0,
+            avgReadingTime: "0m",
+            efficiencyScore: 0,
         };
     }
 };
@@ -604,13 +563,17 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Smooth transitions for all interactive elements */
-.transition-all {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+@keyframes pulse {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
 }
 
-/* Custom shadow for subtle elevation */
-.shadow-xs {
-    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+.animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 </style>

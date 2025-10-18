@@ -1,7 +1,7 @@
 <template>
     <aside
         :class="[
-            'fixed top-0 left-0 z-50 h-screen bg-blue-950 border-r shadow-lg dark:bg-gradient-to-b dark:from-blue-800 dark:to-blue-700 dark:border-blue-700 transition-all duration-300 ease-in-out',
+            'fixed top-0 left-0 z-50 h-screen bg-blue-950 border-r shadow-lg dark:bg-gradient-to-b dark:from-blue-800 dark:to-blue-700 dark:border-blue-700 transition-all duration-300 ease-in-out flex flex-col',
             isOpen ? 'w-[260px]' : 'w-[70px]',
             isMobileMenuOpen
                 ? 'translate-x-0'
@@ -10,40 +10,60 @@
         aria-label="Sidebar"
         id="drawer-navigation"
     >
-        <!-- Logo Section -->
-        <div class="flex items-center justify-start py-[11px] px-4 border-b border-gray-200/20">
-            <div class="flex items-center">
-                <img
-                    src="/images/MainLogo.png"
-                    :class="[
-                        'transition-all duration-300',
-                        isOpen
-                            ? 'w-14 h-14 object-cover'
-                            : 'w-[56px] h-[56px] object-contain',
-                    ]"
-                    alt="AquaTrack Logo"
-                />
-                <span
-                    v-if="isOpen"
-                    class="text-lg text-white ml-3 uppercase font-semibold tracking-tighter transition-opacity duration-300"
-                >
-                    AquaTrack
-                </span>
-            </div>
-        </div>
+        <!-- Header Section -->
+        <div class="flex-shrink-0 items-center">
+            <!-- Logo Section -->
+            <div
+                class="flex items-center justify-between py-[11px] px-4 border-b border-gray-200/20"
+            >
+                <div class="flex items-center min-w-0">
+                    <img
+                        src="/images/MainLogo.png"
+                        :class="[
+                            'transition-all duration-300 flex-shrink-0',
+                            isOpen
+                                ? 'w-14 h-14 object-cover'
+                                : 'w-[56px] h-[56px] object-contain',
+                        ]"
+                        alt="AquaTrack Logo"
+                    />
+                    <span
+                        v-if="isOpen"
+                        class="text-lg text-white ml-3 uppercase font-semibold tracking-tighter transition-opacity duration-300 whitespace-nowrap overflow-hidden"
+                    >
+                        AquaTrack
+                    </span>
+                </div>
 
-        <div class="h-full overflow-hidden px-3 pb-4 bg-transparent">
+                <!-- Toggle Button in Header - Only show when sidebar is open and NOT on mobile -->
+                <button
+                    v-if="isOpen && !isMobile"
+                    @click="$emit('toggle-sidebar')"
+                    class="hidden md:flex items-center justify-center p-2 text-white hover:text-blue-200 rounded-xl transition-all duration-200 flex-shrink-0 ml-2"
+                    title="Collapse sidebar"
+                >
+                    <ArrowLeftFromLine
+                        class="w-5 h-5 transition-transform duration-300"
+                    />
+                </button>
+            </div>
+
             <!-- Close button for mobile -->
             <button
                 v-if="isMobileMenuOpen"
                 @click="$emit('toggle-mobile-menu')"
-                class="absolute top-4 right-4 p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg md:hidden z-10"
+                class="absolute top-[18px] right-4 p-2 text-white dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg md:hidden z-10"
             >
                 <XMarkIcon class="w-6 h-6" />
             </button>
+        </div>
 
+        <!-- Navigation Content -->
+        <div
+            class="flex-1 overflow-hidden px-3 pb-4 bg-transparent flex flex-col"
+        >
             <!-- Menu Label -->
-            <div class="mb-3 mt-2">
+            <div class="mb-3 mt-2 flex-shrink-0">
                 <span
                     v-if="isOpen"
                     class="px-2 text-xs font-semibold text-gray-300 dark:text-gray-400 uppercase tracking-wider"
@@ -52,7 +72,8 @@
                 </span>
             </div>
 
-            <nav class="space-y-2">
+            <!-- Navigation Links -->
+            <nav class="space-y-2 flex-1">
                 <div v-for="link in links" :key="link.url">
                     <Link
                         :href="link.url"
@@ -83,9 +104,9 @@
                         />
 
                         <span
-                            class="ml-3 transition-all duration-300"
+                            class="ml-3 transition-all duration-300 whitespace-nowrap overflow-hidden"
                             :class="{
-                                'opacity-0 w-0 overflow-hidden': !isOpen,
+                                'opacity-0 w-0': !isOpen,
                                 'opacity-100 w-auto': isOpen,
                             }"
                         >
@@ -103,32 +124,19 @@
                 </div>
             </nav>
 
-            <!-- General Section (if needed) -->
-            <!-- <div class="mt-8">
-                <span
-                    v-if="isOpen"
-                    class="px-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                >
-                    GENERAL
-                </span>
-            </div> -->
-
-            <!-- Collapse/Expand Button -->
-            <div class="absolute bottom-4 left-0 right-0 px-3">
+            <!-- Toggle Button at Bottom - Only show when sidebar is closed and NOT on mobile -->
+            <div
+                v-if="!isOpen && !isMobile"
+                class="mt-auto pt-4 border-t border-gray-200/20 flex-shrink-0"
+            >
                 <button
                     @click="$emit('toggle-sidebar')"
-                    class="w-full flex items-center justify-center px-3 py-2 text-sm font-medium text-white dark:text-gray-400  dark:hover:bg-gray-700 rounded-xl transition-all duration-200"
+                    class="w-full flex items-center justify-center p-3 text-white hover:bg-blue-800 rounded-xl transition-all duration-200"
+                    title="Expand sidebar"
                 >
-                    <ChevronDoubleLeftIcon
-                        class="w-5 h-5 transition-transform duration-300"
-                        :class="{ 'rotate-180': !isOpen }"
+                    <ArrowLeftFromLine
+                        class="w-5 h-5 transition-transform duration-300 rotate-180"
                     />
-                    <span
-                        v-if="isOpen"
-                        class="ml-2 transition-opacity duration-300"
-                    >
-
-                    </span>
                 </button>
             </div>
         </div>
@@ -146,9 +154,10 @@ import {
     DocumentTextIcon,
     BellIcon,
     ClipboardDocumentListIcon,
-    ChevronDoubleLeftIcon,
     XMarkIcon,
 } from "@heroicons/vue/24/outline";
+import { ArrowLeftFromLine } from "lucide-vue-next";
+import { ref, onMounted, onUnmounted } from "vue";
 
 defineProps({
     links: {
@@ -163,6 +172,22 @@ defineProps({
         type: Boolean,
         default: false,
     },
+});
+
+// Mobile detection
+const isMobile = ref(false);
+
+const checkMobile = () => {
+    isMobile.value = window.innerWidth < 768;
+};
+
+onMounted(() => {
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+});
+
+onUnmounted(() => {
+    window.removeEventListener("resize", checkMobile);
 });
 
 const iconMap = {

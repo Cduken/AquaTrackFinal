@@ -97,6 +97,7 @@ class AdminUsersController extends Controller
                     'serial_number' => $user->serial_number,
                     'size' => $user->size,
                     'enabled' => $user->enabled,
+                    'created_at' => $user->created_at,
                 ];
             });
 
@@ -141,6 +142,7 @@ class AdminUsersController extends Controller
             'serial_number' => $request->serial_number === '' ? null : $request->serial_number,
             'size' => $request->size === '' ? null : $request->size,
             'email' => $request->email === '' ? null : $request->email,
+
         ]);
 
         // For staff, ensure account_number is completely omitted if null
@@ -172,6 +174,7 @@ class AdminUsersController extends Controller
             'serial_number' => $request->role === 'customer' ? 'required|string|size:9|regex:/^\d{9}$/|unique:users' : 'nullable|string|size:9|regex:/^\d{9}$/',
             'size' => $request->role === 'customer' ? 'required|string|max:50' : 'nullable|string|max:50',
             'enabled' => 'boolean',
+
         ], [
             'account_number.regex' => 'The account number must be in the format 123-12-123 or 123-12-123A (8 or 9 characters)',
         ]);
@@ -187,6 +190,7 @@ class AdminUsersController extends Controller
             'brand' => $validated['brand'] ?? null,
             'serial_number' => $validated['serial_number'] ?? null,
             'size' => $validated['size'] ?? null,
+
             'password' => Hash::make('temporary_password'),
             'enabled' => true,
         ];
@@ -327,6 +331,7 @@ class AdminUsersController extends Controller
                     'serial_number' => $user->serial_number,
                     'size' => $user->size,
                     'enabled' => $user->enabled,
+                    'created_at' => $user->created_at->toDateTimeString(),
                 ];
             });
 

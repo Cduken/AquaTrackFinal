@@ -54,6 +54,9 @@
             <div>Lat: {{ form.latitude?.toFixed(6) }}</div>
             <div>Lng: {{ form.longitude?.toFixed(6) }}</div>
             <div class="text-blue-600 font-medium">✓ Using Cached GPS</div>
+            <div class="text-gray-500 text-xs mt-1">
+                Previously saved location
+            </div>
         </div>
 
         <!-- Offline - Default Location -->
@@ -63,7 +66,19 @@
         >
             <div>Lat: {{ form.latitude?.toFixed(4) }}</div>
             <div>Lng: {{ form.longitude?.toFixed(4) }}</div>
-            <div class="text-orange-600">⚠ Using Default Location</div>
+            <div class="text-orange-600 font-medium">
+                ⚠ Using Default Location
+            </div>
+            <div class="text-gray-500 text-xs mt-1">
+                Center of Clarin, Bohol
+            </div>
+            <button
+                v-if="isOnline"
+                @click="$emit('get-location')"
+                class="mt-2 text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition-colors"
+            >
+                Try GPS Again
+            </button>
         </div>
 
         <!-- Loading -->
@@ -71,7 +86,15 @@
             v-if="locationStatus === 'loading'"
             class="mt-2 text-xs text-yellow-600"
         >
-            Acquiring GPS coordinates...
+            <div class="flex items-center">
+                <div
+                    class="animate-spin rounded-full h-3 w-3 border-b-2 border-yellow-600 mr-2"
+                ></div>
+                Acquiring GPS coordinates...
+            </div>
+            <div class="text-gray-500 text-xs mt-1">
+                This may take up to 30 seconds
+            </div>
         </div>
 
         <!-- Error -->
@@ -93,6 +116,7 @@
 defineProps({
     locationStatus: String,
     form: Object,
+    isOnline: Boolean,
 });
 
 defineEmits(["get-location"]);

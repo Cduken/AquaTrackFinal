@@ -64,6 +64,7 @@
             <LocationStatus
                 :location-status="locationStatus"
                 :form="form"
+                :is-online="isOnline"
                 @get-location="getLocation"
             />
 
@@ -121,7 +122,7 @@ const locationStatus = ref("idle");
 // Advanced GPS State
 const lastKnownLocation = ref(null);
 const locationWatchId = ref(null);
-const locationCacheTimeout = 15 * 60 * 1000; // 15 minutes cache
+const locationCacheTimeout = 24 * 60 * 60 * 1000; // 24 hours cache (increased from 15 minutes)
 
 // Camera state
 const isCameraActive = ref(false);
@@ -211,7 +212,6 @@ const hasErrors = computed(() => {
     return Object.keys(form.errors).length > 0;
 });
 
-// Enhanced form validation with advanced GPS support
 // Enhanced form validation with better GPS handling
 const isFormValid = computed(() => {
     const basicValidation =
@@ -223,28 +223,10 @@ const isFormValid = computed(() => {
         (form.water_issue_type !== "others" || form.custom_water_issue) &&
         form.photos.length > 0;
 
-    // For online mode, allow cached locations if GPS fails
-    if (isOnline.value) {
-        const validOnlineLocations = [
-            "success",
-            "offline_cached_location", // Allow cached in online mode too
-        ];
-        return (
-            basicValidation &&
-            validOnlineLocations.includes(locationStatus.value)
-        );
-    }
+    // Allow all location statuses except when explicitly loading
+    const invalidLocations = ["loading"];
 
-    // For offline mode, allow cached or default locations
-    const validOfflineLocations = [
-        "success",
-        "offline_cached_location",
-        "offline_default_location",
-    ];
-
-    return (
-        basicValidation && validOfflineLocations.includes(locationStatus.value)
-    );
+    return basicValidation && !invalidLocations.includes(locationStatus.value);
 });
 
 const hasMultipleCameras = computed(() => availableCameras.value.length > 1);
@@ -262,8 +244,25 @@ const updateFormField = ({ field, value }) => {
 
 // Network methods
 const updateOnlineStatus = () => {
+    const wasOffline = !isOnline.value;
     isOnline.value = navigator.onLine;
+
+    console.log("🌐 Network status changed:", {
+        wasOffline,
+        isNowOnline: isOnline.value,
+        currentLocationStatus: locationStatus.value,
+    });
+
     if (isOnline.value) {
+        // If we just came online and have poor location, try to get better one
+        if (wasOffline && locationStatus.value === "offline_default_location") {
+            console.log("🔄 Came online - retrying GPS acquisition...");
+            setTimeout(() => {
+                getLocation();
+            }, 2000);
+        }
+
+        // Auto-sync offline reports
         triggerAutoSync();
     }
 };
@@ -290,7 +289,7 @@ const triggerManualSync = async () => {
     }
 };
 
-// Advanced GPS Methods
+// Enhanced GPS Methods with persistent cache
 const loadCachedLocation = () => {
     try {
         const cached = localStorage.getItem("lastKnownLocation");
@@ -300,15 +299,26 @@ const loadCachedLocation = () => {
 
             if (cacheAge < locationCacheTimeout) {
                 lastKnownLocation.value = location;
-                console.log("Loaded cached location:", location);
+                console.log(
+                    "✅ Loaded cached location (age:",
+                    Math.round(cacheAge / 1000),
+                    "seconds):",
+                    location
+                );
                 return location;
             } else {
-                console.log("Cached location expired");
+                console.log(
+                    "🕒 Cached location expired (age:",
+                    Math.round(cacheAge / 1000),
+                    "seconds)"
+                );
                 localStorage.removeItem("lastKnownLocation");
             }
+        } else {
+            console.log("📭 No cached location found in localStorage");
         }
     } catch (e) {
-        console.warn("Failed to load cached location:", e);
+        console.warn("❌ Failed to load cached location:", e);
     }
     return null;
 };
@@ -323,12 +333,190 @@ const saveLocationToCache = (coords) => {
         };
         localStorage.setItem("lastKnownLocation", JSON.stringify(locationData));
         lastKnownLocation.value = locationData;
-        console.log("Location saved to cache:", locationData);
+        console.log("💾 Location saved to cache:", locationData);
     } catch (e) {
-        console.warn("Failed to save location to cache:", e);
+        console.warn("❌ Failed to save location to cache:", e);
     }
 };
 
+// FIXED: Enhanced getLocation with better offline handling
+const getLocation = async () => {
+    console.log(
+        "📍 getLocation called - Online:",
+        isOnline.value,
+        "Fresh start"
+    );
+
+    // STEP 1: Always check for cached location first
+    const cachedLocation = loadCachedLocation();
+    if (cachedLocation) {
+        form.latitude = cachedLocation.latitude;
+        form.longitude = cachedLocation.longitude;
+        locationStatus.value = "offline_cached_location";
+        console.log("✅ Using cached location for offline mode");
+
+        if (!isOnline.value) {
+            Swal.fire({
+                icon: "info",
+                title: "Using Cached Location",
+                text: "Using previously saved GPS location.",
+                toast: true,
+                position: "top-end",
+                showConfirmButton: false,
+                timer: 3000,
+            });
+        }
+        return cachedLocation;
+    }
+
+    console.log("📭 No cached location available");
+
+    // STEP 2: If offline and no cache, check if we should try GPS anyway
+    if (!isOnline.value) {
+        console.log("🌐 Offline mode - checking GPS availability...");
+
+        // Try to get GPS even when offline (GPS hardware might still work)
+        if (navigator.geolocation) {
+            console.log("🔄 Trying GPS even though offline...");
+            locationStatus.value = "loading";
+
+            return new Promise((resolve) => {
+                const offlineGpsOptions = {
+                    enableHighAccuracy: true,
+                    timeout: 15000, // 15 seconds for offline GPS
+                    maximumAge: 0,
+                };
+
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const coords = {
+                            latitude: position.coords.latitude,
+                            longitude: position.coords.longitude,
+                            accuracy: position.coords.accuracy,
+                            timestamp: Date.now(),
+                        };
+
+                        console.log("🎯 Offline GPS acquired!", coords);
+                        saveLocationToCache(coords);
+
+                        form.latitude = coords.latitude;
+                        form.longitude = coords.longitude;
+                        locationStatus.value = "success";
+
+                        Swal.fire({
+                            icon: "success",
+                            title: "GPS Acquired Offline!",
+                            text: "Location saved for future offline use.",
+                            toast: true,
+                            position: "bottom-end",
+                            showConfirmButton: false,
+                            timer: 4000,
+                        });
+
+                        resolve(coords);
+                    },
+                    (error) => {
+                        console.warn("❌ Offline GPS failed:", error.message);
+                        // Fall back to default location
+                        useDefaultLocation();
+                        resolve(null);
+                    },
+                    offlineGpsOptions
+                );
+            });
+        } else {
+            // No geolocation support, use default
+            useDefaultLocation();
+            return null;
+        }
+    }
+
+    // STEP 3: Online mode - get fresh GPS
+    console.log("🌐 Online mode - getting fresh GPS...");
+    locationStatus.value = "loading";
+
+    return new Promise((resolve) => {
+        const onlineGpsOptions = {
+            enableHighAccuracy: true,
+            timeout: 25000, // 25 seconds
+            maximumAge: 0,
+        };
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const coords = {
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude,
+                    accuracy: position.coords.accuracy,
+                    timestamp: Date.now(),
+                };
+
+                console.log("🎯 Online GPS acquired:", coords);
+                saveLocationToCache(coords);
+
+                form.latitude = coords.latitude;
+                form.longitude = coords.longitude;
+                locationStatus.value = "success";
+
+                Swal.fire({
+                    icon: "success",
+                    title: "Location Acquired!",
+                    text: `Accuracy: ${
+                        coords.accuracy
+                            ? coords.accuracy.toFixed(1) + "m"
+                            : "Good"
+                    }`,
+                    toast: true,
+                    position: "bottom-end",
+                    showConfirmButton: false,
+                    timer: 4000,
+                });
+
+                resolve(coords);
+            },
+            (error) => {
+                console.warn("❌ Online GPS failed:", error.message);
+
+                // Try cached location one more time (in case of race condition)
+                const freshCache = loadCachedLocation();
+                if (freshCache) {
+                    form.latitude = freshCache.latitude;
+                    form.longitude = freshCache.longitude;
+                    locationStatus.value = "offline_cached_location";
+                    console.log(
+                        "✅ Fell back to cached location after GPS failure"
+                    );
+                    resolve(freshCache);
+                } else {
+                    useDefaultLocation();
+                    resolve(null);
+                }
+            },
+            onlineGpsOptions
+        );
+    });
+};
+
+// Helper function for default location
+const useDefaultLocation = () => {
+    form.latitude = 9.9616;
+    form.longitude = 124.025;
+    locationStatus.value = "offline_default_location";
+
+    console.log("⚡ Using default location");
+
+    Swal.fire({
+        icon: "warning",
+        title: "Using Default Location",
+        text: "GPS signal unavailable. Using center of Clarin, Bohol.",
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 4000,
+    });
+};
+
+// FIXED: Enhanced location tracking that works with the main getLocation
 const startLocationTracking = () => {
     if (!navigator.geolocation) {
         console.warn("Geolocation not supported");
@@ -336,6 +524,11 @@ const startLocationTracking = () => {
     }
 
     try {
+        // Stop any existing tracking
+        if (locationWatchId.value) {
+            navigator.geolocation.clearWatch(locationWatchId.value);
+        }
+
         locationWatchId.value = navigator.geolocation.watchPosition(
             (position) => {
                 const coords = {
@@ -345,35 +538,33 @@ const startLocationTracking = () => {
                     timestamp: Date.now(),
                 };
 
-                // Update cache with fresh location
+                console.log("📍 Location tracking updated:", coords);
+
+                // Always update cache with fresh location
                 saveLocationToCache(coords);
 
-                // Only update form if we're actively trying to get location
-                if (
-                    locationStatus.value === "loading" ||
-                    locationStatus.value === "success"
-                ) {
+                // Only update form if we don't have a good location yet
+                if (locationStatus.value !== "success") {
                     form.latitude = coords.latitude;
                     form.longitude = coords.longitude;
                     locationStatus.value = "success";
+
+                    console.log("✅ Location improved via tracking");
                 }
             },
             (error) => {
-                console.warn("Location tracking error:", {
-                    code: error.code,
-                    message: error.message,
-                });
-                // Don't show errors for tracking, just log them
+                console.warn("📍 Location tracking error:", error.message);
+                // Don't change status for tracking errors
             },
             {
-                enableHighAccuracy: false, // Use false for better reliability
-                maximumAge: 60000, // 1 minute
+                enableHighAccuracy: false, // Use battery-friendly mode for tracking
+                maximumAge: 30000, // 30 seconds
                 timeout: 10000,
             }
         );
-        console.log("Started continuous location tracking");
+        console.log("📍 Started continuous location tracking");
     } catch (error) {
-        console.error("Failed to start location tracking:", error);
+        console.error("❌ Failed to start location tracking:", error);
     }
 };
 
@@ -383,137 +574,6 @@ const stopLocationTracking = () => {
         locationWatchId.value = null;
         console.log("Stopped location tracking");
     }
-};
-
-const handleLocationError = (error) => {
-    console.warn("Location error details:", {
-        code: error.code,
-        message: error.message,
-        isOnline: isOnline.value,
-    });
-
-    // Try to use cached location first (both online and offline)
-    const cachedLocation = loadCachedLocation();
-    if (cachedLocation) {
-        form.latitude = cachedLocation.latitude;
-        form.longitude = cachedLocation.longitude;
-        locationStatus.value = isOnline.value
-            ? "offline_cached_location"
-            : "offline_cached_location";
-        console.log("Using cached location:", cachedLocation);
-
-        if (isOnline.value) {
-            Swal.fire({
-                icon: "info",
-                title: "Using Cached Location",
-                text: "Could not get fresh GPS signal. Using previously saved location.",
-                toast: true,
-                position: "top-end",
-                showConfirmButton: false,
-                timer: 3000,
-            });
-        }
-        return;
-    }
-
-    // For any mode with no cache, use default
-    form.latitude = 9.9616;
-    form.longitude = 124.025;
-    locationStatus.value = "offline_default_location";
-
-    let errorMessage = "Using default location for Clarin, Bohol.";
-
-    if (error.code === error.TIMEOUT) {
-        errorMessage =
-            "GPS signal timed out. Using default location for Clarin, Bohol.";
-    } else if (error.code === error.POSITION_UNAVAILABLE) {
-        errorMessage =
-            "GPS signal unavailable. Using default location for Clarin, Bohol.";
-    }
-
-    if (isOnline.value) {
-        Swal.fire({
-            icon: "warning",
-            title: "Location Issue",
-            text: errorMessage,
-            confirmButtonColor: "#3085d6",
-        });
-    } else {
-        console.log("Offline mode with default location");
-    }
-};
-
-const getLocation = () => {
-    // First, check if we have a valid cached location (especially for offline)
-    if (!isOnline.value) {
-        const cachedLocation = loadCachedLocation();
-        if (cachedLocation) {
-            form.latitude = cachedLocation.latitude;
-            form.longitude = cachedLocation.longitude;
-            locationStatus.value = "offline_cached_location";
-            console.log(
-                "Using cached location for offline report:",
-                cachedLocation
-            );
-            return;
-        }
-    }
-
-    if (!navigator.geolocation) {
-        handleLocationError("Geolocation not supported");
-        return;
-    }
-
-    locationStatus.value = "loading";
-
-    // More realistic timeout settings
-    const locationOptions = {
-        enableHighAccuracy: true,
-        timeout: isOnline.value ? 20000 : 15000, // Longer timeouts
-        maximumAge: isOnline.value ? 60000 : 300000, // Use older locations
-    };
-
-    navigator.geolocation.getCurrentPosition(
-        (position) => {
-            const coords = {
-                latitude: position.coords.latitude,
-                longitude: position.coords.longitude,
-                accuracy: position.coords.accuracy,
-                timestamp: Date.now(),
-            };
-
-            // Cache the location
-            saveLocationToCache(coords);
-
-            form.latitude = coords.latitude;
-            form.longitude = coords.longitude;
-            locationStatus.value = "success";
-
-
-
-            Swal.fire({
-                icon: "success",
-                title: "Location Acquired!",
-                toast: true,
-                position: "bottom-end",
-                iconColor: "#000000",
-                color: "#000000",
-                showConfirmButton: false,
-                timer: 5000,
-            });
-        },
-        (error) => {
-            console.warn("GPS Error Details:", {
-                code: error.code,
-                message: error.message,
-                PERMISSION_DENIED: error.PERMISSION_DENIED,
-                POSITION_UNAVAILABLE: error.POSITION_UNAVAILABLE,
-                TIMEOUT: error.TIMEOUT,
-            });
-            handleLocationError(error);
-        },
-        locationOptions
-    );
 };
 
 // Camera methods
@@ -882,7 +942,7 @@ const startVideoRecording = async () => {
 
         const options = {
             mimeType: "video/webm;codecs=vp9,opus",
-            videoBitsPerSecond: 1000000 // 1 Mbps for smaller files
+            videoBitsPerSecond: 1000000, // 1 Mbps for smaller files
         };
 
         // Fallback to VP8 if VP9 is not supported
@@ -908,7 +968,9 @@ const startVideoRecording = async () => {
                 Swal.fire({
                     icon: "error",
                     title: "Video Too Large",
-                    text: `Video size exceeds ${MAX_VIDEO_SIZE / 1024 / 1024}MB limit.`,
+                    text: `Video size exceeds ${
+                        MAX_VIDEO_SIZE / 1024 / 1024
+                    }MB limit.`,
                     timer: 3000,
                 });
                 return;
@@ -926,7 +988,11 @@ const startVideoRecording = async () => {
             Swal.fire({
                 icon: "success",
                 title: `Video ${mediaCount.value.videos} recorded!`,
-                text: `Duration: 5 seconds | Size: ${(blob.size / 1024 / 1024).toFixed(2)}MB`,
+                text: `Duration: 5 seconds | Size: ${(
+                    blob.size /
+                    1024 /
+                    1024
+                ).toFixed(2)}MB`,
                 toast: true,
                 position: "top-end",
                 showConfirmButton: false,
@@ -978,7 +1044,7 @@ const stopVideoRecording = () => {
 
     try {
         // Stop the media recorder
-        if (mediaRecorder.state !== 'inactive') {
+        if (mediaRecorder.state !== "inactive") {
             mediaRecorder.stop();
         }
 
@@ -1485,7 +1551,6 @@ const saveReportOffline = async () => {
 };
 
 // Form submission
-// Form submission
 const submitReport = async () => {
     if (!form.water_issue_type) {
         Swal.fire({
@@ -1687,17 +1752,33 @@ watch(
 );
 
 // Lifecycle
-onMounted(() => {
-    // Load cached location on startup
-    loadCachedLocation();
+onMounted(async () => {
+    console.log("🚀 Component mounted - Initializing...");
 
-    // Start continuous location tracking
-    startLocationTracking();
-
+    // Set up network listeners
     window.addEventListener("online", updateOnlineStatus);
     window.addEventListener("offline", updateOnlineStatus);
     loadOfflineReportsCount();
-    getLocation();
+
+    // Start location tracking immediately
+    startLocationTracking();
+
+    // Get initial location with proper sequencing
+    setTimeout(async () => {
+        console.log("🔄 Starting location acquisition sequence...");
+        await getLocation();
+
+        // If we ended up with default location and we're online, try once more after a delay
+        if (
+            locationStatus.value === "offline_default_location" &&
+            isOnline.value
+        ) {
+            console.log("🔄 Retrying GPS acquisition in 5 seconds...");
+            setTimeout(async () => {
+                await getLocation();
+            }, 5000);
+        }
+    }, 1000);
 });
 
 onUnmounted(() => {

@@ -1,475 +1,370 @@
 <template>
     <AdminLayout>
         <div class="mx-auto w-full">
-            <div class="lg:items-center lg:flex mb-4 hidden">
-                <v-icon
-                    name="fa-users"
-                    class="mr-2 text-purple-500"
-                    scale="1.5"
-                />
-                <h1 class="text-2xl">Users Management</h1>
-            </div>
-
-            <div
-                class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6"
-            >
-                <!-- Total Users Card -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                    <div class="flex items-center">
-                        <div
-                            class="p-3 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
+            <!-- Header Section -->
+            <div class="flex items-center mb-6">
+                <div class="flex items-center">
+                    <!-- <v-icon
+                        name="fa-users"
+                        class="mr-3 text-purple-500"
+                        scale="1.5"
+                    /> -->
+                    <div class="flex flex-col">
+                        <h1
+                            class="text-2xl font-bold text-gray-800 dark:text-white"
                         >
-                            <v-icon name="hi-users" class="w-6 h-6" />
-                        </div>
-                        <div class="ml-4">
-                            <p
-                                class="text-sm font-medium text-gray-600 dark:text-gray-400"
-                            >
-                                Total Users
-                            </p>
-                            <h3
-                                class="text-2xl font-bold text-gray-900 dark:text-white"
-                            >
-                                {{ users.total || 0 }}
-                            </h3>
-                        </div>
-                    </div>
-                    <!-- <div class="mt-4">
-                        <div
-                            class="flex items-center text-sm text-green-600 dark:text-green-400"
-                        >
-                            <v-icon
-                                name="hi-trending-up"
-                                class="w-4 h-4 mr-1"
-                            />
-                            <span>All registered users</span>
-                        </div>
-                    </div> -->
-                </div>
-
-                <!-- Active Users Card -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                    <div class="flex items-center">
-                        <div
-                            class="p-3 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400"
-                        >
-                            <v-icon name="hi-check-circle" class="w-6 h-6" />
-                        </div>
-                        <div class="ml-4">
-                            <p
-                                class="text-sm font-medium text-gray-600 dark:text-gray-400"
-                            >
-                                Active Users
-                            </p>
-                            <h3
-                                class="text-2xl font-bold text-gray-900 dark:text-white"
-                            >
-                                {{ activeUsersCount }}
-                            </h3>
-                        </div>
-                    </div>
-                    <!-- <div class="mt-4">
-                        <div
-                            class="flex items-center text-sm text-green-600 dark:text-green-400"
-                        >
-                            <v-icon
-                                name="hi-arrow-sm-up"
-                                class="w-4 h-4 mr-1"
-                            />
-                            <span>{{ activePercentage }}% of total</span>
-                        </div>
-                    </div> -->
-                </div>
-
-                <!-- Admin Users Card -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                    <div class="flex items-center">
-                        <div
-                            class="p-3 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400"
-                        >
-                            <v-icon name="hi-shield-check" class="w-6 h-6" />
-                        </div>
-                        <div class="ml-4">
-                            <p
-                                class="text-sm font-medium text-gray-600 dark:text-gray-400"
-                            >
-                                Admin Users
-                            </p>
-                            <h3
-                                class="text-2xl font-bold text-gray-900 dark:text-white"
-                            >
-                                {{ adminUsersCount }}
-                            </h3>
-                        </div>
-                    </div>
-                    <!-- <div class="mt-4">
-                        <div
-                            class="flex items-center text-sm text-gray-600 dark:text-gray-400"
-                        >
-                            <v-icon
-                                name="hi-lock-closed"
-                                class="w-4 h-4 mr-1"
-                            />
-                            <span>System administrators</span>
-                        </div>
-                    </div> -->
-                </div>
-
-                <!-- Staff Users Card -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-                    <div class="flex items-center">
-                        <div
-                            class="p-3 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400"
-                        >
-                            <v-icon name="hi-user-circle" class="w-6 h-6" />
-                        </div>
-                        <div class="ml-4">
-                            <p
-                                class="text-sm font-medium text-gray-600 dark:text-gray-400"
-                            >
-                                Staff Members
-                            </p>
-                            <h3
-                                class="text-2xl font-bold text-gray-900 dark:text-white"
-                            >
-                                {{ staffUsersCount }}
-                            </h3>
-                        </div>
-                    </div>
-                    <!-- <div class="mt-4">
-                        <div
-                            class="flex items-center text-sm text-gray-600 dark:text-gray-400"
-                        >
-                            <v-icon name="hi-briefcase" class="w-4 h-4 mr-1" />
-                            <span>Support team members</span>
-                        </div>
-                    </div> -->
-                </div>
-            </div>
-
-            <div
-                class="relative bg-white shadow-md dark:bg-gray-800 sm:rounded-lg mb-6"
-            >
-                <div
-                    class="flex flex-col items-center justify-between p-4 space-y-3 md:flex-row md:space-y-0 md:space-x-4"
-                >
-                    <div class="w-full md:w-1/2">
-                        <form class="flex items-center">
-                            <label for="simple-search" class="sr-only"
-                                >Search</label
-                            >
-                            <div class="relative w-full">
-                                <div
-                                    class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
-                                >
-                                    <v-icon
-                                        name="hi-solid-search"
-                                        class="w-5 h-5 text-gray-500 dark:text-gray-400"
-                                    />
-                                </div>
-                                <input
-                                    v-model="filters.search"
-                                    type="text"
-                                    id="simple-search"
-                                    class="block w-full p-2 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                                    placeholder="Name, email, phone..."
-                                    @keyup.enter="fetchUsers"
-                                />
-                            </div>
-                        </form>
-                    </div>
-                    <div
-                        class="flex flex-col items-stretch justify-end flex-shrink-0 w-full space-y-2 md:w-auto md:flex-row md:space-y-0 md:items-center md:space-x-3"
-                    >
-                        <button
-                            @click="showCreateModal = true"
-                            type="button"
-                            class="flex items-center justify-center px-4 py-2 text-sm font-medium text-white rounded-lg bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
-                        >
-                            <v-icon
-                                name="hi-solid-plus"
-                                class="h-3.5 w-3.5 mr-2"
-                            />
-                            Register New User
-                        </button>
-                        <div
-                            class="flex items-center w-full space-x-3 md:w-auto"
-                        >
-                            <div class="relative">
-                                <button
-                                    @click="
-                                        showFilterDropdown = !showFilterDropdown
-                                    "
-                                    class="flex items-center justify-center w-full px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg md:w-auto focus:outline-none hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
-                                    type="button"
-                                >
-                                    <v-icon
-                                        name="hi-solid-filter"
-                                        class="w-4 h-4 mr-2 text-gray-400"
-                                    />
-                                    Filter
-                                    <v-icon
-                                        name="hi-chevron-down"
-                                        class="-mr-1 ml-1.5 w-5 h-5"
-                                    />
-                                </button>
-
-                                <!-- Custom Filter Dropdown -->
-                                <div
-                                    v-if="showFilterDropdown"
-                                    class="absolute z-10 top-full right-0 mt-1 w-48 p-3 bg-white rounded-lg shadow dark:bg-gray-700"
-                                >
-                                    <h6
-                                        class="mb-3 text-sm font-medium text-gray-900 dark:text-white"
-                                    >
-                                        Role
-                                    </h6>
-                                    <ul class="space-y-2 text-sm">
-                                        <li class="flex items-center">
-                                            <input
-                                                id="role-all"
-                                                type="radio"
-                                                name="role"
-                                                value=""
-                                                :checked="!filters.role"
-                                                @change="updateRoleFilter('')"
-                                                class="w-4 h-4 bg-gray-100 border-gray-300 rounded text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
-                                            />
-                                            <label
-                                                for="role-all"
-                                                class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100"
-                                                >All Roles</label
-                                            >
-                                        </li>
-                                        <li class="flex items-center">
-                                            <input
-                                                id="role-customer"
-                                                type="radio"
-                                                name="role"
-                                                value="customer"
-                                                :checked="
-                                                    filters.role === 'customer'
-                                                "
-                                                @change="
-                                                    updateRoleFilter('customer')
-                                                "
-                                                class="w-4 h-4 bg-gray-100 border-gray-300 rounded text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
-                                            />
-                                            <label
-                                                for="role-customer"
-                                                class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100"
-                                                >Customer</label
-                                            >
-                                        </li>
-                                        <li class="flex items-center">
-                                            <input
-                                                id="role-staff"
-                                                type="radio"
-                                                name="role"
-                                                value="staff"
-                                                :checked="
-                                                    filters.role === 'staff'
-                                                "
-                                                @change="
-                                                    updateRoleFilter('staff')
-                                                "
-                                                class="w-4 h-4 bg-gray-100 border-gray-300 rounded text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
-                                            />
-                                            <label
-                                                for="role-staff"
-                                                class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100"
-                                                >Staff</label
-                                            >
-                                        </li>
-                                        <li class="flex items-center">
-                                            <input
-                                                id="role-admin"
-                                                type="radio"
-                                                name="role"
-                                                value="admin"
-                                                :checked="
-                                                    filters.role === 'admin'
-                                                "
-                                                @change="
-                                                    updateRoleFilter('admin')
-                                                "
-                                                class="w-4 h-4 bg-gray-100 border-gray-300 rounded text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
-                                            />
-                                            <label
-                                                for="role-admin"
-                                                class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100"
-                                                >Admin</label
-                                            >
-                                        </li>
-                                    </ul>
-                                    <h6
-                                        class="mb-3 mt-4 text-sm font-medium text-gray-900 dark:text-white"
-                                    >
-                                        Status
-                                    </h6>
-                                    <ul class="space-y-2 text-sm">
-                                        <li class="flex items-center">
-                                            <input
-                                                id="status-all"
-                                                type="radio"
-                                                name="status"
-                                                value=""
-                                                :checked="!filters.enabled"
-                                                @change="
-                                                    updateEnabledFilter('')
-                                                "
-                                                class="w-4 h-4 bg-gray-100 border-gray-300 rounded text-green-600 focus:ring-green-500 dark:focus:ring-green-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
-                                            />
-                                            <label
-                                                for="status-all"
-                                                class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100"
-                                                >All Status</label
-                                            >
-                                        </li>
-                                        <li class="flex items-center">
-                                            <input
-                                                id="status-active"
-                                                type="radio"
-                                                name="status"
-                                                value="1"
-                                                :checked="
-                                                    filters.enabled === '1'
-                                                "
-                                                @change="
-                                                    updateEnabledFilter('1')
-                                                "
-                                                class="w-4 h-4 bg-gray-100 border-gray-300 rounded text-green-600 focus:ring-green-500 dark:focus:ring-green-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
-                                            />
-                                            <label
-                                                for="status-active"
-                                                class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100"
-                                                >Active</label
-                                            >
-                                        </li>
-                                        <li class="flex items-center">
-                                            <input
-                                                id="status-inactive"
-                                                type="radio"
-                                                name="status"
-                                                value="0"
-                                                :checked="
-                                                    filters.enabled === '0'
-                                                "
-                                                @change="
-                                                    updateEnabledFilter('0')
-                                                "
-                                                class="w-4 h-4 bg-gray-100 border-gray-300 rounded text-red-600 focus:ring-red-500 dark:focus:ring-red-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
-                                            />
-                                            <label
-                                                for="status-inactive"
-                                                class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100"
-                                                >Inactive</label
-                                            >
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                            <button
-                                @click="resetFilters"
-                                class="flex items-center justify-center w-full px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg md:w-auto focus:outline-none hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
-                            >
-                                <v-icon
-                                    name="hi-refresh"
-                                    class="w-4 h-4 mr-1"
-                                    :class="{ 'animate-spin': isResetting }"
-                                />
-                                Reset Filters
-                            </button>
+                            User Management
+                        </h1>
+                        <div class="text-sm text-gray-500 dark:text-gray-400">
+                            {{ currentDateTime }}
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Table Section -->
-            <div class="relative overflow-x-auto mb-4 shadow-md sm:rounded-lg">
-                <table
-                    class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400"
-                >
-                    <thead
-                        class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400"
+            <div
+                class="bg-white dark:bg-gray-800 rounded-sm shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
+            >
+                <div class="dark:border-gray-700 p-4 mb-6">
+                    <div
+                        class="flex flex-col md:flex-row md:items-center justify-between gap-4"
                     >
-                        <tr>
-                            <th scope="col" class="px-6 py-3">ID</th>
-                            <th scope="col" class="px-6 py-3">Avatar</th>
-                            <th
-                                scope="col"
-                                class="px-6 py-3 cursor-pointer"
-                                @click="sortBy('name')"
-                            >
-                                <div class="flex items-center">
-                                    Name
+                        <!-- Search -->
+                        <div class="w-full md:w-auto">
+                            <div class="relative">
+                                <div
+                                    class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
+                                >
                                     <v-icon
-                                        v-if="filters.sort === 'name'"
-                                        :name="
-                                            filters.order === 'asc'
-                                                ? 'hi-sort-ascending'
-                                                : 'hi-sort-descending'
-                                        "
-                                        class="w-4 h-4 ml-1"
+                                        name="hi-solid-search"
+                                        class="w-4 h-4 text-gray-500 dark:text-gray-400"
                                     />
                                 </div>
+                                <input
+                                    v-model="filters.search"
+                                    type="text"
+                                    class="block w-full md:w-[500px] p-2 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-white focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                    placeholder="Name, email, phone..."
+                                    @keyup.enter="fetchUsers"
+                                />
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex items-center space-x-2">
+                            <button
+                                @click="showCreateModal = true"
+                                type="button"
+                                class="flex items-center px-4 py-2 text-sm font-medium border border-blue-500 text-blue-500 bg-white rounded-sm hover:bg-blue-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 ease-in-out"
+                            >
+                                <v-icon
+                                    name="hi-solid-plus"
+                                    class="w-4 h-4 mr-2"
+                                />
+                                Add User
+                            </button>
+                            <!-- Filter Dropdown -->
+                            <div class="relative">
+                                <button
+                                    @click="
+                                        showFilterDropdown = !showFilterDropdown
+                                    "
+                                    class="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600"
+                                    type="button"
+                                >
+                                    <v-icon
+                                        name="hi-solid-filter"
+                                        class="w-4 h-4 mr-2"
+                                    />
+                                    Filter
+                                    <v-icon
+                                        name="hi-chevron-down"
+                                        class="ml-1 w-4 h-4"
+                                    />
+                                </button>
+
+                                <!-- Filter Dropdown Content -->
+                                <div
+                                    v-if="showFilterDropdown"
+                                    class="absolute z-10 top-full right-0 mt-1 w-56 bg-white rounded-lg shadow-lg border border-gray-200 dark:bg-gray-700 dark:border-gray-600"
+                                >
+                                    <div class="p-4">
+                                        <h6
+                                            class="mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                                        >
+                                            Role
+                                        </h6>
+                                        <div class="space-y-2">
+                                            <div class="flex items-center">
+                                                <input
+                                                    id="role-all"
+                                                    type="radio"
+                                                    name="role"
+                                                    value=""
+                                                    :checked="!filters.role"
+                                                    @change="
+                                                        updateRoleFilter('')
+                                                    "
+                                                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
+                                                />
+                                                <label
+                                                    for="role-all"
+                                                    class="ml-2 text-sm text-gray-700 dark:text-gray-300"
+                                                    >All Roles</label
+                                                >
+                                            </div>
+                                            <div class="flex items-center">
+                                                <input
+                                                    id="role-customer"
+                                                    type="radio"
+                                                    name="role"
+                                                    value="customer"
+                                                    :checked="
+                                                        filters.role ===
+                                                        'customer'
+                                                    "
+                                                    @change="
+                                                        updateRoleFilter(
+                                                            'customer'
+                                                        )
+                                                    "
+                                                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
+                                                />
+                                                <label
+                                                    for="role-customer"
+                                                    class="ml-2 text-sm text-gray-700 dark:text-gray-300"
+                                                    >Customer</label
+                                                >
+                                            </div>
+                                            <div class="flex items-center">
+                                                <input
+                                                    id="role-staff"
+                                                    type="radio"
+                                                    name="role"
+                                                    value="staff"
+                                                    :checked="
+                                                        filters.role === 'staff'
+                                                    "
+                                                    @change="
+                                                        updateRoleFilter(
+                                                            'staff'
+                                                        )
+                                                    "
+                                                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
+                                                />
+                                                <label
+                                                    for="role-staff"
+                                                    class="ml-2 text-sm text-gray-700 dark:text-gray-300"
+                                                    >Staff</label
+                                                >
+                                            </div>
+                                            <div class="flex items-center">
+                                                <input
+                                                    id="role-admin"
+                                                    type="radio"
+                                                    name="role"
+                                                    value="admin"
+                                                    :checked="
+                                                        filters.role === 'admin'
+                                                    "
+                                                    @change="
+                                                        updateRoleFilter(
+                                                            'admin'
+                                                        )
+                                                    "
+                                                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
+                                                />
+                                                <label
+                                                    for="role-admin"
+                                                    class="ml-2 text-sm text-gray-700 dark:text-gray-300"
+                                                    >Admin</label
+                                                >
+                                            </div>
+                                        </div>
+
+                                        <h6
+                                            class="mb-2 mt-4 text-sm font-medium text-gray-900 dark:text-white"
+                                        >
+                                            Status
+                                        </h6>
+                                        <div class="space-y-2">
+                                            <div class="flex items-center">
+                                                <input
+                                                    id="status-all"
+                                                    type="radio"
+                                                    name="status"
+                                                    value=""
+                                                    :checked="!filters.enabled"
+                                                    @change="
+                                                        updateEnabledFilter('')
+                                                    "
+                                                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
+                                                />
+                                                <label
+                                                    for="status-all"
+                                                    class="ml-2 text-sm text-gray-700 dark:text-gray-300"
+                                                    >All Status</label
+                                                >
+                                            </div>
+                                            <div class="flex items-center">
+                                                <input
+                                                    id="status-active"
+                                                    type="radio"
+                                                    name="status"
+                                                    value="1"
+                                                    :checked="
+                                                        filters.enabled === '1'
+                                                    "
+                                                    @change="
+                                                        updateEnabledFilter('1')
+                                                    "
+                                                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
+                                                />
+                                                <label
+                                                    for="status-active"
+                                                    class="ml-2 text-sm text-gray-700 dark:text-gray-300"
+                                                    >Active</label
+                                                >
+                                            </div>
+                                            <div class="flex items-center">
+                                                <input
+                                                    id="status-inactive"
+                                                    type="radio"
+                                                    name="status"
+                                                    value="0"
+                                                    :checked="
+                                                        filters.enabled === '0'
+                                                    "
+                                                    @change="
+                                                        updateEnabledFilter('0')
+                                                    "
+                                                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
+                                                />
+                                                <label
+                                                    for="status-inactive"
+                                                    class="ml-2 text-sm text-gray-700 dark:text-gray-300"
+                                                    >Inactive</label
+                                                >
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div
+                                        class="flex items-center justify-between p-4 border-t border-gray-200 dark:border-gray-600"
+                                    >
+                                        <button
+                                            @click="resetFilters"
+                                            class="flex items-center text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+                                        >
+                                            <v-icon
+                                                name="hi-refresh"
+                                                class="w-4 h-4 mr-1"
+                                                :class="{
+                                                    'animate-spin': isResetting,
+                                                }"
+                                            />
+                                            Reset
+                                        </button>
+                                        <button
+                                            @click="showFilterDropdown = false"
+                                            class="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        >
+                                            Apply
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Add User Button -->
+                        </div>
+                    </div>
+                </div>
+                <table
+                    class="w-full text-sm text-left text-gray-500 dark:text-gray-400"
+                >
+                    <thead
+                        class="text-xs text-white uppercase bg-blue-700 dark:bg-gray-700 dark:text-gray-400"
+                    >
+                        <tr>
+                            <th scope="col" class="px-6 py-3 font-medium">
+                                User
                             </th>
-                            <!-- <th scope="col" class="px-6 py-3">Email</th> -->
-                            <th scope="col" class="px-6 py-3">Serial No.</th>
-                            <th scope="col" class="px-6 py-3">Role</th>
-                            <th scope="col" class="px-6 py-3">Status</th>
-                            <th scope="col" class="px-6 py-3">Actions</th>
+                            <th scope="col" class="px-6 py-3 font-medium">
+                                Account No.
+                            </th>
+                            <th scope="col" class="px-6 py-3 font-medium">
+                                Serial No.
+                            </th>
+                            <th scope="col" class="px-6 py-3 font-medium">
+                                Role(s)
+                            </th>
+                            <th scope="col" class="px-6 py-3 font-medium">
+                                Status
+                            </th>
+                            <th scope="col" class="px-6 py-3 font-medium">
+                                Created
+                            </th>
+
+                            <th
+                                scope="col"
+                                class="px-6 py-3 font-medium text-center"
+                            >
+                                Actions
+                            </th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody
+                        class="divide-y divide-gray-200 dark:divide-gray-700"
+                    >
                         <tr
                             v-for="user in users.data"
                             :key="user.id"
-                            class="border-b dark:border-gray-700 border-gray-200"
-                            :class="
-                                user.enabled
-                                    ? 'bg-white dark:bg-gray-900'
-                                    : 'bg-gray-50 dark:bg-gray-800 opacity-70'
-                            "
+                            class="bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700"
                         >
-                            <th
-                                scope="row"
-                                class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"
-                            >
-                                {{ user.id }}
-                            </th>
                             <td class="px-6 py-4">
-                                <div class="flex-shrink-0 h-10 w-10">
-                                    <img
-                                        v-if="user.avatar_url"
-                                        :src="user.avatar_url"
-                                        :alt="user.name"
-                                        class="h-10 w-10 rounded-full object-cover"
-                                    />
-                                    <div
-                                        v-else
-                                        class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center"
-                                    >
-                                        <span
-                                            class="text-gray-500 text-sm font-semibold"
-                                            >{{ userInitials(user.name) }}</span
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 h-10 w-10 mr-3">
+                                        <img
+                                            v-if="user.avatar_url"
+                                            :src="user.avatar_url"
+                                            :alt="user.name"
+                                            class="h-10 w-10 rounded-full object-cover"
+                                        />
+                                        <div
+                                            v-else
+                                            class="h-10 w-10 rounded-full flex items-center justify-center text-white font-semibold text-sm"
+                                            :class="getAvatarColor(user.name)"
                                         >
+                                            {{ userInitials(user.name) }}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div
+                                            class="font-medium text-gray-900 dark:text-white"
+                                        >
+                                            {{ user.name }}
+                                        </div>
+                                        <div
+                                            class="text-xs text-gray-500 dark:text-gray-400"
+                                        >
+                                            {{ user.email || "N/A" }}
+                                        </div>
                                     </div>
                                 </div>
                             </td>
-                            <td
-                                class="px-6 py-4 font-medium text-gray-900 dark:text-white"
-                            >
-                                {{ user.name }}
+
+                            <td class="px-6 py-4 text-gray-800 whitespace-nowrap">
+                                {{ user.account_number || "N/A" }}
                             </td>
-                            <!-- <td class="px-6 py-4">{{ user.email || "N/A" }}</td> -->
-                            <td class="px-6 py-4">
+
+                            <td class="px-6 py-4 text-gray-800 whitespace-nowrap">
                                 {{ user.serial_number || "N/A" }}
                             </td>
+
                             <td class="px-6 py-4">
                                 <span
                                     :class="roleClasses(user.role)"
-                                    class="inline-flex items-center"
+                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
                                 >
                                     <v-icon
                                         :name="roleIcon(user.role)"
@@ -481,7 +376,7 @@
                             <td class="px-6 py-4">
                                 <span
                                     :class="statusClasses(user.enabled)"
-                                    class="inline-flex items-center text-xs px-2 py-1 rounded-full"
+                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
                                 >
                                     <v-icon
                                         :name="
@@ -491,37 +386,43 @@
                                         "
                                         class="w-3 h-3 mr-1"
                                     />
-                                    {{ user.enabled ? "Active" : "Inactive" }}
+                                    {{ user.enabled ? "Active" : "Pending" }}
                                 </span>
                             </td>
+                            <td class="px-6 py-4 text-gray-800  whitespace-nowrap">
+                                {{ formatDate(user.created_at) }}
+                            </td>
+
                             <td class="px-6 py-4">
-                                <div class="flex space-x-3">
+                                <div class="flex justify-end space-x-2">
                                     <button
                                         @click="viewUser(user)"
-                                        class="text-blue-600 hover:text-blue-800 transition-colors"
+                                        class="p-1.5 text-blue-600 bg-blue-500 rounded-sm hover:bg-blue-600 transition-colors"
                                         title="View"
                                     >
-                                        <v-icon name="hi-eye" class="w-5 h-5" />
+                                        <v-icon
+                                            name="hi-eye"
+                                            class="w-4 h-4 text-white"
+                                        />
                                     </button>
-
                                     <button
                                         @click="editUser(user)"
-                                        class="text-yellow-500 hover:text-yellow-700 transition-colors"
+                                        class="p-1.5 text-yellow-500 bg-yellow-500 rounded-sm h hover:bg-yellow-600 transition-colors"
                                         title="Edit"
                                     >
                                         <v-icon
                                             name="hi-pencil"
-                                            class="w-5 h-5"
+                                            class="w-4 h-4 text-white"
                                         />
                                     </button>
                                     <button
                                         @click="toggleUserStatus(user)"
                                         :class="
                                             user.enabled
-                                                ? 'text-orange-500 hover:text-orange-700'
-                                                : 'text-green-500 hover:text-green-700'
+                                                ? 'text-orange-500 hover:text-orange-700 bg-orange-500 hover:bg-orange-600'
+                                                : 'text-green-500 hover:text-green-700 bg-green-500 hover:bg-green-600'
                                         "
-                                        class="transition-colors"
+                                        class="p-1.5 rounded transition-colors"
                                         :title="
                                             user.enabled
                                                 ? 'Deactivate'
@@ -534,38 +435,37 @@
                                                     ? 'hi-lock-closed'
                                                     : 'hi-lock-open'
                                             "
-                                            class="w-5 h-5"
+                                            class="w-4 h-4 text-white"
                                         />
                                     </button>
                                     <button
                                         @click="confirmDelete(user)"
-                                        class="text-red-600 hover:text-red-800 transition-colors"
+                                        class="p-1.5 text-white bg-red-500 hover:bg-red-600 rounded transition-colors"
                                         title="Delete"
                                     >
                                         <v-icon
                                             name="hi-trash"
-                                            class="w-5 h-5"
+                                            class="w-4 h-4"
                                         />
                                     </button>
                                 </div>
                             </td>
                         </tr>
                         <tr v-if="users.data.length === 0">
-                            <td
-                                colspan="8"
-                                class="px-6 py-8 text-center text-sm text-gray-500"
-                            >
+                            <td colspan="6" class="px-6 py-12 text-center">
                                 <div
-                                    class="flex flex-col items-center justify-center space-y-2"
+                                    class="flex flex-col items-center justify-center space-y-3"
                                 >
                                     <v-icon
                                         name="hi-user-group"
-                                        class="w-10 h-10 text-gray-300 mb-2"
+                                        class="w-12 h-12 text-gray-300"
                                     />
-                                    <span class="font-semibold text-gray-400"
+                                    <span
+                                        class="font-medium text-gray-500 dark:text-gray-400"
                                         >No users found</span
                                     >
-                                    <span class="text-xs text-gray-300"
+                                    <span
+                                        class="text-sm text-gray-400 dark:text-gray-500"
                                         >Try adjusting your filters or search
                                         keywords.</span
                                     >
@@ -576,13 +476,17 @@
                 </table>
             </div>
 
-            <Pagination
-                :items="users"
-                item-name="users"
-                previous-text="Previous"
-                next-text="Next"
-            />
+            <!-- Pagination -->
+            <div class="mt-6">
+                <Pagination
+                    :items="users"
+                    item-name="users"
+                    previous-text="Previous"
+                    next-text="Next"
+                />
+            </div>
 
+            <!-- Modals -->
             <CreateUserModal
                 :show="showCreateModal"
                 :zones="zones"
@@ -624,6 +528,26 @@ const props = defineProps({
     zones: Object,
 });
 
+const currentDateTime = ref("");
+
+const updateDateTime = () => {
+    const date = new Date().toLocaleString("en-US", {
+        timeZone: "Asia/Manila",
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+    });
+    currentDateTime.value = date;
+};
+
+onMounted(() => {
+    updateDateTime(); // Initial update
+    const interval = setInterval(updateDateTime, 1000); // Update every second
+    // Store interval ID to clear it later
+    onUnmounted(() => clearInterval(interval));
+});
+
 const filters = ref({
     search: props.filters.search || "",
     role: props.filters.role || "",
@@ -662,25 +586,41 @@ const zones = ref(
     }
 );
 
-// Compute user statistics
-import { computed } from "vue";
+const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+    });
+};
 
-const activeUsersCount = computed(() => {
-    return props.users.data.filter((user) => user.enabled).length;
-});
+// Generate avatar color based on user name
+const getAvatarColor = (name) => {
+    if (!name) return "bg-gray-400";
 
-const adminUsersCount = computed(() => {
-    return props.users.data.filter((user) => user.role === "admin").length;
-});
+    const colors = [
+        "bg-blue-500",
+        "bg-green-500",
+        "bg-purple-500",
+        "bg-pink-500",
+        "bg-indigo-500",
+        "bg-yellow-500",
+        "bg-red-500",
+        "bg-teal-500",
+        "bg-orange-500",
+    ];
 
-const staffUsersCount = computed(() => {
-    return props.users.data.filter((user) => user.role === "staff").length;
-});
+    // Simple hash function to get consistent color for same name
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+        hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    }
 
-const activePercentage = computed(() => {
-    if (!props.users.total || props.users.total === 0) return 0;
-    return Math.round((activeUsersCount.value / props.users.total) * 100);
-});
+    const index = Math.abs(hash) % colors.length;
+    return colors[index];
+};
 
 // Handle click outside to close dropdown
 const handleClickOutside = (event) => {
@@ -698,6 +638,8 @@ const handleClickOutside = (event) => {
         showFilterDropdown.value = false;
     }
 };
+
+console.log("Users data:", props.users.data);
 
 // Add event listener for click outside
 onMounted(() => {
@@ -1044,7 +986,6 @@ const submitCreateUser = (userData) => {
 
 const roleClasses = (role) => {
     return {
-        "px-2 py-1 rounded-full text-xs font-semibold inline-flex items-center": true,
         "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200":
             role === "admin",
         "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200":
@@ -1056,10 +997,10 @@ const roleClasses = (role) => {
 
 const statusClasses = (enabled) => {
     return {
-        "px-2 py-1 rounded-full text-xs font-medium": true,
         "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200":
             enabled,
-        "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200": !enabled,
+        "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200":
+            !enabled,
     };
 };
 

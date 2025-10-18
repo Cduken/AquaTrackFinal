@@ -156,7 +156,7 @@ if (typeof window !== "undefined") {
         />
         <Features id="features" />
         <About id="about" />
-        <CallToAction id="cta" />
+        <!-- <CallToAction id="cta" /> -->
         <Footer />
     </div>
 </template>

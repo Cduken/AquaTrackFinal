@@ -711,6 +711,8 @@ const filters = ref({
     perPage: props.filters.perPage || 10,
 });
 
+console.log("Records data:", props.records.data);
+
 // Month options
 const months = [
     { name: "January", value: "01" },

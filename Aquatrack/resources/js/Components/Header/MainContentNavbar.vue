@@ -1,6 +1,6 @@
 <template>
     <nav
-        class="bg-white border-b border-gray-200 px-6 py-[13px] shadow-sm dark:bg-gray-800 dark:border-gray-700 fixed right-0 top-0 z-40 transition-all duration-300 ease-in-out"
+        class="bg-white border-b border-gray-200 px-2 py-[5px] shadow-sm dark:bg-gray-800 dark:border-gray-700 fixed right-0 top-0 z-40 transition-all duration-300 ease-in-out"
         :class="[
             isSidebarOpen ? 'left-64' : 'left-16',
             isMobileMenuOpen ? 'left-0' : '',
@@ -8,57 +8,54 @@
         :style="navStyle"
     >
         <div class="flex justify-between items-center">
-            <!-- Left section with breadcrumbs, mobile menu and search -->
+            <!-- Left section with breadcrumbs, mobile menu -->
             <div class="flex items-center flex-1 max-w-3xl">
                 <!-- Mobile menu button -->
                 <button
                     @click="$emit('toggle-mobile-menu')"
                     class="p-2 mr-3 text-gray-600 rounded-lg cursor-pointer md:hidden hover:text-gray-900 hover:bg-gray-100 focus:bg-gray-100 dark:focus:bg-gray-700 focus:ring-2 focus:ring-gray-100 dark:focus:ring-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white transition-colors duration-200"
                 >
-                    <Bars3Icon v-if="!isMobileMenuOpen" class="w-6 h-6" />
-                    <XMarkIcon v-else class="w-6 h-6" />
+                    <Menu v-if="!isMobileMenuOpen" :size="24" />
+                    <X v-else :size="24" />
                 </button>
 
                 <!-- Breadcrumbs -->
-                <div class="hidden md:flex items-center space-x-2 text-sm">
-                    <Link
-                        :href="dashboardRoute"
-                        class="flex items-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors duration-200"
-                    >
-                        <HomeIcon class="w-4 h-4 mr-1" />
-                        <span class="font-medium capitalize">{{
-                            userRole
-                        }}</span>
-                    </Link>
-                    <ChevronRightIcon class="w-3 h-3 text-gray-400" />
+                <div class="hidden md:flex items-center space-x-2 text-lg ">
+
                     <span
                         class="text-gray-900 dark:text-white font-semibold capitalize"
-                        >{{ currentPageName }}</span
                     >
+                        {{ currentPageName }}
+                    </span>
                 </div>
 
                 <!-- Mobile Breadcrumbs (simplified) -->
                 <div class="flex md:hidden items-center space-x-2 text-sm ml-2">
                     <span
                         class="text-gray-900 dark:text-white font-semibold capitalize"
-                        >{{ currentPageName }}</span
                     >
+                        {{ currentPageName }}
+                    </span>
                 </div>
             </div>
 
             <!-- Right section with notifications and user menu -->
             <div class="flex items-center space-x-3 ml-4">
-                <!-- Notifications Button - Now opens modal instead of dropdown -->
+                <!-- Notifications Button -->
                 <div class="relative">
                     <button
                         type="button"
                         @click="showNotificationModal = true"
-                        class="relative p-2 text-gray-500 rounded-full hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-700 focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600 transition-all duration-200"
+                        class="relative p-2.5 text-gray-500 rounded-xl hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-700 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-all duration-200 group"
                     >
-                        <BellIcon class="w-6 h-6" />
+
+                        <Bell
+                            :size="18"
+                            class="group-hover:scale-110 transition-transform"
+                        />
                         <span
                             v-if="unreadCount > 0"
-                            class="absolute -top-1 -right-1 flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full border-2 border-white dark:border-gray-800 animate-pulse"
+                            class="absolute -top-0.5 -right-0.5 flex items-center justify-center min-w-[20px] h-5 px-1 text-xs font-bold text-white bg-gradient-to-r from-red-500 to-red-600 rounded-full border-2 border-white dark:border-gray-800 shadow-lg animate-pulse"
                         >
                             {{ unreadCount > 99 ? "99+" : unreadCount }}
                         </span>
@@ -70,24 +67,24 @@
                     <button
                         type="button"
                         @click.stop="toggleUserDropdown"
-                        class="flex items-center space-x-3 text-sm rounded-full p-2 hover:bg-gray-100 dark:hover:bg-gray-700 focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600 transition-all duration-200"
+                        class="flex items-center space-x-3 text-sm rounded-xl p-2 hover:bg-gray-100 dark:hover:bg-gray-700 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-all duration-200 group"
                         ref="userButton"
                     >
                         <img
                             v-if="user.avatar_url"
-                            class="w-8 h-8 rounded-full border-2 border-gray-200 dark:border-gray-600 shadow-sm"
+                            class="w-6 h-6 rounded-full border-2 border-gray-200 dark:border-gray-600 shadow-sm group-hover:border-blue-400 transition-all"
                             :src="user.avatar_url"
                             :alt="userDisplayName"
                         />
                         <div
                             v-else
-                            class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-blue-500 text-white flex items-center justify-center font-medium text-sm border-2 border-gray-200 dark:border-gray-600 shadow-sm"
+                            class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-blue-500 text-white flex items-center justify-center font-semibold text-sm border-2 border-gray-200 dark:border-gray-600 shadow-sm group-hover:border-blue-400 transition-all"
                         >
                             {{ userInitials }}
                         </div>
                         <div class="text-left hidden sm:block">
                             <p
-                                class="text-sm font-medium text-gray-900 dark:text-white"
+                                class="text-sm font-semibold text-gray-900 dark:text-white"
                             >
                                 {{ userDisplayName }}
                             </p>
@@ -98,43 +95,47 @@
                                 }}
                             </p>
                         </div>
-                        <ChevronDownIcon class="w-4 h-4 text-gray-400" />
+                        <ChevronDown
+                            :size="16"
+                            class="text-gray-400 transition-transform duration-200"
+                            :class="{ 'rotate-180': isUserDropdownOpen }"
+                        />
                     </button>
 
                     <!-- User Dropdown Menu -->
                     <div
                         v-show="isUserDropdownOpen"
                         v-click-outside="closeUserDropdown"
-                        class="absolute right-0 top-full mt-2 z-50 w-64 text-base bg-white rounded-xl shadow-xl dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden transform transition-all duration-200"
+                        class="absolute right-0 top-full mt-2 z-50 w-64 text-base bg-white rounded-2xl shadow-2xl dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden transform transition-all duration-200"
                         :class="{
                             'scale-100 opacity-100': isUserDropdownOpen,
                             'scale-95 opacity-0': !isUserDropdownOpen,
                         }"
                     >
                         <div
-                            class="py-4 px-4 bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-700 dark:to-gray-600 border-b border-gray-100 dark:border-gray-600"
+                            class="py-4 px-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-600 border-b border-gray-100 dark:border-gray-600"
                         >
                             <div class="flex items-center space-x-3">
                                 <img
                                     v-if="user.avatar_url"
-                                    class="w-12 h-12 rounded-full border-2 border-white dark:border-gray-700 shadow-sm"
+                                    class="w-12 h-12 rounded-full border-2 border-white dark:border-gray-700 shadow-md"
                                     :src="user.avatar_url"
                                     :alt="userDisplayName"
                                 />
                                 <div
                                     v-else
-                                    class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-blue-500 text-white flex items-center justify-center font-medium border-2 border-white dark:border-gray-700 shadow-sm"
+                                    class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-blue-500 text-white flex items-center justify-center font-semibold text-base border-2 border-white dark:border-gray-700 shadow-md"
                                 >
                                     {{ userInitials }}
                                 </div>
-                                <div>
+                                <div class="flex-1 min-w-0">
                                     <p
-                                        class="text-sm font-semibold text-gray-900 dark:text-white"
+                                        class="text-sm font-semibold text-gray-900 dark:text-white truncate"
                                     >
                                         {{ userDisplayName }}
                                     </p>
                                     <p
-                                        class="text-xs text-gray-600 dark:text-gray-300"
+                                        class="text-xs text-gray-600 dark:text-gray-300 truncate"
                                     >
                                         {{ user?.email }}
                                     </p>
@@ -144,24 +145,30 @@
                         <div class="py-2">
                             <Link
                                 href="/profile"
-                                class="flex items-center gap-3 py-3 px-4 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+                                class="flex items-center gap-3 py-3 px-4 text-sm text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors duration-200 group"
                                 @click="closeUserDropdown"
                             >
-                                <UserIcon
-                                    class="w-4 h-4 text-gray-500 dark:text-gray-400"
+                                <User
+                                    :size="18"
+                                    class="text-gray-500 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"
                                 />
-                                <span>Profile Settings</span>
+                                <span class="font-medium"
+                                    >Profile Settings</span
+                                >
                             </Link>
                         </div>
                         <div
-                            class="border-t border-gray-100 dark:border-gray-700 pt-2"
+                            class="border-t border-gray-100 dark:border-gray-700 pt-2 pb-2"
                         >
                             <button
                                 @click.prevent="handleLogout"
-                                class="flex items-center w-full gap-3 py-3 px-4 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-200"
+                                class="flex items-center w-full gap-3 py-3 px-4 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-200 group"
                             >
-                                <ArrowRightOnRectangleIcon class="w-4 h-4" />
-                                <span>Sign out</span>
+                                <LogOut
+                                    :size="18"
+                                    class="group-hover:translate-x-0.5 transition-transform"
+                                />
+                                <span class="font-medium">Sign out</span>
                             </button>
                         </div>
                     </div>
@@ -170,101 +177,135 @@
         </div>
 
         <!-- Notification Modal -->
-        <div
-            v-if="showNotificationModal"
-            class="fixed inset-0 z-50 overflow-y-auto"
-        >
-            <!-- Background -->
+        <Transition name="modal">
             <div
-                class="fixed inset-0 bg-black bg-opacity-50"
-                @click="showNotificationModal = false"
-            ></div>
-
-            <!-- Modal -->
-            <div
-                class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0"
+                v-if="showNotificationModal"
+                class="fixed inset-0 z-50 overflow-y-auto"
             >
+                <!-- Background Overlay -->
                 <div
-                    class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full"
-                >
-                    <!-- Header -->
-                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-lg font-bold text-gray-900">
-                                Notifications
-                                <span
-                                    v-if="
-                                        modalNotifications.length > 0 &&
-                                        !modalLoading
-                                    "
-                                    class="ml-2 text-sm text-gray-500"
-                                >
-                                    ({{ modalUnreadCount }} unread)
-                                </span>
-                            </h3>
-                            <div class="flex items-center space-x-2">
-                                <button
-                                    v-if="
-                                        modalNotifications.length > 0 &&
-                                        modalUnreadCount > 0
-                                    "
-                                    @click="markAllAsReadInModal"
-                                    class="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 transition-colors"
-                                    :disabled="markingAllAsRead"
-                                >
-                                    <span v-if="markingAllAsRead">...</span>
-                                    <span v-else>Mark All Read</span>
-                                </button>
-                                <button
-                                    @click="showNotificationModal = false"
-                                    class="text-gray-400 hover:text-gray-500"
-                                >
-                                    <svg
-                                        class="h-6 w-6"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor"
+                    class="fixed inset-0 bg-black/60  transition-opacity"
+                    @click="showNotificationModal = false"
+                ></div>
+
+                <!-- Modal Container -->
+                <div class="flex items-center justify-center min-h-screen p-4">
+                    <div
+                        class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all"
+                    >
+                        <!-- Header -->
+                        <div
+                            class="bg-[#172554] px-6 py-5"
+                        >
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center space-x-3">
+                                    <div
+                                        class="p-2 bg-white/20 rounded-lg backdrop-blur-sm"
                                     >
-                                        <path
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="2"
-                                            d="M6 18L18 6M6 6l12 12"
-                                        />
-                                    </svg>
-                                </button>
+                                        <Bell :size="24" class="text-white" />
+                                    </div>
+                                    <div>
+                                        <h3
+                                            class="text-xl font-bold text-white"
+                                        >
+                                            Notifications
+                                        </h3>
+                                        <p
+                                            v-if="
+                                                modalNotifications.length > 0 &&
+                                                !modalLoading
+                                            "
+                                            class="text-sm text-blue-100"
+                                        >
+                                            {{ modalUnreadCount }} unread
+                                            notification{{
+                                                modalUnreadCount !== 1
+                                                    ? "s"
+                                                    : ""
+                                            }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <button
+                                        v-if="
+                                            modalNotifications.length > 0 &&
+                                            modalUnreadCount > 0
+                                        "
+                                        @click="markAllAsReadInModal"
+                                        class="flex items-center space-x-1.5 text-sm bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded-lg transition-all duration-200 backdrop-blur-sm"
+                                        :disabled="markingAllAsRead"
+                                    >
+                                        <CheckCheck :size="16" />
+                                        <span v-if="!markingAllAsRead"
+                                            >Mark All Read</span
+                                        >
+                                        <span v-else>Marking...</span>
+                                    </button>
+                                    <button
+                                        @click="showNotificationModal = false"
+                                        class="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+                                    >
+                                        <X :size="20" />
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
                         <!-- Notifications List -->
-                        <div class="max-h-96 overflow-y-auto">
-                            <div v-if="modalLoading" class="text-center py-4">
-                                <div
-                                    class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"
-                                ></div>
-                                <p class="mt-2 text-gray-500">
+                        <div
+                            class="max-h-[500px] overflow-y-auto bg-gray-50 dark:bg-gray-900"
+                        >
+                            <div
+                                v-if="modalLoading"
+                                class="flex flex-col items-center justify-center py-12"
+                            >
+                                <div class="relative">
+                                    <div
+                                        class="w-16 h-16 border-4 border-blue-200 dark:border-blue-900 rounded-full"
+                                    ></div>
+                                    <div
+                                        class="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin absolute top-0 left-0"
+                                    ></div>
+                                </div>
+                                <p
+                                    class="mt-4 text-gray-600 dark:text-gray-400 font-medium"
+                                >
                                     Loading notifications...
                                 </p>
                             </div>
 
                             <div
                                 v-else-if="modalNotifications.length === 0"
-                                class="text-center py-8 text-gray-500"
+                                class="flex flex-col items-center justify-center py-12 px-4"
                             >
-                                <div class="text-4xl mb-2">🔔</div>
-                                <p>No notifications available</p>
-                                <p class="text-sm mt-1">
-                                    You're all caught up!
+                                <div
+                                    class="w-20 h-20 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900 dark:to-indigo-900 rounded-full flex items-center justify-center mb-4"
+                                >
+                                    <BellOff
+                                        :size="40"
+                                        class="text-blue-600 dark:text-blue-400"
+                                    />
+                                </div>
+                                <p
+                                    class="text-gray-900 dark:text-white font-semibold text-lg"
+                                >
+                                    All caught up!
+                                </p>
+                                <p
+                                    class="text-gray-500 dark:text-gray-400 text-sm mt-1"
+                                >
+                                    No notifications at the moment
                                 </p>
                             </div>
 
-                            <div v-else class="space-y-3">
+                            <div v-else class="p-4 space-y-3">
                                 <div
                                     v-for="notification in modalNotifications"
                                     :key="notification.id"
-                                    class="p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-all"
+                                    class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:shadow-md cursor-pointer transition-all duration-200 group"
                                     :class="{
-                                        'bg-blue-50 border-blue-200':
+                                        'ring-2 ring-blue-400 dark:ring-blue-500 bg-blue-50 dark:bg-blue-900/20':
                                             notification.unread,
                                         'border-l-4 border-l-orange-500':
                                             notification.important,
@@ -275,31 +316,40 @@
                                         )
                                     "
                                 >
-                                    <div class="flex items-start space-x-3">
-                                        <div class="flex-shrink-0 text-xl">
-                                            {{
-                                                getNotificationIcon(
-                                                    notification.type
-                                                )
-                                            }}
+                                    <div class="flex items-start space-x-4">
+                                        <div class="flex-shrink-0">
+                                            <div
+                                                class="w-10 h-10 rounded-xl bg-gradient-to-br flex items-center justify-center text-xl"
+                                                :class="
+                                                    getNotificationIconBg(
+                                                        notification.type
+                                                    )
+                                                "
+                                            >
+                                                {{
+                                                    getNotificationIcon(
+                                                        notification.type
+                                                    )
+                                                }}
+                                            </div>
                                         </div>
                                         <div class="flex-1 min-w-0">
                                             <div
-                                                class="flex items-center justify-between"
+                                                class="flex items-start justify-between mb-1"
                                             >
                                                 <p
-                                                    class="text-sm font-medium text-gray-900"
+                                                    class="text-sm font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"
                                                 >
                                                     {{ notification.title }}
                                                 </p>
                                                 <div
-                                                    class="flex items-center space-x-2"
+                                                    class="flex items-center space-x-2 ml-2"
                                                 >
                                                     <span
                                                         v-if="
                                                             notification.unread
                                                         "
-                                                        class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                                                        class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
                                                     >
                                                         New
                                                     </span>
@@ -309,7 +359,7 @@
                                                                 notification.type
                                                             )
                                                         "
-                                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold"
                                                     >
                                                         {{
                                                             formatNotificationType(
@@ -320,7 +370,7 @@
                                                 </div>
                                             </div>
                                             <p
-                                                class="text-sm text-gray-600 mt-1"
+                                                class="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 mb-2"
                                             >
                                                 {{
                                                     notification.message ||
@@ -328,17 +378,18 @@
                                                 }}
                                             </p>
                                             <div
-                                                class="flex justify-between items-center mt-2"
+                                                class="flex justify-between items-center"
                                             >
-                                                <p
-                                                    class="text-xs text-gray-400"
+                                                <div
+                                                    class="flex items-center space-x-1.5 text-xs text-gray-500 dark:text-gray-400"
                                                 >
-                                                    {{
+                                                    <Clock :size="14" />
+                                                    <span>{{
                                                         formatTime(
                                                             notification.created_at
                                                         )
-                                                    }}
-                                                </p>
+                                                    }}</span>
+                                                </div>
                                                 <button
                                                     v-if="notification.unread"
                                                     @click.stop="
@@ -346,9 +397,10 @@
                                                             notification.id
                                                         )
                                                     "
-                                                    class="text-xs text-green-600 hover:text-green-800 transition-colors"
+                                                    class="flex items-center space-x-1 text-xs text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 font-medium transition-colors"
                                                 >
-                                                    Mark read
+                                                    <CheckCircle2 :size="14" />
+                                                    <span>Mark read</span>
                                                 </button>
                                             </div>
                                         </div>
@@ -356,30 +408,24 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Footer -->
-                    <div
-                        class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse"
-                    >
-                        <button
-                            type="button"
-                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm"
-                            @click="viewAllNotifications"
+                        <!-- Footer -->
+                        <div
+                            class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-end space-x-3"
                         >
-                            View All Notifications
-                        </button>
-                        <!-- <button
-                            type="button"
-                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-                            @click="showNotificationModal = false"
-                        >
-                            Close
-                        </button> -->
+                            <button
+                                type="button"
+                                class="flex items-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-200"
+                                @click="viewAllNotifications"
+                            >
+                                <List :size="18" />
+                                <span>View All Notifications</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </Transition>
     </nav>
 </template>
 
@@ -387,15 +433,20 @@
 import { computed, ref, onMounted, onUnmounted, watch } from "vue";
 import { usePage, Link, router } from "@inertiajs/vue3";
 import {
-    HomeIcon,
-    ChevronRightIcon,
-    ChevronDownIcon,
-    BellIcon,
-    UserIcon,
-    ArrowRightOnRectangleIcon,
-    Bars3Icon,
-    XMarkIcon,
-} from "@heroicons/vue/24/outline";
+    Home,
+    ChevronRight,
+    ChevronDown,
+    Bell,
+    BellOff,
+    User,
+    LogOut,
+    Menu,
+    X,
+    Clock,
+    CheckCircle2,
+    CheckCheck,
+    List,
+} from "lucide-vue-next";
 import Swal from "sweetalert2";
 
 const props = defineProps({
@@ -518,19 +569,54 @@ const getNotificationIcon = (type) => {
     return icons[type] || "🔔";
 };
 
+const getNotificationIconBg = (type) => {
+    const backgrounds = {
+        info: "from-blue-100 to-blue-200 dark:from-blue-900 dark:to-blue-800",
+        report_update:
+            "from-purple-100 to-purple-200 dark:from-purple-900 dark:to-purple-800",
+        announcement:
+            "from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600",
+        bill_overdue:
+            "from-red-100 to-red-200 dark:from-red-900 dark:to-red-800",
+        bill_due_soon:
+            "from-orange-100 to-orange-200 dark:from-orange-900 dark:to-orange-800",
+        bill_final_reminder:
+            "from-yellow-100 to-yellow-200 dark:from-yellow-900 dark:to-yellow-800",
+        bill_due_today:
+            "from-red-100 to-red-200 dark:from-red-900 dark:to-red-800",
+        alert: "from-red-100 to-red-200 dark:from-red-900 dark:to-red-800",
+        reminder:
+            "from-yellow-100 to-yellow-200 dark:from-yellow-900 dark:to-yellow-800",
+    };
+    return (
+        backgrounds[type] ||
+        "from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600"
+    );
+};
+
 const getStatusBadgeClass = (type) => {
     const classes = {
-        info: "bg-blue-100 text-blue-800",
-        report_update: "bg-purple-100 text-purple-800",
-        announcement: "bg-gray-100 text-gray-800",
-        bill_overdue: "bg-red-100 text-red-800",
-        bill_due_soon: "bg-orange-100 text-orange-800",
-        bill_final_reminder: "bg-yellow-100 text-yellow-800",
-        bill_due_today: "bg-red-100 text-red-800",
-        alert: "bg-red-100 text-red-800",
-        reminder: "bg-yellow-100 text-yellow-800",
+        info: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
+        report_update:
+            "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300",
+        announcement:
+            "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300",
+        bill_overdue:
+            "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
+        bill_due_soon:
+            "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300",
+        bill_final_reminder:
+            "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300",
+        bill_due_today:
+            "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
+        alert: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
+        reminder:
+            "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300",
     };
-    return classes[type] || "bg-gray-100 text-gray-800";
+    return (
+        classes[type] ||
+        "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
+    );
 };
 
 const formatNotificationType = (type) => {
@@ -611,7 +697,6 @@ const markAsReadInModal = async (id) => {
         });
 
         if (response.ok) {
-            // Update local state
             const notification = modalNotifications.value.find(
                 (n) => n.id === id
             );
@@ -638,7 +723,6 @@ const markAllAsReadInModal = async () => {
         });
 
         if (response.ok) {
-            // Update all notifications to read
             modalNotifications.value.forEach((notification) => {
                 notification.unread = false;
             });
@@ -651,12 +735,10 @@ const markAllAsReadInModal = async () => {
 };
 
 const handleNotificationClickInModal = (notification) => {
-    // Mark as read when clicked
     if (notification.unread) {
         markAsReadInModal(notification.id);
     }
 
-    // Navigate based on action_url
     if (notification.action_url) {
         router.visit(notification.action_url);
         showNotificationModal.value = false;
@@ -723,7 +805,6 @@ const vClickOutside = {
 // Lifecycle
 onMounted(() => {
     window.addEventListener("resize", handleResize);
-    // Load initial notifications for badge count
     fetchModalNotifications();
 });
 
@@ -738,9 +819,6 @@ onUnmounted(() => {
         padding-left: 0.5rem;
         padding-right: 0.5rem;
     }
-    .text-\[25px\] {
-        font-size: 1.25rem;
-    }
 }
 
 .line-clamp-2 {
@@ -753,9 +831,9 @@ onUnmounted(() => {
 button:active {
     transform: scale(0.98);
 }
+
 button:focus {
     outline: none;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
 }
 
 .transition-all {
@@ -763,41 +841,80 @@ button:focus {
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.max-h-96::-webkit-scrollbar {
-    width: 6px;
+/* Custom scrollbar */
+.max-h-\[500px\]::-webkit-scrollbar {
+    width: 8px;
 }
-.max-h-96::-webkit-scrollbar-track {
+
+.max-h-\[500px\]::-webkit-scrollbar-track {
     background: transparent;
 }
-.max-h-96::-webkit-scrollbar-thumb {
-    background-color: rgba(156, 163, 175, 0.5);
-    border-radius: 3px;
-}
-.max-h-96::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(156, 163, 175, 0.8);
-}
-.dark .max-h-96::-webkit-scrollbar-thumb {
-    background-color: rgba(75, 85, 99, 0.5);
-}
-.dark .max-h-96::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(75, 85, 99, 0.8);
+
+.max-h-\[500px\]::-webkit-scrollbar-thumb {
+    background: linear-gradient(
+        to bottom,
+        rgb(191, 219, 254),
+        rgb(147, 197, 253)
+    );
+    border-radius: 4px;
 }
 
-.group:hover .animate-pulse {
-    animation: none;
+.max-h-\[500px\]::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(
+        to bottom,
+        rgb(147, 197, 253),
+        rgb(96, 165, 250)
+    );
 }
 
+.dark .max-h-\[500px\]::-webkit-scrollbar-thumb {
+    background: linear-gradient(to bottom, rgb(30, 58, 138), rgb(29, 78, 216));
+}
+
+.dark .max-h-\[500px\]::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(to bottom, rgb(29, 78, 216), rgb(37, 99, 235));
+}
+
+/* Modal animations */
+.modal-enter-active,
+.modal-leave-active {
+    transition: opacity 0.3s ease;
+}
+
+.modal-enter-from,
+.modal-leave-to {
+    opacity: 0;
+}
+
+.modal-enter-active .relative,
+.modal-leave-active .relative {
+    transition: transform 0.3s ease;
+}
+
+.modal-enter-from .relative,
+.modal-leave-to .relative {
+    transform: scale(0.95);
+}
+
+/* Badge pulse animation */
 @keyframes badge-pulse {
     0%,
     100% {
         opacity: 1;
+        transform: scale(1);
     }
     50% {
-        opacity: 0.8;
+        opacity: 0.9;
+        transform: scale(1.05);
     }
 }
 
 .animate-pulse {
     animation: badge-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Smooth rotation for chevron */
+.rotate-180 {
+    transform: rotate(180deg);
 }
 </style>

@@ -1,6 +1,5 @@
 <template>
     <div class="w-full p-6 bg-white">
-        <!-- Network Status -->
         <NetworkStatus
             :is-online="isOnline"
             :is-syncing="isSyncing"
@@ -8,30 +7,19 @@
             @manual-sync="triggerManualSync"
         />
 
-        <!-- Form Errors Indicator -->
         <FormErrors v-if="hasErrors" :errors="form.errors" />
 
         <form @submit.prevent="submitReport" class="space-y-6">
-            <!-- Location Fields -->
             <LocationFields :form="form" />
-
-            <!-- Reporter Information -->
             <ReporterInfo :form="form" @update:field="updateFormField" />
-
-            <!-- Area Information -->
             <AreaInfo
                 :form="form"
                 :zones="props.zones"
                 @update:field="updateFormField"
             />
-
-            <!-- Water Issue Type -->
             <WaterIssueType :form="form" @update:field="updateFormField" />
-
-            <!-- Description -->
             <DescriptionField :form="form" @update:field="updateFormField" />
 
-            <!-- Camera Section -->
             <CameraSection
                 ref="cameraSectionRef"
                 :form="form"
@@ -60,7 +48,6 @@
                 @clear-all-media="clearAllMedia"
             />
 
-            <!-- Location Status -->
             <LocationStatus
                 :location-status="locationStatus"
                 :form="form"
@@ -68,7 +55,6 @@
                 @get-location="getLocation"
             />
 
-            <!-- Submit Button -->
             <SubmitButton
                 :is-submitting="isSubmitting"
                 :is-recording="isRecording"
@@ -100,7 +86,6 @@ import CameraSection from "./Camera/CameraSection.vue";
 import LocationStatus from "./LocationStatus.vue";
 import SubmitButton from "./SubmitButton.vue";
 
-// Emits declaration
 const emit = defineEmits(["submitted", "offlineReportsSynced", "cancel"]);
 
 const props = defineProps({
@@ -119,10 +104,10 @@ const offlineReportsCount = ref(0);
 const isSubmitting = ref(false);
 const locationStatus = ref("idle");
 
-// Advanced GPS State
+// GPS State
 const lastKnownLocation = ref(null);
 const locationWatchId = ref(null);
-const locationCacheTimeout = 24 * 60 * 60 * 1000; // 24 hours cache (increased from 15 minutes)
+const locationCacheTimeout = 24 * 60 * 60 * 1000;
 
 // Camera state
 const isCameraActive = ref(false);
@@ -151,11 +136,8 @@ const MAX_PHOTOS = 3;
 const MAX_VIDEOS = 2;
 const MAX_TOTAL = MAX_PHOTOS + MAX_VIDEOS;
 const MAX_PHOTO_SIZE = 5 * 1024 * 1024;
-
-const MAX_VIDEO_DURATION = 5; // 5 seconds maximum
-const MAX_VIDEO_SIZE = 10 * 1024 * 1024; // 10MB maximum
-
-const currentLocation = ref("Clarin, Bohol");
+const MAX_VIDEO_DURATION = 5;
+const MAX_VIDEO_SIZE = 10 * 1024 * 1024;
 
 const waterIssueTypes = [
     "Burst pipe",
@@ -212,7 +194,6 @@ const hasErrors = computed(() => {
     return Object.keys(form.errors).length > 0;
 });
 
-// Enhanced form validation with better GPS handling
 const isFormValid = computed(() => {
     const basicValidation =
         form.reporter_name &&
@@ -223,7 +204,6 @@ const isFormValid = computed(() => {
         (form.water_issue_type !== "others" || form.custom_water_issue) &&
         form.photos.length > 0;
 
-    // Allow all location statuses except when explicitly loading
     const invalidLocations = ["loading"];
 
     return basicValidation && !invalidLocations.includes(locationStatus.value);
@@ -247,22 +227,12 @@ const updateOnlineStatus = () => {
     const wasOffline = !isOnline.value;
     isOnline.value = navigator.onLine;
 
-    console.log("🌐 Network status changed:", {
-        wasOffline,
-        isNowOnline: isOnline.value,
-        currentLocationStatus: locationStatus.value,
-    });
-
     if (isOnline.value) {
-        // If we just came online and have poor location, try to get better one
         if (wasOffline && locationStatus.value === "offline_default_location") {
-            console.log("🔄 Came online - retrying GPS acquisition...");
             setTimeout(() => {
                 getLocation();
             }, 2000);
         }
-
-        // Auto-sync offline reports
         triggerAutoSync();
     }
 };
@@ -289,7 +259,7 @@ const triggerManualSync = async () => {
     }
 };
 
-// Enhanced GPS Methods with persistent cache
+// GPS Methods
 const loadCachedLocation = () => {
     try {
         const cached = localStorage.getItem("lastKnownLocation");
@@ -299,26 +269,13 @@ const loadCachedLocation = () => {
 
             if (cacheAge < locationCacheTimeout) {
                 lastKnownLocation.value = location;
-                console.log(
-                    "✅ Loaded cached location (age:",
-                    Math.round(cacheAge / 1000),
-                    "seconds):",
-                    location
-                );
                 return location;
             } else {
-                console.log(
-                    "🕒 Cached location expired (age:",
-                    Math.round(cacheAge / 1000),
-                    "seconds)"
-                );
                 localStorage.removeItem("lastKnownLocation");
             }
-        } else {
-            console.log("📭 No cached location found in localStorage");
         }
     } catch (e) {
-        console.warn("❌ Failed to load cached location:", e);
+        console.warn("Failed to load cached location:", e);
     }
     return null;
 };
@@ -333,27 +290,17 @@ const saveLocationToCache = (coords) => {
         };
         localStorage.setItem("lastKnownLocation", JSON.stringify(locationData));
         lastKnownLocation.value = locationData;
-        console.log("💾 Location saved to cache:", locationData);
     } catch (e) {
-        console.warn("❌ Failed to save location to cache:", e);
+        console.warn("Failed to save location to cache:", e);
     }
 };
 
-// FIXED: Enhanced getLocation with better offline handling
 const getLocation = async () => {
-    console.log(
-        "📍 getLocation called - Online:",
-        isOnline.value,
-        "Fresh start"
-    );
-
-    // STEP 1: Always check for cached location first
     const cachedLocation = loadCachedLocation();
     if (cachedLocation) {
         form.latitude = cachedLocation.latitude;
         form.longitude = cachedLocation.longitude;
         locationStatus.value = "offline_cached_location";
-        console.log("✅ Using cached location for offline mode");
 
         if (!isOnline.value) {
             Swal.fire({
@@ -369,21 +316,14 @@ const getLocation = async () => {
         return cachedLocation;
     }
 
-    console.log("📭 No cached location available");
-
-    // STEP 2: If offline and no cache, check if we should try GPS anyway
     if (!isOnline.value) {
-        console.log("🌐 Offline mode - checking GPS availability...");
-
-        // Try to get GPS even when offline (GPS hardware might still work)
         if (navigator.geolocation) {
-            console.log("🔄 Trying GPS even though offline...");
             locationStatus.value = "loading";
 
             return new Promise((resolve) => {
                 const offlineGpsOptions = {
                     enableHighAccuracy: true,
-                    timeout: 15000, // 15 seconds for offline GPS
+                    timeout: 15000,
                     maximumAge: 0,
                 };
 
@@ -396,9 +336,7 @@ const getLocation = async () => {
                             timestamp: Date.now(),
                         };
 
-                        console.log("🎯 Offline GPS acquired!", coords);
                         saveLocationToCache(coords);
-
                         form.latitude = coords.latitude;
                         form.longitude = coords.longitude;
                         locationStatus.value = "success";
@@ -416,8 +354,6 @@ const getLocation = async () => {
                         resolve(coords);
                     },
                     (error) => {
-                        console.warn("❌ Offline GPS failed:", error.message);
-                        // Fall back to default location
                         useDefaultLocation();
                         resolve(null);
                     },
@@ -425,20 +361,17 @@ const getLocation = async () => {
                 );
             });
         } else {
-            // No geolocation support, use default
             useDefaultLocation();
             return null;
         }
     }
 
-    // STEP 3: Online mode - get fresh GPS
-    console.log("🌐 Online mode - getting fresh GPS...");
     locationStatus.value = "loading";
 
     return new Promise((resolve) => {
         const onlineGpsOptions = {
             enableHighAccuracy: true,
-            timeout: 25000, // 25 seconds
+            timeout: 25000,
             maximumAge: 0,
         };
 
@@ -451,9 +384,7 @@ const getLocation = async () => {
                     timestamp: Date.now(),
                 };
 
-                console.log("🎯 Online GPS acquired:", coords);
                 saveLocationToCache(coords);
-
                 form.latitude = coords.latitude;
                 form.longitude = coords.longitude;
                 locationStatus.value = "success";
@@ -475,17 +406,11 @@ const getLocation = async () => {
                 resolve(coords);
             },
             (error) => {
-                console.warn("❌ Online GPS failed:", error.message);
-
-                // Try cached location one more time (in case of race condition)
                 const freshCache = loadCachedLocation();
                 if (freshCache) {
                     form.latitude = freshCache.latitude;
                     form.longitude = freshCache.longitude;
                     locationStatus.value = "offline_cached_location";
-                    console.log(
-                        "✅ Fell back to cached location after GPS failure"
-                    );
                     resolve(freshCache);
                 } else {
                     useDefaultLocation();
@@ -497,13 +422,10 @@ const getLocation = async () => {
     });
 };
 
-// Helper function for default location
 const useDefaultLocation = () => {
     form.latitude = 9.9616;
     form.longitude = 124.025;
     locationStatus.value = "offline_default_location";
-
-    console.log("⚡ Using default location");
 
     Swal.fire({
         icon: "warning",
@@ -516,15 +438,10 @@ const useDefaultLocation = () => {
     });
 };
 
-// FIXED: Enhanced location tracking that works with the main getLocation
 const startLocationTracking = () => {
-    if (!navigator.geolocation) {
-        console.warn("Geolocation not supported");
-        return;
-    }
+    if (!navigator.geolocation) return;
 
     try {
-        // Stop any existing tracking
         if (locationWatchId.value) {
             navigator.geolocation.clearWatch(locationWatchId.value);
         }
@@ -538,33 +455,25 @@ const startLocationTracking = () => {
                     timestamp: Date.now(),
                 };
 
-                console.log("📍 Location tracking updated:", coords);
-
-                // Always update cache with fresh location
                 saveLocationToCache(coords);
 
-                // Only update form if we don't have a good location yet
                 if (locationStatus.value !== "success") {
                     form.latitude = coords.latitude;
                     form.longitude = coords.longitude;
                     locationStatus.value = "success";
-
-                    console.log("✅ Location improved via tracking");
                 }
             },
             (error) => {
-                console.warn("📍 Location tracking error:", error.message);
-                // Don't change status for tracking errors
+                console.warn("Location tracking error:", error.message);
             },
             {
-                enableHighAccuracy: false, // Use battery-friendly mode for tracking
-                maximumAge: 30000, // 30 seconds
+                enableHighAccuracy: false,
+                maximumAge: 30000,
                 timeout: 10000,
             }
         );
-        console.log("📍 Started continuous location tracking");
     } catch (error) {
-        console.error("❌ Failed to start location tracking:", error);
+        console.error("Failed to start location tracking:", error);
     }
 };
 
@@ -572,7 +481,6 @@ const stopLocationTracking = () => {
     if (locationWatchId.value) {
         navigator.geolocation.clearWatch(locationWatchId.value);
         locationWatchId.value = null;
-        console.log("Stopped location tracking");
     }
 };
 
@@ -650,7 +558,7 @@ const startCameraStream = async () => {
         }
 
         isCameraActive.value = true;
-        await nextTick(); // Wait for DOM update
+        await nextTick();
 
         const constraints = {
             video: {
@@ -672,7 +580,6 @@ const startCameraStream = async () => {
 
         stream = await navigator.mediaDevices.getUserMedia(constraints);
 
-        // FIX: Set the stream to the camera interface
         if (cameraSectionRef.value) {
             cameraSectionRef.value.setVideoStream(stream);
         }
@@ -752,7 +659,6 @@ const capturePhoto = async () => {
         const canvas = document.createElement("canvas");
         const ctx = canvas.getContext("2d");
 
-        // FIX: Get the video element from CameraSection
         const video = cameraSectionRef.value?.getVideoElement();
 
         if (!video) {
@@ -762,13 +668,9 @@ const capturePhoto = async () => {
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
 
-        // Draw the video frame
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-        // Add timestamp and location watermark
         addWatermark(ctx, canvas.width, canvas.height);
 
-        // FIX: Properly handle the async toBlob with Promise
         const blob = await new Promise((resolve, reject) => {
             canvas.toBlob(
                 (blob) => {
@@ -779,7 +681,7 @@ const capturePhoto = async () => {
                     }
                 },
                 "image/jpeg",
-                0.85 // Slightly lower quality for better reliability
+                0.85
             );
         });
 
@@ -817,11 +719,9 @@ const capturePhoto = async () => {
     }
 };
 
-// Add this new function to create the watermark
 const addWatermark = (ctx, width, height) => {
     const now = new Date();
 
-    // Format date and time separately
     const dateStr = now
         .toLocaleDateString("en-US", {
             year: "numeric",
@@ -837,42 +737,34 @@ const addWatermark = (ctx, width, height) => {
         hour12: false,
     });
 
-    // Get location information
     const locationInfo = getLocationInfo();
 
-    // Watermark lines
     const lines = [`${dateStr} ${timeStr}`, locationInfo];
 
-    // Watermark styling
     const padding = 10;
-    const fontSize = Math.max(12, width * 0.012); // Responsive font size
+    const fontSize = Math.max(12, width * 0.012);
     const lineHeight = fontSize * 1.2;
     const fontFamily = "Arial, sans-serif";
 
-    // Set text style
     ctx.font = `bold ${fontSize}px ${fontFamily}`;
     ctx.textAlign = "left";
     ctx.textBaseline = "bottom";
 
-    // Calculate maximum text width
     let maxTextWidth = 0;
     lines.forEach((line) => {
         const textMetrics = ctx.measureText(line);
         maxTextWidth = Math.max(maxTextWidth, textMetrics.width);
     });
 
-    // Background dimensions
     const bgPadding = 6;
     const bgWidth = maxTextWidth + bgPadding * 2;
     const bgHeight = lines.length * lineHeight + bgPadding * 2;
     const bgX = padding;
     const bgY = height - padding - bgHeight;
 
-    // Draw semi-transparent background
     ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
     ctx.fillRect(bgX, bgY, bgWidth, bgHeight);
 
-    // Draw text lines
     ctx.fillStyle = "white";
     lines.forEach((line, index) => {
         const yPos =
@@ -883,17 +775,14 @@ const addWatermark = (ctx, width, height) => {
         ctx.fillText(line, bgX + bgPadding, yPos);
     });
 
-    // Optional: Add a small border
     ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
     ctx.lineWidth = 1;
     ctx.strokeRect(bgX, bgY, bgWidth, bgHeight);
 };
 
-// Add this helper function to get location information
 const getLocationInfo = () => {
     const locationParts = [];
 
-    // Add specific location details
     if (form.purok) {
         locationParts.push(`Purok ${form.purok}`);
     }
@@ -902,12 +791,10 @@ const getLocationInfo = () => {
         locationParts.push(form.barangay);
     }
 
-    // Add GPS accuracy indicator if available
     if (form.latitude && form.longitude) {
         const lat = Number(form.latitude).toFixed(6);
         const lon = Number(form.longitude).toFixed(6);
 
-        // Add accuracy indicator based on location status
         let accuracyIndicator = "";
         if (locationStatus.value === "success") {
             accuracyIndicator = "GPS";
@@ -919,14 +806,12 @@ const getLocationInfo = () => {
 
         locationParts.push(`${accuracyIndicator}: ${lat}, ${lon}`);
     } else {
-        // Fallback to municipality
         locationParts.push(form.municipality || "Clarin");
     }
 
     return locationParts.join(" • ") || "Location unknown";
 };
 
-// Alternative: Real-time video recording with watermark overlay
 const startVideoRecording = async () => {
     if (
         !isCameraReady.value ||
@@ -942,10 +827,9 @@ const startVideoRecording = async () => {
 
         const options = {
             mimeType: "video/webm;codecs=vp9,opus",
-            videoBitsPerSecond: 1000000, // 1 Mbps for smaller files
+            videoBitsPerSecond: 1000000,
         };
 
-        // Fallback to VP8 if VP9 is not supported
         if (!MediaRecorder.isTypeSupported(options.mimeType)) {
             options.mimeType = "video/webm;codecs=vp8,opus";
         }
@@ -961,7 +845,6 @@ const startVideoRecording = async () => {
         mediaRecorder.onstop = async () => {
             let blob = new Blob(recordedChunks, { type: "video/webm" });
 
-            // Add watermark to the recorded video
             blob = await addWatermarkToVideo(blob);
 
             if (blob.size > MAX_VIDEO_SIZE) {
@@ -1006,7 +889,6 @@ const startVideoRecording = async () => {
         recordingInterval = setInterval(() => {
             recordingTime.value++;
 
-            // Auto-stop at 5 seconds
             if (recordingTime.value >= MAX_VIDEO_DURATION) {
                 stopVideoRecording();
             }
@@ -1022,41 +904,25 @@ const startVideoRecording = async () => {
     }
 };
 
-// Add this function in ReportForm.vue
 const addWatermarkToVideo = async (blob) => {
-    // For now, return the original blob since video watermarking is complex
-    // In a production environment, you would use FFmpeg.js or a similar library
-    console.log("Video watermarking would be implemented here");
     return blob;
-};
-
-// Simple compression function for final size adjustment
-const compressVideoToSize = async (blob) => {
-    return new Promise((resolve) => {
-        // For now, we'll use the original blob since we're already compressing during recording
-        // You can add additional compression here if needed
-        resolve(blob);
-    });
 };
 
 const stopVideoRecording = () => {
     if (!isRecording.value || !mediaRecorder) return;
 
     try {
-        // Stop the media recorder
         if (mediaRecorder.state !== "inactive") {
             mediaRecorder.stop();
         }
 
         isRecording.value = false;
 
-        // Clear the recording interval
         if (recordingInterval) {
             clearInterval(recordingInterval);
             recordingInterval = null;
         }
 
-        // Show recording stopped message if not auto-stopped
         if (recordingTime.value < MAX_VIDEO_DURATION) {
             Swal.fire({
                 icon: "info",
@@ -1128,7 +994,6 @@ const clearAllMedia = () => {
     });
 };
 
-// Helper function for showing sync results
 const showSyncResults = (successfulSyncs, failedSyncs, syncTrackingData) => {
     if (successfulSyncs.length > 0 || failedSyncs.length > 0) {
         let message = "";
@@ -1159,14 +1024,12 @@ const syncOfflineReports = async () => {
     if (!isOnline.value || isSyncing.value) return;
 
     isSyncing.value = true;
-    console.log("Starting offline reports sync...");
 
     try {
         const queue =
             (await offlineReportsStore.getItem("offline_reports_queue")) || [];
 
         if (queue.length === 0) {
-            console.log("No offline reports to sync");
             isSyncing.value = false;
             return;
         }
@@ -1177,20 +1040,13 @@ const syncOfflineReports = async () => {
 
         for (const report of queue) {
             try {
-                console.log(`Processing report: ${report.id}`, report.formData);
-
-                // Enhanced validation - ensure location data exists
                 if (!isValidOfflineReport(report)) {
-                    console.warn(
-                        `Invalid offline report ${report.id}, skipping`
-                    );
                     failedSyncs.push({ id: report.id, reason: "Invalid data" });
                     continue;
                 }
 
                 const formData = new FormData();
 
-                // Add all form data fields with proper formatting
                 Object.keys(report.formData).forEach((key) => {
                     const value = report.formData[key];
                     if (value !== null && value !== undefined && value !== "") {
@@ -1206,9 +1062,7 @@ const syncOfflineReports = async () => {
                     }
                 });
 
-                // Ensure latitude and longitude are always included
                 if (!formData.has("latitude") || !formData.has("longitude")) {
-                    // Use default coordinates if missing
                     formData.append(
                         "latitude",
                         report.formData.latitude || "9.9616"
@@ -1219,7 +1073,6 @@ const syncOfflineReports = async () => {
                     );
                 }
 
-                // Convert base64 photos back to files
                 let hasValidPhotos = false;
                 for (const photo of report.photos) {
                     try {
@@ -1227,9 +1080,6 @@ const syncOfflineReports = async () => {
                         const blob = await response.blob();
 
                         if (blob.size === 0 || blob.size > MAX_PHOTO_SIZE) {
-                            console.warn(
-                                `Invalid photo size in report ${report.id}: ${blob.size} bytes`
-                            );
                             continue;
                         }
 
@@ -1247,7 +1097,6 @@ const syncOfflineReports = async () => {
                 }
 
                 if (!hasValidPhotos) {
-                    console.warn(`No valid photos in report ${report.id}`);
                     failedSyncs.push({
                         id: report.id,
                         reason: "No valid photos",
@@ -1255,7 +1104,6 @@ const syncOfflineReports = async () => {
                     continue;
                 }
 
-                // Add CSRF token for Laravel
                 const csrfToken = document
                     .querySelector('meta[name="csrf-token"]')
                     ?.getAttribute("content");
@@ -1284,9 +1132,6 @@ const syncOfflineReports = async () => {
                             originalReportId: report.id,
                         });
                     }
-                    console.log(
-                        `Successfully synced report ${report.id} with tracking code: ${response.data.trackingCode}`
-                    );
                 } else {
                     failedSyncs.push({
                         id: report.id,
@@ -1298,22 +1143,6 @@ const syncOfflineReports = async () => {
                 console.error(`Error syncing report ${report.id}:`, error);
 
                 if (error.response) {
-                    console.error(
-                        "Server response error:",
-                        error.response.status
-                    );
-                    console.error("Server response data:", error.response.data);
-
-                    if (
-                        error.response.status === 422 &&
-                        error.response.data.errors
-                    ) {
-                        console.error(
-                            "VALIDATION ERRORS:",
-                            error.response.data.errors
-                        );
-                    }
-
                     failedSyncs.push({
                         id: report.id,
                         reason: `Server error: ${error.response.status}`,
@@ -1331,7 +1160,6 @@ const syncOfflineReports = async () => {
             }
         }
 
-        // Update queue
         const updatedQueue = queue.filter(
             (report) => !successfulSyncs.includes(report.id)
         );
@@ -1341,23 +1169,16 @@ const syncOfflineReports = async () => {
         );
         offlineReportsCount.value = updatedQueue.length;
 
-        // Show success modal for synced reports
         if (syncTrackingData.length > 0) {
             const latestSync = syncTrackingData[syncTrackingData.length - 1];
 
-            // Emit to parent (Hero.vue) instead of showing modal here
             emit("offlineReportsSynced", {
                 trackingCode: latestSync.trackingCode,
                 dateSubmitted: latestSync.dateSubmitted,
                 totalSynced: syncTrackingData.length,
             });
-
-            console.log(
-                `Emitting sync success for tracking code: ${latestSync.trackingCode}`
-            );
         }
 
-        // Show sync results
         showSyncResults(successfulSyncs, failedSyncs, syncTrackingData);
     } catch (error) {
         console.error("Error during offline reports sync:", error);
@@ -1372,7 +1193,6 @@ const syncOfflineReports = async () => {
     }
 };
 
-// Add this validation function
 const isValidOfflineReport = (report) => {
     if (!report || !report.formData || !report.photos) {
         return false;
@@ -1384,8 +1204,8 @@ const isValidOfflineReport = (report) => {
         "purok",
         "description",
         "water_issue_type",
-        "latitude", // Now required by server
-        "longitude", // Now required by server
+        "latitude",
+        "longitude",
     ];
 
     for (const field of requiredFields) {
@@ -1393,31 +1213,24 @@ const isValidOfflineReport = (report) => {
             !report.formData[field] ||
             report.formData[field].toString().trim() === ""
         ) {
-            console.warn(`Missing required field: ${field}`);
             return false;
         }
     }
 
-    // Validate water issue type
     if (
         report.formData.water_issue_type === "others" &&
         (!report.formData.custom_water_issue ||
             report.formData.custom_water_issue.trim() === "")
     ) {
-        console.warn('Custom water issue required when type is "others"');
         return false;
     }
 
-    // Validate photos
     if (!Array.isArray(report.photos) || report.photos.length === 0) {
-        console.warn("No photos in report");
         return false;
     }
 
-    // Check if photos are valid
     for (const photo of report.photos) {
         if (!photo.dataUrl || !photo.name || !photo.type) {
-            console.warn("Invalid photo data");
             return false;
         }
     }
@@ -1425,7 +1238,6 @@ const isValidOfflineReport = (report) => {
     return true;
 };
 
-// Offline storage methods
 const fileToBase64 = (file) => {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -1443,7 +1255,6 @@ const saveReportOffline = async () => {
             "_" +
             Math.random().toString(36).substr(2, 9);
 
-        // Validate required fields
         const requiredFields = [
             "reporter_name",
             "barangay",
@@ -1465,7 +1276,6 @@ const saveReportOffline = async () => {
             );
         }
 
-        // Validate water issue type
         if (
             form.water_issue_type === "others" &&
             (!form.custom_water_issue || form.custom_water_issue.trim() === "")
@@ -1475,16 +1285,13 @@ const saveReportOffline = async () => {
             );
         }
 
-        // Validate photos
         if (form.photos.length === 0) {
             throw new Error("At least one photo is required");
         }
 
-        // Convert photos to base64 for storage
         const photosWithData = [];
         for (const photo of form.photos) {
             if (!photo || photo.size === 0 || photo.size > MAX_PHOTO_SIZE) {
-                console.warn("Skipping invalid photo:", photo);
                 continue;
             }
 
@@ -1505,7 +1312,6 @@ const saveReportOffline = async () => {
             throw new Error("No valid photos to save");
         }
 
-        // Enhanced location data with source information
         const latitude = form.latitude || 9.9616;
         const longitude = form.longitude || 124.025;
         const locationSource =
@@ -1530,7 +1336,7 @@ const saveReportOffline = async () => {
                 longitude: longitude,
                 water_issue_type: form.water_issue_type,
                 custom_water_issue: (form.custom_water_issue || "").trim(),
-                location_source: locationSource, // Track where the location came from
+                location_source: locationSource,
             },
             photos: photosWithData,
             createdAt: new Date().toISOString(),
@@ -1550,7 +1356,6 @@ const saveReportOffline = async () => {
     }
 };
 
-// Form submission
 const submitReport = async () => {
     if (!form.water_issue_type) {
         Swal.fire({
@@ -1580,7 +1385,6 @@ const submitReport = async () => {
         return;
     }
 
-    // Enhanced location validation with GPS support
     if (isOnline.value && locationStatus.value !== "success") {
         Swal.fire({
             icon: "error",
@@ -1591,7 +1395,6 @@ const submitReport = async () => {
         return;
     }
 
-    // For offline mode, show appropriate warning based on location source
     if (
         !isOnline.value &&
         locationStatus.value === "offline_default_location"
@@ -1608,7 +1411,7 @@ const submitReport = async () => {
         });
 
         if (!result.isConfirmed) {
-            getLocation(); // Retry location
+            getLocation();
             return;
         }
     }
@@ -1616,14 +1419,6 @@ const submitReport = async () => {
     isSubmitting.value = true;
 
     try {
-        // Show loading message immediately for both online and offline
-        console.log(
-            `Starting ${
-                isOnline.value ? "online" : "offline"
-            } submission with delay...`
-        );
-
-        // Show saving message immediately
         Swal.fire({
             title: isOnline.value
                 ? "Submitting Report..."
@@ -1640,11 +1435,9 @@ const submitReport = async () => {
             },
         });
 
-        // Add 2-second delay before actual processing for both modes
         await new Promise((resolve) => setTimeout(resolve, 2000));
 
         if (isOnline.value) {
-            // Online submission
             const formData = new FormData();
             Object.keys(form.data()).forEach((key) => {
                 if (key !== "photos" && key !== "photo_previews") {
@@ -1665,8 +1458,6 @@ const submitReport = async () => {
             );
 
             isSubmitting.value = false;
-
-            // Close the loading dialog
             Swal.close();
 
             if (response.data.success) {
@@ -1680,17 +1471,13 @@ const submitReport = async () => {
             form.photos = [];
             form.photo_previews = [];
         } else {
-            // Offline submission
             const reportId = await saveReportOffline();
             isSubmitting.value = false;
-
-            // Close the loading dialog
             Swal.close();
 
             let successMessage =
                 "Your report has been saved locally and will be submitted automatically when you're back online.";
 
-            // Add location info to success message
             if (locationStatus.value === "offline_cached_location") {
                 successMessage =
                     "Your report with cached GPS coordinates has been saved locally and will be submitted when online.";
@@ -1716,8 +1503,6 @@ const submitReport = async () => {
         }
     } catch (error) {
         isSubmitting.value = false;
-
-        // Close any open loading dialogs
         Swal.close();
 
         if (isOnline.value) {
@@ -1753,27 +1538,19 @@ watch(
 
 // Lifecycle
 onMounted(async () => {
-    console.log("🚀 Component mounted - Initializing...");
-
-    // Set up network listeners
     window.addEventListener("online", updateOnlineStatus);
     window.addEventListener("offline", updateOnlineStatus);
     loadOfflineReportsCount();
 
-    // Start location tracking immediately
     startLocationTracking();
 
-    // Get initial location with proper sequencing
     setTimeout(async () => {
-        console.log("🔄 Starting location acquisition sequence...");
         await getLocation();
 
-        // If we ended up with default location and we're online, try once more after a delay
         if (
             locationStatus.value === "offline_default_location" &&
             isOnline.value
         ) {
-            console.log("🔄 Retrying GPS acquisition in 5 seconds...");
             setTimeout(async () => {
                 await getLocation();
             }, 5000);

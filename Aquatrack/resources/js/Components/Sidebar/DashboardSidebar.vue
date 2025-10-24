@@ -2,7 +2,7 @@
     <aside
         :class="[
             'fixed top-0 left-0 z-50 h-screen bg-blue-950 border-r shadow-lg dark:bg-gradient-to-b dark:from-blue-800 dark:to-blue-700 dark:border-blue-700 transition-all duration-300 ease-in-out flex flex-col',
-            isOpen ? 'w-[260px]' : 'w-[70px]',
+            isOpen ? 'w-[257px]' : 'w-[70px]',
             isMobileMenuOpen
                 ? 'translate-x-0'
                 : '-translate-x-full md:translate-x-0',
@@ -14,7 +14,7 @@
         <div class="flex-shrink-0 items-center">
             <!-- Logo Section -->
             <div
-                class="flex items-center justify-between py-[11px] px-4 border-b border-gray-200/20"
+                class="flex items-center justify-between py-[3px] px-4 border-b border-gray-200/20"
             >
                 <div class="flex items-center min-w-0">
                     <img
@@ -22,7 +22,7 @@
                         :class="[
                             'transition-all duration-300 flex-shrink-0',
                             isOpen
-                                ? 'w-14 h-14 object-cover'
+                                ? 'w-18 h-14 object-cover'
                                 : 'w-[56px] h-[56px] object-contain',
                         ]"
                         alt="AquaTrack Logo"
@@ -78,7 +78,7 @@
                     <Link
                         :href="link.url"
                         :title="!isOpen ? link.name : ''"
-                        class="flex items-center text-white px-3 py-3 text-sm font-medium rounded-xl transition-all duration-200 group relative"
+                        class="flex items-center text-white px-3 py-3 text-sm font-medium rounded-sm transition-all duration-200 group relative"
                         :class="{
                             'bg-blue-900 text-white shadow-md transform scale-[1.02]':
                                 isActive(link.url),
@@ -90,7 +90,7 @@
                         <!-- Active indicator -->
                         <div
                             v-if="isActive(link.url)"
-                            class="absolute left-0 w-2 h-8 bg-white rounded-r-full opacity-80"
+                            class="absolute left-0 w-[4px] h-6 bg-white rounded-r-full opacity-80"
                         ></div>
 
                         <component

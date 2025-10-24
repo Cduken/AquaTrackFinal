@@ -18,7 +18,7 @@
         />
         <main
             :class="[
-                'p-4 pt-[100px] bg-gray-200 flex-1 transition-all duration-300 ease-in-out',
+                ' pt-[60px] bg-gray-50 flex-1 transition-all duration-300 ease-in-out',
                 { 'md:ml-64': isSidebarOpen, 'md:ml-16': !isSidebarOpen },
             ]"
         >

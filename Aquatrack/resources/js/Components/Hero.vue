@@ -1,6 +1,6 @@
 <script setup>
 import { Link } from "@inertiajs/vue3";
-import { ref, onMounted, onUnmounted, watch } from "vue";
+import { ref, onMounted, onUnmounted, watch, nextTick } from "vue";
 import ReportForm from "@/Components/Reports/ReportForm.vue";
 import GlobalReportSuccessModal from "@/Components/Modals/GlobalReportSuccessModal.vue";
 import TrackReportModal from "@/Components/Modals/TrackReportModal.vue";
@@ -36,38 +36,23 @@ const props = defineProps({
     },
 });
 
-// Use reactive stats that sync with props
 const stats = ref({
     active_users: props.dashboardStats?.active_users || 0,
     resolution_percentage: props.dashboardStats?.resolution_percentage || 0,
 });
 
-
-
-// In Hero.vue script setup section, add this method
-// In Hero.vue, add this method
 const handleOfflineReportsSynced = (data) => {
-    console.log("Offline reports synced:", data);
-
-    // Close report modal first if it's open
     if (showReportModal.value) {
         showReportModal.value = false;
         document.body.style.overflow = "auto";
     }
 
-    // Show success modal with the tracking code
     trackingInfo.value = {
         code: data.trackingCode,
         date: data.dateSubmitted,
     };
     showSuccessModal.value = true;
 
-    console.log(
-        "Showing success modal for synced offline report:",
-        trackingInfo.value
-    );
-
-    // Show SweetAlert toast for successful sync
     Swal.fire({
         icon: "success",
         title: "Offline Reports Synced!",
@@ -82,7 +67,6 @@ const handleOfflineReportsSynced = (data) => {
         color: "#065f46",
     });
 
-    // Refresh stats after sync
     setTimeout(() => {
         refreshStats();
     }, 2000);
@@ -110,7 +94,6 @@ const zones = {
     "Zone 12": ["Lajog", "Buacao"],
 };
 
-// Watch for props changes and update stats
 watch(
     () => props.dashboardStats,
     (newStats) => {
@@ -123,7 +106,6 @@ watch(
     { immediate: true, deep: true }
 );
 
-// Function to refresh stats
 const refreshStats = () => {
     router.reload({
         only: ["dashboardStats"],
@@ -133,13 +115,6 @@ const refreshStats = () => {
 };
 
 onMounted(() => {
-    console.log("Received props on mount:", {
-        trackingCode: props.trackingCode,
-        dateSubmitted: props.dateSubmitted,
-        dashboardStats: props.dashboardStats,
-    });
-
-    // Initialize stats from props
     if (props.dashboardStats) {
         stats.value = {
             active_users: props.dashboardStats.active_users || 0,
@@ -154,15 +129,8 @@ onMounted(() => {
             date: props.dateSubmitted,
         };
         showSuccessModal.value = true;
-    } else {
-        console.log("No trackingCode or dateSubmitted, modal will not show.");
     }
-    console.log("Modal state:", {
-        showSuccessModal: showSuccessModal.value,
-        trackingInfo: trackingInfo.value,
-    });
 
-    // Start refreshing stats every 30 seconds
     refreshInterval = setInterval(() => {
         refreshStats();
     }, 30000);
@@ -231,34 +199,67 @@ const handleTrackReport = () => {
 const openReportModal = () => {
     showReportModal.value = true;
     document.body.style.overflow = "hidden";
+
+    // Wait for the modal to be rendered in DOM
+    nextTick(() => {
+        const modalContainer = document.querySelector(".modal-container");
+        if (modalContainer) {
+            // Reset any previous transforms
+            gsap.set(modalContainer, { clearProps: "all" });
+
+            // Drop down animation from top to center
+            gsap.fromTo(
+                modalContainer,
+                {
+                    y: -100,
+                    opacity: 0,
+                    scale: 0.9,
+                },
+                {
+                    y: 0,
+                    opacity: 1,
+                    scale: 1,
+                    duration: 0.6,
+                    ease: "back.out(1.4)",
+                }
+            );
+        }
+    });
 };
 
 const closeReportModal = () => {
-    showReportModal.value = false;
-    document.body.style.overflow = "auto";
+    const modalContainer = document.querySelector(".modal-container");
+    if (modalContainer) {
+        // Slide up animation
+        gsap.to(modalContainer, {
+            y: -100,
+            opacity: 0,
+            scale: 0.9,
+            duration: 0.4,
+            ease: "power2.in",
+            onComplete: () => {
+                showReportModal.value = false;
+                document.body.style.overflow = "auto";
+            },
+        });
+    } else {
+        // Fallback if element not found
+        showReportModal.value = false;
+        document.body.style.overflow = "auto";
+    }
 };
 
 const handleReportSuccess = (data) => {
-    console.log("Handling report success:", data);
-
-    // Close report modal
     showReportModal.value = false;
     document.body.style.overflow = "auto";
 
-    // Set tracking info and show success modal
     trackingInfo.value = {
         code: data.trackingCode,
         date: data.dateSubmitted,
     };
     showSuccessModal.value = true;
 
-    console.log("Modal state after handleReportSuccess:", {
-        showSuccessModal: showSuccessModal.value,
-        trackingInfo: trackingInfo.value,
-    });
-
-    // Show SweetAlert toast for successful submission
-     Swal.fire({
+    Swal.fire({
         icon: "success",
         title: "Report Submitted Successfully!",
         toast: true,
@@ -270,11 +271,9 @@ const handleReportSuccess = (data) => {
         iconColor: "#000000",
         color: "#000000",
         width: 380,
-        padding: '0.75rem',
-
+        padding: "0.75rem",
     });
 
-    // Refresh stats after a report is submitted
     setTimeout(() => {
         refreshStats();
     }, 2000);
@@ -284,8 +283,6 @@ const handleReportSuccess = (data) => {
 <template>
     <main id="home" class="relative w-full min-h-screen overflow-hidden">
         <Navigation />
-
-
 
         <div
             class="relative px-4 sm:px-8 lg:px-[120px] flex flex-col lg:flex-row gap-12 lg:gap-20 items-center justify-center min-h-[85vh] py-16 lg:py-0"
@@ -371,22 +368,9 @@ const handleReportSuccess = (data) => {
                 class="hero-image-container w-full lg:w-2/5 flex items-center justify-center order-1 lg:order-2 relative z-10"
             >
                 <div class="relative group">
-                    <!-- Decorative Elements -->
-
-                    <!-- Main Image Container -->
                     <div
                         class="relative bg-white rounded-2xl shadow-2xl overflow-hidden transform group-hover:scale-105 transition-transform duration-500"
                     >
-                        <!-- Image Badge -->
-                        <div
-                            class="absolute top-4 right-4 z-10 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg border border-gray-200"
-                        >
-                            <!-- <div class="flex items-center gap-2">
-                                <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                                <span class="text-sm font-semibold text-gray-700">Active</span>
-                            </div> -->
-                        </div>
-
                         <div class="p-6">
                             <img
                                 class="rounded-xl w-full h-auto object-cover shadow-inner"
@@ -395,60 +379,11 @@ const handleReportSuccess = (data) => {
                             />
                         </div>
                     </div>
-
-                    <!-- Floating Stats Cards - NOW DYNAMIC -->
-                    <div
-                        class="absolute -bottom-6 -left-6 bg-white rounded-xl shadow-xl p-4 border border-gray-100 animate-float"
-                    >
-                        <div class="flex items-center gap-3">
-                            <div
-                                class="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center"
-                            >
-                                <v-icon
-                                    name="hi-users"
-                                    class="text-white"
-                                    scale="1.5"
-                                />
-                            </div>
-                            <div>
-                                <p class="text-2xl font-bold text-gray-800">
-                                    {{ stats.active_users.toLocaleString() }}+
-                                </p>
-                                <p class="text-xs text-gray-600">
-                                    Active Users
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div
-                        class="absolute -top-6 -right-6 bg-white rounded-xl shadow-xl p-4 border border-gray-100 animate-float animation-delay-2000"
-                    >
-                        <div class="flex items-center gap-3">
-                            <div
-                                class="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg flex items-center justify-center"
-                            >
-                                <v-icon
-                                    name="hi-check-circle"
-                                    class="text-white"
-                                    scale="1.5"
-                                />
-                            </div>
-                            <div>
-                                <p class="text-2xl font-bold text-gray-800">
-                                    {{ stats.resolution_percentage }}%
-                                </p>
-                                <p class="text-xs text-gray-600">
-                                    Resolved Issues
-                                </p>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Track Report Floating Button - Enhanced -->
+        <!-- Track Report Floating Button -->
         <div class="fixed bottom-8 right-8 z-20 group">
             <button
                 @click="handleTrackReport"
@@ -475,7 +410,7 @@ const handleReportSuccess = (data) => {
             </button>
         </div>
 
-        <!-- Clean Report Modal -->
+        <!-- Report Modal with Animation -->
         <div v-if="showReportModal" class="fixed inset-0 z-50 overflow-y-auto">
             <div
                 class="fixed inset-0 bg-black/60 transition-all duration-300"
@@ -484,7 +419,7 @@ const handleReportSuccess = (data) => {
 
             <div class="flex min-h-full items-center justify-center p-4">
                 <div
-                    class="relative bg-white rounded-2xl shadow-2xl w-full max-w-[1000px] max-h-[90vh] overflow-hidden transform transition-all duration-300 scale-100"
+                    class="modal-container relative bg-white rounded-2xl shadow-2xl w-full max-w-[1000px] max-h-[90vh] overflow-hidden transform"
                 >
                     <div
                         class="bg-gradient-to-r from-[#062F64] via-[#1E4272] to-[#0D3468] px-6 py-5 sticky top-0 z-10"
@@ -515,7 +450,6 @@ const handleReportSuccess = (data) => {
                     </div>
 
                     <div class="overflow-y-auto max-h-[calc(90vh-100px)]">
-                        <!-- In Hero.vue template, update the ReportForm component -->
                         <ReportForm
                             :zones="zones"
                             @submitted="handleReportSuccess"
@@ -527,7 +461,7 @@ const handleReportSuccess = (data) => {
             </div>
         </div>
 
-        <!-- These modals should be siblings at the same level -->
+        <!-- Success and Track Modals -->
         <GlobalReportSuccessModal
             v-if="showSuccessModal && trackingInfo"
             :show="showSuccessModal"
@@ -592,7 +526,6 @@ const handleReportSuccess = (data) => {
     animation-delay: 4s;
 }
 
-/* Hide scrollbar for modal */
 .overflow-y-auto {
     scrollbar-width: thin;
     scrollbar-color: #cbd5e1 #f1f5f9;
@@ -615,7 +548,6 @@ const handleReportSuccess = (data) => {
     background: #94a3b8;
 }
 
-/* Responsive Styles */
 @media (max-width: 1024px) {
     .hero-content {
         text-align: center;
@@ -650,13 +582,10 @@ const handleReportSuccess = (data) => {
         font-size: 0.875rem;
     }
 
-    /* Hide floating stat cards on mobile */
     .animate-float {
         display: none;
     }
 }
-
-
 
 @media (max-width: 480px) {
     h1 {

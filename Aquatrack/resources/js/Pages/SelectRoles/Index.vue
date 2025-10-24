@@ -1,9 +1,11 @@
 <template>
     <Navigation />
-    <div class="min-h-[80vh]">
+    <div class="min-h-[80vh] relative">
+
+
         <!-- Left Side - Login Form -->
-        <div class="w-full flex items-center  justify-center p-8 bg-white">
-            <div class="w-full max-w-md ">
+        <div class="w-full flex items-center justify-center bg-white">
+            <div class="w-full max-w-xl border shadow-xl rounded-xl p-8 ">
                 <!-- Logo & Header -->
                 <div class="text-center mb-8">
 

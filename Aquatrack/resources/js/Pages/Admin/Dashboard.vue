@@ -307,7 +307,7 @@ watch(
         <!-- Header Section -->
         <div class="mb-8">
             <div
-                class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4"
+                class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 p-4"
             >
                 <div>
                     <h1 class="text-2xl font-bold text-gray-900">
@@ -354,7 +354,7 @@ watch(
         </div>
 
         <!-- Stats Grid -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+        <div class=" p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
             <StatCard
                 v-for="stat in statCards"
                 :key="stat.title"
@@ -370,7 +370,7 @@ watch(
         </div>
 
         <!-- Main Content Grid -->
-        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-8">
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-8 p-4">
             <!-- Left Column - Main Charts -->
             <div class="xl:col-span-2 space-y-6">
                 <!-- Water Consumption Chart -->
@@ -489,6 +489,7 @@ watch(
         </div>
 
         <!-- Recent Activity Section -->
+        <div class="p-4">
         <DashboardSection
             title="Recent Activity"
             :action="
@@ -514,5 +515,6 @@ watch(
                 />
             </div>
         </DashboardSection>
+        </div>
     </AdminLayout>
 </template>

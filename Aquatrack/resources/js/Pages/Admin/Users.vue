@@ -1,7 +1,6 @@
 <template>
     <AdminLayout>
         <div class="mx-auto w-full">
-            <!-- Table Section -->
             <div
                 class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden"
             >
@@ -19,9 +18,6 @@
                             </h5>
                         </div>
 
-                        <div class=""></div>
-
-                        <!-- Action Buttons -->
                         <div
                             class="flex flex-col md:flex-row items-center space-x-3"
                         >
@@ -43,6 +39,7 @@
                                     />
                                 </div>
                             </div>
+
                             <button
                                 @click="showCreateModal = true"
                                 type="button"
@@ -52,7 +49,6 @@
                                 Add User
                             </button>
 
-                            <!-- Filter Dropdown -->
                             <div class="relative">
                                 <button
                                     @click="toggleFilterDropdown"
@@ -65,7 +61,6 @@
                                     <ChevronDown class="ml-1 w-4 h-4" />
                                 </button>
 
-                                <!-- Filter Dropdown Content -->
                                 <div
                                     v-if="showFilterDropdown"
                                     class="fixed z-[1000] mt-1 w-56 bg-white rounded-lg shadow-lg border border-gray-200 dark:bg-gray-700 dark:border-gray-600"
@@ -79,90 +74,33 @@
                                             Role
                                         </h6>
                                         <div class="space-y-2">
-                                            <div class="flex items-center">
+                                            <div
+                                                class="flex items-center"
+                                                v-for="roleOption in roleOptions"
+                                                :key="roleOption.value"
+                                            >
                                                 <input
-                                                    id="role-all"
+                                                    :id="`role-${roleOption.value}`"
                                                     type="radio"
                                                     name="role"
-                                                    value=""
-                                                    :checked="!filters.role"
-                                                    @change="
-                                                        updateRoleFilter('')
-                                                    "
-                                                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
-                                                />
-                                                <label
-                                                    for="role-all"
-                                                    class="ml-2 text-sm text-gray-700 dark:text-gray-300"
-                                                    >All Roles</label
-                                                >
-                                            </div>
-                                            <div class="flex items-center">
-                                                <input
-                                                    id="role-customer"
-                                                    type="radio"
-                                                    name="role"
-                                                    value="customer"
+                                                    :value="roleOption.value"
                                                     :checked="
                                                         filters.role ===
-                                                        'customer'
+                                                        roleOption.value
                                                     "
                                                     @change="
                                                         updateRoleFilter(
-                                                            'customer'
+                                                            roleOption.value
                                                         )
                                                     "
                                                     class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
                                                 />
                                                 <label
-                                                    for="role-customer"
+                                                    :for="`role-${roleOption.value}`"
                                                     class="ml-2 text-sm text-gray-700 dark:text-gray-300"
-                                                    >Customer</label
                                                 >
-                                            </div>
-                                            <div class="flex items-center">
-                                                <input
-                                                    id="role-staff"
-                                                    type="radio"
-                                                    name="role"
-                                                    value="staff"
-                                                    :checked="
-                                                        filters.role === 'staff'
-                                                    "
-                                                    @change="
-                                                        updateRoleFilter(
-                                                            'staff'
-                                                        )
-                                                    "
-                                                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
-                                                />
-                                                <label
-                                                    for="role-staff"
-                                                    class="ml-2 text-sm text-gray-700 dark:text-gray-300"
-                                                    >Staff</label
-                                                >
-                                            </div>
-                                            <div class="flex items-center">
-                                                <input
-                                                    id="role-admin"
-                                                    type="radio"
-                                                    name="role"
-                                                    value="admin"
-                                                    :checked="
-                                                        filters.role === 'admin'
-                                                    "
-                                                    @change="
-                                                        updateRoleFilter(
-                                                            'admin'
-                                                        )
-                                                    "
-                                                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
-                                                />
-                                                <label
-                                                    for="role-admin"
-                                                    class="ml-2 text-sm text-gray-700 dark:text-gray-300"
-                                                    >Admin</label
-                                                >
+                                                    {{ roleOption.label }}
+                                                </label>
                                             </div>
                                         </div>
 
@@ -172,63 +110,33 @@
                                             Status
                                         </h6>
                                         <div class="space-y-2">
-                                            <div class="flex items-center">
+                                            <div
+                                                class="flex items-center"
+                                                v-for="statusOption in statusOptions"
+                                                :key="statusOption.value"
+                                            >
                                                 <input
-                                                    id="status-all"
+                                                    :id="`status-${statusOption.value}`"
                                                     type="radio"
                                                     name="status"
-                                                    value=""
-                                                    :checked="!filters.enabled"
-                                                    @change="
-                                                        updateEnabledFilter('')
-                                                    "
-                                                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
-                                                />
-                                                <label
-                                                    for="status-all"
-                                                    class="ml-2 text-sm text-gray-700 dark:text-gray-300"
-                                                    >All Status</label
-                                                >
-                                            </div>
-                                            <div class="flex items-center">
-                                                <input
-                                                    id="status-active"
-                                                    type="radio"
-                                                    name="status"
-                                                    value="1"
+                                                    :value="statusOption.value"
                                                     :checked="
-                                                        filters.enabled === '1'
+                                                        filters.enabled ===
+                                                        statusOption.value
                                                     "
                                                     @change="
-                                                        updateEnabledFilter('1')
+                                                        updateEnabledFilter(
+                                                            statusOption.value
+                                                        )
                                                     "
                                                     class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
                                                 />
                                                 <label
-                                                    for="status-active"
+                                                    :for="`status-${statusOption.value}`"
                                                     class="ml-2 text-sm text-gray-700 dark:text-gray-300"
-                                                    >Active</label
                                                 >
-                                            </div>
-                                            <div class="flex items-center">
-                                                <input
-                                                    id="status-inactive"
-                                                    type="radio"
-                                                    name="status"
-                                                    value="0"
-                                                    :checked="
-                                                        filters.enabled === '0'
-                                                    "
-                                                    @change="
-                                                        updateEnabledFilter('0')
-                                                    "
-                                                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
-                                                />
-                                                <label
-                                                    for="status-inactive"
-                                                    class="ml-2 text-sm text-gray-700 dark:text-gray-300"
-                                                    >Inactive</label
-                                                >
+                                                    {{ statusOption.label }}
+                                                </label>
                                             </div>
                                         </div>
                                     </div>
@@ -247,12 +155,6 @@
                                             />
                                             Reset
                                         </button>
-                                        <button
-                                            @click="showFilterDropdown = false"
-                                            class="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        >
-                                            Close
-                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -268,43 +170,36 @@
                         >
                             <tr>
                                 <th
-                                    scope="col"
                                     class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
                                 >
                                     User
                                 </th>
                                 <th
-                                    scope="col"
                                     class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
                                 >
                                     Account No.
                                 </th>
                                 <th
-                                    scope="col"
                                     class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
                                 >
                                     Serial No.
                                 </th>
                                 <th
-                                    scope="col"
                                     class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
                                 >
                                     Role(s)
                                 </th>
                                 <th
-                                    scope="col"
                                     class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
                                 >
                                     Status
                                 </th>
                                 <th
-                                    scope="col"
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
                                 >
                                     Created
                                 </th>
                                 <th
-                                    scope="col"
                                     class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
                                 >
                                     Actions
@@ -319,7 +214,6 @@
                                 :key="user.id"
                                 class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150"
                             >
-                                <!-- User Column -->
                                 <td class="px-6 py-2">
                                     <div class="flex items-center">
                                         <div class="flex-shrink-0 h-8 w-8 mr-3">
@@ -354,21 +248,18 @@
                                     </div>
                                 </td>
 
-                                <!-- Account Number -->
                                 <td
                                     class="px-6 py-2 text-xs text-gray-900 dark:text-white whitespace-nowrap"
                                 >
                                     {{ user.account_number || "N/A" }}
                                 </td>
 
-                                <!-- Serial Number -->
                                 <td
                                     class="px-6 py-2 text-xs text-gray-900 dark:text-white whitespace-nowrap"
                                 >
                                     {{ user.serial_number || "N/A" }}
                                 </td>
 
-                                <!-- Role -->
                                 <td class="px-6 py-2">
                                     <span
                                         :class="roleClasses(user.role)"
@@ -378,7 +269,6 @@
                                     </span>
                                 </td>
 
-                                <!-- Status -->
                                 <td class="px-6 py-3">
                                     <span
                                         :class="statusClasses(user.enabled)"
@@ -389,7 +279,7 @@
                                             :class="
                                                 user.enabled
                                                     ? 'bg-green-400'
-                                                    : 'bg-yellow-400'
+                                                    : 'bg-red-400'
                                             "
                                         ></span>
                                         {{
@@ -398,14 +288,12 @@
                                     </span>
                                 </td>
 
-                                <!-- Created Date -->
                                 <td
                                     class="px-6 py-2 text-xs text-gray-900 dark:text-white whitespace-nowrap"
                                 >
                                     {{ formatDate(user.created_at) }}
                                 </td>
 
-                                <!-- Actions -->
                                 <td class="px-6 py-3 text-right">
                                     <div class="flex justify-end">
                                         <div class="relative">
@@ -421,7 +309,6 @@
                                                 />
                                             </button>
 
-                                            <!-- Action Menu Dropdown -->
                                             <div
                                                 v-if="
                                                     activeActionMenu === user.id
@@ -492,7 +379,6 @@
                                 </td>
                             </tr>
 
-                            <!-- Empty State -->
                             <tr v-if="users.data.length === 0">
                                 <td colspan="7" class="px-6 py-8 text-center">
                                     <div
@@ -518,64 +404,7 @@
                     </table>
                 </div>
 
-                <!-- Pagination -->
-                <div
-                    class="border-t border-gray-200 dark:border-gray-700 px-6 py-2"
-                >
-                    <div class="flex items-center justify-between">
-                        <div class="text-sm text-gray-700 dark:text-gray-300">
-                            Showing
-                            <span class="font-semibold">{{
-                                users.from || 0
-                            }}</span>
-                            to
-                            <span class="font-semibold">{{
-                                users.to || 0
-                            }}</span>
-                            of
-                            <span class="font-semibold">{{
-                                users.total || 0
-                            }}</span>
-                            results
-                        </div>
-
-                        <div class="flex items-center space-x-2">
-                            <button
-                                @click="prevPage"
-                                :disabled="!users.prev_page_url"
-                                class="flex items-center px-3 py-1 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600 transition-colors"
-                            >
-                                Previous
-                            </button>
-
-                            <!-- Page Numbers -->
-                            <div class="flex items-center space-x-1">
-                                <button
-                                    v-for="page in getVisiblePages()"
-                                    :key="page"
-                                    @click="goToPage(page)"
-                                    :class="[
-                                        'px-3 py-1 text-sm font-medium rounded-md transition-colors',
-                                        page === users.current_page
-                                            ? 'bg-blue-50  text-blue-600 border border-blue-600'
-                                            : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50 hover:text-gray-700 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600',
-                                    ]"
-                                    :disabled="page === '...'"
-                                >
-                                    {{ page }}
-                                </button>
-                            </div>
-
-                            <button
-                                @click="nextPage"
-                                :disabled="!users.next_page_url"
-                                class="flex items-center px-3 py-1 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600 transition-colors"
-                            >
-                                Next
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <Pagination :data="users" />
             </div>
 
             <!-- Modals -->
@@ -605,6 +434,7 @@
 
 <script setup>
 import AdminLayout from "@/Layouts/AdminLayout.vue";
+import Pagination from "@/Components/Pagination.vue";
 import { ref, watch, onMounted, onUnmounted, nextTick } from "vue";
 import { router } from "@inertiajs/vue3";
 import { pickBy, debounce } from "lodash";
@@ -625,7 +455,6 @@ import {
     Trash2,
     Users,
     MoreHorizontal,
-    UserStar,
 } from "lucide-vue-next";
 
 const props = defineProps({
@@ -634,27 +463,7 @@ const props = defineProps({
     zones: Object,
 });
 
-console.log("Total users: ", props.users.total);
-
-const currentDateTime = ref("");
-
-const updateDateTime = () => {
-    const date = new Date().toLocaleString("en-US", {
-        timeZone: "Asia/Manila",
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-    });
-    currentDateTime.value = date;
-};
-
-onMounted(() => {
-    updateDateTime();
-    const interval = setInterval(updateDateTime, 1000);
-    onUnmounted(() => clearInterval(interval));
-});
-
+// Reactive state
 const filters = ref({
     search: props.filters.search || "",
     role: props.filters.role || "",
@@ -662,7 +471,6 @@ const filters = ref({
     order: props.filters.order || "desc",
     per_page: props.filters.per_page || 10,
     enabled: props.filters.enabled !== undefined ? props.filters.enabled : "",
-    action: props.filters.action || "",
 });
 
 const selectedUsers = ref([]);
@@ -672,46 +480,53 @@ const isResetting = ref(false);
 const activeActionMenu = ref(null);
 const filterDropdownStyle = ref({});
 const filterButton = ref(null);
-
-// Modal refs
 const showUserModal = ref(false);
 const showEditModal = ref(false);
 const selectedUser = ref(null);
 
-const zones = ref(
-    props.zones || {
-        "Zone 1": ["Poblacion Sur"],
-        "Zone 2": ["Poblacion Centro"],
-        "Zone 3": ["Poblacion Centro"],
-        "Zone 4": ["Poblacion Norte"],
-        "Zone 5": ["Candajec", "Buangan"],
-        "Zone 6": ["Bonbon"],
-        "Zone 7": ["Bonbon"],
-        "Zone 8": ["Nahawan"],
-        "Zone 9": ["Caboy", "Villaflor", "Cantuyoc"],
-        "Zone 10": ["Bacani", "Mataub", "Comaang", "Tangaran"],
-        "Zone 11": ["Cantuyoc", "Nahawan"],
-        "Zone 12": ["Lajog", "Buacao"],
-    }
-);
+// Constants
+const roleOptions = [
+    { value: "", label: "All Roles" },
+    { value: "customer", label: "Customer" },
+    { value: "staff", label: "Staff" },
+    { value: "admin", label: "Admin" },
+];
 
-// Toggle filter dropdown with positioning
+const statusOptions = [
+    { value: "", label: "All Status" },
+    { value: "1", label: "Active" },
+    { value: "0", label: "Inactive" },
+];
+
+const avatarColors = [
+    "bg-blue-500",
+    "bg-green-500",
+    "bg-purple-500",
+    "bg-pink-500",
+    "bg-indigo-500",
+    "bg-yellow-500",
+    "bg-red-500",
+    "bg-teal-500",
+    "bg-orange-500",
+];
+
+// Dropdown handlers
 const toggleFilterDropdown = async () => {
     showFilterDropdown.value = !showFilterDropdown.value;
 
-    if (showFilterDropdown.value) {
+    if (showFilterDropdown.value && filterButton.value) {
         await nextTick();
-        if (filterButton.value) {
-            const rect = filterButton.value.getBoundingClientRect();
-            filterDropdownStyle.value = {
-                left: `${rect.left}px`,
-                top: `${rect.bottom + 8}px`,
-            };
-        }
+        const rect = filterButton.value.getBoundingClientRect();
+        const dropdownWidth = 224;
+
+        filterDropdownStyle.value = {
+            left: `${rect.right - dropdownWidth}px`,
+            top: `${rect.bottom + 8}px`,
+            position: "fixed",
+        };
     }
 };
 
-// Get action dropdown position
 const getActionDropdownStyle = (userId) => {
     if (typeof window === "undefined") return {};
 
@@ -720,40 +535,34 @@ const getActionDropdownStyle = (userId) => {
 
     const rect = button.getBoundingClientRect();
     const viewportHeight = window.innerHeight;
-
-    // Calculate if dropdown should open upwards
     const spaceBelow = viewportHeight - rect.bottom;
-    const dropdownHeight = 176; // Approximate height of 4 menu items
+    const dropdownHeight = 176;
 
     let top = rect.bottom + 4;
 
-    // If not enough space below, open upwards
     if (spaceBelow < dropdownHeight && rect.top > dropdownHeight) {
         top = rect.top - dropdownHeight - 4;
     }
 
     return {
-        left: `${rect.right - 192}px`, // 192px is dropdown width (48 * 4)
+        left: `${rect.right - 192}px`,
         top: `${top}px`,
     };
 };
 
-// Toggle action menu
 const toggleActionMenu = async (userId) => {
     if (activeActionMenu.value === userId) {
         activeActionMenu.value = null;
     } else {
         activeActionMenu.value = userId;
-        // Wait for DOM update and recalculate position
         await nextTick();
     }
 };
 
-// Close dropdowns when clicking outside - FIXED VERSION
+// Click outside handler
 const handleClickOutside = (event) => {
-    // Check if click is inside filter dropdown or filter button
     const isFilterClick =
-        (filterButton.value && filterButton.value.contains(event.target)) ||
+        filterButton.value?.contains(event.target) ||
         (showFilterDropdown.value &&
             event.target.closest(".fixed.z-\\[1000\\]"));
 
@@ -761,7 +570,6 @@ const handleClickOutside = (event) => {
         showFilterDropdown.value = false;
     }
 
-    // Check if click is inside action dropdowns
     const actionButtons = document.querySelectorAll("[data-action-button]");
     let isClickInsideActionMenu = false;
 
@@ -771,7 +579,6 @@ const handleClickOutside = (event) => {
         }
     });
 
-    // Check if click is inside any action dropdown
     const actionDropdowns = document.querySelectorAll(".fixed.z-\\[1000\\]");
     actionDropdowns.forEach((dropdown) => {
         if (dropdown.contains(event.target)) {
@@ -792,22 +599,20 @@ onUnmounted(() => {
     document.removeEventListener("click", handleClickOutside);
 });
 
-// Filter update methods
+// Filter methods
 const updateRoleFilter = (role) => {
     filters.value.role = role;
-    // Auto-apply the filter immediately when radio button is clicked
     latestRequestId++;
     debouncedFetchUsers(filters.value, latestRequestId);
 };
 
 const updateEnabledFilter = (enabled) => {
     filters.value.enabled = enabled;
-    // Auto-apply the filter immediately when radio button is clicked
     latestRequestId++;
     debouncedFetchUsers(filters.value, latestRequestId);
 };
 
-// Rest of your existing methods remain the same...
+// Utility methods
 const formatDate = (dateString) => {
     if (!dateString) return "N/A";
     const date = new Date(dateString);
@@ -820,26 +625,12 @@ const formatDate = (dateString) => {
 
 const getAvatarColor = (name) => {
     if (!name) return "bg-gray-400";
-
-    const colors = [
-        "bg-blue-500",
-        "bg-green-500",
-        "bg-purple-500",
-        "bg-pink-500",
-        "bg-indigo-500",
-        "bg-yellow-500",
-        "bg-red-500",
-        "bg-teal-500",
-        "bg-orange-500",
-    ];
-
     let hash = 0;
     for (let i = 0; i < name.length; i++) {
         hash = name.charCodeAt(i) + ((hash << 5) - hash);
     }
-
-    const index = Math.abs(hash) % colors.length;
-    return colors[index];
+    const index = Math.abs(hash) % avatarColors.length;
+    return avatarColors[index];
 };
 
 const userInitials = (name) => {
@@ -852,7 +643,9 @@ const userInitials = (name) => {
         .substring(0, 2);
 };
 
-// Debounced fetch with request tracking
+// Data fetching
+let latestRequestId = 0;
+
 const debouncedFetchUsers = debounce((filters, requestId) => {
     router.get("/admin/users", pickBy(filters), {
         preserveState: true,
@@ -864,7 +657,6 @@ const debouncedFetchUsers = debounce((filters, requestId) => {
         },
         onError: (errors) => {
             if (requestId === latestRequestId) {
-                console.error("Fetch error:", errors);
                 Swal.fire({
                     icon: "error",
                     title: "Error",
@@ -878,8 +670,6 @@ const debouncedFetchUsers = debounce((filters, requestId) => {
         },
     });
 }, 300);
-
-let latestRequestId = 0;
 
 watch(
     () => ({
@@ -897,23 +687,6 @@ watch(
     { deep: true }
 );
 
-watch(selectedUsers, (value) => {
-    if (value.length === 0 && filters.value.action) {
-        filters.value.action = "";
-        latestRequestId++;
-        debouncedFetchUsers(filters.value, latestRequestId);
-    }
-});
-
-const sortBy = (column) => {
-    if (filters.value.sort === column) {
-        filters.value.order = filters.value.order === "asc" ? "desc" : "asc";
-    } else {
-        filters.value.sort = column;
-        filters.value.order = "asc";
-    }
-};
-
 const resetFilters = () => {
     isResetting.value = true;
     setTimeout(() => {
@@ -924,7 +697,6 @@ const resetFilters = () => {
             order: "desc",
             per_page: 10,
             enabled: "",
-            action: "",
         };
         selectedUsers.value = [];
         showFilterDropdown.value = false;
@@ -937,9 +709,10 @@ const fetchUsers = () => {
     debouncedFetchUsers(filters.value, latestRequestId);
 };
 
+// User actions
 const toggleUserStatus = (user) => {
     const newStatus = !user.enabled;
-    activeActionMenu.value = null; // Close menu
+    activeActionMenu.value = null;
 
     Swal.fire({
         title: `${newStatus ? "Activate" : "Deactivate"} User`,
@@ -976,20 +749,16 @@ const toggleUserStatus = (user) => {
                         });
                         fetchUsers();
                     },
-                    onError: (errors) => {
+                    onError: () => {
                         Swal.fire({
                             icon: "error",
                             title: "Error",
-                            text: `Failed to update status. ${
-                                errors.message ||
-                                "Please check the console for details."
-                            }`,
+                            text: "Failed to update status. Please try again.",
                             toast: true,
                             position: "top-end",
                             showConfirmButton: false,
                             timer: 2000,
                         });
-                        console.error("Update error:", errors);
                     },
                 }
             );
@@ -1000,13 +769,13 @@ const toggleUserStatus = (user) => {
 const editUser = (user) => {
     selectedUser.value = user;
     showEditModal.value = true;
-    activeActionMenu.value = null; // Close menu
+    activeActionMenu.value = null;
 };
 
 const viewUser = (user) => {
     selectedUser.value = user;
     showUserModal.value = true;
-    activeActionMenu.value = null; // Close menu
+    activeActionMenu.value = null;
 };
 
 const handleUserUpdated = () => {
@@ -1023,7 +792,7 @@ const handleUserUpdated = () => {
 };
 
 const confirmDelete = (user) => {
-    activeActionMenu.value = null; // Close menu
+    activeActionMenu.value = null;
 
     Swal.fire({
         title: "Are you sure?",
@@ -1118,7 +887,6 @@ const submitCreateUser = (userData) => {
             fetchUsers();
         },
         onError: (errors) => {
-            console.log("Error details:", errors);
             let errorMessage =
                 "Failed to create user. Please check the form and try again.";
 
@@ -1148,6 +916,7 @@ const submitCreateUser = (userData) => {
     });
 };
 
+// Styling helpers
 const roleClasses = (role) => {
     return {
         "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200":
@@ -1163,7 +932,7 @@ const statusClasses = (enabled) => {
     return {
         "bg-green-100 border border-green-200 text-green-800 dark:bg-green-900 dark:text-green-200":
             enabled,
-        "bg-yellow-100 border border-yellow-200 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200":
+        "bg-red-100 border border-red-200 text-red-800 dark:bg-red-900 dark:text-red-200":
             !enabled,
     };
 };
@@ -1173,78 +942,10 @@ const capitalizeRole = (role) => {
     return role.charAt(0).toUpperCase() + role.slice(1);
 };
 
-// Pagination methods
-const prevPage = () => {
-    if (props.users.prev_page_url) {
-        router.visit(props.users.prev_page_url, {
-            preserveState: true,
-        });
-    }
-};
 
-const nextPage = () => {
-    if (props.users.next_page_url) {
-        router.visit(props.users.next_page_url, {
-            preserveState: true,
-        });
-    }
-};
-
-const goToPage = (page) => {
-    if (page === "..." || page === props.users.current_page) return;
-
-    const url = new URL(props.users.first_page_url);
-    url.searchParams.set("page", page);
-    router.visit(url.toString(), {
-        preserveState: true,
-    });
-};
-
-const getVisiblePages = () => {
-    if (!props.users.last_page) return [];
-
-    const current = props.users.current_page;
-    const last = props.users.last_page;
-    const delta = 2; // Number of pages to show on each side of current page
-    const range = [];
-    const rangeWithDots = [];
-
-    for (let i = 1; i <= last; i++) {
-        if (
-            i === 1 ||
-            i === last ||
-            (i >= current - delta && i <= current + delta)
-        ) {
-            range.push(i);
-        }
-    }
-
-    let l;
-    for (let i of range) {
-        if (l) {
-            if (i - l === 2) {
-                rangeWithDots.push(l + 1);
-            } else if (i - l !== 1) {
-                rangeWithDots.push("...");
-            }
-        }
-        rangeWithDots.push(i);
-        l = i;
-    }
-
-    return rangeWithDots;
-};
 </script>
 
 <style scoped>
-.cursor-pointer {
-    cursor: pointer;
-}
-
-tr {
-    transition: opacity 0.2s ease;
-}
-
 .animate-spin {
     animation: spin 1.5s linear;
 }

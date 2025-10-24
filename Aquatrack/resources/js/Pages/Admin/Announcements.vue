@@ -1,10 +1,16 @@
+//Pages/Admin/Announcements.vue
 <template>
     <AdminLayout>
         <div class="mx-auto w-full">
             <!-- Main Content Grid -->
-            <div class="grid grid-cols-1 xl:grid-cols-3 gap-2">
-                <!-- Table Section - Takes 2/3 on large screens -->
-                <div class="xl:col-span-2">
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-2 relative">
+                <!-- Table Section -->
+                <div
+                    :class="[
+                        'transition-all duration-500 ease-in-out',
+                        showCalendar ? 'xl:col-span-2' : 'xl:col-span-3',
+                    ]"
+                >
                     <div
                         class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden"
                     >
@@ -377,22 +383,57 @@
                         </div>
 
                         <!-- Pagination Component -->
-                        <AnnouncementPagination
-                            v-if="
-                                announcements &&
-                                announcements.data &&
-                                announcements.data.length > 0
+                        <Pagination :data="announcements" />
+                    </div>
+                </div>
+
+                <!-- Calendar Component with Toggle -->
+                <div
+                    :class="[
+                        'transition-all duration-500 ease-in-out transform',
+                        showCalendar
+                            ? 'xl:col-span-1 opacity-100 translate-x-0 max-h-[800px]'
+                            : 'xl:col-span-0 opacity-0 -translate-x-full max-h-0 overflow-hidden',
+                    ]"
+                >
+                    <div class="relative h-full">
+                        <!-- Calendar Toggle Button -->
+                        <button
+                            @click="toggleCalendar"
+                            class="absolute -left-2 top-4 z-20 p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 hover:shadow-xl"
+                            :title="
+                                showCalendar ? 'Hide Calendar' : 'Show Calendar'
                             "
-                            :data="announcements"
+                        >
+                            <ChevronRight
+                                class="w-4 h-4 text-gray-600 dark:text-gray-400 transition-transform duration-300"
+                                :class="{
+                                    'rotate-0': showCalendar,
+                                    'rotate-180': !showCalendar,
+                                }"
+                            />
+                        </button>
+
+                        <AnnouncementCalendar
+                            :announcements="announcements.data || []"
                         />
                     </div>
                 </div>
 
-                <!-- Calendar Component -->
-                <div class="xl:col-span-1">
-                    <AnnouncementCalendar
-                        :announcements="announcements.data || []"
-                    />
+                <!-- Show Calendar Button when Calendar is Hidden -->
+                <div
+                    v-if="!showCalendar"
+                    class="fixed right-4 top-1/2 transform -translate-y-1/2 z-10"
+                >
+                    <button
+                        @click="toggleCalendar"
+                        class="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 hover:shadow-xl"
+                        title="Show Calendar"
+                    >
+                        <ChevronLeft
+                            class="w-5 h-5 text-gray-600 dark:text-gray-400 transition-transform duration-300"
+                        />
+                    </button>
                 </div>
             </div>
 
@@ -412,10 +453,10 @@
 <script setup>
 import AdminLayout from "@/Layouts/AdminLayout.vue";
 import AnnouncementModal from "@/Components/Modals/AnnouncementModal.vue";
-import AnnouncementPagination from "@/Components/AnnouncementPagination.vue";
+import Pagination from "@/Components/Pagination.vue";
 import AnnouncementCalendar from "@/Components/Admin/Calendar/AnnouncementCalendar.vue";
 import { useForm } from "@inertiajs/vue3";
-import { ref, reactive, onMounted, onUnmounted, nextTick, watch } from "vue";
+import { ref, reactive, onMounted, onUnmounted, nextTick } from "vue";
 import { pickBy, debounce } from "lodash";
 import Swal from "sweetalert2";
 import { router } from "@inertiajs/vue3";
@@ -424,6 +465,8 @@ import {
     Plus,
     Filter,
     ChevronDown,
+    ChevronRight,
+    ChevronLeft,
     RefreshCw,
     Edit,
     Trash2,
@@ -437,15 +480,7 @@ const props = defineProps({
     filters: Object,
 });
 
-// Initialize filters from props
-const filters = reactive({
-    search: props.filters?.search || "",
-    status: props.filters?.status || "",
-    sort: props.filters?.sort || "id",
-    order: props.filters?.order || "desc",
-    per_page: props.filters?.per_page || 10,
-});
-
+// Refs
 const showModal = ref(false);
 const editing = ref(false);
 const showFilterDropdown = ref(false);
@@ -453,6 +488,16 @@ const isResetting = ref(false);
 const currentId = ref(null);
 const filterButton = ref(null);
 const filterDropdownStyle = ref({});
+const showCalendar = ref(true);
+
+// Reactive data
+const filters = reactive({
+    search: props.filters?.search || "",
+    status: props.filters?.status || "",
+    sort: props.filters?.sort || "id",
+    order: props.filters?.order || "desc",
+    per_page: props.filters?.per_page || 10,
+});
 
 const form = useForm({
     title: "",
@@ -462,15 +507,11 @@ const form = useForm({
     end_date: null,
 });
 
-// Debug: Log filter changes
-watch(
-    () => filters.status,
-    (newStatus) => {
-        console.log("Status filter changed to:", newStatus);
-    }
-);
+// Methods
+const toggleCalendar = () => {
+    showCalendar.value = !showCalendar.value;
+};
 
-// Filter methods
 const toggleFilterDropdown = async () => {
     showFilterDropdown.value = !showFilterDropdown.value;
 
@@ -486,18 +527,15 @@ const toggleFilterDropdown = async () => {
 };
 
 const applyFilters = () => {
-    console.log("Applying filters:", filters);
     showFilterDropdown.value = false;
     fetchAnnouncements();
 };
 
 const handleSearch = debounce(() => {
-    console.log("Search triggered:", filters.search);
     fetchAnnouncements();
 }, 300);
 
 const resetFilters = () => {
-    console.log("Resetting filters");
     isResetting.value = true;
 
     Object.assign(filters, {
@@ -515,36 +553,18 @@ const resetFilters = () => {
     }, 500);
 };
 
-// Fetch announcements
 const fetchAnnouncements = () => {
     const filteredParams = pickBy(
         filters,
         (value) => value !== "" && value !== null && value !== undefined
     );
 
-    console.log("Fetching announcements with filters:", filteredParams);
-
     router.get("/admin/announcements", filteredParams, {
         preserveState: true,
         replace: true,
-        onSuccess: (page) => {
-            console.log("Filters applied successfully", {
-                total: page.props.announcements.total,
-                dataCount: page.props.announcements.data?.length,
-                filters: page.props.filters,
-            });
-        },
         onError: (errors) => {
             console.error("Fetch error:", errors);
-            Swal.fire({
-                icon: "error",
-                title: "Error",
-                text: "Failed to fetch announcements. Please try again.",
-                toast: true,
-                position: "top-end",
-                showConfirmButton: false,
-                timer: 3000,
-            });
+            showError("Failed to fetch announcements. Please try again.");
         },
     });
 };
@@ -586,6 +606,29 @@ const sortBy = (column) => {
     fetchAnnouncements();
 };
 
+const showError = (message) => {
+    Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: message,
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000,
+    });
+};
+
+const showSuccess = (message) => {
+    Swal.fire({
+        position: "top-end",
+        icon: "success",
+        title: message,
+        showConfirmButton: false,
+        timer: 2000,
+        toast: true,
+    });
+};
+
 // Modal control functions
 const openCreateModal = () => {
     editing.value = false;
@@ -617,27 +660,11 @@ const createAnnouncement = () => {
         onSuccess: () => {
             showModal.value = false;
             form.reset();
-            Swal.fire({
-                position: "top-end",
-                icon: "success",
-                title: "Announcement Created!",
-                text: "Your announcement has been successfully created.",
-                showConfirmButton: false,
-                timer: 2000,
-                toast: true,
-            });
+            showSuccess("Announcement Created!");
             fetchAnnouncements();
         },
         onError: () => {
-            Swal.fire({
-                position: "top-end",
-                icon: "error",
-                title: "Creation Failed",
-                text: "There was an error creating the announcement.",
-                showConfirmButton: false,
-                timer: 2000,
-                toast: true,
-            });
+            showError("There was an error creating the announcement.");
         },
     });
 };
@@ -649,27 +676,11 @@ const updateAnnouncement = () => {
             editing.value = false;
             form.reset();
             currentId.value = null;
-            Swal.fire({
-                position: "top-end",
-                icon: "success",
-                title: "Update Successful!",
-                text: "The announcement has been updated.",
-                showConfirmButton: false,
-                timer: 2000,
-                toast: true,
-            });
+            showSuccess("Update Successful!");
             fetchAnnouncements();
         },
         onError: () => {
-            Swal.fire({
-                position: "top-end",
-                icon: "error",
-                title: "Update Failed",
-                text: "There was an error updating the announcement.",
-                showConfirmButton: false,
-                timer: 2000,
-                toast: true,
-            });
+            showError("There was an error updating the announcement.");
         },
     });
 };
@@ -696,7 +707,7 @@ const deleteAnnouncement = (id) => {
                     fetchAnnouncements();
                 },
                 onError: () => {
-                    Swal.fire("Error!", "Something went wrong.", "error");
+                    showError("Something went wrong.");
                 },
             });
         }
@@ -710,7 +721,14 @@ const handleClickOutside = (event) => {
     }
 };
 
+// Lifecycle
+onMounted(() => {
+    document.addEventListener("click", handleClickOutside);
+});
 
+onUnmounted(() => {
+    document.removeEventListener("click", handleClickOutside);
+});
 </script>
 
 <style scoped>
@@ -725,5 +743,21 @@ const handleClickOutside = (event) => {
     to {
         transform: rotate(360deg);
     }
+}
+
+/* Smooth transitions for calendar */
+.calendar-enter-active,
+.calendar-leave-active {
+    transition: all 0.5s ease-in-out;
+}
+
+.calendar-enter-from {
+    opacity: 0;
+    transform: translateX(100%);
+}
+
+.calendar-leave-to {
+    opacity: 0;
+    transform: translateX(-100%);
 }
 </style>

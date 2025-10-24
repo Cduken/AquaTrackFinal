@@ -1,78 +1,53 @@
+<!-- Components/Pagination.vue -->
 <template>
     <div
-        class="flex items-center justify-between border-t border-gray-200 px-4 py-3 sm:px-6"
+        class="border-t border-gray-200 dark:border-gray-700 px-6 py-2"
+        v-if="data && data.data && data.data.length > 0"
     >
-        <!-- Mobile view -->
-        <div class="flex flex-1 justify-between sm:hidden">
-            <button
-                @click="prevPage"
-                :disabled="!items.prev_page_url"
-                :class="{
-                    'opacity-50 cursor-not-allowed': !items.prev_page_url,
-                }"
-                class="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
-                Previous
-            </button>
-            <button
-                @click="nextPage"
-                :disabled="!items.next_page_url"
-                :class="{
-                    'opacity-50 cursor-not-allowed': !items.next_page_url,
-                }"
-                class="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
-                Next
-            </button>
-        </div>
-
-        <!-- Desktop view -->
-        <div
-            class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between"
-        >
-            <div>
-                <p class="text-sm text-gray-700">
-                    Showing
-                    <span class="font-medium">{{ items.from }}</span>
-                    to
-                    <span class="font-medium">{{ items.to }}</span>
-                    of
-                    <span class="font-medium">{{ items.total }}</span>
-                    {{ itemName }}
-                </p>
+        <div class="flex items-center justify-between">
+            <div class="text-sm text-gray-700 dark:text-gray-300">
+                Showing
+                <span class="font-semibold">{{ data.from || 0 }}</span>
+                to
+                <span class="font-semibold">{{ data.to || 0 }}</span>
+                of
+                <span class="font-semibold">{{ data.total || 0 }}</span>
+                results
             </div>
-            <div>
-                <nav
-                    class="isolate inline-flex -space-x-px rounded-md shadow-sm"
+
+            <div class="flex items-center space-x-2">
+                <button
+                    @click="prevPage"
+                    :disabled="!data.prev_page_url"
+                    class="flex items-center px-3 py-1 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600 transition-colors"
                 >
-                    <button
-                        @click="prevPage"
-                        :disabled="!items.prev_page_url"
-                        :class="{
-                            'opacity-50 cursor-not-allowed':
-                                !items.prev_page_url,
-                        }"
-                        class="relative inline-flex items-center rounded-l-md px-3 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0"
-                    >
-                        <span class="sr-only">Previous</span>
-                        <MoveLeft class="h-4 w-4" />
-                    </button>
+                    Previous
+                </button>
 
-                    <!-- Page numbers would go here if you want to add them -->
-
+                <div class="flex items-center space-x-1">
                     <button
-                        @click="nextPage"
-                        :disabled="!items.next_page_url"
-                        :class="{
-                            'opacity-50 cursor-not-allowed':
-                                !items.next_page_url,
-                        }"
-                        class="relative inline-flex items-center rounded-r-md px-3 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0"
+                        v-for="page in getVisiblePages()"
+                        :key="page"
+                        @click="goToPage(page)"
+                        :class="[
+                            'px-3 py-1 text-sm font-medium rounded-md transition-colors',
+                            page === data.current_page
+                                ? 'bg-blue-50 text-blue-600 border border-blue-600'
+                                : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50 hover:text-gray-700 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600',
+                        ]"
+                        :disabled="page === '...'"
                     >
-                        <span class="sr-only">Next</span>
-                        <MoveRight class="h-4 w-4" />
+                        {{ page }}
                     </button>
-                </nav>
+                </div>
+
+                <button
+                    @click="nextPage"
+                    :disabled="!data.next_page_url"
+                    class="flex items-center px-3 py-1 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600 transition-colors"
+                >
+                    Next
+                </button>
             </div>
         </div>
     </div>
@@ -80,37 +55,69 @@
 
 <script setup>
 import { router } from "@inertiajs/vue3";
-import { MoveLeft, MoveRight } from "lucide-vue-next";
 
 const props = defineProps({
-    items: Object,
-    itemName: {
-        type: String,
-        default: "items",
-    },
-    previousText: {
-        type: String,
-        default: "Previous",
-    },
-    nextText: {
-        type: String,
-        default: "Next",
-    },
+    data: Object,
 });
 
 const prevPage = () => {
-    if (props.items.prev_page_url) {
-        router.visit(props.items.prev_page_url, {
+    if (props.data.prev_page_url) {
+        router.visit(props.data.prev_page_url, {
             preserveState: true,
         });
     }
 };
 
 const nextPage = () => {
-    if (props.items.next_page_url) {
-        router.visit(props.items.next_page_url, {
+    if (props.data.next_page_url) {
+        router.visit(props.data.next_page_url, {
             preserveState: true,
         });
     }
+};
+
+const goToPage = (page) => {
+    if (page === "..." || page === props.data.current_page) return;
+
+    const url = new URL(props.data.first_page_url);
+    url.searchParams.set("page", page);
+    router.visit(url.toString(), {
+        preserveState: true,
+    });
+};
+
+const getVisiblePages = () => {
+    if (!props.data.last_page) return [];
+
+    const current = props.data.current_page;
+    const last = props.data.last_page;
+    const delta = 2;
+    const range = [];
+    const rangeWithDots = [];
+
+    for (let i = 1; i <= last; i++) {
+        if (
+            i === 1 ||
+            i === last ||
+            (i >= current - delta && i <= current + delta)
+        ) {
+            range.push(i);
+        }
+    }
+
+    let l;
+    for (let i of range) {
+        if (l) {
+            if (i - l === 2) {
+                rangeWithDots.push(l + 1);
+            } else if (i - l !== 1) {
+                rangeWithDots.push("...");
+            }
+        }
+        rangeWithDots.push(i);
+        l = i;
+    }
+
+    return rangeWithDots;
 };
 </script>

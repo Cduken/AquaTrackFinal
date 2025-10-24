@@ -51,9 +51,9 @@
                         ? 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                         : 'bg-gray-50 dark:bg-gray-700 border-gray-100 dark:border-gray-600 text-gray-400',
                     day.hasStartingAnnouncements
-                        ? 'ring-2 ring-blue-500 dark:ring-blue-400 shadow-sm'
+                        ? 'ring-1 ring-blue-500 dark:ring-blue-400 shadow-sm'
                         : day.hasActiveAnnouncements
-                        ? 'ring-1 ring-blue-300 dark:ring-blue-600'
+                        ? 'ring-1 ring-blue-200 dark:ring-blue-600'
                         : '',
                     isToday(day.date)
                         ? 'border-2 border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20'

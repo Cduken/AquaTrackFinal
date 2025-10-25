@@ -264,7 +264,7 @@ onMounted(() => {
                             <button
                                 @click="downloadQRCode"
                                 type="button"
-                                class="flex-1 inline-flex items-center justify-center px-4 py-2 border border-[#0A7EB8] text-sm font-medium rounded-lg shadow-sm text-blue-500  hover:bg-[#0A7EB8] hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
+                                class="flex-1 inline-flex items-center justify-center px-4 py-2 border border-[#0A7EB8] bg-[#0A7EB8] text-white text-sm font-medium rounded-lg shadow-sm   hover:bg-[#086899] hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
                             >
                                 <svg
                                     class="-ml-1 mr-2 h-4 w-4"

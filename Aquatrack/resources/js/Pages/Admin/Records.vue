@@ -227,8 +227,20 @@
                                 <td class="px-6 py-2">
                                     <div class="flex items-center">
                                         <div class="flex-shrink-0 h-8 w-8 mr-3">
+                                            <img
+                                                v-if="record.user.avatar_url"
+                                                :src="record.user.avatar_url"
+                                                :alt="record.user.name"
+                                                class="h-8 w-8 rounded-full object-cover"
+                                            />
                                             <div
-                                                class="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-xs"
+                                                v-else
+                                                class="h-8 w-8 rounded-full flex items-center justify-center text-white font-semibold text-xs"
+                                                :class="
+                                                    getAvatarColor(
+                                                        record.user.name
+                                                    )
+                                                "
                                             >
                                                 {{
                                                     getUserInitials(record.user)
@@ -315,9 +327,7 @@
                                             <div
                                                 class="text-red-600 dark:text-red-400"
                                             >
-                                                +₱{{
-                                                    record.surcharge
-                                                }}
+                                                +₱{{ record.surcharge }}
                                                 surcharge
                                             </div>
                                         </div>
@@ -546,11 +556,9 @@ import {
     Clock,
     AlertCircle,
 } from "lucide-vue-next";
-import Users from "./Users.vue";
 
 // Props
 const props = defineProps({
-
     records: Object,
     filters: Object,
 });
@@ -666,8 +674,6 @@ const toggleActionMenu = async (recordId) => {
     }
 };
 
-
-
 // Click outside handler
 const handleClickOutside = (event) => {
     const isFilterClick =
@@ -775,13 +781,35 @@ watch(
     { deep: true, immediate: true }
 );
 
+const avatarColors = [
+    "bg-blue-500",
+    "bg-green-500",
+    "bg-purple-500",
+    "bg-pink-500",
+    "bg-indigo-500",
+    "bg-yellow-500",
+    "bg-red-500",
+    "bg-teal-500",
+    "bg-orange-500",
+];
+
+// Add getAvatarColor function
+const getAvatarColor = (name) => {
+    if (!name) return "bg-gray-400";
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+        hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const index = Math.abs(hash) % avatarColors.length;
+    return avatarColors[index];
+};
+
 // Utility methods
 const getUserInitials = (user) => {
     if (!user) return "?";
-    return (
-        `${user.name?.[0] || ""}${user.lastname?.[0] || ""}`.toUpperCase() ||
-        "?"
-    );
+    const firstName = user.name || "";
+    const lastName = user.lastname || "";
+    return `${firstName[0] || ""}${lastName[0] || ""}`.toUpperCase() || "?";
 };
 
 const formatDate = (dateString) => {

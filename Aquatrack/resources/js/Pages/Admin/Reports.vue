@@ -1,405 +1,814 @@
+//Pages/Admin/Reports.vue
 <template>
     <AdminLayout>
         <div class="mx-auto w-full">
-            <div class="lg:items-center lg:flex mb-4 hidden">
-                <v-icon name="md-reportproblem" class="mr-2 text-amber-500" scale="1.5" />
-                <h1 class="text-2xl">Reports Management</h1>
-            </div>
-
-            <!-- Reports Stats Cards Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-                <!-- Total Reports Card -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                    <div class="flex items-center">
-                        <div class="p-3 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
-                            <v-icon name="bi-clipboard-data" class="w-6 h-6" />
-                        </div>
-                        <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                Total Reports
-                            </p>
-                            <h3 class="text-2xl font-bold text-gray-900 dark:text-white">
-                                {{ reports.total || 0 }}
-                            </h3>
-                        </div>
-                    </div>
-                    <!-- <div class="mt-4">
-                        <div class="flex items-center text-sm text-blue-600 dark:text-blue-400">
-                            <v-icon name="bi-list-ul" class="w-4 h-4 mr-1" />
-                            <span>All system reports</span>
-                        </div>
-                    </div> -->
-                </div>
-
-                <!-- Pending Reports Card -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                    <div class="flex items-center">
-                        <div
-                            class="p-3 rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400">
-                            <v-icon name="bi-clock" class="w-6 h-6" />
-                        </div>
-                        <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                Pending Reports
-                            </p>
-                            <h3 class="text-2xl font-bold text-gray-900 dark:text-white">
-                                {{ pendingReportsCount }}
-                            </h3>
-                        </div>
-                    </div>
-                    <!-- <div class="mt-4">
-                        <div class="flex items-center text-sm text-yellow-600 dark:text-yellow-400">
-                            <v-icon name="bi-hourglass-split" class="w-4 h-4 mr-1" />
-                            <span>{{ pendingPercentage }}% of total</span>
-                        </div>
-                    </div> -->
-                </div>
-
-                <!-- In Progress Reports Card -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                    <div class="flex items-center">
-                        <div class="p-3 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
-                            <v-icon name="bi-arrow-repeat" class="w-6 h-6" />
-                        </div>
-                        <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                In Progress
-                            </p>
-                            <h3 class="text-2xl font-bold text-gray-900 dark:text-white">
-                                {{ inProgressReportsCount }}
-                            </h3>
-                        </div>
-                    </div>
-                    <!-- <div class="mt-4">
-                        <div class="flex items-center text-sm text-blue-600 dark:text-blue-400">
-                            <v-icon name="bi-gear" class="w-4 h-4 mr-1" />
-                            <span>{{ inProgressPercentage }}% of total</span>
-                        </div>
-                    </div> -->
-                </div>
-
-                <!-- Resolved Reports Card -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                    <div class="flex items-center">
-                        <div
-                            class="p-3 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400">
-                            <v-icon name="bi-check-circle" class="w-6 h-6" />
-                        </div>
-                        <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                Resolved Reports
-                            </p>
-                            <h3 class="text-2xl font-bold text-gray-900 dark:text-white">
-                                {{ resolvedReportsCount }}
-                            </h3>
-                        </div>
-                    </div>
-                    <!-- <div class="mt-4">
-                        <div class="flex items-center text-sm text-green-600 dark:text-green-400">
-                            <v-icon name="bi-check-lg" class="w-4 h-4 mr-1" />
-                            <span>{{ resolvedPercentage }}% of total</span>
-                        </div>
-                    </div> -->
-                </div>
-            </div>
-
-            <!-- Header Section with Filters -->
-            <div class="relative bg-white shadow-md dark:bg-gray-800 sm:rounded-lg mb-6">
-                <div
-                    class="flex flex-col items-center justify-between p-4 space-y-3 md:flex-row md:space-y-0 md:space-x-4">
-                    <div class="w-full md:w-1/2">
-                        <form class="flex items-center">
-                            <label for="simple-search" class="sr-only">Search</label>
-                            <div class="relative w-full">
-                                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                    <v-icon name="hi-solid-search" class="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                                </div>
-                                <input v-model="filters.search" type="text" id="simple-search"
-                                    class="block w-full p-2 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                                    placeholder="Search reports, names, issues..." @keyup.enter="getReports" />
-                            </div>
-                        </form>
-                    </div>
+            <div
+                class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden"
+            >
+                <!-- Search and Filter Section -->
+                <div class="p-2 border-b border-gray-200 dark:border-gray-700">
                     <div
-                        class="flex flex-col items-stretch justify-end flex-shrink-0 w-full space-y-2 md:w-auto md:flex-row md:space-y-0 md:items-center md:space-x-3">
-                        <div class="flex items-center w-full space-x-3 md:w-auto">
+                        class="flex flex-col md:flex-row md:items-center justify-between gap-4"
+                    >
+                        <div class="flex items-center">
+                            <h5
+                                class="text-sm font-semibold text-gray-500 dark:text-gray-400"
+                            >
+                                <span
+                                    class="font-bold text-black dark:text-white"
+                                    >{{ reports.total || 0 }}</span
+                                >
+                                Total Reports
+                            </h5>
+                        </div>
+
+                        <div
+                            class="flex flex-col md:flex-row items-center space-x-3"
+                        >
+                            <div class="w-full md:w-auto">
+                                <div class="relative">
+                                    <div
+                                        class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
+                                    >
+                                        <Search
+                                            class="w-4 h-4 text-gray-900 dark:text-gray-400"
+                                        />
+                                    </div>
+                                    <input
+                                        v-model="filters.search"
+                                        type="text"
+                                        class="block w-full md:w-auto pl-10 text-sm text-gray-900 border border-gray-300 rounded-sm bg-white focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                        placeholder="Search reports, names, issues..."
+                                        @keyup.enter="getReports"
+                                    />
+                                </div>
+                            </div>
+
+                            <!-- Status Filter -->
                             <div class="relative">
-                                <button @click="
-                                    showFilterDropdown = !showFilterDropdown
-                                    "
-                                    class="flex items-center justify-center w-full px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg md:w-auto focus:outline-none hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
-                                    type="button">
-                                    <v-icon name="hi-solid-filter" class="w-4 h-4 mr-2 text-gray-400" />
+                                <button
+                                    @click="toggleFilterDropdown"
+                                    ref="filterButton"
+                                    class="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600"
+                                    type="button"
+                                >
+                                    <Filter class="w-4 h-4 mr-2" />
                                     Filter
-                                    <v-icon name="hi-chevron-down" class="-mr-1 ml-1.5 w-5 h-5" />
+                                    <ChevronDown class="ml-1 w-4 h-4" />
                                 </button>
 
-                                <!-- Custom Filter Dropdown -->
-                                <div v-if="showFilterDropdown"
-                                    class="absolute z-10 top-full right-0 mt-1 w-48 p-3 bg-white rounded-lg shadow dark:bg-gray-700">
-                                    <h6 class="mb-3 text-sm font-medium text-gray-900 dark:text-white">
-                                        Status
-                                    </h6>
-                                    <ul class="space-y-2 text-sm">
-                                        <li class="flex items-center">
-                                            <input id="status-all" type="radio" name="status" value=""
-                                                :checked="!filters.status" @change="updateStatusFilter('')"
-                                                class="w-4 h-4 bg-gray-100 border-gray-300 rounded text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
-                                            <label for="status-all"
-                                                class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100">All
-                                                Status</label>
-                                        </li>
-                                        <li class="flex items-center">
-                                            <input id="status-pending" type="radio" name="status" value="pending"
-                                                :checked="filters.status === 'pending'
-                                                    " @change="
-                                                    updateStatusFilter(
-                                                        'pending'
-                                                    )
+                                <div
+                                    v-if="showFilterDropdown"
+                                    class="fixed z-[1000] mt-1 w-56 bg-white rounded-lg shadow-lg border border-gray-200 dark:bg-gray-700 dark:border-gray-600"
+                                    :style="filterDropdownStyle"
+                                    @click.stop
+                                >
+                                    <div class="p-4">
+                                        <h6
+                                            class="mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                                        >
+                                            Status
+                                        </h6>
+                                        <div class="space-y-2">
+                                            <div
+                                                class="flex items-center"
+                                                v-for="statusOption in statusOptions"
+                                                :key="statusOption.value"
+                                            >
+                                                <input
+                                                    :id="`status-${statusOption.value}`"
+                                                    type="radio"
+                                                    name="status"
+                                                    :value="statusOption.value"
+                                                    :checked="
+                                                        filters.status ===
+                                                        statusOption.value
                                                     "
-                                                class="w-4 h-4 bg-gray-100 border-gray-300 rounded text-yellow-600 focus:ring-yellow-500 dark:focus:ring-yellow-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
-                                            <label for="status-pending"
-                                                class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100">Pending</label>
-                                        </li>
-                                        <li class="flex items-center">
-                                            <input id="status-in_progress" type="radio" name="status"
-                                                value="in_progress" :checked="filters.status ===
-                                                    'in_progress'
-                                                    " @change="
-                                                    updateStatusFilter(
-                                                        'in_progress'
-                                                    )
+                                                    @change="
+                                                        updateStatusFilter(
+                                                            statusOption.value
+                                                        )
                                                     "
-                                                class="w-4 h-4 bg-gray-100 border-gray-300 rounded text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
-                                            <label for="status-in_progress"
-                                                class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100">In
-                                                Progress</label>
-                                        </li>
-                                        <li class="flex items-center">
-                                            <input id="status-resolved" type="radio" name="status" value="resolved"
-                                                :checked="filters.status ===
-                                                    'resolved'
-                                                    " @change="
-                                                    updateStatusFilter(
-                                                        'resolved'
-                                                    )
+                                                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
+                                                />
+                                                <label
+                                                    :for="`status-${statusOption.value}`"
+                                                    class="ml-2 text-sm text-gray-700 dark:text-gray-300"
+                                                >
+                                                    {{ statusOption.label }}
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <h6
+                                            class="mb-2 mt-4 text-sm font-medium text-gray-900 dark:text-white"
+                                        >
+                                            User Type
+                                        </h6>
+                                        <div class="space-y-2">
+                                            <div
+                                                class="flex items-center"
+                                                v-for="userTypeOption in userTypeOptions"
+                                                :key="userTypeOption.value"
+                                            >
+                                                <input
+                                                    :id="`userType-${userTypeOption.value}`"
+                                                    type="radio"
+                                                    name="userType"
+                                                    :value="
+                                                        userTypeOption.value
                                                     "
-                                                class="w-4 h-4 bg-gray-100 border-gray-300 rounded text-green-600 focus:ring-green-500 dark:focus:ring-green-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
-                                            <label for="status-resolved"
-                                                class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100">Resolved</label>
-                                        </li>
-                                    </ul>
-                                    <h6 class="mb-3 mt-4 text-sm font-medium text-gray-900 dark:text-white">
-                                        User Type
-                                    </h6>
-                                    <ul class="space-y-2 text-sm">
-                                        <li class="flex items-center">
-                                            <input id="user-type-all" type="radio" name="userType" value="all" :checked="!filters.userType ||
-                                                filters.userType === 'all'
-                                                " @change="
-                                                    updateUserTypeFilter('all')
+                                                    :checked="
+                                                        filters.userType ===
+                                                        userTypeOption.value
                                                     "
-                                                class="w-4 h-4 bg-gray-100 border-gray-300 rounded text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
-                                            <label for="user-type-all"
-                                                class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100">All
-                                                Users</label>
-                                        </li>
-                                        <li class="flex items-center">
-                                            <input id="user-type-guest" type="radio" name="userType" value="guest"
-                                                :checked="filters.userType === 'guest'
-                                                    " @change="
-                                                    updateUserTypeFilter(
-                                                        'guest'
-                                                    )
+                                                    @change="
+                                                        updateUserTypeFilter(
+                                                            userTypeOption.value
+                                                        )
                                                     "
-                                                class="w-4 h-4 bg-gray-100 border-gray-300 rounded text-purple-600 focus:ring-purple-500 dark:focus:ring-purple-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
-                                            <label for="user-type-guest"
-                                                class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100">Guest</label>
-                                        </li>
-                                        <li class="flex items-center">
-                                            <input id="user-type-authenticated" type="radio" name="userType"
-                                                value="authenticated" :checked="filters.userType ===
-                                                    'authenticated'
-                                                    " @change="
-                                                    updateUserTypeFilter(
-                                                        'authenticated'
-                                                    )
-                                                    "
-                                                class="w-4 h-4 bg-gray-100 border-gray-300 rounded text-green-600 focus:ring-green-500 dark:focus:ring-green-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
-                                            <label for="user-type-authenticated"
-                                                class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100">Registered</label>
-                                        </li>
-                                    </ul>
+                                                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
+                                                />
+                                                <label
+                                                    :for="`userType-${userTypeOption.value}`"
+                                                    class="ml-2 text-sm text-gray-700 dark:text-gray-300"
+                                                >
+                                                    {{ userTypeOption.label }}
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <!-- Quick Stats Section -->
+                                        <div
+                                            class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600"
+                                        >
+                                            <h6
+                                                class="mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                                            >
+                                                Quick Stats
+                                            </h6>
+                                            <div
+                                                class="grid grid-cols-2 gap-2 text-xs"
+                                            >
+                                                <div
+                                                    class="flex items-center text-green-600 dark:text-green-400"
+                                                >
+                                                    <CheckCircle
+                                                        class="w-3 h-3 mr-1"
+                                                    />
+                                                    {{ resolvedReportsCount }}
+                                                    Resolved
+                                                </div>
+                                                <div
+                                                    class="flex items-center text-blue-600 dark:text-blue-400"
+                                                >
+                                                    <RefreshCw
+                                                        class="w-3 h-3 mr-1"
+                                                    />
+                                                    {{ inProgressReportsCount }}
+                                                    In Progress
+                                                </div>
+                                                <div
+                                                    class="flex items-center text-yellow-600 dark:text-yellow-400"
+                                                >
+                                                    <Clock
+                                                        class="w-3 h-3 mr-1"
+                                                    />
+                                                    {{ pendingReportsCount }}
+                                                    Pending
+                                                </div>
+                                                <div
+                                                    class="flex items-center text-gray-600 dark:text-gray-400"
+                                                >
+                                                    <FileText
+                                                        class="w-3 h-3 mr-1"
+                                                    />
+                                                    {{ reports.total }} Total
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div
+                                        class="flex items-center justify-between p-4 border-t border-gray-200 dark:border-gray-600"
+                                    >
+                                        <button
+                                            @click="resetFilters"
+                                            class="flex items-center text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+                                        >
+                                            <RefreshCw
+                                                class="w-4 h-4 mr-1"
+                                                :class="{
+                                                    'animate-spin': isResetting,
+                                                }"
+                                            />
+                                            Reset
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                            <button @click="resetFilters"
-                                class="flex items-center justify-center w-full px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg md:w-auto focus:outline-none hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
-                                <v-icon name="hi-refresh" class="w-4 h-4 mr-1" />
-                                Reset Filters
+
+                            <!-- Export Button -->
+                            <button
+                                @click="exportReports"
+                                class="flex items-center px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-sm hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800 dark:hover:bg-green-900/30"
+                            >
+                                <Download class="w-4 h-4 mr-2" />
+                                Export
                             </button>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Table Section -->
-            <div class="relative overflow-x-auto mb-4 shadow-md sm:rounded-lg">
-                <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                        <tr>
-                            <th scope="col" class="px-6 py-3">Reporter</th>
-                            <th scope="col" class="px-6 py-3">User Type</th>
-                            <th scope="col" class="px-6 py-3">Zone</th>
-                            <th scope="col" class="px-6 py-3">Barangay</th>
-                            <th scope="col" class="px-6 py-3">Purok</th>
-                            <th scope="col" class="px-6 py-3">Issue Type</th>
-                            <th scope="col" class="px-6 py-3">Priority</th>
-                            <th scope="col" class="px-6 py-3">Status</th>
-                            <th scope="col" class="px-6 py-3">Date</th>
-                            <th scope="col" class="px-6 py-3">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="report in filteredReports" :key="report.id"
-                            class="border-b dark:border-gray-700 border-gray-200"
-                            :class="getStatusRowClass(report.status)">
-                            <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">
-                                <span v-if="isMergedReport(report)">
-                                    <span class="cursor-pointer text-blue-600 hover:underline"
-                                        @click="showAllReporters(report)">
-                                        {{ getTruncatedReporters(report) }}
-                                        <span v-if="hasManyReporters(report)" class="ml-1">
-                                            ...
-                                        </span>
-                                    </span>
-                                </span>
-                                <span v-else>
-                                    {{
-                                        report.reporter_name ||
-                                        report.user?.name ||
-                                        "N/A"
-                                    }}
-                                </span>
-                                <span v-if="report.user_id" class="text-xs text-gray-400 block">
-                                    User ID: {{ report.user_id }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4">
-                                <span :class="userTypeClasses(report.formatted_user_types)"
-                                    class="inline-flex items-center text-xs px-2 py-1 rounded-full">
-                                    <v-icon :name="getUserTypeIcon(report.formatted_user_types)" class="w-3 h-3 mr-1" />
-                                    {{ report.formatted_user_types || 'Guest' }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4">
-                                {{ report.zone || "N/A" }}
-                            </td>
-                            <td class="px-6 py-4">
-                                {{ report.barangay || "N/A" }}
-                            </td>
-                            <td class="px-6 py-4">
-                                {{ report.purok || "N/A" }}
-                            </td>
-                            <td class="px-6 py-4">
-                                <span
-                                    class="inline-flex items-center text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                                    <v-icon name="bi-droplet" class="w-3 h-3 mr-1" />
-                                    {{
-                                        report.water_issue_type === "others"
-                                            ? report.custom_water_issue ||
-                                            "Custom Issue"
-                                            : report.water_issue_type
-                                    }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4">
-                                <span :class="priorityClasses(report.priority)"
-                                    class="inline-flex items-center text-xs px-2 py-1 rounded-full">
-                                    <v-icon :name="getPriorityIcon(report.priority)" class="w-3 h-3 mr-1" />
-                                    {{ report.priority || "N/A" }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4">
-                                <span :class="statusClasses(report.status)"
-                                    class="inline-flex items-center text-xs px-2 py-1 rounded-full">
-                                    <v-icon :name="getStatusIcon(report.status)" class="w-3 h-3 mr-1" />
-                                    {{ formatStatus(report.status) }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4">
-                                {{ formatDate(report.created_at) }}
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="flex space-x-3">
-                                    <button @click="openModal(report)"
-                                        class="text-blue-600 hover:text-blue-800 transition-colors" title="View">
-                                        <v-icon name="hi-eye" class="w-5 h-5" />
-                                    </button>
-                                    <div class="relative" v-if="props.canEdit">
-                                        <button @click="openStatusModal(report)"
-                                            class="text-yellow-500 hover:text-yellow-700 transition-colors flex items-center"
-                                            title="Change Status">
-                                            <v-icon name="hi-pencil" class="w-5 h-5" />
-                                        </button>
+                <!-- Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead
+                            class="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600"
+                        >
+                            <tr>
+                                <th
+                                    class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                >
+                                    Reporter
+                                </th>
+                                <th
+                                    class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                >
+                                    User Type
+                                </th>
+                                <th
+                                    class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                >
+                                    Location
+                                </th>
+                                <th
+                                    class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                >
+                                    Issue Type
+                                </th>
+                                <th
+                                    class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                >
+                                    Priority
+                                </th>
+                                <th
+                                    class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                >
+                                    Status
+                                </th>
+                                <th
+                                    class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                >
+                                    Date
+                                </th>
+                                <th
+                                    class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                >
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody
+                            class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"
+                        >
+                            <tr
+                                v-for="report in filteredReports"
+                                :key="report.id"
+                                class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150"
+                                :class="getStatusRowClass(report.status)"
+                            >
+                                <!-- Reporter Column -->
+                                <td class="px-6 py-2">
+                                    <div class="flex items-center">
+                                        <!-- <div class="flex-shrink-0 h-8 w-8 mr-3">
+                                            <div
+                                                class="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-xs"
+                                            >
+                                                {{
+                                                    getReporterInitials(report)
+                                                }}
+                                            </div>
+                                        </div> -->
+                                        <div>
+                                            <div
+                                                class="font-medium text-gray-900 dark:text-white text-xs"
+                                            >
+                                                <span
+                                                    v-if="
+                                                        isMergedReport(report)
+                                                    "
+                                                >
+                                                    <span
+                                                        class="cursor-pointer text-blue-600 hover:underline"
+                                                        @click="
+                                                            showAllReporters(
+                                                                report
+                                                            )
+                                                        "
+                                                    >
+                                                        {{
+                                                            getTruncatedReporters(
+                                                                report
+                                                            )
+                                                        }}
+                                                        <span
+                                                            v-if="
+                                                                hasManyReporters(
+                                                                    report
+                                                                )
+                                                            "
+                                                            class="ml-1"
+                                                        >
+                                                            ...
+                                                        </span>
+                                                    </span>
+                                                </span>
+                                                <span v-else>
+                                                    {{
+                                                        report.reporter_name ||
+                                                        report.user?.name ||
+                                                        "N/A"
+                                                    }}
+                                                </span>
+                                            </div>
+                                            <div
+                                                class="text-xs text-gray-500 dark:text-gray-400"
+                                            >
+                                                {{ report.tracking_code }}
+                                            </div>
+                                        </div>
                                     </div>
-                                    <button v-if="props.canDelete" @click="confirmDelete(report)"
-                                        class="text-red-600 hover:text-red-800 transition-colors" title="Delete Report"
-                                        :disabled="deletingReport">
-                                        <v-icon name="hi-trash" class="w-5 h-5" />
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr v-if="filteredReports.length === 0">
-                            <td colspan="10" class="px-6 py-8 text-center text-sm text-gray-500">
-                                <div class="flex flex-col items-center justify-center space-y-2">
-                                    <v-icon name="bi-clipboard-data" class="w-10 h-10 text-gray-300 mb-2" />
-                                    <span class="font-semibold text-gray-400">No reports found</span>
-                                    <span class="text-xs text-gray-300">Try adjusting your filters or search
-                                        keywords.</span>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                                </td>
+
+                                <!-- User Type -->
+                                <td class="px-6 py-2">
+                                    <span
+                                        :class="
+                                            userTypeClasses(
+                                                report.formatted_user_types
+                                            )
+                                        "
+                                        class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-sm"
+                                    >
+                                        <span
+                                            class="w-1.5 h-1.5 rounded-full mr-1.5"
+                                            :class="
+                                                getUserTypeDotClass(
+                                                    report.formatted_user_types
+                                                )
+                                            "
+                                        ></span>
+                                        {{
+                                            report.formatted_user_types ||
+                                            "Guest"
+                                        }}
+                                    </span>
+                                </td>
+
+                                <!-- Location -->
+                                <td
+                                    class="px-6 py-2 text-xs text-gray-900 dark:text-white"
+                                >
+                                    <div class="font-medium">
+                                        {{ report.zone || "N/A" }}
+                                    </div>
+                                    <div
+                                        class="text-gray-500 dark:text-gray-400"
+                                    >
+                                        {{ report.barangay }},
+                                        {{ report.purok }}
+                                    </div>
+                                </td>
+
+                                <!-- Issue Type -->
+                                <td class="px-6 py-2">
+                                    <div class="text-xs">
+                                        <div
+                                            class="font-medium text-gray-900 dark:text-white"
+                                        >
+                                            {{
+                                                report.water_issue_type ===
+                                                "others"
+                                                    ? report.custom_water_issue ||
+                                                      "Custom Issue"
+                                                    : report.water_issue_type
+                                            }}
+                                        </div>
+                                        <div
+                                            class="text-gray-500 dark:text-gray-400 truncate max-w-xs"
+                                        >
+                                            {{
+                                                truncateText(
+                                                    report.description,
+                                                    30
+                                                )
+                                            }}
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <!-- Priority -->
+                                <td class="px-6 py-2">
+                                    <span
+                                        :class="
+                                            priorityClasses(report.priority)
+                                        "
+                                        class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-sm"
+                                    >
+                                        <span
+                                            class="w-1.5 h-1.5 rounded-full mr-1.5"
+                                            :class="
+                                                priorityDotClasses(
+                                                    report.priority
+                                                )
+                                            "
+                                        ></span>
+                                        {{ report.priority || "N/A" }}
+                                    </span>
+                                </td>
+
+                                <!-- Status -->
+                                <td class="px-6 py-2">
+                                    <span
+                                        :class="statusClasses(report.status)"
+                                        class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-sm"
+                                    >
+                                        <span
+                                            class="w-1.5 h-1.5 rounded-full mr-1.5"
+                                            :class="
+                                                statusDotClasses(report.status)
+                                            "
+                                        ></span>
+                                        {{ formatStatus(report.status) }}
+                                    </span>
+                                </td>
+
+                                <!-- Date -->
+                                <td
+                                    class="px-6 py-2 text-xs text-gray-900 dark:text-white"
+                                >
+                                    <div>
+                                        {{ formatDate(report.created_at) }}
+                                    </div>
+                                    <div
+                                        class="text-gray-500 dark:text-gray-400"
+                                    >
+                                        {{ formatTime(report.created_at) }}
+                                    </div>
+                                </td>
+
+                                <!-- Actions -->
+                                <td class="px-6 py-3 text-right">
+                                    <div class="flex justify-end">
+                                        <div class="relative">
+                                            <button
+                                                @click="
+                                                    toggleActionMenu(report.id)
+                                                "
+                                                class="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-200 dark:hover:text-gray-300 rounded-lg transition-colors"
+                                                :data-action-button="report.id"
+                                            >
+                                                <MoreHorizontal
+                                                    class="w-4 h-4"
+                                                />
+                                            </button>
+
+                                            <!-- Action Menu Dropdown -->
+                                            <div
+                                                v-if="
+                                                    activeActionMenu ===
+                                                    report.id
+                                                "
+                                                class="fixed z-[1000] mt-1 w-48 bg-white dark:bg-gray-700 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600"
+                                                :style="
+                                                    getActionDropdownStyle(
+                                                        report.id
+                                                    )
+                                                "
+                                            >
+                                                <div class="py-1">
+                                                    <button
+                                                        @click="
+                                                            openModal(report)
+                                                        "
+                                                        class="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                                                    >
+                                                        <Eye
+                                                            class="w-4 h-4 mr-3"
+                                                        />
+                                                        View Details
+                                                    </button>
+                                                    <button
+                                                        v-if="props.canEdit"
+                                                        @click="
+                                                            openStatusModal(
+                                                                report
+                                                            )
+                                                        "
+                                                        class="flex items-center w-full px-4 py-2 text-sm text-yellow-600 dark:text-yellow-400 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                                                    >
+                                                        <Edit
+                                                            class="w-4 h-4 mr-3"
+                                                        />
+                                                        Change Status
+                                                    </button>
+                                                    <button
+                                                        v-if="
+                                                            report.status !==
+                                                                'resolved' &&
+                                                            props.canEdit
+                                                        "
+                                                        @click="
+                                                            quickResolve(report)
+                                                        "
+                                                        class="flex items-center w-full px-4 py-2 text-sm text-green-600 dark:text-green-400 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                                                    >
+                                                        <CheckCircle
+                                                            class="w-4 h-4 mr-3"
+                                                        />
+                                                        Mark Resolved
+                                                    </button>
+                                                    <button
+                                                        v-if="props.canDelete"
+                                                        @click="
+                                                            confirmDelete(
+                                                                report
+                                                            )
+                                                        "
+                                                        class="flex items-center w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                                                    >
+                                                        <Trash2
+                                                            class="w-4 h-4 mr-3"
+                                                        />
+                                                        Delete Report
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- Empty State -->
+                            <tr v-if="filteredReports.length === 0">
+                                <td colspan="8" class="px-6 py-8 text-center">
+                                    <div
+                                        class="flex flex-col items-center justify-center space-y-2"
+                                    >
+                                        <FileText
+                                            class="w-12 h-12 text-gray-300"
+                                        />
+                                        <span
+                                            class="font-medium text-gray-500 dark:text-gray-400"
+                                            >No reports found</span
+                                        >
+                                        <span
+                                            class="text-xs text-gray-400 dark:text-gray-500"
+                                        >
+                                            Try adjusting your filters or search
+                                            keywords.
+                                        </span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <Pagination :data="reports" />
             </div>
 
-            <!-- Pagination -->
-            <Pagination v-if="reports.data && reports.data.length > 0" :items="reports" item-name="reports"
-                class="mt-6" />
+            <!-- Modals -->
+            <ReportDetailsModal
+                :show="showModal"
+                :report="selectedReport"
+                @close="closeModal"
+            />
+
+            <!-- Status Change Modal -->
+            <div
+                v-if="showStatusModal"
+                class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 transition-opacity duration-300"
+                @click="closeStatusModal"
+            >
+                <div
+                    class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md mx-4 transform transition-all duration-300 scale-100"
+                    @click.stop
+                >
+                    <!-- Modal Header -->
+                    <div
+                        class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700"
+                    >
+                        <h3
+                            class="text-lg font-semibold text-gray-900 dark:text-white"
+                        >
+                            Change Report Status
+                        </h3>
+                        <button
+                            @click="closeStatusModal"
+                            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                        >
+                            <svg
+                                class="w-5 h-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12"
+                                />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Modal Body -->
+                    <div class="p-6">
+                        <div class="mb-6">
+                            <p
+                                class="text-sm text-gray-600 dark:text-gray-400 mb-2"
+                            >
+                                Report Details:
+                            </p>
+                            <div
+                                class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4"
+                            >
+                                <p
+                                    class="text-sm font-medium text-gray-900 dark:text-white"
+                                >
+                                    {{ statusReport?.tracking_code }} -
+                                    {{ statusReport?.reporter_name }}
+                                </p>
+                                <p
+                                    class="text-xs text-gray-500 dark:text-gray-400 mt-1"
+                                >
+                                    Current Status:
+                                    <span
+                                        :class="
+                                            statusClasses(statusReport?.status)
+                                        "
+                                        class="ml-1 px-2 py-1 rounded-full text-xs"
+                                    >
+                                        {{ formatStatus(statusReport?.status) }}
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4">
+                            <label
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                            >
+                                Select New Status:
+                            </label>
+
+                            <div class="grid grid-cols-1 gap-3">
+                                <label
+                                    v-for="status in statusOptions.filter(
+                                        (s) => s.value
+                                    )"
+                                    :key="status.value"
+                                    :class="[
+                                        'flex items-center p-4 border-2 rounded-lg cursor-pointer transition-all duration-200',
+                                        selectedStatus === status.value
+                                            ? getStatusBorderClass(status.value)
+                                            : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500',
+                                    ]"
+                                >
+                                    <input
+                                        type="radio"
+                                        :value="status.value"
+                                        v-model="selectedStatus"
+                                        class="hidden"
+                                    />
+                                    <div class="flex items-center w-full">
+                                        <div
+                                            class="w-4 h-4 rounded-full border-2 mr-3 flex items-center justify-center"
+                                            :class="
+                                                selectedStatus === status.value
+                                                    ? getStatusRadioClass(
+                                                          status.value
+                                                      )
+                                                    : 'border-gray-300 dark:border-gray-500'
+                                            "
+                                        >
+                                            <div
+                                                v-if="
+                                                    selectedStatus ===
+                                                    status.value
+                                                "
+                                                class="w-2 h-2 rounded-full"
+                                                :class="
+                                                    getStatusDotClass(
+                                                        status.value
+                                                    )
+                                                "
+                                            ></div>
+                                        </div>
+                                        <div class="flex items-center flex-1">
+                                            <span
+                                                :class="
+                                                    statusClasses(status.value)
+                                                "
+                                                class="px-3 py-1 rounded-full text-sm font-medium mr-3"
+                                            >
+                                                {{ status.label }}
+                                            </span>
+                                            <span
+                                                class="text-xs text-gray-500 dark:text-gray-400 flex-1"
+                                            >
+                                                {{
+                                                    getStatusDescription(
+                                                        status.value
+                                                    )
+                                                }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal Footer -->
+                    <div
+                        class="flex justify-end space-x-3 p-6 border-t border-gray-200 dark:border-gray-700"
+                    >
+                        <button
+                            @click="closeStatusModal"
+                            :disabled="updatingStatus"
+                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            @click="confirmStatusChange"
+                            :disabled="
+                                !selectedStatus ||
+                                selectedStatus === statusReport?.status ||
+                                updatingStatus
+                            "
+                            class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
+                        >
+                            <span
+                                v-if="updatingStatus"
+                                class="flex items-center"
+                            >
+                                <RefreshCw class="w-4 h-4 mr-2 animate-spin" />
+                                Updating...
+                            </span>
+                            <span v-else class="flex items-center">
+                                <CheckCircle class="w-4 h-4 mr-2" />
+                                Update Status
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </div>
 
             <!-- Reporter Details Modal -->
-            <div v-if="showReporterModal"
-                class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
+            <div
+                v-if="showReporterModal"
+                class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50"
+            >
                 <div
-                    class="bg-gradient-to-br from-white to-gray-100 dark:from-gray-800 dark:to-gray-900 p-8 rounded-xl shadow-2xl w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl xl:max-w-3xl transform transition-all duration-300 ease-in-out hover:shadow-3xl">
+                    class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-md"
+                >
                     <h3
-                        class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-6 border-b-2 border-blue-200 dark:border-blue-800 pb-3">
+                        class="text-lg font-semibold text-gray-900 dark:text-white mb-4"
+                    >
                         All Reporters
                     </h3>
-                    <div class="space-y-4 max-h-72 sm:max-h-80 overflow-y-auto">
-                        <div v-for="(reporter, index) in selectedReportReporters" :key="index"
-                            class="flex items-center justify-between text-gray-700 dark:text-gray-300 px-5 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200 border-b border-gray-200 dark:border-gray-600 last:border-b-0">
-                            <!-- Reporter Name -->
-                            <span class="font-medium">{{ reporter.name }}</span>
-
-                            <!-- User Type Badge -->
-                            <span :class="getReporterTypeClasses(reporter.type)"
-                                class="inline-flex items-center text-xs px-2 py-1 rounded-full font-medium">
-                                <v-icon :name="getReporterTypeIcon(reporter.type)" class="w-3 h-3 mr-1" />
-                                {{ reporter.type || 'Guest' }}
+                    <div class="space-y-3 max-h-64 overflow-y-auto">
+                        <div
+                            v-for="(reporter, index) in selectedReportReporters"
+                            :key="index"
+                            class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                        >
+                            <span
+                                class="text-sm font-medium text-gray-900 dark:text-white"
+                            >
+                                {{ reporter.name }}
+                            </span>
+                            <span
+                                :class="getReporterTypeClasses(reporter.type)"
+                                class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                            >
+                                {{ reporter.type || "Guest" }}
                             </span>
                         </div>
                     </div>
-                    <button @click="closeReporterModal"
-                        class="mt-6 w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 transform hover:-translate-y-1">
+                    <button
+                        @click="closeReporterModal"
+                        class="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
                         Close
                     </button>
                 </div>
             </div>
-
-            <!-- Report Details Modal -->
-            <ReportDetailsModal :show="showModal" :report="selectedReport" @close="closeModal" />
         </div>
     </AdminLayout>
 </template>
@@ -412,6 +821,20 @@ import { ref, computed, watch, onMounted, onUnmounted, nextTick } from "vue";
 import { router } from "@inertiajs/vue3";
 import { debounce } from "lodash";
 import Swal from "sweetalert2";
+import {
+    Search,
+    Filter,
+    ChevronDown,
+    RefreshCw,
+    Eye,
+    Edit,
+    MoreHorizontal,
+    FileText,
+    CheckCircle,
+    Clock,
+    Trash2,
+    Download,
+} from "lucide-vue-next";
 
 const props = defineProps({
     reports: Object,
@@ -423,82 +846,44 @@ const props = defineProps({
     report_id: [String, Number],
 });
 
+// Reactive state
 const filters = ref({
     userType: props.filters?.userType || "all",
     status: props.filters?.status || "",
     search: props.filters?.search || "",
 });
 
-// State
 const showModal = ref(false);
 const showFilterDropdown = ref(false);
-const updatingStatus = ref(false);
-const deletingReport = ref(false);
+const isResetting = ref(false);
+const activeActionMenu = ref(null);
+const filterDropdownStyle = ref({});
+const filterButton = ref(null);
 const showReporterModal = ref(false);
 const selectedReportReporters = ref([]);
 const selectedReport = ref(props.selectedReport || null);
+const updatingStatus = ref(false);
 
-// Watch for report_id changes and open modal if present
-watch(
-    () => props.report_id,
-    async (newReportId) => {
-        if (newReportId) {
-            await openReportById(newReportId);
-        }
-    }
-);
+// Status modal state
+const showStatusModal = ref(false);
+const statusReport = ref(null);
+const selectedStatus = ref("");
 
-// Also check on component mount
-onMounted(async () => {
-    if (props.selectedReport) {
-        selectedReport.value = props.selectedReport;
-        showModal.value = true;
-    }
+// Constants
+const statusOptions = [
+    { value: "", label: "All Status" },
+    { value: "pending", label: "Pending" },
+    { value: "in_progress", label: "In Progress" },
+    { value: "resolved", label: "Resolved" },
+];
 
-    // Check if report_id is provided via URL parameter
-    if (props.report_id) {
-        await openReportById(props.report_id);
-    }
+const userTypeOptions = [
+    { value: "all", label: "All Users" },
+    { value: "guest", label: "Guest" },
+    { value: "authenticated", label: "Registered" },
+];
 
-    if (props.swal) {
-        Swal.fire(props.swal);
-    }
-});
-
-// Method to open report by ID
-const openReportById = async (reportId) => {
-    // Find the report in the current reports data
-    const report = props.reports.data.find((r) => r.id == reportId);
-
-    if (report) {
-        selectedReport.value = report;
-        // Use nextTick to ensure the modal component is ready
-        await nextTick();
-        showModal.value = true;
-
-        // Clear the URL parameter after opening the modal
-        clearReportIdParameter();
-    } else {
-        console.warn("Report not found in current data:", reportId);
-    }
-};
-
-// Method to clear the report_id parameter from URL
-const clearReportIdParameter = () => {
-    const url = new URL(window.location.href);
-    if (url.searchParams.has("report_id")) {
-        url.searchParams.delete("report_id");
-        window.history.replaceState({}, "", url.toString());
-    }
-};
-
-// Update the closeModal method to also clear the parameter
-const closeModal = () => {
-    showModal.value = false;
-    clearReportIdParameter();
-};
-
-// Computed properties for statistics
+// Computed properties
 const pendingReportsCount = computed(() => {
     return props.reports.data.filter((report) => report.status === "pending")
         .length;
@@ -515,24 +900,6 @@ const resolvedReportsCount = computed(() => {
         .length;
 });
 
-const pendingPercentage = computed(() => {
-    if (!props.reports.total || props.reports.total === 0) return 0;
-    return Math.round((pendingReportsCount.value / props.reports.total) * 100);
-});
-
-const inProgressPercentage = computed(() => {
-    if (!props.reports.total || props.reports.total === 0) return 0;
-    return Math.round(
-        (inProgressReportsCount.value / props.reports.total) * 100
-    );
-});
-
-const resolvedPercentage = computed(() => {
-    if (!props.reports.total || props.reports.total === 0) return 0;
-    return Math.round((resolvedReportsCount.value / props.reports.total) * 100);
-});
-
-// Filtered reports
 const filteredReports = computed(() => {
     return props.reports.data.filter((report) => {
         if (filters.value.userType === "guest" && report.user_id) return false;
@@ -577,10 +944,72 @@ const filteredReports = computed(() => {
     });
 });
 
-// Handle click outside to close filter dropdown only
+// Dropdown handlers
+const toggleFilterDropdown = async () => {
+    showFilterDropdown.value = !showFilterDropdown.value;
+    if (showFilterDropdown.value && filterButton.value) {
+        await nextTick();
+        const rect = filterButton.value.getBoundingClientRect();
+        const dropdownWidth = 224;
+        filterDropdownStyle.value = {
+            left: `${rect.right - dropdownWidth}px`,
+            top: `${rect.bottom + 8}px`,
+            position: "fixed",
+        };
+    }
+};
+
+const getActionDropdownStyle = (reportId) => {
+    if (typeof window === "undefined") return {};
+    const button = document.querySelector(`[data-action-button="${reportId}"]`);
+    if (!button) return {};
+    const rect = button.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    const spaceBelow = viewportHeight - rect.bottom;
+    const dropdownHeight = 176;
+    let top = rect.bottom + 4;
+    if (spaceBelow < dropdownHeight && rect.top > dropdownHeight) {
+        top = rect.top - dropdownHeight - 4;
+    }
+    return {
+        left: `${rect.right - 192}px`,
+        top: `${top}px`,
+    };
+};
+
+const toggleActionMenu = async (reportId) => {
+    if (activeActionMenu.value === reportId) {
+        activeActionMenu.value = null;
+    } else {
+        activeActionMenu.value = reportId;
+        await nextTick();
+    }
+};
+
+// Click outside handler
 const handleClickOutside = (event) => {
-    if (!event.target.closest(".relative")) {
+    const isFilterClick =
+        filterButton.value?.contains(event.target) ||
+        (showFilterDropdown.value &&
+            event.target.closest(".fixed.z-\\[1000\\]"));
+    if (!isFilterClick) {
         showFilterDropdown.value = false;
+    }
+    const actionButtons = document.querySelectorAll("[data-action-button]");
+    let isClickInsideActionMenu = false;
+    actionButtons.forEach((button) => {
+        if (button.contains(event.target)) {
+            isClickInsideActionMenu = true;
+        }
+    });
+    const actionDropdowns = document.querySelectorAll(".fixed.z-\\[1000\\]");
+    actionDropdowns.forEach((dropdown) => {
+        if (dropdown.contains(event.target)) {
+            isClickInsideActionMenu = true;
+        }
+    });
+    if (!isClickInsideActionMenu) {
+        activeActionMenu.value = null;
     }
 };
 
@@ -592,19 +1021,7 @@ onUnmounted(() => {
     document.removeEventListener("click", handleClickOutside);
 });
 
-// Watch filters with debounce
-watch(
-    filters,
-    debounce(() => {
-        router.get(route("admin.reports"), filters.value, {
-            preserveState: true,
-            replace: true,
-        });
-    }, 300),
-    { deep: true }
-);
-
-// Filter functions
+// Filter methods
 const updateStatusFilter = (status) => {
     filters.value.status = status;
     showFilterDropdown.value = false;
@@ -616,100 +1033,49 @@ const updateUserTypeFilter = (userType) => {
 };
 
 const resetFilters = () => {
-    filters.value = {
-        userType: "all",
-        status: "",
-        search: "",
-    };
-    showFilterDropdown.value = false;
+    isResetting.value = true;
+    setTimeout(() => {
+        filters.value = {
+            userType: "all",
+            status: "",
+            search: "",
+        };
+        showFilterDropdown.value = false;
+        isResetting.value = false;
+    }, 500);
 };
+
+// Data fetching
+const getReports = () => {
+    router.get(route("admin.reports"), filters.value, {
+        preserveState: true,
+        replace: true,
+    });
+};
+
+// Watch for filter changes
+watch(
+    filters,
+    debounce(() => {
+        getReports();
+    }, 300),
+    { deep: true }
+);
 
 // Modal functions
 const openModal = (report) => {
     selectedReport.value = report;
     showModal.value = true;
+    activeActionMenu.value = null;
 };
 
-// Reporter Modal Functions - UPDATED
-const showAllReporters = (report) => {
-    if (isMergedReport(report)) {
-        const reporters = report.reporter_name.split(',').map(name => name.trim());
-
-        // Get user types from the report
-        const userTypes = report.user_types ? JSON.parse(report.user_types) : [];
-
-        // Create reporter objects with names and types
-        selectedReportReporters.value = reporters.map((reporterName, index) => {
-            let reporterType = 'Guest'; // Default to guest
-
-            // If this is the first reporter and there's a user_id, it's registered
-            if (index === 0 && report.user_id) {
-                reporterType = 'Registered';
-            }
-            // If we have user types array and it matches the order
-            else if (userTypes[index]) {
-                reporterType = userTypes[index];
-            }
-            // If the reporter name matches a registered user in the system
-            else if (isRegisteredUser(reporterName)) {
-                reporterType = 'Registered';
-            }
-
-            return {
-                name: reporterName,
-                type: reporterType
-            };
-        });
-
-        showReporterModal.value = true;
-    }
+const closeModal = () => {
+    showModal.value = false;
+    selectedReport.value = null;
 };
 
-// Helper method to check if a reporter is a registered user
-const isRegisteredUser = (reporterName) => {
-    // This would need to be implemented based on your user data
-    // For now, we'll use a simple check - you might want to enhance this
-    const registeredUsers = props.reports.data
-        .filter(report => report.user_id)
-        .map(report => report.reporter_name || report.user?.name)
-        .filter(name => name);
-
-    return registeredUsers.includes(reporterName);
-};
-
-// Method to get classes for reporter type badge in modal
-const getReporterTypeClasses = (type) => {
-    const baseClasses = "px-2 py-1 rounded-full text-xs font-medium";
-
-    switch (type) {
-        case 'Registered':
-            return `${baseClasses} bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 border border-purple-200 dark:border-purple-700`;
-        case 'Guest':
-            return `${baseClasses} bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200 border border-gray-200 dark:border-gray-700`;
-        default:
-            return `${baseClasses} bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200`;
-    }
-};
-
-// Method to get icon for reporter type in modal
-const getReporterTypeIcon = (type) => {
-    switch (type) {
-        case 'Registered':
-            return "hi-user";
-        case 'Guest':
-            return "hi-users";
-        default:
-            return "hi-question-mark-circle";
-    }
-};
-
-const closeReporterModal = () => {
-    showReporterModal.value = false;
-    selectedReportReporters.value = [];
-};
-
-// SweetAlert Status Modal
-const openStatusModal = async (report) => {
+// Status Modal Functions
+const openStatusModal = (report) => {
     if (report.status.startsWith("Deleted")) {
         Swal.fire({
             icon: "warning",
@@ -719,45 +1085,34 @@ const openStatusModal = async (report) => {
         return;
     }
 
-    const { value: status } = await Swal.fire({
-        title: "Change Report Status",
-        text: `Current status: ${formatStatus(report.status)}`,
-        icon: "question",
-        input: "select",
-        inputOptions: {
-            pending: "Pending",
-            in_progress: "In Progress",
-            resolved: "Resolved",
-        },
-        inputValue: report.status,
-        showCancelButton: true,
-        confirmButtonColor: "#3085d6",
-        cancelButtonColor: "#d33",
-        confirmButtonText: "Update Status",
-        cancelButtonText: "Cancel",
-        inputValidator: (value) => {
-            if (!value) {
-                return "You need to select a status!";
-            }
-            if (value === report.status) {
-                return "This is already the current status!";
-            }
-        },
-    });
-
-    if (status && status !== report.status) {
-        updateStatus(report, status);
-    }
+    statusReport.value = report;
+    selectedStatus.value = report.status;
+    showStatusModal.value = true;
+    activeActionMenu.value = null;
 };
 
-// Status update function
-const updateStatus = async (report, newStatus) => {
+const closeStatusModal = () => {
+    showStatusModal.value = false;
+    statusReport.value = null;
+    selectedStatus.value = "";
+    updatingStatus.value = false;
+};
+
+const confirmStatusChange = async () => {
+    if (
+        !selectedStatus.value ||
+        !statusReport.value ||
+        selectedStatus.value === statusReport.value.status
+    ) {
+        return;
+    }
+
     updatingStatus.value = true;
     try {
         await router.post(
-            route("admin.reports.updateStatus", report.id),
+            route("admin.reports.updateStatus", statusReport.value.id),
             {
-                status: newStatus,
+                status: selectedStatus.value,
             },
             {
                 preserveScroll: true,
@@ -766,11 +1121,14 @@ const updateStatus = async (report, newStatus) => {
                         toast: true,
                         position: "top-end",
                         icon: "success",
-                        title: `Status updated to "${formatStatus(newStatus)}"`,
+                        title: `Status updated to "${formatStatus(
+                            selectedStatus.value
+                        )}"`,
                         showConfirmButton: false,
                         timer: 2000,
                         timerProgressBar: true,
                     });
+                    closeStatusModal();
                 },
                 onError: (error) => {
                     Swal.fire({
@@ -795,43 +1153,126 @@ const updateStatus = async (report, newStatus) => {
     }
 };
 
-// Delete report function
-const confirmDelete = async (report) => {
-    const result = await Swal.fire({
-        title: "Are you sure?",
-        html: `You are about to delete the report from <strong>${report.reporter_name || report.user?.name || "Unknown"
-            }</strong>.<br>This action cannot be undone.`,
-        icon: "warning",
-        input: "text",
-        inputLabel: "Reason for deletion",
-        inputPlaceholder: "Enter reason for deletion",
-        showCancelButton: true,
-        confirmButtonColor: "#d33",
-        cancelButtonColor: "#3085d6",
-        cancelButtonText: "Cancel",
-        confirmButtonText: "Yes, delete it!",
-        reverseButtons: false,
-        focusCancel: true,
-        inputValidator: (value) => {
-            if (!value) {
-                return "You must provide a reason for deletion!";
-            }
-            if (value.length > 255) {
-                return "Reason must not exceed 255 characters!";
-            }
-        },
-    });
-
-    if (result.isConfirmed) {
-        await deleteReport(report, result.value);
+// Status modal styling helpers
+const getStatusBorderClass = (status) => {
+    switch (status) {
+        case "pending":
+            return "border-gray-400 bg-gray-50 dark:bg-gray-700";
+        case "in_progress":
+            return "border-blue-400 bg-blue-50 dark:bg-blue-900/20";
+        case "resolved":
+            return "border-green-400 bg-green-50 dark:bg-green-900/20";
+        default:
+            return "border-gray-400 bg-gray-50 dark:bg-gray-700";
     }
 };
 
-const deleteReport = async (report, reason) => {
-    deletingReport.value = true;
+const getStatusRadioClass = (status) => {
+    switch (status) {
+        case "pending":
+            return "border-gray-500";
+        case "in_progress":
+            return "border-blue-500";
+        case "resolved":
+            return "border-green-500";
+        default:
+            return "border-gray-500";
+    }
+};
+
+const getStatusDotClass = (status) => {
+    switch (status) {
+        case "pending":
+            return "bg-gray-500";
+        case "in_progress":
+            return "bg-blue-500";
+        case "resolved":
+            return "bg-green-500";
+        default:
+            return "bg-gray-500";
+    }
+};
+
+const getStatusDescription = (status) => {
+    switch (status) {
+        case "pending":
+            return "Report is waiting for review";
+        case "in_progress":
+            return "Team is working on this issue";
+        case "resolved":
+            return "Issue has been resolved";
+        default:
+            return "";
+    }
+};
+
+// Quick resolve function
+const quickResolve = (report) => {
+    activeActionMenu.value = null;
+    if (report.status !== "resolved") {
+        statusReport.value = report;
+        selectedStatus.value = "resolved";
+        confirmStatusChange();
+    }
+};
+
+// Reporter Modal Functions
+const showAllReporters = (report) => {
+    if (isMergedReport(report)) {
+        const reporters = report.reporter_name
+            .split(",")
+            .map((name) => name.trim());
+        const userTypes = report.user_types
+            ? JSON.parse(report.user_types)
+            : [];
+
+        selectedReportReporters.value = reporters.map((reporterName, index) => {
+            let reporterType = "Guest";
+            if (index === 0 && report.user_id) {
+                reporterType = "Registered";
+            } else if (userTypes[index]) {
+                reporterType = userTypes[index];
+            }
+            return {
+                name: reporterName,
+                type: reporterType,
+            };
+        });
+
+        showReporterModal.value = true;
+    }
+};
+
+const closeReporterModal = () => {
+    showReporterModal.value = false;
+    selectedReportReporters.value = [];
+};
+
+// Delete report function
+const confirmDelete = (report) => {
+    activeActionMenu.value = null;
+
+    Swal.fire({
+        title: "Are you sure?",
+        text: `You are about to delete the report from ${
+            report.reporter_name || report.user?.name || "Unknown"
+        }. This action cannot be undone.`,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Yes, delete it!",
+        cancelButtonText: "Cancel",
+    }).then((result) => {
+        if (result.isConfirmed) {
+            deleteReport(report);
+        }
+    });
+};
+
+const deleteReport = async (report) => {
     try {
         await router.delete(route("admin.reports.destroy", report.id), {
-            data: { reason },
             preserveScroll: true,
             onSuccess: () => {
                 Swal.fire({
@@ -848,9 +1289,7 @@ const deleteReport = async (report, reason) => {
                 Swal.fire({
                     icon: "error",
                     title: "Error",
-                    text:
-                        error.reason ||
-                        "Failed to delete report. Please try again.",
+                    text: "Failed to delete report. Please try again.",
                 });
             },
         });
@@ -861,12 +1300,136 @@ const deleteReport = async (report, reason) => {
             title: "Error",
             text: "An unexpected error occurred. Please try again.",
         });
-    } finally {
-        deletingReport.value = false;
     }
 };
 
-// Helper functions
+// Export function
+const exportReports = async () => {
+    try {
+        const { value: format } = await Swal.fire({
+            title: "Export Reports",
+            text: "Choose export format",
+            icon: "question",
+            input: "select",
+            inputOptions: {
+                csv: "CSV (Excel)",
+                json: "JSON Data",
+            },
+            inputPlaceholder: "Select format",
+            showCancelButton: true,
+            confirmButtonText: "Export",
+            cancelButtonText: "Cancel",
+        });
+
+        if (!format) return;
+
+        // Show loading
+        Swal.fire({
+            title: "Generating Report...",
+            text: "Please wait while we prepare your export",
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            },
+        });
+
+        // Generate export data
+        const exportData = filteredReports.value.map((report) => ({
+            ID: report.id,
+            "Tracking Code": report.tracking_code,
+            "Reporter Name": report.reporter_name || report.user?.name || "N/A",
+            "User Type": report.formatted_user_types || "Guest",
+            Zone: report.zone || "N/A",
+            Barangay: report.barangay || "N/A",
+            Purok: report.purok || "N/A",
+            "Issue Type":
+                report.water_issue_type === "others"
+                    ? report.custom_water_issue || "Custom Issue"
+                    : report.water_issue_type,
+            Priority: report.priority || "N/A",
+            Status: formatStatus(report.status),
+            "Date Created": formatDate(report.created_at),
+            "Time Created": formatTime(report.created_at),
+            Description: report.description || "",
+            "Reporter Phone": report.reporter_phone || "N/A",
+        }));
+
+        // Generate file based on format
+        if (format === "csv") {
+            exportToCSV(exportData);
+        } else if (format === "json") {
+            exportToJSON(exportData);
+        }
+
+        Swal.fire({
+            icon: "success",
+            title: "Export Complete!",
+            text: `Reports exported as ${format.toUpperCase()} successfully`,
+            timer: 2000,
+            showConfirmButton: false,
+        });
+    } catch (error) {
+        console.error("Export failed:", error);
+        Swal.fire({
+            icon: "error",
+            title: "Export Failed",
+            text: "Failed to generate export. Please try again.",
+        });
+    }
+};
+
+// CSV Export Function
+const exportToCSV = (data) => {
+    if (data.length === 0) return;
+
+    const headers = Object.keys(data[0]);
+    const csvContent = [
+        headers.join(","),
+        ...data.map((row) =>
+            headers
+                .map((header) => {
+                    const value = row[header] || "";
+                    // Escape commas and quotes in CSV
+                    return `"${String(value).replace(/"/g, '""')}"`;
+                })
+                .join(",")
+        ),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute(
+        "download",
+        `aquatrack-reports-${new Date().toISOString().split("T")[0]}.csv`
+    );
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+};
+
+// JSON Export Function
+const exportToJSON = (data) => {
+    const jsonContent = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonContent], {
+        type: "application/json;charset=utf-8;",
+    });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute(
+        "download",
+        `aquatrack-reports-${new Date().toISOString().split("T")[0]}.json`
+    );
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+};
+
+// Utility functions
 const isMergedReport = (report) => {
     return report.reporter_name && report.reporter_name.includes(",");
 };
@@ -883,87 +1446,136 @@ const getTruncatedReporters = (report) => {
         .join(", ");
 };
 
+const getReporterInitials = (report) => {
+    if (isMergedReport(report)) {
+        return "MR"; // Multiple Reporters
+    }
+    const name = report.reporter_name || report.user?.name || "N/A";
+    return name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .substring(0, 2);
+};
+
+const truncateText = (text, length) => {
+    if (!text) return "";
+    return text.length > length ? text.substring(0, length) + "..." : text;
+};
+
+const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    const options = { year: "numeric", month: "short", day: "numeric" };
+    return new Date(dateString).toLocaleDateString(undefined, options);
+};
+
+const formatTime = (dateString) => {
+    if (!dateString) return "";
+    return new Date(dateString).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+    });
+};
+
+// Styling helpers
 const userTypeClasses = (userTypes) => {
-    const baseClasses = "px-2 py-1 rounded-full text-xs font-medium";
-
-    if (userTypes && userTypes.includes('Registered') && userTypes.includes('Guest')) {
-        return `${baseClasses} bg-gradient-to-r from-purple-100 to-gray-100 text-purple-800 dark:from-purple-900 dark:to-gray-900 dark:text-purple-200`;
-    } else if (userTypes && userTypes.includes('Registered')) {
-        return `${baseClasses} bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200`;
+    if (
+        userTypes &&
+        userTypes.includes("Registered") &&
+        userTypes.includes("Guest")
+    ) {
+        return "bg-gradient-to-r from-purple-100 to-gray-100 text-purple-800 dark:from-purple-900 dark:to-gray-900 dark:text-purple-200";
+    } else if (userTypes && userTypes.includes("Registered")) {
+        return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200";
     } else {
-        return `${baseClasses} bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200`;
+        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
     }
 };
 
-const getUserTypeIcon = (userTypes) => {
-    if (userTypes && userTypes.includes('Registered') && userTypes.includes('Guest')) {
-        return "hi-user-group";
-    } else if (userTypes && userTypes.includes('Registered')) {
-        return "hi-user";
+const getUserTypeDotClass = (userTypes) => {
+    if (
+        userTypes &&
+        userTypes.includes("Registered") &&
+        userTypes.includes("Guest")
+    ) {
+        return "bg-purple-400";
+    } else if (userTypes && userTypes.includes("Registered")) {
+        return "bg-purple-400";
     } else {
-        return "hi-users";
+        return "bg-gray-400";
     }
 };
 
-const priorityClasses = (priority) => ({
-    "px-2 py-1 rounded-full text-xs font-medium": true,
-    "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200":
-        priority === "high",
-    "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200":
-        priority === "medium",
-    "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200":
-        priority === "low",
-    "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200": !priority,
-});
+const priorityClasses = (priority) => {
+    return {
+        "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200":
+            priority === "high",
+        "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200":
+            priority === "medium",
+        "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200":
+            priority === "low",
+        "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200":
+            !priority,
+    };
+};
 
-const statusClasses = (status) => ({
-    "px-2 py-1 rounded-full text-xs font-medium": true,
-    "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200":
-        status === "pending",
-    "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200":
-        status === "in_progress",
-    "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200":
-        status === "resolved",
-    "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200":
-        status.startsWith("Deleted"),
-});
+const priorityDotClasses = (priority) => {
+    return {
+        "bg-red-400": priority === "high",
+        "bg-yellow-400": priority === "medium",
+        "bg-green-400": priority === "low",
+        "bg-gray-400": !priority,
+    };
+};
+
+const statusClasses = (status) => {
+    return {
+        "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200":
+            status === "pending",
+        "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200":
+            status === "in_progress",
+        "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200":
+            status === "resolved",
+        "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200":
+            status.startsWith("Deleted"),
+    };
+};
+
+const statusDotClasses = (status) => {
+    if (status.startsWith("Deleted")) return "bg-red-400";
+    switch (status) {
+        case "pending":
+            return "bg-gray-400";
+        case "in_progress":
+            return "bg-blue-400";
+        case "resolved":
+            return "bg-green-400";
+        default:
+            return "bg-gray-400";
+    }
+};
 
 const getStatusRowClass = (status) => {
     return status === "pending"
-        ? "bg-white dark:bg-gray-900"
+        ? ""
         : status === "in_progress"
-            ? "bg-blue-50 dark:bg-blue-900/20"
-            : status === "resolved"
-                ? "bg-green-50 dark:bg-green-900/20"
-                : status.startsWith("Deleted")
-                    ? "bg-red-50 dark:bg-red-900/20"
-                    : "";
+        ? "bg-blue-50 dark:bg-blue-900/20"
+        : status === "resolved"
+        ? "bg-green-50 dark:bg-green-900/20"
+        : status.startsWith("Deleted")
+        ? "bg-red-50 dark:bg-red-900/20"
+        : "";
 };
 
-const getStatusIcon = (status) => {
-    if (status.startsWith("Deleted")) return "hi-trash";
-    switch (status) {
-        case "pending":
-            return "hi-clock";
-        case "in_progress":
-            return "bi-arrow-repeat";
-        case "resolved":
-            return "hi-check-circle";
+const getReporterTypeClasses = (type) => {
+    switch (type) {
+        case "Registered":
+            return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200";
+        case "Guest":
+            return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
         default:
-            return "hi-question-mark-circle";
-    }
-};
-
-const getPriorityIcon = (priority) => {
-    switch (priority) {
-        case "high":
-            return "hi-exclamation";
-        case "medium":
-            return "hi-exclamation-circle";
-        case "low":
-            return "hi-information-circle";
-        default:
-            return "hi-question-mark-circle";
+            return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
     }
 };
 
@@ -976,25 +1588,23 @@ const formatStatus = (status) => {
     };
     return statusMap[status] || status;
 };
-
-const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
-    const options = { year: "numeric", month: "short", day: "numeric" };
-    return new Date(dateString).toLocaleDateString(undefined, options);
-};
 </script>
 
 <style scoped>
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 .cursor-pointer {
     cursor: pointer;
-}
-
-tr {
-    transition: opacity 0.2s ease;
-}
-
-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
 }
 </style>

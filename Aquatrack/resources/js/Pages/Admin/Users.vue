@@ -43,7 +43,7 @@
                             <button
                                 @click="showCreateModal = true"
                                 type="button"
-                                class="flex items-center px-4 py-2 text-sm font-medium border border-blue-500 text-blue-500 rounded-sm hover:border-blue-700 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 ease-in-out"
+                                class="flex items-center px-4 py-2 text-sm font-medium border border-blue-500/20 bg-blue-100/40 text-blue-500 rounded-sm hover:bg-blue-100/80 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 ease-in-out"
                             >
                                 <Plus class="w-4 h-4 mr-2" />
                                 Add User
@@ -331,6 +331,10 @@
                                                         View Details
                                                     </button>
                                                     <button
+                                                        v-if="
+                                                            user.role !==
+                                                            'admin'
+                                                        "
                                                         @click="editUser(user)"
                                                         class="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                                                     >
@@ -340,6 +344,10 @@
                                                         Edit User
                                                     </button>
                                                     <button
+                                                        v-if="
+                                                            user.role !==
+                                                            'admin'
+                                                        "
                                                         @click="
                                                             toggleUserStatus(
                                                                 user
@@ -362,6 +370,10 @@
                                                         }}
                                                     </button>
                                                     <button
+                                                        v-if="
+                                                            user.role !==
+                                                            'admin'
+                                                        "
                                                         @click="
                                                             confirmDelete(user)
                                                         "
@@ -428,6 +440,23 @@
                 @close="showEditModal = false"
                 @saved="handleUserUpdated"
             />
+
+            <!-- Status Toggle Modal -->
+            <StatusToggleModal
+                :show="showStatusModal"
+                :user="selectedUser"
+                :action="statusAction"
+                @close="closeStatusModal"
+                @confirm="handleStatusToggle"
+            />
+
+            <!-- Delete User Modal -->
+            <DeleteUserModal
+                :show="showDeleteModal"
+                :user="selectedUser"
+                @close="closeDeleteModal"
+                @confirm="handleDeleteUser"
+            />
         </div>
     </AdminLayout>
 </template>
@@ -442,6 +471,8 @@ import Swal from "sweetalert2";
 import CreateUserModal from "@/Components/Admin/Modals/CreateUserModal.vue";
 import UserDetailsModal from "@/Components/Modals/UserDetailsModal.vue";
 import EditUserDetailsModal from "@/Components/Modals/EditUserDetailsModal.vue";
+import StatusToggleModal from "@/Components/Admin/Modals/StatusToggleModal.vue";
+import DeleteUserModal from "@/Components/Admin/Modals/DeleteUserModal.vue";
 import {
     Search,
     Plus,
@@ -473,7 +504,6 @@ const filters = ref({
     enabled: props.filters.enabled !== undefined ? props.filters.enabled : "",
 });
 
-const selectedUsers = ref([]);
 const showCreateModal = ref(false);
 const showFilterDropdown = ref(false);
 const isResetting = ref(false);
@@ -482,7 +512,10 @@ const filterDropdownStyle = ref({});
 const filterButton = ref(null);
 const showUserModal = ref(false);
 const showEditModal = ref(false);
+const showStatusModal = ref(false);
+const showDeleteModal = ref(false);
 const selectedUser = ref(null);
+const statusAction = ref("");
 
 // Constants
 const roleOptions = [
@@ -602,14 +635,12 @@ onUnmounted(() => {
 // Filter methods
 const updateRoleFilter = (role) => {
     filters.value.role = role;
-    latestRequestId++;
-    debouncedFetchUsers(filters.value, latestRequestId);
+    fetchUsers();
 };
 
 const updateEnabledFilter = (enabled) => {
     filters.value.enabled = enabled;
-    latestRequestId++;
-    debouncedFetchUsers(filters.value, latestRequestId);
+    fetchUsers();
 };
 
 // Utility methods
@@ -652,40 +683,21 @@ const debouncedFetchUsers = debounce((filters, requestId) => {
         replace: true,
         onSuccess: () => {
             if (requestId === latestRequestId) {
-                selectedUsers.value = [];
+                // Success handling
             }
         },
-        onError: (errors) => {
+        onError: () => {
             if (requestId === latestRequestId) {
-                Swal.fire({
-                    icon: "error",
-                    title: "Error",
-                    text: "Failed to fetch users. Please try again.",
-                    toast: true,
-                    position: "top-end",
-                    showConfirmButton: false,
-                    timer: 3000,
-                });
+                showError("Failed to fetch users. Please try again.");
             }
         },
     });
 }, 300);
 
-watch(
-    () => ({
-        search: filters.value.search,
-        role: filters.value.role,
-        sort: filters.value.sort,
-        order: filters.value.order,
-        per_page: filters.value.per_page,
-        enabled: filters.value.enabled,
-    }),
-    (newFilters) => {
-        latestRequestId++;
-        debouncedFetchUsers(newFilters, latestRequestId);
-    },
-    { deep: true }
-);
+const fetchUsers = () => {
+    latestRequestId++;
+    debouncedFetchUsers(filters.value, latestRequestId);
+};
 
 const resetFilters = () => {
     isResetting.value = true;
@@ -698,71 +710,78 @@ const resetFilters = () => {
             per_page: 10,
             enabled: "",
         };
-        selectedUsers.value = [];
         showFilterDropdown.value = false;
         isResetting.value = false;
     }, 1500);
 };
 
-const fetchUsers = () => {
-    latestRequestId++;
-    debouncedFetchUsers(filters.value, latestRequestId);
-};
-
 // User actions
 const toggleUserStatus = (user) => {
-    const newStatus = !user.enabled;
+    selectedUser.value = user;
+    statusAction.value = user.enabled ? "deactivate" : "activate";
+    showStatusModal.value = true;
     activeActionMenu.value = null;
+};
 
-    Swal.fire({
-        title: `${newStatus ? "Activate" : "Deactivate"} User`,
-        text: `Are you sure you want to ${
-            newStatus ? "activate" : "deactivate"
-        } ${user.name}?`,
-        icon: "question",
-        showCancelButton: true,
-        confirmButtonText: `Yes, ${newStatus ? "activate" : "deactivate"}`,
-        cancelButtonText: "Cancel",
-    }).then((result) => {
-        if (result.isConfirmed) {
-            router.post(
-                "/admin/users/toggle-status",
-                {
-                    user_ids: [user.id],
-                    enabled: newStatus,
-                },
-                {
-                    preserveState: true,
-                    onSuccess: () => {
-                        Swal.fire({
-                            icon: newStatus ? "success" : "info",
-                            title: newStatus
-                                ? "User Activated"
-                                : "User Deactivated",
-                            text: `User ${user.name} has been ${
-                                newStatus ? "activated" : "deactivated"
-                            }.`,
-                            toast: true,
-                            position: "top-end",
-                            showConfirmButton: false,
-                            timer: 2000,
-                        });
-                        fetchUsers();
-                    },
-                    onError: () => {
-                        Swal.fire({
-                            icon: "error",
-                            title: "Error",
-                            text: "Failed to update status. Please try again.",
-                            toast: true,
-                            position: "top-end",
-                            showConfirmButton: false,
-                            timer: 2000,
-                        });
-                    },
-                }
-            );
+const closeStatusModal = () => {
+    showStatusModal.value = false;
+    selectedUser.value = null;
+};
+
+const handleStatusToggle = () => {
+    const user = selectedUser.value;
+    const newStatus = !user.enabled;
+
+    router.post(
+        "/admin/users/toggle-status",
+        {
+            user_ids: [user.id],
+            enabled: newStatus,
+        },
+        {
+            preserveState: true,
+            onSuccess: () => {
+                closeStatusModal();
+                showSuccess(
+                    `User ${user.name} has been ${
+                        newStatus ? "activated" : "deactivated"
+                    }.`
+                );
+                fetchUsers(); // This will refresh the table data
+            },
+            onError: () => {
+                closeStatusModal();
+                showError("Failed to update status. Please try again.");
+            },
         }
+    );
+};
+
+const confirmDelete = (user) => {
+    selectedUser.value = user;
+    showDeleteModal.value = true;
+    activeActionMenu.value = null;
+};
+
+const closeDeleteModal = () => {
+    showDeleteModal.value = false;
+    selectedUser.value = null;
+};
+
+const handleDeleteUser = () => {
+    const user = selectedUser.value;
+
+    router.delete(`/admin/users/${user.id}`, {
+        preserveState: true,
+        onSuccess: () => {
+            closeDeleteModal();
+            showSuccess("The user has been deleted successfully.");
+            fetchUsers(); // This will refresh the table data
+        },
+        onError: () => {
+            closeDeleteModal();
+            showError("Failed to delete user. Please try again.");
+        },
     });
 };
 
@@ -780,45 +799,7 @@ const viewUser = (user) => {
 
 const handleUserUpdated = () => {
     fetchUsers();
-    Swal.fire({
-        icon: "success",
-        title: "User Updated",
-        text: "User information has been updated successfully.",
-        toast: true,
-        position: "top-end",
-        showConfirmButton: false,
-        timer: 3000,
-    });
-};
-
-const confirmDelete = (user) => {
-    activeActionMenu.value = null;
-
-    Swal.fire({
-        title: "Are you sure?",
-        text: `You are about to delete ${user.name}. This action cannot be undone.`,
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#3085d6",
-        cancelButtonColor: "#d33",
-        confirmButtonText: "Yes, delete it!",
-    }).then((result) => {
-        if (result.isConfirmed) {
-            router.delete(`/admin/users/${user.id}`, {
-                onSuccess: () => {
-                    Swal.fire(
-                        "Deleted!",
-                        "The user has been deleted.",
-                        "success"
-                    );
-                    fetchUsers();
-                },
-                onError: () => {
-                    Swal.fire("Error!", "Something went wrong.", "error");
-                },
-            });
-        }
-    });
+    showSuccess("User information has been updated successfully.");
 };
 
 const submitCreateUser = (userData) => {
@@ -829,60 +810,9 @@ const submitCreateUser = (userData) => {
             const generatedPassword = response.props.flash?.generated_password;
 
             if (generatedPassword) {
-                Swal.fire({
-                    icon: "success",
-                    title: "User created successfully!",
-                    html: `
-                        <div class="text-left flex items-center flex-col justify-center">
-                            <p class="mb-2 font-medium">Generated Password:</p>
-                            <input
-                                id="swal-password"
-                                class="swal2-input text-center font-mono text-lg"
-                                value="${generatedPassword}"
-                                readonly
-                                style="width: 70%; padding: 0.5rem;"
-                            />
-                            <p class="mt-2 text-sm text-gray-500">Please provide this password to the user</p>
-                        </div>
-                    `,
-                    showConfirmButton: true,
-                    confirmButtonText: "Copy Password",
-                    showCancelButton: true,
-                    cancelButtonText: "Close",
-                    focusConfirm: false,
-                    customClass: {
-                        popup: "!text-left",
-                        confirmButton: "!bg-blue-600 !hover:bg-blue-700",
-                    },
-                    didOpen: () => {
-                        const confirmBtn = Swal.getConfirmButton();
-                        if (confirmBtn) {
-                            confirmBtn.addEventListener("click", () => {
-                                navigator.clipboard.writeText(
-                                    generatedPassword
-                                );
-                                Swal.fire({
-                                    icon: "success",
-                                    title: "Copied!",
-                                    text: "Password copied to clipboard",
-                                    toast: true,
-                                    position: "top-end",
-                                    showConfirmButton: false,
-                                    timer: 2000,
-                                });
-                            });
-                        }
-                    },
-                });
+                showPasswordModal(generatedPassword);
             } else {
-                Swal.fire({
-                    icon: "warning",
-                    title: "User created",
-                    text: "User was created successfully but password could not be displayed",
-                    toast: true,
-                    position: "top-end",
-                    timer: 3000,
-                });
+                showSuccess("User created successfully!");
             }
             fetchUsers();
         },
@@ -903,15 +833,78 @@ const submitCreateUser = (userData) => {
                 errorMessage = errors;
             }
 
-            Swal.fire({
-                icon: "error",
-                title: "Creation Failed",
-                text: errorMessage,
-                confirmButtonText: "OK",
-                customClass: {
-                    confirmButton: "!bg-red-600 !hover:bg-red-700",
-                },
-            });
+            showError(errorMessage);
+        },
+    });
+};
+
+// Helper functions for notifications
+const showSuccess = (message) => {
+    Swal.fire({
+        icon: "success",
+        title: "Success",
+        text: message,
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000,
+    });
+};
+
+const showError = (message) => {
+    Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: message,
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000,
+    });
+};
+
+const showPasswordModal = (password) => {
+    Swal.fire({
+        icon: "success",
+        title: "User created successfully!",
+        html: `
+            <div class="text-left flex items-center flex-col justify-center">
+                <p class="mb-2 font-medium">Generated Password:</p>
+                <input
+                    id="swal-password"
+                    class="swal2-input text-center font-mono text-lg"
+                    value="${password}"
+                    readonly
+                    style="width: 70%; padding: 0.5rem;"
+                />
+                <p class="mt-2 text-sm text-gray-500">Please provide this password to the user</p>
+            </div>
+        `,
+        showConfirmButton: true,
+        confirmButtonText: "Copy Password",
+        showCancelButton: true,
+        cancelButtonText: "Close",
+        focusConfirm: false,
+        customClass: {
+            popup: "!text-left",
+            confirmButton: "!bg-blue-600 !hover:bg-blue-700",
+        },
+        didOpen: () => {
+            const confirmBtn = Swal.getConfirmButton();
+            if (confirmBtn) {
+                confirmBtn.addEventListener("click", () => {
+                    navigator.clipboard.writeText(password);
+                    Swal.fire({
+                        icon: "success",
+                        title: "Copied!",
+                        text: "Password copied to clipboard",
+                        toast: true,
+                        position: "top-end",
+                        showConfirmButton: false,
+                        timer: 2000,
+                    });
+                });
+            }
         },
     });
 };
@@ -942,7 +935,22 @@ const capitalizeRole = (role) => {
     return role.charAt(0).toUpperCase() + role.slice(1);
 };
 
-
+// Watch for filter changes
+watch(
+    () => ({
+        search: filters.value.search,
+        role: filters.value.role,
+        sort: filters.value.sort,
+        order: filters.value.order,
+        per_page: filters.value.per_page,
+        enabled: filters.value.enabled,
+    }),
+    (newFilters) => {
+        latestRequestId++;
+        debouncedFetchUsers(newFilters, latestRequestId);
+    },
+    { deep: true }
+);
 </script>
 
 <style scoped>

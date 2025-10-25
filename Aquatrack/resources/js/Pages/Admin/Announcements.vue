@@ -57,7 +57,7 @@
                                     <button
                                         @click="openCreateModal"
                                         type="button"
-                                        class="flex items-center px-4 py-2 text-sm font-medium border border-blue-500 text-blue-500 rounded-sm hover:border-blue-700 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 ease-in-out"
+                                        class="flex items-center px-4 py-2 text-sm font-medium border bg-blue-100/40 border-blue-500/20 text-blue-500 rounded-sm hover:bg-blue-100/80 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 ease-in-out"
                                     >
                                         <Plus class="w-4 h-4 mr-2" />
                                         Create Announcement

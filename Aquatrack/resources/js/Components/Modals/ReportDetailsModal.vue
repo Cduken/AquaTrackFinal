@@ -1,611 +1,981 @@
+//Components/ReportDetailsModal.vue
 <template>
     <!-- Single transition wrapper for both overlay and panel -->
     <transition name="modal">
-        <div v-if="show" class="fixed inset-0 z-[1000] overflow-hidden">
+        <div v-if="show" class="fixed inset-0 z-[1000] overflow-y-auto">
             <!-- Overlay -->
             <div
-                class="absolute inset-0 bg-black/50 transition-opacity duration-300"
+                class="fixed inset-0 bg-black/50 transition-opacity duration-300"
                 @click="emit('close')"
             ></div>
 
-            <!-- Sliding panel container -->
-            <div class="fixed inset-y-0 right-0 w-full max-w-2xl flex">
-                <!-- Panel with transform class for animation -->
+            <!-- Centered modal container - becomes fullscreen when maximized -->
+            <div
+                class="flex min-h-full items-center justify-center p-4"
+                :class="{ 'p-0 items-stretch': isMaximized }"
+            >
+                <!-- Modal panel -->
                 <div
-                    class="relative w-full h-full transform transition-transform duration-300 ease-in-out"
+                    class="relative w-full max-w-4xl transform transition-all duration-300 scale-100"
+                    :class="{
+                        'max-w-none w-full h-full max-h-none rounded-none':
+                            isMaximized,
+                        'max-h-[90vh]': !isMaximized,
+                    }"
                 >
-                    <div class="h-full flex flex-col bg-white shadow-xl">
+                    <div
+                        class="bg-white rounded-lg shadow-xl overflow-hidden flex flex-col"
+                        :class="{
+                            'rounded-none h-full': isMaximized,
+                            'max-h-[90vh]': !isMaximized,
+                        }"
+                    >
                         <!-- Header -->
                         <div
-                            class="flex items-center justify-between px-4 py-6 bg-gradient-to-r from-[#062F64] to-[#1E4272]"
+                            class="flex items-center justify-between py-4 border-b flex-shrink-0"
                         >
-                            <div class="flex items-center space-x-2">
-                                <v-icon
-                                    name="oi-report"
-                                    class="text-amber-300"
-                                    scale="1.5"
-                                />
-                                <span class="text-white font-[200] text-xl"
-                                    >Concessioner's Report Details</span
-                                >
+                            <div class="px-6">
+                                <div>
+                                    <h2
+                                        class="text-black font-semibold text-lg"
+                                        :class="{ 'text-xl': isMaximized }"
+                                    >
+                                        Report Details
+                                    </h2>
+                                </div>
                             </div>
-                            <button
-                                @click="emit('close')"
-                                class="text-white hover:text-gray-200 transition-colors duration-200 p-1 rounded-full hover:bg-white/10"
-                            >
-                                <v-icon name="bi-x-lg" class="h-6 w-6" />
-                            </button>
+
+                            <div class="flex items-center space-x-2 px-6">
+                                <!-- Maximize/Minimize Button -->
+                                <button
+                                    @click="toggleMaximize"
+                                    class="text-black transition-colors duration-200 p-2 rounded-lg hover:text-gray-600 hover:bg-gray-100"
+                                    :title="
+                                        isMaximized ? 'Minimize' : 'Maximize'
+                                    "
+                                >
+                                    <v-icon
+                                        :name="
+                                            isMaximized
+                                                ? 'bi-fullscreen-exit'
+                                                : 'bi-fullscreen'
+                                        "
+                                        class="h-5 w-5"
+                                    />
+                                </button>
+                                <!-- Close Button -->
+                                <button
+                                    @click="emit('close')"
+                                    class="text-black transition-colors duration-200 p-2 rounded-lg hover:text-gray-600 hover:bg-gray-100"
+                                >
+                                    <v-icon name="bi-x-lg" class="h-5 w-5" />
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Content -->
-                        <div class="flex-1 overflow-y-auto p-4">
-                            <div v-if="report" class="space-y-4 text-sm">
-                                <!-- Location Information -->
+                        <div
+                            class="flex-1 overflow-y-auto p-6"
+                            :class="{
+                                'p-8': isMaximized,
+                                'max-h-[calc(90vh-120px)]': !isMaximized,
+                            }"
+                        >
+                            <div
+                                v-if="report"
+                                class="space-y-6"
+                                :class="{ 'space-y-8': isMaximized }"
+                            >
+                                <!-- Status and Priority Badges -->
                                 <div
-                                    class="bg-gray-50 border border-gray-200 p-4 rounded-lg shadow-sm"
+                                    class="flex flex-wrap gap-3"
+                                    :class="{ 'gap-4': isMaximized }"
                                 >
-                                    <h3
-                                        class="text-md font-semibold text-gray-900 mb-3 flex items-center"
+                                    <div
+                                        class="flex items-center bg-gray-50 px-3 py-2 rounded-lg border"
+                                        :class="{ 'px-4 py-3': isMaximized }"
                                     >
                                         <v-icon
-                                            name="bi-geo-alt"
-                                            class="mr-2 text-blue-600"
+                                            name="bi-circle-fill"
+                                            class="mr-2 text-blue-500"
+                                            :class="{ 'h-5 w-5': isMaximized }"
                                         />
-                                        Location Information
-                                    </h3>
-                                    <div
-                                        class="grid grid-cols-1 md:grid-cols-2 gap-3"
-                                    >
-                                        <div class="flex items-start">
-                                            <v-icon
-                                                name="bi-building"
-                                                class="mr-2 mt-0.5 text-blue-500"
-                                            />
-                                            <div>
-                                                <p
-                                                    class="text-xs text-gray-500"
-                                                >
-                                                    Municipality
-                                                </p>
-                                                <p class="font-medium">
-                                                    {{
-                                                        report.municipality ||
-                                                        "N/A"
-                                                    }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-start">
-                                            <v-icon
-                                                name="bi-map"
-                                                class="mr-2 mt-0.5 text-blue-500"
-                                            />
-                                            <div>
-                                                <p
-                                                    class="text-xs text-gray-500"
-                                                >
-                                                    Province
-                                                </p>
-                                                <p class="font-medium">
-                                                    {{
-                                                        report.province || "N/A"
-                                                    }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-start">
-                                            <v-icon
-                                                name="bi-geo"
-                                                class="mr-2 mt-0.5 text-blue-500"
-                                            />
-                                            <div>
-                                                <p
-                                                    class="text-xs text-gray-500"
-                                                >
-                                                    Barangay
-                                                </p>
-                                                <p class="font-medium">
-                                                    {{
-                                                        report.barangay || "N/A"
-                                                    }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-start">
-                                            <v-icon
-                                                name="bi-signpost"
-                                                class="mr-2 mt-0.5 text-blue-500"
-                                            />
-                                            <div>
-                                                <p
-                                                    class="text-xs text-gray-500"
-                                                >
-                                                    Purok/Street
-                                                </p>
-                                                <p class="font-medium">
-                                                    {{ report.purok || "N/A" }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div
-                                            class="flex items-start col-span-2 bg-blue-50 p-3 rounded-lg border border-blue-100"
+                                        <span
+                                            class="text-sm font-medium text-gray-700"
+                                            :class="{
+                                                'text-base': isMaximized,
+                                            }"
+                                            >ID: {{ report.id }}</span
                                         >
-                                            <div class="flex items-center mr-3">
-                                                <v-icon
-                                                    name="bi-geo-alt-fill"
-                                                    class="text-red-500 text-lg"
-                                                />
-                                            </div>
-                                            <div class="flex-1">
-                                                <p
-                                                    class="text-xs text-gray-500 mb-1"
-                                                >
-                                                    GPS Coordinates
-                                                </p>
-                                                <div
-                                                    class="flex items-center gap-2 flex-wrap"
-                                                >
-                                                    <span
-                                                        class="font-medium bg-white py-1 px-2 rounded border"
-                                                    >
-                                                        Lat: {{ getLatitude }}
-                                                    </span>
-                                                    <span
-                                                        class="font-medium bg-white py-1 px-2 rounded border"
-                                                    >
-                                                        Lon: {{ getLongitude }}
-                                                    </span>
-                                                    <span
-                                                        v-if="report.heading"
-                                                        class="font-medium bg-white py-1 px-2 rounded border flex items-center"
-                                                    >
-                                                        <v-icon
-                                                            name="bi-compass"
-                                                            class="mr-1 text-blue-500"
-                                                        />
-                                                        {{ getHeading }}
-                                                    </span>
-                                                </div>
-                                            </div>
+                                    </div>
+                                    <span
+                                        class="px-3 py-2 text-sm font-semibold rounded-lg"
+                                        :class="[
+                                            statusClass,
+                                            {
+                                                'px-4 py-3 text-base':
+                                                    isMaximized,
+                                            },
+                                        ]"
+                                    >
+                                        {{ statusLabel }}
+                                    </span>
+                                    <span
+                                        class="px-3 py-2 text-sm font-semibold rounded-lg"
+                                        :class="[
+                                            priorityClass,
+                                            {
+                                                'px-4 py-3 text-base':
+                                                    isMaximized,
+                                            },
+                                        ]"
+                                    >
+                                        {{ report.priority || "N/A" }} Priority
+                                    </span>
+                                    <div
+                                        class="flex items-center bg-gray-50 px-3 py-2 rounded-lg border"
+                                        :class="{ 'px-4 py-3': isMaximized }"
+                                    >
+                                        <v-icon
+                                            name="bi-calendar"
+                                            class="mr-2 text-gray-500"
+                                            :class="{ 'h-5 w-5': isMaximized }"
+                                        />
+                                        <span
+                                            class="text-sm text-gray-700"
+                                            :class="{
+                                                'text-base': isMaximized,
+                                            }"
+                                        >
+                                            {{
+                                                report.created_at
+                                                    ? new Date(
+                                                          report.created_at
+                                                      ).toLocaleDateString()
+                                                    : "N/A"
+                                            }}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- Main Grid Layout -->
+                                <div
+                                    class="grid grid-cols-1 lg:grid-cols-2 gap-6"
+                                    :class="{ 'gap-8': isMaximized }"
+                                >
+                                    <!-- Left Column -->
+                                    <div
+                                        class="space-y-6"
+                                        :class="{ 'space-y-8': isMaximized }"
+                                    >
+                                        <!-- Location Information -->
+                                        <div
+                                            class="bg-white border border-gray-200 rounded-lg shadow-sm"
+                                            :class="{
+                                                'rounded-xl': isMaximized,
+                                            }"
+                                        >
                                             <div
-                                                class="ml-2 flex items-center justify-center bg-red-100 p-2 rounded-full"
+                                                class="bg-gray-50 px-4 py-3 border-b border-gray-200"
+                                                :class="{
+                                                    'px-6 py-4': isMaximized,
+                                                }"
                                             >
-                                                <v-icon
-                                                    name="bi-signpost-split"
-                                                    class="text-red-600 text-lg"
-                                                    animation="spin"
-                                                    speed="slow"
-                                                    hover
-                                                />
-                                            </div>
-                                        </div>
-                                        <!-- Map Section -->
-                                        <div class="col-span-2 mt-4">
-                                            <div
-                                                v-if="
-                                                    report.latitude &&
-                                                    report.longitude
-                                                "
-                                                ref="mapContainer"
-                                                class="w-full h-48 rounded-lg border border-gray-300 shadow-sm relative"
-                                                style="min-height: 200px"
-                                            >
-                                                <!-- Loading indicator -->
-                                                <div
-                                                    v-if="!mapLoaded"
-                                                    class="absolute inset-0 flex items-center justify-center bg-gray-100 bg-opacity-80 z-10"
-                                                >
-                                                    <div class="text-center">
-                                                        <v-icon
-                                                            name="bi-compass"
-                                                            class="text-blue-500 text-2xl mb-2 animate-spin"
-                                                        />
-                                                        <p
-                                                            class="text-sm text-gray-600"
-                                                        >
-                                                            Loading map...
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <!-- Arrow indicator explanation -->
-                                                <div
-                                                    v-if="mapLoaded"
-                                                    class="absolute bottom-2 left-2 bg-white bg-opacity-80 px-2 py-1 rounded text-xs flex items-center"
-                                                >
-                                                    <div
-                                                        class="w-4 h-4 mr-1 relative"
-                                                    >
-                                                        <div
-                                                            class="w-4 h-4 bg-red-600 rounded-full"
-                                                        ></div>
-                                                        <div
-                                                            class="absolute top-0 left-1.5 w-1 h-2 bg-white"
-                                                        ></div>
-                                                    </div>
-                                                    <span
-                                                        >Device location with
-                                                        direction
-                                                        indicator</span
-                                                    >
-                                                </div>
-                                            </div>
-                                            <div
-                                                v-else
-                                                class="w-full h-48 rounded-lg border border-gray-300 bg-gray-50 flex items-center justify-center"
-                                            >
-                                                <div
-                                                    class="text-center text-gray-500"
+                                                <h3
+                                                    class="text-md font-semibold text-gray-900 flex items-center"
+                                                    :class="{
+                                                        'text-lg': isMaximized,
+                                                    }"
                                                 >
                                                     <v-icon
                                                         name="bi-geo-alt"
-                                                        class="text-3xl mb-2"
+                                                        class="mr-2 text-blue-600"
+                                                        :class="{
+                                                            'h-5 w-5':
+                                                                isMaximized,
+                                                        }"
                                                     />
-                                                    <p class="text-sm">
-                                                        No GPS coordinates
-                                                        available
-                                                    </p>
-                                                </div>
+                                                    Location Information
+                                                </h3>
                                             </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Reporter Information -->
-                                <div
-                                    class="bg-gray-50 border border-gray-200 p-4 rounded-lg shadow-sm"
-                                >
-                                    <h3
-                                        class="text-md font-semibold text-gray-900 mb-3 flex items-center"
-                                    >
-                                        <v-icon
-                                            name="bi-person"
-                                            class="mr-2 text-blue-600"
-                                        />
-                                        Reporter Information
-                                    </h3>
-                                    <div
-                                        class="grid grid-cols-1 md:grid-cols-2 gap-3"
-                                    >
-                                        <div class="flex items-start">
-                                            <v-icon
-                                                name="bi-person-badge"
-                                                class="mr-2 mt-0.5 text-blue-500"
-                                            />
-                                            <div>
-                                                <p
-                                                    class="text-xs text-gray-500"
-                                                >
-                                                    Reporter Name
-                                                </p>
-                                                <p class="font-medium">
-                                                    {{
-                                                        report.reporter_name ||
-                                                        "N/A"
-                                                    }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div
-                                            v-if="report.reporter_phone"
-                                            class="flex items-start"
-                                        >
-                                            <v-icon
-                                                name="bi-telephone"
-                                                class="mr-2 mt-0.5 text-blue-500"
-                                            />
-                                            <div>
-                                                <p
-                                                    class="text-xs text-gray-500"
-                                                >
-                                                    Phone Number
-                                                </p>
-                                                <p class="font-medium">
-                                                    {{ report.reporter_phone }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div
-                                            v-if="report.user"
-                                            class="flex items-start"
-                                        >
-                                            <v-icon
-                                                name="bi-person-check"
-                                                class="mr-2 mt-0.5 text-blue-500"
-                                            />
-                                            <div>
-                                                <p
-                                                    class="text-xs text-gray-500"
-                                                >
-                                                    Registered User
-                                                </p>
-                                                <p class="font-medium">
-                                                    {{
-                                                        report.user?.name ||
-                                                        "N/A"
-                                                    }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Report Metadata -->
-                                <div
-                                    class="bg-gray-50 border border-gray-200 p-4 rounded-lg shadow-sm"
-                                >
-                                    <h3
-                                        class="text-md font-semibold text-gray-900 mb-3 flex items-center"
-                                    >
-                                        <v-icon
-                                            name="bi-info-circle"
-                                            class="mr-2 text-blue-600"
-                                        />
-                                        Report Information
-                                    </h3>
-                                    <div
-                                        class="grid grid-cols-1 md:grid-cols-2 gap-3"
-                                    >
-                                        <div class="flex items-start">
-                                            <v-icon
-                                                name="bi-tag"
-                                                class="mr-2 mt-0.5 text-blue-500"
-                                            />
-                                            <div>
-                                                <p
-                                                    class="text-xs text-gray-500"
-                                                >
-                                                    Report ID
-                                                </p>
-                                                <p class="font-medium">
-                                                    {{ report.id || "N/A" }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-start">
-                                            <v-icon
-                                                name="bi-calendar"
-                                                class="mr-2 mt-0.5 text-blue-500"
-                                            />
-                                            <div>
-                                                <p
-                                                    class="text-xs text-gray-500"
-                                                >
-                                                    Submitted
-                                                </p>
-                                                <p class="font-medium">
-                                                    {{
-                                                        report.created_at
-                                                            ? new Date(
-                                                                  report.created_at
-                                                              ).toLocaleString()
-                                                            : "N/A"
-                                                    }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-start">
-                                            <v-icon
-                                                name="bi-check-circle"
-                                                class="mr-2 mt-0.5 text-blue-500"
-                                            />
-                                            <div>
-                                                <p
-                                                    class="text-xs text-gray-500"
-                                                >
-                                                    Status
-                                                </p>
-                                                <span
-                                                    class="px-2 py-1 text-xs font-semibold rounded-full"
-                                                    :class="statusClass"
-                                                >
-                                                    {{ statusLabel }}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-start">
-                                            <v-icon
-                                                name="bi-upc-scan"
-                                                class="mr-2 mt-0.5 text-blue-500"
-                                            />
-                                            <div>
-                                                <p
-                                                    class="text-xs text-gray-500"
-                                                >
-                                                    Tracking Code
-                                                </p>
-                                                <p class="font-medium">
-                                                    {{
-                                                        report.tracking_code ||
-                                                        "N/A"
-                                                    }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-start">
-                                            <v-icon
-                                                name="bi-droplet"
-                                                class="mr-2 mt-0.5 text-blue-500"
-                                            />
-                                            <div>
-                                                <p
-                                                    class="text-xs text-gray-500"
-                                                >
-                                                    Water Issue Type
-                                                </p>
-                                                <p class="font-medium">
-                                                    {{
-                                                        report.water_issue_type ===
-                                                        "others"
-                                                            ? report.custom_water_issue ||
-                                                              "Custom Issue"
-                                                            : report.water_issue_type ||
-                                                              "N/A"
-                                                    }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Description -->
-                                <div
-                                    class="bg-gray-50 border border-gray-200 p-4 rounded-lg shadow-sm"
-                                >
-                                    <h3
-                                        class="text-md font-semibold text-gray-900 mb-3 flex items-center"
-                                    >
-                                        <v-icon
-                                            name="bi-card-text"
-                                            class="mr-2 text-blue-600"
-                                        />
-                                        Description
-                                    </h3>
-                                    <div
-                                        class="bg-white p-3 rounded border border-gray-200"
-                                    >
-                                        <p
-                                            class="text-gray-700 whitespace-pre-line text-sm"
-                                        >
-                                            {{
-                                                report.description ||
-                                                "No description provided"
-                                            }}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <!-- Media Section -->
-                                <!-- Media Section -->
-                                <div
-                                    v-if="report.photos && report.photos.length"
-                                    class="bg-gray-50 border border-gray-200 p-4 rounded-lg shadow-sm"
-                                >
-                                    <h3
-                                        class="text-md font-semibold text-gray-900 mb-3 flex items-center"
-                                    >
-                                        <v-icon
-                                            name="bi-images"
-                                            class="mr-2 text-blue-600"
-                                        />
-                                        Media
-                                    </h3>
-                                    <div
-                                        class="grid grid-cols-2 sm:grid-cols-3 gap-3"
-                                    >
-                                        <div
-                                            v-for="(
-                                                media, index
-                                            ) in report.photos"
-                                            :key="index"
-                                            class="relative group overflow-hidden rounded-lg border border-gray-200 h-32 shadow-sm transition-all duration-300 hover:shadow-md hover:border-blue-300 cursor-pointer"
-                                            @click="
-                                                openImageModal(
-                                                    media.path,
-                                                    index
-                                                )
-                                            "
-                                        >
-                                            <!-- Video Thumbnail -->
-                                            <template v-if="isVideoFile(media)">
+                                            <div
+                                                class="p-4 space-y-3"
+                                                :class="{
+                                                    'p-6 space-y-4':
+                                                        isMaximized,
+                                                }"
+                                            >
                                                 <div
-                                                    class="w-full h-full bg-gray-800 flex items-center justify-center relative"
+                                                    class="grid grid-cols-2 gap-4"
+                                                    :class="{
+                                                        'gap-6': isMaximized,
+                                                    }"
                                                 >
-                                                    <!-- Video element that will play on hover -->
-                                                    <video
-                                                        muted
-                                                        loop
-                                                        class="absolute inset-0 w-full h-full object-cover group-hover:opacity-100 transition-opacity duration-300"
-                                                    >
-                                                        <source
-                                                            :src="
-                                                                '/storage/' +
-                                                                media.path
-                                                            "
-                                                            type="video/mp4"
-                                                        />
-                                                    </video>
+                                                    <div>
+                                                        <label
+                                                            class="text-xs text-gray-500 font-medium"
+                                                            :class="{
+                                                                'text-sm':
+                                                                    isMaximized,
+                                                            }"
+                                                            >Municipality</label
+                                                        >
+                                                        <p
+                                                            class="text-sm font-medium text-gray-900 mt-1"
+                                                            :class="{
+                                                                'text-base mt-2':
+                                                                    isMaximized,
+                                                            }"
+                                                        >
+                                                            {{
+                                                                report.municipality ||
+                                                                "N/A"
+                                                            }}
+                                                        </p>
+                                                    </div>
+                                                    <div>
+                                                        <label
+                                                            class="text-xs text-gray-500 font-medium"
+                                                            :class="{
+                                                                'text-sm':
+                                                                    isMaximized,
+                                                            }"
+                                                            >Province</label
+                                                        >
+                                                        <p
+                                                            class="text-sm font-medium text-gray-900 mt-1"
+                                                            :class="{
+                                                                'text-base mt-2':
+                                                                    isMaximized,
+                                                            }"
+                                                        >
+                                                            {{
+                                                                report.province ||
+                                                                "N/A"
+                                                            }}
+                                                        </p>
+                                                    </div>
+                                                    <div>
+                                                        <label
+                                                            class="text-xs text-gray-500 font-medium"
+                                                            :class="{
+                                                                'text-sm':
+                                                                    isMaximized,
+                                                            }"
+                                                            >Barangay</label
+                                                        >
+                                                        <p
+                                                            class="text-sm font-medium text-gray-900 mt-1"
+                                                            :class="{
+                                                                'text-base mt-2':
+                                                                    isMaximized,
+                                                            }"
+                                                        >
+                                                            {{
+                                                                report.barangay ||
+                                                                "N/A"
+                                                            }}
+                                                        </p>
+                                                    </div>
+                                                    <div>
+                                                        <label
+                                                            class="text-xs text-gray-500 font-medium"
+                                                            :class="{
+                                                                'text-sm':
+                                                                    isMaximized,
+                                                            }"
+                                                            >Purok/Street</label
+                                                        >
+                                                        <p
+                                                            class="text-sm font-medium text-gray-900 mt-1"
+                                                            :class="{
+                                                                'text-base mt-2':
+                                                                    isMaximized,
+                                                            }"
+                                                        >
+                                                            {{
+                                                                report.purok ||
+                                                                "N/A"
+                                                            }}
+                                                        </p>
+                                                    </div>
+                                                </div>
 
-                                                    <!-- Play button overlay -->
+                                                <!-- GPS Coordinates -->
+                                                <div
+                                                    class="bg-blue-50 p-3 rounded-lg border border-blue-200 mt-3"
+                                                    :class="{
+                                                        'p-4 mt-4': isMaximized,
+                                                    }"
+                                                >
                                                     <div
-                                                        class="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/10 transition-all z-10"
+                                                        class="flex items-center justify-between"
                                                     >
+                                                        <div>
+                                                            <label
+                                                                class="text-xs text-blue-700 font-medium"
+                                                                :class="{
+                                                                    'text-sm':
+                                                                        isMaximized,
+                                                                }"
+                                                                >GPS
+                                                                Coordinates</label
+                                                            >
+                                                            <div
+                                                                class="flex gap-3 mt-1"
+                                                                :class="{
+                                                                    'gap-4 mt-2':
+                                                                        isMaximized,
+                                                                }"
+                                                            >
+                                                                <span
+                                                                    class="text-sm font-medium text-blue-900"
+                                                                    :class="{
+                                                                        'text-base':
+                                                                            isMaximized,
+                                                                    }"
+                                                                >
+                                                                    Lat:
+                                                                    {{
+                                                                        getLatitude
+                                                                    }}
+                                                                </span>
+                                                                <span
+                                                                    class="text-sm font-medium text-blue-900"
+                                                                    :class="{
+                                                                        'text-base':
+                                                                            isMaximized,
+                                                                    }"
+                                                                >
+                                                                    Lon:
+                                                                    {{
+                                                                        getLongitude
+                                                                    }}
+                                                                </span>
+                                                            </div>
+                                                        </div>
                                                         <v-icon
-                                                            name="bi-play-circle-fill"
-                                                            class="text-white text-4xl"
+                                                            name="bi-geo-alt-fill"
+                                                            class="text-blue-600 text-lg"
+                                                            :class="{
+                                                                'text-xl':
+                                                                    isMaximized,
+                                                            }"
                                                         />
                                                     </div>
                                                 </div>
-                                                <button
-                                                    @click.stop="
-                                                        openVideoModal(
-                                                            media.path
-                                                        )
-                                                    "
-                                                    class="absolute inset-0 w-full h-full flex items-center justify-center bg-black/0 group-hover:bg-black/20 transition-all z-20"
-                                                >
-                                                    <span class="sr-only"
-                                                        >Play video</span
-                                                    >
-                                                </button>
-                                            </template>
 
-                                            <!-- Image Thumbnail -->
-                                            <template v-else>
-                                                <img
-                                                    :src="
-                                                        '/storage/' + media.path
-                                                    "
-                                                    :alt="`Report photo ${
-                                                        index + 1
-                                                    }`"
-                                                    class="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                                                    loading="lazy"
-                                                />
+                                                <!-- Map Section -->
                                                 <div
-                                                    class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100"
+                                                    class="mt-4"
+                                                    :class="{
+                                                        'mt-5': isMaximized,
+                                                    }"
+                                                >
+                                                    <div
+                                                        v-if="
+                                                            report.latitude &&
+                                                            report.longitude
+                                                        "
+                                                        ref="mapContainer"
+                                                        class="w-full rounded-lg border border-gray-300 shadow-sm relative"
+                                                        :class="{
+                                                            'h-80 rounded-xl':
+                                                                isMaximized,
+                                                            'h-48': !isMaximized,
+                                                        }"
+                                                    >
+                                                        <!-- Loading indicator -->
+                                                        <div
+                                                            v-if="!mapLoaded"
+                                                            class="absolute inset-0 flex items-center justify-center bg-gray-100 bg-opacity-80 z-10"
+                                                        >
+                                                            <div
+                                                                class="text-center"
+                                                            >
+                                                                <v-icon
+                                                                    name="bi-compass"
+                                                                    class="text-blue-500 text-2xl mb-2 animate-spin"
+                                                                    :class="{
+                                                                        'text-3xl':
+                                                                            isMaximized,
+                                                                    }"
+                                                                />
+                                                                <p
+                                                                    class="text-sm text-gray-600"
+                                                                    :class="{
+                                                                        'text-base':
+                                                                            isMaximized,
+                                                                    }"
+                                                                >
+                                                                    Loading
+                                                                    map...
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div
+                                                        v-else
+                                                        class="w-full rounded-lg border border-gray-300 bg-gray-50 flex items-center justify-center"
+                                                        :class="{
+                                                            'h-80 rounded-xl':
+                                                                isMaximized,
+                                                            'h-48': !isMaximized,
+                                                        }"
+                                                    >
+                                                        <div
+                                                            class="text-center text-gray-500"
+                                                        >
+                                                            <v-icon
+                                                                name="bi-geo-alt"
+                                                                class="text-3xl mb-2"
+                                                                :class="{
+                                                                    'text-4xl':
+                                                                        isMaximized,
+                                                                }"
+                                                            />
+                                                            <p
+                                                                class="text-sm"
+                                                                :class="{
+                                                                    'text-base':
+                                                                        isMaximized,
+                                                                }"
+                                                            >
+                                                                No GPS
+                                                                coordinates
+                                                                available
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Reporter Information -->
+                                        <div
+                                            class="bg-white border border-gray-200 rounded-lg shadow-sm"
+                                            :class="{
+                                                'rounded-xl': isMaximized,
+                                            }"
+                                        >
+                                            <div
+                                                class="bg-gray-50 px-4 py-3 border-b border-gray-200"
+                                                :class="{
+                                                    'px-6 py-4': isMaximized,
+                                                }"
+                                            >
+                                                <h3
+                                                    class="text-md font-semibold text-gray-900 flex items-center"
+                                                    :class="{
+                                                        'text-lg': isMaximized,
+                                                    }"
                                                 >
                                                     <v-icon
-                                                        name="bi-zoom-in"
-                                                        class="text-white bg-black/50 p-1.5 rounded-full"
+                                                        name="bi-person"
+                                                        class="mr-2 text-blue-600"
+                                                        :class="{
+                                                            'h-5 w-5':
+                                                                isMaximized,
+                                                        }"
                                                     />
-                                                </div>
-                                            </template>
-
+                                                    Reporter Information
+                                                </h3>
+                                            </div>
                                             <div
-                                                class="absolute bottom-1 left-1 bg-black bg-opacity-50 text-white text-xs px-1 rounded"
+                                                class="p-4 space-y-3"
+                                                :class="{
+                                                    'p-6 space-y-4':
+                                                        isMaximized,
+                                                }"
                                             >
-                                                {{
-                                                    (
-                                                        media.size /
-                                                        1024 /
-                                                        1024
-                                                    ).toFixed(2)
-                                                }}
-                                                MB
-                                                <span v-if="isVideoFile(media)"
-                                                    >(Video)</span
+                                                <div
+                                                    class="grid grid-cols-1 gap-3"
+                                                    :class="{
+                                                        'gap-4': isMaximized,
+                                                    }"
                                                 >
+                                                    <div>
+                                                        <label
+                                                            class="text-xs text-gray-500 font-medium"
+                                                            :class="{
+                                                                'text-sm':
+                                                                    isMaximized,
+                                                            }"
+                                                            >Reporter
+                                                            Name</label
+                                                        >
+                                                        <p
+                                                            class="text-sm font-medium text-gray-900 mt-1"
+                                                            :class="{
+                                                                'text-base mt-2':
+                                                                    isMaximized,
+                                                            }"
+                                                        >
+                                                            {{
+                                                                report.reporter_name ||
+                                                                "N/A"
+                                                            }}
+                                                        </p>
+                                                    </div>
+                                                    <div
+                                                        v-if="
+                                                            report.reporter_phone
+                                                        "
+                                                    >
+                                                        <label
+                                                            class="text-xs text-gray-500 font-medium"
+                                                            :class="{
+                                                                'text-sm':
+                                                                    isMaximized,
+                                                            }"
+                                                            >Phone Number</label
+                                                        >
+                                                        <p
+                                                            class="text-sm font-medium text-gray-900 mt-1"
+                                                            :class="{
+                                                                'text-base mt-2':
+                                                                    isMaximized,
+                                                            }"
+                                                        >
+                                                            {{
+                                                                report.reporter_phone
+                                                            }}
+                                                        </p>
+                                                    </div>
+                                                    <div v-if="report.user">
+                                                        <label
+                                                            class="text-xs text-gray-500 font-medium"
+                                                            :class="{
+                                                                'text-sm':
+                                                                    isMaximized,
+                                                            }"
+                                                            >Registered
+                                                            User</label
+                                                        >
+                                                        <p
+                                                            class="text-sm font-medium text-gray-900 mt-1"
+                                                            :class="{
+                                                                'text-base mt-2':
+                                                                    isMaximized,
+                                                            }"
+                                                        >
+                                                            {{
+                                                                report.user
+                                                                    ?.name ||
+                                                                "N/A"
+                                                            }}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Right Column -->
+                                    <div
+                                        class="space-y-6"
+                                        :class="{ 'space-y-8': isMaximized }"
+                                    >
+                                        <!-- Issue Information -->
+                                        <div
+                                            class="bg-white border border-gray-200 rounded-lg shadow-sm"
+                                            :class="{
+                                                'rounded-xl': isMaximized,
+                                            }"
+                                        >
+                                            <div
+                                                class="bg-gray-50 px-4 py-3 border-b border-gray-200"
+                                                :class="{
+                                                    'px-6 py-4': isMaximized,
+                                                }"
+                                            >
+                                                <h3
+                                                    class="text-md font-semibold text-gray-900 flex items-center"
+                                                    :class="{
+                                                        'text-lg': isMaximized,
+                                                    }"
+                                                >
+                                                    <v-icon
+                                                        name="bi-droplet"
+                                                        class="mr-2 text-blue-600"
+                                                        :class="{
+                                                            'h-5 w-5':
+                                                                isMaximized,
+                                                        }"
+                                                    />
+                                                    Issue Details
+                                                </h3>
+                                            </div>
+                                            <div
+                                                class="p-4 space-y-3"
+                                                :class="{
+                                                    'p-6 space-y-4':
+                                                        isMaximized,
+                                                }"
+                                            >
+                                                <div>
+                                                    <label
+                                                        class="text-xs text-gray-500 font-medium"
+                                                        :class="{
+                                                            'text-sm':
+                                                                isMaximized,
+                                                        }"
+                                                        >Issue Type</label
+                                                    >
+                                                    <p
+                                                        class="text-sm font-medium text-gray-900 mt-1"
+                                                        :class="{
+                                                            'text-base mt-2':
+                                                                isMaximized,
+                                                        }"
+                                                    >
+                                                        {{
+                                                            report.water_issue_type ===
+                                                            "others"
+                                                                ? report.custom_water_issue ||
+                                                                  "Custom Issue"
+                                                                : report.water_issue_type ||
+                                                                  "N/A"
+                                                        }}
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <label
+                                                        class="text-xs text-gray-500 font-medium"
+                                                        :class="{
+                                                            'text-sm':
+                                                                isMaximized,
+                                                        }"
+                                                        >Description</label
+                                                    >
+                                                    <div
+                                                        class="bg-gray-50 p-3 rounded-lg border border-gray-200 mt-1"
+                                                        :class="{
+                                                            'p-4 mt-2':
+                                                                isMaximized,
+                                                        }"
+                                                    >
+                                                        <p
+                                                            class="text-sm text-gray-700 whitespace-pre-line"
+                                                            :class="{
+                                                                'text-base':
+                                                                    isMaximized,
+                                                            }"
+                                                        >
+                                                            {{
+                                                                report.description ||
+                                                                "No description provided"
+                                                            }}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Media Section -->
+                                        <div
+                                            v-if="
+                                                report.photos &&
+                                                report.photos.length
+                                            "
+                                            class="bg-white border border-gray-200 rounded-lg shadow-sm"
+                                            :class="{
+                                                'rounded-xl': isMaximized,
+                                            }"
+                                        >
+                                            <div
+                                                class="bg-gray-50 px-4 py-3 border-b border-gray-200"
+                                                :class="{
+                                                    'px-6 py-4': isMaximized,
+                                                }"
+                                            >
+                                                <h3
+                                                    class="text-md font-semibold text-gray-900 flex items-center"
+                                                    :class="{
+                                                        'text-lg': isMaximized,
+                                                    }"
+                                                >
+                                                    <v-icon
+                                                        name="bi-images"
+                                                        class="mr-2 text-blue-600"
+                                                        :class="{
+                                                            'h-5 w-5':
+                                                                isMaximized,
+                                                        }"
+                                                    />
+                                                    Media ({{
+                                                        report.photos.length
+                                                    }})
+                                                </h3>
+                                            </div>
+                                            <div
+                                                class="p-4"
+                                                :class="{ 'p-6': isMaximized }"
+                                            >
+                                                <div
+                                                    class="grid grid-cols-2 sm:grid-cols-3 gap-3"
+                                                    :class="{
+                                                        'gap-4': isMaximized,
+                                                    }"
+                                                >
+                                                    <div
+                                                        v-for="(
+                                                            media, index
+                                                        ) in report.photos"
+                                                        :key="index"
+                                                        class="relative group overflow-hidden rounded-lg border border-gray-200 shadow-sm transition-all duration-300 hover:shadow-md hover:border-blue-300 cursor-pointer"
+                                                        :class="{
+                                                            'h-40 rounded-xl':
+                                                                isMaximized,
+                                                            'h-32': !isMaximized,
+                                                        }"
+                                                        @click="
+                                                            openMediaModal(
+                                                                media,
+                                                                index
+                                                            )
+                                                        "
+                                                    >
+                                                        <!-- Video Thumbnail -->
+                                                        <template
+                                                            v-if="
+                                                                isVideoFile(
+                                                                    media
+                                                                )
+                                                            "
+                                                        >
+                                                            <div
+                                                                class="w-full h-full bg-gray-800 flex items-center justify-center relative"
+                                                            >
+                                                                <video
+                                                                    muted
+                                                                    loop
+                                                                    class="absolute inset-0 w-full h-full object-cover group-hover:opacity-100 transition-opacity duration-300"
+                                                                >
+                                                                    <source
+                                                                        :src="
+                                                                            '/storage/' +
+                                                                            media.path
+                                                                        "
+                                                                        type="video/mp4"
+                                                                    />
+                                                                </video>
+                                                                <div
+                                                                    class="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/10 transition-all z-10"
+                                                                >
+                                                                    <v-icon
+                                                                        name="bi-play-circle-fill"
+                                                                        class="text-white text-4xl"
+                                                                        :class="{
+                                                                            'text-5xl':
+                                                                                isMaximized,
+                                                                        }"
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                        </template>
+
+                                                        <!-- Image Thumbnail -->
+                                                        <template v-else>
+                                                            <img
+                                                                :src="
+                                                                    '/storage/' +
+                                                                    media.path
+                                                                "
+                                                                :alt="`Report photo ${
+                                                                    index + 1
+                                                                }`"
+                                                                class="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                                                                loading="lazy"
+                                                            />
+                                                            <div
+                                                                class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100"
+                                                            >
+                                                                <v-icon
+                                                                    name="bi-zoom-in"
+                                                                    class="text-white bg-black/50 p-1.5 rounded-full"
+                                                                    :class="{
+                                                                        'p-2': isMaximized,
+                                                                    }"
+                                                                />
+                                                            </div>
+                                                        </template>
+
+                                                        <div
+                                                            class="absolute bottom-1 left-1 bg-black bg-opacity-50 text-white text-xs px-1 rounded"
+                                                            :class="{
+                                                                'text-sm bottom-2 left-2':
+                                                                    isMaximized,
+                                                            }"
+                                                        >
+                                                            {{
+                                                                (
+                                                                    media.size /
+                                                                    1024 /
+                                                                    1024
+                                                                ).toFixed(2)
+                                                            }}
+                                                            MB
+                                                            <span
+                                                                v-if="
+                                                                    isVideoFile(
+                                                                        media
+                                                                    )
+                                                                "
+                                                                >(Video)</span
+                                                            >
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Additional Information -->
+                                        <div
+                                            class="bg-white border border-gray-200 rounded-lg shadow-sm"
+                                            :class="{
+                                                'rounded-xl': isMaximized,
+                                            }"
+                                        >
+                                            <div
+                                                class="bg-gray-50 px-4 py-3 border-b border-gray-200"
+                                                :class="{
+                                                    'px-6 py-4': isMaximized,
+                                                }"
+                                            >
+                                                <h3
+                                                    class="text-md font-semibold text-gray-900 flex items-center"
+                                                    :class="{
+                                                        'text-lg': isMaximized,
+                                                    }"
+                                                >
+                                                    <v-icon
+                                                        name="bi-info-circle"
+                                                        class="mr-2 text-blue-600"
+                                                        :class="{
+                                                            'h-5 w-5':
+                                                                isMaximized,
+                                                        }"
+                                                    />
+                                                    Additional Information
+                                                </h3>
+                                            </div>
+                                            <div
+                                                class="p-4 space-y-3"
+                                                :class="{
+                                                    'p-6 space-y-4':
+                                                        isMaximized,
+                                                }"
+                                            >
+                                                <div
+                                                    class="grid grid-cols-2 gap-4"
+                                                    :class="{
+                                                        'gap-6': isMaximized,
+                                                    }"
+                                                >
+                                                    <div>
+                                                        <label
+                                                            class="text-xs text-gray-500 font-medium"
+                                                            :class="{
+                                                                'text-sm':
+                                                                    isMaximized,
+                                                            }"
+                                                            >Submitted
+                                                            Date</label
+                                                        >
+                                                        <p
+                                                            class="text-sm font-medium text-gray-900 mt-1"
+                                                            :class="{
+                                                                'text-base mt-2':
+                                                                    isMaximized,
+                                                            }"
+                                                        >
+                                                            {{
+                                                                report.created_at
+                                                                    ? new Date(
+                                                                          report.created_at
+                                                                      ).toLocaleString()
+                                                                    : "N/A"
+                                                            }}
+                                                        </p>
+                                                    </div>
+                                                    <div>
+                                                        <label
+                                                            class="text-xs text-gray-500 font-medium"
+                                                            :class="{
+                                                                'text-sm':
+                                                                    isMaximized,
+                                                            }"
+                                                            >User Type</label
+                                                        >
+                                                        <p
+                                                            class="text-sm font-medium text-gray-900 mt-1"
+                                                            :class="{
+                                                                'text-base mt-2':
+                                                                    isMaximized,
+                                                            }"
+                                                        >
+                                                            {{
+                                                                report.formatted_user_types ||
+                                                                "Guest"
+                                                            }}
+                                                        </p>
+                                                    </div>
+
+                                                    <div>
+                                                        <label
+                                                            class="text-xs text-gray-500 font-medium"
+                                                            :class="{
+                                                                'text-sm':
+                                                                    isMaximized,
+                                                            }"
+                                                            >Tracking
+                                                            Code</label
+                                                        >
+                                                        <p
+                                                            class="text-sm font-bold text-blue-900 mt-1"
+                                                            :class="{
+                                                                'text-base mt-2':
+                                                                    isMaximized,
+                                                            }"
+                                                        >
+                                                            {{
+                                                                report.tracking_code ||
+                                                                "N/A"
+                                                            }}
+                                                        </p>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <div
-                                v-else
-                                class="text-center text-gray-500 dark:text-gray-400"
-                            >
-                                No report data available.
+                            <div v-else class="text-center text-gray-500 py-8">
+                                <v-icon
+                                    name="bi-exclamation-circle"
+                                    class="text-4xl mb-2"
+                                    :class="{ 'text-5xl': isMaximized }"
+                                />
+                                <p
+                                    class="text-sm"
+                                    :class="{ 'text-base': isMaximized }"
+                                >
+                                    No report data available.
+                                </p>
                             </div>
                         </div>
 
                         <!-- Footer -->
                         <div
-                            class="border-t border-gray-200 px-4 py-3 bg-gray-50"
+                            class="border-t border-gray-200 px-6 py-4 bg-gray-50 flex justify-end flex-shrink-0"
+                            :class="{ 'px-8 py-2': isMaximized }"
                         >
                             <button
                                 @click="emit('close')"
                                 type="button"
-                                class="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+                                class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+                                :class="{ 'px-5 py-2 text-base': isMaximized }"
                             >
                                 <v-icon name="bi-x-lg" class="mr-2" />
                                 Close
@@ -716,7 +1086,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from "vue";
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from "vue";
 
 const props = defineProps({
     show: {
@@ -734,9 +1104,76 @@ const showVideoModal = ref(false);
 const currentVideo = ref(null);
 const map = ref(null);
 const mapContainer = ref(null);
-const heading = ref(0); // Default heading (north)
+const heading = ref(0);
 const mapLoaded = ref(false);
 const imageLoaded = ref(false);
+const showImageModal = ref(false);
+const currentImage = ref(null);
+const currentImageIndex = ref(0);
+const allImages = ref([]);
+const isMaximized = ref(false);
+
+const toggleMaximize = async () => {
+    isMaximized.value = !isMaximized.value;
+
+    // Wait for the DOM to update
+    await nextTick();
+
+    // Re-initialize map when toggling maximize to ensure proper sizing
+    if (map.value) {
+        // Use a longer delay to ensure the container has fully resized
+        setTimeout(() => {
+            if (map.value) {
+                try {
+                    map.value.invalidateSize();
+                    // Re-center the map to ensure it's properly displayed
+                    if (
+                        props.report &&
+                        props.report.latitude &&
+                        props.report.longitude
+                    ) {
+                        const lat = Number(props.report.latitude);
+                        const lon = Number(props.report.longitude);
+                        if (!isNaN(lat) && !isNaN(lon)) {
+                            map.value.setView([lat, lon], map.value.getZoom());
+                        }
+                    }
+                } catch (error) {
+                    console.error("Error resizing map:", error);
+                    // If invalidateSize fails, reinitialize the map completely
+                    reinitializeMap();
+                }
+            } else {
+                // If map doesn't exist, reinitialize it
+                reinitializeMap();
+            }
+        }, 500); // Increased delay for better reliability
+    } else {
+        // If map doesn't exist, initialize it
+        reinitializeMap();
+    }
+};
+
+// Reinitialize map completely
+const reinitializeMap = () => {
+    destroyMap();
+    setTimeout(() => {
+        initializeMap();
+    }, 300);
+};
+
+// Destroy map completely
+const destroyMap = () => {
+    if (map.value) {
+        try {
+            map.value.remove();
+        } catch (error) {
+            console.error("Error removing map:", error);
+        }
+        map.value = null;
+    }
+    mapLoaded.value = false;
+};
 
 // Initialize Leaflet map
 const initializeMap = () => {
@@ -748,11 +1185,9 @@ const initializeMap = () => {
         props.report.longitude !== null &&
         mapContainer.value
     ) {
-        // Convert to numbers if they are strings
         const lat = Number(props.report.latitude);
         const lon = Number(props.report.longitude);
 
-        // Get heading if available (for arrow direction)
         if (
             props.report.heading !== undefined &&
             props.report.heading !== null
@@ -760,7 +1195,6 @@ const initializeMap = () => {
             heading.value = Number(props.report.heading);
         }
 
-        // Validate coordinates
         if (
             !isNaN(lat) &&
             !isNaN(lon) &&
@@ -768,68 +1202,76 @@ const initializeMap = () => {
             Math.abs(lon) <= 180
         ) {
             const L = window.L;
-            if (L && !map.value) {
+            if (L) {
+                // Clear any existing map first
+                destroyMap();
+
                 setTimeout(() => {
-                    if (mapContainer.value) {
-                        map.value = L.map(mapContainer.value).setView(
-                            [lat, lon],
-                            15
-                        );
+                    if (mapContainer.value && !map.value) {
+                        try {
+                            map.value = L.map(mapContainer.value).setView(
+                                [lat, lon],
+                                15
+                            );
 
-                        L.tileLayer(
-                            "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-                            {
-                                maxZoom: 19,
-                                attribution:
-                                    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-                            }
-                        ).addTo(map.value);
+                            L.tileLayer(
+                                "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                                {
+                                    maxZoom: 19,
+                                    attribution:
+                                        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                                }
+                            ).addTo(map.value);
 
-                        // Create a simple marker with a standard icon
-                        const markerIcon = L.icon({
-                            iconUrl:
-                                "data:image/svg+xml;base64," +
-                                btoa(`
-                                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="40" viewBox="0 0 30 40">
-                                    <g transform="rotate(${heading.value} 15 15)">
-                                        <path d="M15,1.5 C8.1,1.5 2.5,7.1 2.5,14 C2.5,23.8 15,38.5 15,38.5 C15,38.5 27.5,23.8 27.5,14 C27.5,7.1 21.9,1.5 15,1.5 Z" fill="#dc2626" stroke="#ffffff" stroke-width="2"/>
-                                        <circle cx="15" cy="13" r="5" fill="#ffffff"/>
-                                        <polygon points="15,5 12,15 15,12 18,15" fill="#ffffff"/>
-                                    </g>
-                                </svg>
-                            `),
-                            iconSize: [30, 40],
-                            iconAnchor: [15, 40],
-                            popupAnchor: [0, -40],
-                        });
+                            // Create marker
+                            const markerIcon = L.icon({
+                                iconUrl:
+                                    "data:image/svg+xml;base64," +
+                                    btoa(`
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="40" viewBox="0 0 30 40">
+                                        <g transform="rotate(${heading.value} 15 15)">
+                                            <path d="M15,1.5 C8.1,1.5 2.5,7.1 2.5,14 C2.5,23.8 15,38.5 15,38.5 C15,38.5 27.5,23.8 27.5,14 C27.5,7.1 21.9,1.5 15,1.5 Z" fill="#dc2626" stroke="#ffffff" stroke-width="2"/>
+                                            <circle cx="15" cy="13" r="5" fill="#ffffff"/>
+                                            <polygon points="15,5 12,15 15,12 18,15" fill="#ffffff"/>
+                                        </g>
+                                    </svg>
+                                `),
+                                iconSize: [30, 40],
+                                iconAnchor: [15, 40],
+                                popupAnchor: [0, -40],
+                            });
 
-                        // Add marker
-                        L.marker([lat, lon], { icon: markerIcon }).addTo(
-                            map.value
-                        );
+                            L.marker([lat, lon], { icon: markerIcon }).addTo(
+                                map.value
+                            );
 
-                        // Force map to resize after a short delay
-                        setTimeout(() => {
-                            if (map.value) {
-                                map.value.invalidateSize();
-                                mapLoaded.value = true;
-                            }
-                        }, 100);
+                            // Force a resize after a short delay to ensure the map renders correctly
+                            setTimeout(() => {
+                                if (map.value) {
+                                    map.value.invalidateSize();
+                                    mapLoaded.value = true;
+                                }
+                            }, 400);
+                        } catch (error) {
+                            console.error("Error initializing map:", error);
+                            mapLoaded.value = true;
+                        }
                     }
-                }, 100);
+                }, 200);
             }
         }
     }
 };
 
-const showImageModal = ref(false);
-const currentImage = ref(null);
-const currentImageIndex = ref(0);
-const allImages = ref([]);
+const openMediaModal = (media, index = 0) => {
+    if (isVideoFile(media)) {
+        openVideoModal(media.path);
+    } else {
+        openImageModal(media.path, index);
+    }
+};
 
-// Add these methods
 const openImageModal = (imagePath, index = 0) => {
-    // Filter only images (not videos)
     allImages.value = props.report.photos
         .filter((media) => !isVideoFile(media))
         .map((media) => "/storage/" + media.path);
@@ -864,60 +1306,6 @@ const prevImage = () => {
     }
 };
 
-// Add keyboard navigation
-const handleKeydown = (event) => {
-    if (showImageModal.value) {
-        if (event.key === "Escape") {
-            closeImageModal();
-        } else if (event.key === "ArrowRight") {
-            nextImage();
-        } else if (event.key === "ArrowLeft") {
-            prevImage();
-        }
-    }
-};
-
-// Add event listener for keyboard
-onMounted(() => {
-    window.addEventListener("keydown", handleKeydown);
-});
-
-onUnmounted(() => {
-    window.removeEventListener("keydown", handleKeydown);
-});
-
-// Watch for changes in show prop to initialize map
-watch(
-    () => props.show,
-    (newVal) => {
-        if (newVal && props.report) {
-            // Small delay to ensure the modal is fully rendered
-            setTimeout(() => {
-                initializeMap();
-            }, 200);
-        } else {
-            mapLoaded.value = false;
-            if (map.value) {
-                map.value.remove();
-                map.value = null;
-            }
-        }
-    }
-);
-
-onMounted(() => {
-    if (props.show && props.report) {
-        initializeMap();
-    }
-});
-
-onUnmounted(() => {
-    if (map.value) {
-        map.value.remove();
-        map.value = null;
-    }
-});
-
 const openVideoModal = (videoPath) => {
     currentVideo.value = "/storage/" + videoPath;
     showVideoModal.value = true;
@@ -936,25 +1324,43 @@ const isVideoFile = (file) => {
 };
 
 const statusClass = computed(() => {
-    if (!props.report || !props.report.status) return "";
+    if (!props.report || !props.report.status)
+        return "bg-gray-100 text-gray-800";
     switch (props.report.status.toLowerCase()) {
         case "in_progress":
-            return "bg-blue-100 text-blue-800";
+            return "bg-blue-100 text-blue-800 border border-blue-200";
         case "resolved":
-            return "bg-green-100 text-green-800";
+            return "bg-green-100 text-green-800 border border-green-200";
         case "pending":
-            return "bg-yellow-100 text-yellow-800";
+            return "bg-yellow-100 text-yellow-800 border border-yellow-200";
         default:
-            return "bg-gray-100 text-gray-800";
+            return "bg-gray-100 text-gray-800 border border-gray-200";
+    }
+});
+
+const priorityClass = computed(() => {
+    if (!props.report || !props.report.priority)
+        return "bg-gray-100 text-gray-800 border border-gray-200";
+    switch (props.report.priority.toLowerCase()) {
+        case "high":
+            return "bg-red-100 text-red-800 border border-red-200";
+        case "medium":
+            return "bg-yellow-100 text-yellow-800 border border-yellow-200";
+        case "low":
+            return "bg-green-100 text-green-800 border border-green-200";
+        default:
+            return "bg-gray-100 text-gray-800 border border-gray-200";
     }
 });
 
 const statusLabel = computed(() => {
-    if (!props.report || !props.report.status) return "";
-    return (
-        props.report.status.charAt(0).toUpperCase() +
-        props.report.status.slice(1)
-    );
+    if (!props.report || !props.report.status) return "Unknown";
+    const statusMap = {
+        pending: "Pending",
+        in_progress: "In Progress",
+        resolved: "Resolved",
+    };
+    return statusMap[props.report.status.toLowerCase()] || props.report.status;
 });
 
 // Safely get coordinates with fallback
@@ -974,13 +1380,58 @@ const getLongitude = computed(() => {
         : "N/A";
 });
 
-// Format the heading for display
-const getHeading = computed(() => {
-    if (!props.report || !props.report.heading) return "N/A";
+// Keyboard navigation
+const handleKeydown = (event) => {
+    if (showImageModal.value) {
+        if (event.key === "Escape") {
+            closeImageModal();
+        } else if (event.key === "ArrowRight") {
+            nextImage();
+        } else if (event.key === "ArrowLeft") {
+            prevImage();
+        }
+    }
+};
 
-    const directions = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
-    const index = Math.round((Number(props.report.heading) % 360) / 45) % 8;
-    return `${directions[index]} (${Math.round(props.report.heading)}°)`;
+// Watch for changes in show prop to initialize map
+watch(
+    () => props.show,
+    (newVal) => {
+        if (newVal && props.report) {
+            setTimeout(() => {
+                initializeMap();
+            }, 300);
+        } else {
+            destroyMap();
+            // Reset maximize state when modal closes
+            isMaximized.value = false;
+        }
+    }
+);
+
+// Watch for maximize state changes to handle map resizing
+watch(
+    () => isMaximized.value,
+    () => {
+        if (props.show) {
+            // Use a longer delay to ensure the container has fully resized
+            setTimeout(() => {
+                reinitializeMap();
+            }, 400);
+        }
+    }
+);
+
+onMounted(() => {
+    window.addEventListener("keydown", handleKeydown);
+    if (props.show && props.report) {
+        initializeMap();
+    }
+});
+
+onUnmounted(() => {
+    window.removeEventListener("keydown", handleKeydown);
+    destroyMap();
 });
 </script>
 
@@ -1025,16 +1476,10 @@ const getHeading = computed(() => {
 }
 
 .modal-enter-from .transform {
-    transform: translateX(100%);
+    transform: scale(0.95) translateY(-10px);
 }
 
 .modal-leave-to .transform {
-    transform: translateX(100%);
-}
-
-/* Custom arrow marker styles */
-.custom-arrow-container {
-    background: transparent !important;
-    border: none !important;
+    transform: scale(0.95) translateY(-10px);
 }
 </style>

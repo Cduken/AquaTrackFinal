@@ -4,7 +4,7 @@
         <div v-if="show" class="fixed inset-0 z-[1000] overflow-hidden">
             <!-- Backdrop -->
             <div
-                class="absolute inset-0 bg-black/60  transition-opacity duration-300"
+                class="absolute inset-0 bg-black/60 transition-opacity duration-300"
                 @click="$emit('close')"
             ></div>
 
@@ -19,9 +19,7 @@
                         class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden"
                     >
                         <!-- Header -->
-                        <div
-                            class="relative px-8 py-4 bg-[#172554]"
-                        >
+                        <div class="relative px-8 py-4 bg-[#172554]">
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center space-x-3">
                                     <div
@@ -30,12 +28,9 @@
                                         <User class="w-6 h-6 text-white" />
                                     </div>
                                     <div>
-                                        <h2
-                                            class="text-xl font-sm text-white"
-                                        >
+                                        <h2 class="text-xl font-sm text-white">
                                             Register User
                                         </h2>
-
                                     </div>
                                 </div>
                                 <div class="flex items-center space-x-2">
@@ -318,9 +313,8 @@
                                                     <input
                                                         v-model="userData.phone"
                                                         type="tel"
-                                                        required
                                                         class="w-full pl-11 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                                        placeholder="09123456789"
+                                                        placeholder="09123456789 (Optional)"
                                                         @input="
                                                             validatePhoneNumber
                                                         "
@@ -778,6 +772,13 @@ const formatAccountNumber = (e) => {
 
 const validatePhoneNumber = (e) => {
     let value = e.target.value;
+
+    // If empty, just clear the field
+    if (!value || value.trim() === "") {
+        userData.value.phone = "";
+        return;
+    }
+
     value = value.replace(/[^0-9+]/g, "");
 
     if (value.startsWith("+")) {
@@ -787,6 +788,19 @@ const validatePhoneNumber = (e) => {
     }
 
     userData.value.phone = value;
+
+    // Add real-time validation feedback only if there's input
+    const phoneInput = e.target;
+    const cleanPhone = value.replace(/\D/g, "");
+    const phoneRegex = /^(\+63\d{10}|09\d{9})$/;
+
+    if (cleanPhone && !phoneRegex.test(cleanPhone)) {
+        phoneInput.classList.add("border-red-500");
+        phoneInput.classList.remove("border-gray-300");
+    } else {
+        phoneInput.classList.remove("border-red-500");
+        phoneInput.classList.add("border-gray-300");
+    }
 };
 
 const validateSerialNumber = (e) => {
@@ -911,13 +925,31 @@ const handleSubmit = async () => {
             }
         }
 
+        // Validate phone number format only if provided
+        if (userData.value.phone && userData.value.phone.trim() !== "") {
+            const phoneRegex = /^(\+63\d{10}|09\d{9})$/;
+            const cleanPhone = userData.value.phone.replace(/\D/g, "");
+
+            if (!phoneRegex.test(cleanPhone)) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Validation Error",
+                    text: "Phone number must be in format 09123456789 or +639123456789",
+                });
+                isSubmitting.value = false;
+                return;
+            }
+        }
+
         await new Promise((resolve) => setTimeout(resolve, 2000));
 
         const submitData = {
             name: userData.value.name,
             lastname: userData.value.lastname,
             email: userData.value.email,
-            phone: userData.value.phone.replace(/\D/g, ""),
+            phone: userData.value.phone
+                ? userData.value.phone.replace(/\D/g, "")
+                : null, // Set to null if empty
             role: userData.value.role,
         };
 

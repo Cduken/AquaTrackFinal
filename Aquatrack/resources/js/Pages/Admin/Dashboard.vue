@@ -1,13 +1,12 @@
-//Pages/Admin/Dashboard.vue
 <script setup>
 import AdminLayout from "@/Layouts/AdminLayout.vue";
 import StatCard from "@/Components/Admin/Dashboard/StatCard.vue";
-import ActivityItem from "@/Components/Admin/Dashboard/ActivityItem.vue";
-import DashboardSection from "@/Components/Admin/Dashboard/DashboardSection.vue";
+
 import EmptyState from "@/Components/Admin/Dashboard/EmptyState.vue";
 import ReportItem from "@/Components/Admin/Dashboard/ReportItem.vue";
 import StatusItem from "@/Components/Admin/Dashboard/StatusItem.vue";
 import CustomerItem from "@/Components/Admin/Dashboard/CustomerItem.vue";
+import Pagination from "@/Components/Pagination.vue";
 import { ref, onMounted, computed, watch } from "vue";
 import { usePage, Link, router } from "@inertiajs/vue3";
 import Chart from "chart.js/auto";
@@ -20,12 +19,10 @@ import {
     createWaterChartConfig,
     createDoughnutChartConfig,
 } from "@/utils/chartConfig";
-import { RefreshCw } from "lucide-vue-next";
 
 // Reactive state
 const state = ref({
     isLoading: false,
-    timeFilter: "month",
     chartInstances: {
         consumption: null,
         area: null,
@@ -38,14 +35,6 @@ const consumptionChart = ref(null);
 const areaChart = ref(null);
 const reportStatusChart = ref(null);
 const page = usePage();
-
-// Constants
-const FILTER_OPTIONS = [
-    { value: "day", label: "Today" },
-    { value: "week", label: "This Week" },
-    { value: "month", label: "This Month" },
-    { value: "year", label: "This Year" },
-];
 
 const STATUS_CONFIG = {
     pending: {
@@ -161,20 +150,6 @@ const hasAreaData = computed(() => {
 });
 
 // Methods
-const refreshData = async () => {
-    state.value.isLoading = true;
-
-    // Show loading animation for 1.5 seconds
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    router.reload();
-    state.value.isLoading = false;
-};
-
-const handleFilterChange = (filter) => {
-    state.value.timeFilter = filter;
-    refreshData();
-};
 
 const getStatusConfig = (status) => {
     return STATUS_CONFIG[status] || STATUS_CONFIG.pending;
@@ -197,9 +172,7 @@ const initializeCharts = () => {
 
 const initializeConsumptionChart = () => {
     if (!consumptionChart.value) return;
-
     destroyChart("consumption");
-
     const config = createWaterChartConfig(
         dashboardData.value.monthlyConsumption
     );
@@ -209,55 +182,72 @@ const initializeConsumptionChart = () => {
     );
 };
 
+const createPieChartConfig = (labels, data, colors) => {
+    return {
+        type: "pie",
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    data: data,
+                    backgroundColor: colors,
+                    borderColor: "#ffffff",
+                    borderWidth: 2,
+                },
+            ],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false,
+                },
+                tooltip: {
+                    backgroundColor: "rgba(0, 0, 0, 0.8)",
+                    padding: 12,
+                    titleFont: {
+                        size: 13,
+                        weight: "600",
+                    },
+                    bodyFont: {
+                        size: 12,
+                    },
+                    cornerRadius: 6,
+                    displayColors: true,
+                    boxWidth: 12,
+                    boxHeight: 12,
+                    boxPadding: 6,
+                },
+            },
+        },
+    };
+};
+
 const initializeAreaChart = () => {
     if (!areaChart.value) return;
-
     destroyChart("area");
-
     if (hasAreaData.value) {
-        state.value.chartInstances.area = new Chart(areaChart.value, {
-            ...createDoughnutChartConfig(
+        state.value.chartInstances.area = new Chart(
+            areaChart.value,
+            createPieChartConfig(
                 dashboardData.value.consumptionByArea.map((item) => item.name),
                 dashboardData.value.consumptionByArea.map(
                     (item) => item.consumption
                 ),
                 ["#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6"]
-            ),
-            options: {
-                ...createDoughnutChartConfig().options,
-                plugins: {
-                    ...createDoughnutChartConfig().options.plugins,
-                    tooltip: {
-                        callbacks: {
-                            label: (context) => {
-                                const total =
-                                    dashboardData.value.consumptionByArea.reduce(
-                                        (sum, item) => sum + item.consumption,
-                                        0
-                                    );
-                                const percentage = (
-                                    (context.parsed / total) *
-                                    100
-                                ).toFixed(1);
-                                return `${context.label}: ${context.parsed} reports (${percentage}%)`;
-                            },
-                        },
-                    },
-                },
-            },
-        });
+            )
+        );
     }
 };
 
 const initializeReportStatusChart = () => {
     if (!reportStatusChart.value) return;
-
     destroyChart("reportStatus");
-
     if (hasReportStatusData.value) {
         state.value.chartInstances.reportStatus = new Chart(
             reportStatusChart.value,
-            createDoughnutChartConfig(
+            createPieChartConfig(
                 reportStatusData.value.labels,
                 reportStatusData.value.data,
                 reportStatusData.value.colors
@@ -304,217 +294,200 @@ watch(
 
 <template>
     <AdminLayout>
-        <!-- Header Section -->
-        <div class="mb-8">
+        <div class="max-w-[1600px] mx-auto px-5 py-5">
+
+            <!-- Stats Grid -->
             <div
-                class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 p-4"
+                class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
             >
-                <div>
-                    <h1 class="text-2xl font-bold text-gray-900">
-                        Dashboard Overview
-                    </h1>
-                    <p class="text-gray-500 mt-1">
-                        Welcome back! Here's what's happening with your water
-                        management system.
-                    </p>
-                </div>
-                <div class="flex items-center gap-3">
-                    <!-- Filter Buttons -->
-                    <div
-                        class="flex items-center bg-white border border-gray-200 rounded-lg p-1"
-                    >
-                        <button
-                            v-for="option in FILTER_OPTIONS"
-                            :key="option.value"
-                            @click="handleFilterChange(option.value)"
-                            :class="[
-                                'px-3 py-1.5 text-sm font-medium rounded-md transition-all',
-                                state.timeFilter === option.value
-                                    ? 'bg-blue-50 text-blue-600 border border-blue-200'
-                                    : 'text-gray-600 hover:text-gray-900',
-                            ]"
-                        >
-                            {{ option.label }}
-                        </button>
-                    </div>
-
-                    <button
-                        @click="refreshData"
-                        :disabled="state.isLoading"
-                        class="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        <RefreshCw
-                            class="w-4 h-4 transition-transform duration-1500"
-                            :class="{ 'animate-spin': state.isLoading }"
-                        />
-                        {{ state.isLoading ? "Refreshing..." : "Refresh" }}
-                    </button>
-                </div>
+                <StatCard
+                    v-for="stat in statCards"
+                    :key="stat.title"
+                    :title="stat.title"
+                    :value="stat.value"
+                    :description="stat.description"
+                    :icon="stat.icon"
+                    :icon-bg-color="stat.iconBgColor"
+                    :icon-color="stat.iconColor"
+                    :change="stat.change"
+                    :change-type="stat.changeType"
+                />
             </div>
-        </div>
 
-        <!-- Stats Grid -->
-        <div class=" p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-            <StatCard
-                v-for="stat in statCards"
-                :key="stat.title"
-                :title="stat.title"
-                :value="stat.value"
-                :description="stat.description"
-                :icon="stat.icon"
-                :icon-bg-color="stat.iconBgColor"
-                :icon-color="stat.iconColor"
-                :change="stat.change"
-                :change-type="stat.changeType"
-            />
-        </div>
-
-        <!-- Main Content Grid -->
-        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-8 p-4">
-            <!-- Left Column - Main Charts -->
-            <div class="xl:col-span-2 space-y-6">
-                <!-- Water Consumption Chart -->
-                <div class="bg-white rounded-xl border border-gray-200 p-6">
+            <!-- Main Content Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Left Column - Main Charts (2 columns wide) -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- Water Consumption Chart -->
                     <div
-                        class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4"
+                        class="bg-white rounded-lg border border-gray-300 shadow-sm overflow-hidden"
                     >
-                        <div>
-                            <h2 class="text-lg font-semibold text-gray-900">
-                                Water Consumption
-                            </h2>
-                            <p class="text-sm text-gray-500 mt-1">
-                                {{ getCurrentYear() }} Overview
-                            </p>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <div
-                                class="flex items-center text-sm text-gray-600"
-                            >
+                        <div class="px-6 py-5 border-b border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h2
+                                        class="text-lg font-semibold text-gray-900"
+                                    >
+                                        Water Consumption
+                                    </h2>
+                                    <p class="text-sm text-gray-600 mt-1">
+                                        {{ getCurrentYear() }} Overview
+                                    </p>
+                                </div>
                                 <div
-                                    class="w-2 h-2 rounded-full bg-indigo-500 mr-2"
-                                ></div>
-                                Consumption (m³)
+                                    class="flex items-center text-sm text-gray-600"
+                                >
+                                    <div
+                                        class="w-3 h-3 rounded-full bg-indigo-500 mr-2"
+                                    ></div>
+                                    <span>Consumption (m³)</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <div class="h-80">
+                                <canvas ref="consumptionChart"></canvas>
                             </div>
                         </div>
                     </div>
-                    <div class="h-80">
-                        <canvas ref="consumptionChart"></canvas>
+
+                    <!-- Recent Reports -->
+                    <div
+                        class="bg-white rounded-lg border border-gray-300 shadow-sm overflow-hidden"
+                    >
+                        <div class="px-6 py-5 border-b border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <h2 class="text-lg font-semibold text-gray-900">
+                                    Recent Reports
+                                </h2>
+                                <Link
+                                    :href="route('admin.reports')"
+                                    class="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+                                >
+                                    View All →
+                                </Link>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <div class="space-y-3">
+                                <ReportItem
+                                    v-for="report in safeRecentReports"
+                                    :key="report.id"
+                                    :report="report"
+                                />
+                                <EmptyState
+                                    v-if="safeRecentReports.length === 0"
+                                    icon="AlertCircle"
+                                    title="No reports found"
+                                    description="Reports will appear here once submitted"
+                                />
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Recent Reports -->
-                <DashboardSection
-                    title="Recent Reports"
-                    :action="{
-                        label: 'View All',
-                        href: route('admin.reports'),
-                    }"
-                >
-                    <div class="space-y-3">
-                        <ReportItem
-                            v-for="report in safeRecentReports"
-                            :key="report.id"
-                            :report="report"
-                        />
-                        <EmptyState
-                            v-if="safeRecentReports.length === 0"
-                            icon="AlertCircle"
-                            title="No reports found"
-                            description="Reports will appear here once submitted"
-                        />
+                <!-- Right Column - Sidebar (1 column wide) -->
+                <div class="space-y-6">
+                    <!-- Report Status -->
+                    <div
+                        class="bg-white rounded-lg border border-gray-300 shadow-sm overflow-hidden"
+                    >
+                        <div class="px-6 py-5 border-b border-gray-200">
+                            <h2 class="text-lg font-semibold text-gray-900">
+                                Report Status
+                            </h2>
+                        </div>
+                        <div class="p-6">
+                            <div
+                                class="h-56 mb-6 relative flex items-center justify-center"
+                            >
+                                <canvas ref="reportStatusChart"></canvas>
+                                <EmptyState
+                                    v-if="!hasReportStatusData"
+                                    title="No status data"
+                                    description="Report status data will appear here"
+                                    size="sm"
+                                    class="absolute inset-0 flex items-center justify-center bg-white"
+                                />
+                            </div>
+                            <div
+                                class="space-y-3 pt-4 border-t border-gray-200"
+                            >
+                                <StatusItem
+                                    v-for="(
+                                        status, index
+                                    ) in reportStatusData.labels"
+                                    :key="status"
+                                    :status="status"
+                                    :count="reportStatusData.data[index]"
+                                    :color="reportStatusData.colors[index]"
+                                />
+                            </div>
+                        </div>
                     </div>
-                </DashboardSection>
+
+                    <!-- Reports by Zone -->
+                    <div
+                        class="bg-white rounded-lg border border-gray-300 shadow-sm overflow-hidden"
+                    >
+                        <div class="px-6 py-5 border-b border-gray-200">
+                            <h2 class="text-lg font-semibold text-gray-900">
+                                Reports by Zone
+                            </h2>
+                        </div>
+                        <div class="p-6">
+                            <div
+                                class="h-56 relative flex items-center justify-center"
+                            >
+                                <canvas ref="areaChart"></canvas>
+                                <EmptyState
+                                    v-if="!hasAreaData"
+                                    title="No zone data"
+                                    description="Zone consumption data will appear here"
+                                    size="sm"
+                                    class="absolute inset-0 flex items-center justify-center bg-white"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Customers -->
+                    <div
+                        class="bg-white rounded-lg border border-gray-300 shadow-sm overflow-hidden"
+                    >
+                        <div class="px-6 py-5 border-b border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <h2 class="text-lg font-semibold text-gray-900">
+                                    Recent Customers
+                                </h2>
+                                <span
+                                    v-if="dashboardData.recentCustomers.length"
+                                    class="text-xs font-medium text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full"
+                                >
+                                    {{ dashboardData.recentCustomers.length }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <div class="space-y-4">
+                                <CustomerItem
+                                    v-for="customer in dashboardData.recentCustomers"
+                                    :key="customer.email"
+                                    :customer="customer"
+                                />
+                                <EmptyState
+                                    v-if="
+                                        dashboardData.recentCustomers.length ===
+                                        0
+                                    "
+                                    title="No recent customers"
+                                    size="sm"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-
-            <!-- Right Column - Sidebar -->
-            <div class="space-y-6">
-                <!-- Report Status -->
-                <DashboardSection title="Report Status">
-                    <div class="h-48 mb-4 relative">
-                        <canvas ref="reportStatusChart"></canvas>
-                        <EmptyState
-                            v-if="!hasReportStatusData"
-                            title="No status data"
-                            description="Report status data will appear here"
-                            size="sm"
-                            class="absolute inset-0 flex items-center justify-center bg-white"
-                        />
-                    </div>
-                    <div class="space-y-3">
-                        <StatusItem
-                            v-for="(status, index) in reportStatusData.labels"
-                            :key="status"
-                            :status="status"
-                            :count="reportStatusData.data[index]"
-                            :color="reportStatusData.colors[index]"
-                        />
-                    </div>
-                </DashboardSection>
-
-                 <!-- Reports by Zone -->
-                <DashboardSection title="Reports by Zone">
-                    <div class="h-48 relative">
-                        <canvas ref="areaChart"></canvas>
-                        <EmptyState
-                            v-if="!hasAreaData"
-                            title="No zone data"
-                            description="Zone consumption data will appear here"
-                            size="sm"
-                            class="absolute inset-0 flex items-center justify-center bg-white"
-                        />
-                    </div>
-                </DashboardSection>
-
-                <!-- Recent Customers -->
-                <DashboardSection
-                    title="Recent Customers"
-                    :badge="dashboardData.recentCustomers.length"
-                >
-                    <div class="space-y-4">
-                        <CustomerItem
-                            v-for="customer in dashboardData.recentCustomers"
-                            :key="customer.email"
-                            :customer="customer"
-                        />
-                        <EmptyState
-                            v-if="dashboardData.recentCustomers.length === 0"
-                            title="No recent customers"
-                            size="sm"
-                        />
-                    </div>
-                </DashboardSection>
-
-
-            </div>
-        </div>
-
-        <!-- Recent Activity Section -->
-        <div class="p-4">
-        <DashboardSection
-            title="Recent Activity"
-            :action="
-                dashboardData.canViewActivityLog
-                    ? { label: 'View All', href: route('admin.activity-logs') }
-                    : null
-            "
-            class="bg-white rounded-xl border border-gray-200"
-            :padding="false"
-        >
-            <div class="divide-y divide-gray-100">
-                <ActivityItem
-                    v-for="activity in dashboardData.recentActivities"
-                    :key="activity.id"
-                    :activity="activity"
-                />
-                <EmptyState
-                    v-if="dashboardData.recentActivities.length === 0"
-                    icon="History"
-                    title="No recent activities"
-                    description="Activities will appear here as they occur"
-                    class="p-8"
-                />
-            </div>
-        </DashboardSection>
         </div>
     </AdminLayout>
 </template>

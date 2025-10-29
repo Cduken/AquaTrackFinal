@@ -2,7 +2,7 @@
     <CustomerLayout>
         <div class="w-full bg-white rounded-2xl shadow-sm overflow-hidden">
             <!-- Header Section -->
-            <div
+            <!-- <div
                 class="border-b border-gray-100 p-8 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50"
             >
                 <div class="flex items-center gap-4">
@@ -31,7 +31,7 @@
                         </span>
                     </div>
                 </div>
-            </div>
+            </div> -->
 
             <!-- Main Content -->
             <div class="flex flex-col xl:flex-row p-6 gap-8">

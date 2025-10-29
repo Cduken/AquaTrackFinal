@@ -37,7 +37,7 @@
         />
         <main
             :class="[
-                'p-4 pt-[100px] flex-1 transition-all duration-300 ease-in-out',
+                'p-4 pt-20 flex-1 transition-all duration-300 ease-in-out',
                 { 'md:ml-64': isSidebarOpen, 'md:ml-16': !isSidebarOpen },
             ]"
         >
@@ -57,7 +57,7 @@ import Swal from "sweetalert2";
 const { props: pageProps } = usePage();
 
 const isSidebarOpen = ref(true);
-const isMobileMenuOpen = ref(false); // Add mobile menu state
+const isMobileMenuOpen = ref(false);
 
 const customerLinks = [
     { name: "Dashboard", url: "/customer/dashboard", icon: "md-dashboard" },
@@ -68,11 +68,6 @@ const customerLinks = [
         url: "/customer/announcements",
         icon: "bi-megaphone-fill",
     },
-    // {
-    //     name: "Notifications",
-    //     url: "/customer/notifications",
-    //     icon: "bi-bell-fill",
-    // },
 ];
 
 const form = useForm({});
@@ -81,7 +76,6 @@ const toggleSidebar = () => {
     isSidebarOpen.value = !isSidebarOpen.value;
 };
 
-// Add mobile menu toggle function
 const toggleMobileMenu = () => {
     isMobileMenuOpen.value = !isMobileMenuOpen.value;
 };

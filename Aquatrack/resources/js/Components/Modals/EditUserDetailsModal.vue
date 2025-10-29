@@ -19,18 +19,18 @@
                     >
                         <!-- Header -->
                         <div
-                            class="relative px-8 py-4 bg-[#172554]"
+                            class="relative px-4 py-4 border-b"
                         >
                             <div class="flex items-center justify-between">
-                                <div class="flex items-center space-x-3">
+                                <div class="flex items-center">
                                     <div
                                         class="p-2.5 bg-white/20 rounded-xl backdrop-blur-sm"
                                     >
-                                        <UserCog class="w-6 h-6 text-white" />
+                                        <UserCog class="w-6 h-6 text-black" />
                                     </div>
                                     <div>
                                         <h2
-                                            class="text-xl font-sm text-white"
+                                            class="text-xl font-sm text-black"
                                         >
                                             Edit User Details
                                         </h2>
@@ -41,7 +41,7 @@
                                     <!-- Maximize Button -->
                                     <button
                                         @click="toggleMaximize"
-                                        class="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200"
+                                        class="p-2 text-black/80 hover:text-gray-700 hover:bg-white/10 rounded-lg transition-all duration-200"
                                         :title="
                                             isMaximized
                                                 ? 'Minimize'
@@ -57,7 +57,7 @@
                                     <!-- Close Button -->
                                     <button
                                         @click="emit('close')"
-                                        class="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200"
+                                        class="p-2 text-black/80 hover:text-gray-400 hover:bg-white/10 rounded-lg transition-all duration-200"
                                     >
                                         <X class="w-5 h-5" />
                                     </button>

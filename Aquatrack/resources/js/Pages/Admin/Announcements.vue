@@ -21,7 +21,7 @@
                             <div
                                 class="flex flex-col md:flex-row md:items-center justify-between gap-4"
                             >
-                                <div class="flex items-center">
+                                <div class="flex items-center px-2 space-x-4">
                                     <h5
                                         class="text-sm font-semibold text-gray-500"
                                     >

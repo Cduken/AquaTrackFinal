@@ -22,7 +22,7 @@
                     >
                         <!-- Header -->
                         <div
-                            class="flex items-center justify-between px-6 py-5 bg-[#0D4C9D] shadow-md"
+                            class="flex items-center justify-between px-6 py-5 bg-[#062F64]"
                         >
                             <div class="flex items-center space-x-3">
                                 <div class="p-2 bg-white/10 rounded-full">
@@ -428,9 +428,6 @@
                                                 }"
                                             >
                                                 Phone Number
-                                                <span class="text-red-500"
-                                                    >*</span
-                                                >
                                             </label>
                                             <div class="relative">
                                                 <div
@@ -459,8 +456,7 @@
                                                     }"
                                                     pattern="[0-9]{1,11}"
                                                     maxlength="11"
-                                                    placeholder="912 345 6789"
-                                                    required
+                                                    placeholder="912 345 6789 (optional)"
                                                 />
                                             </div>
                                             <p
@@ -471,6 +467,7 @@
                                             >
                                                 Enter your 10-digit mobile
                                                 number without the leading 0
+                                                (optional)
                                             </p>
                                             <p
                                                 v-if="
@@ -709,13 +706,13 @@
                                                             characters</span
                                                         >
                                                     </div>
-                                                    <div v-else>
+                                                    <!-- <div v-else>
                                                         <span
                                                             >Please provide a
                                                             detailed
                                                             description</span
                                                         >
-                                                    </div>
+                                                    </div> -->
                                                     <button
                                                         type="button"
                                                         @click="

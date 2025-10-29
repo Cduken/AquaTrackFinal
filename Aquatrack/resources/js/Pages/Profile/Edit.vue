@@ -143,7 +143,7 @@ const layout = computed(() => {
                                     class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg"
                                 >
                                     <v-icon name="bi-arrow-left" class="mr-2" />
-                                    Back to Dashboard
+                                    Back
                                 </button>
                             </div>
                         </div>

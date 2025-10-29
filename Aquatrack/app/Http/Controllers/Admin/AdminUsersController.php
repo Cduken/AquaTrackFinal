@@ -142,6 +142,7 @@ class AdminUsersController extends Controller
             'serial_number' => $request->serial_number === '' ? null : $request->serial_number,
             'size' => $request->size === '' ? null : $request->size,
             'email' => $request->email === '' ? null : $request->email,
+            'phone' => $request->phone === '' ? null : $request->phone,
 
         ]);
 
@@ -155,7 +156,7 @@ class AdminUsersController extends Controller
             'lastname' => 'required|string|max:255',
             'email' => $request->role === 'staff' ? 'required|string|email|max:255|unique:users' : 'nullable|string|email|max:255|unique:users',
             'phone' => [
-                'required',
+                'nullable',
                 'string',
                 'regex:/^(\+63\d{10}|09\d{9})$/',
                 'unique:users',
@@ -183,7 +184,7 @@ class AdminUsersController extends Controller
             'name' => $validated['name'],
             'lastname' => $validated['lastname'],
             'email' => $validated['email'] ?? null,
-            'phone' => $validated['phone'],
+            'phone' => $validated['phone'] ?? null,
             'zone' => $validated['zone'] ?? null,
             'barangay' => $validated['barangay'] ?? null,
             'date_installed' => $validated['date_installed'] ?? null,
@@ -248,7 +249,7 @@ class AdminUsersController extends Controller
             'lastname' => 'required|string|max:255',
             'email' => 'nullable|string|email|max:255',
             'phone' => [
-                'required',
+                'nullable',
                 'string',
                 'regex:/^(\+63\d{10}|09\d{9})$/',
             ],

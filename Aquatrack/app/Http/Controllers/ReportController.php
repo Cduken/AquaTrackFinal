@@ -312,7 +312,7 @@ class ReportController extends Controller
                     'description' => $validated['description'],
                     'reporter_name' => $validated['reporter_name'],
                     'reporter_phone' => $validated['reporter_phone'] ?? null,
-                    'user_id' => $isAuthenticated ? Auth::id() : null,
+                    'user_id' => Auth::check() ? Auth::id() : null, // THIS MUST BE SET
                     'status' => 'pending',
                     'tracking_code' => $trackingCode,
                     'latitude' => $validated['latitude'],
@@ -433,83 +433,169 @@ class ReportController extends Controller
     }
 
     /**
-     * Format user types for display
+     * Detect if a reporter name belongs to a registered user
      */
+    protected function isRegisteredUser($reporterName)
+    {
+        try {
+            // Try to find a user with this exact name
+            $user = User::where('name', trim($reporterName))->first();
+            return $user ? true : false;
+        } catch (\Exception $e) {
+            Log::error('Error checking registered user', [
+                'reporterName' => $reporterName,
+                'error' => $e->getMessage()
+            ]);
+            return false;
+        }
+    }
+
     /**
-     * Format user types for display
+     * Enhanced formatUserTypes method
      */
-    protected function formatUserTypes($userTypesJson, $userId = null)
+    protected function formatUserTypes($userTypesJson, $userId = null, $reporterName = null)
     {
         // If we have valid user_types data, use that
         if ($userTypesJson) {
             $userTypes = json_decode($userTypesJson, true);
 
             if (is_array($userTypes) && !empty($userTypes)) {
-                // Remove duplicates and sort
-                $userTypes = array_unique($userTypes);
-                usort($userTypes, function ($a, $b) {
-                    $order = ['Registered' => 1, 'Guest' => 2];
-                    return ($order[$a] ?? 3) - ($order[$b] ?? 4);
-                });
+                // Count unique types
+                $uniqueTypes = array_unique($userTypes);
+                $typeCount = count($uniqueTypes);
 
-                return implode(', ', $userTypes);
+                // If we have multiple user types, it's Hybrid
+                if ($typeCount > 1) {
+                    return 'Hybrid';
+                }
+
+                // Single type - return what it is
+                if (in_array('Registered', $uniqueTypes)) {
+                    return 'Registered';
+                }
+                return 'Guest';
             }
         }
 
-        // Fallback: Check user_id to determine if registered or guest
-        // If user_id is NOT null, it means a registered user created this report
-        if ($userId !== null) {
-            return 'Registered';
+        // Enhanced fallback logic
+        if ($reporterName && str_contains($reporterName, ',')) {
+            $reporters = array_filter(array_map('trim', explode(',', $reporterName)));
+            $hasRegistered = false;
+            $hasGuest = false;
+
+            foreach ($reporters as $reporter) {
+                if ($this->isRegisteredUser($reporter)) {
+                    $hasRegistered = true;
+                } else {
+                    $hasGuest = true;
+                }
+
+                // If we found both types, it's Hybrid
+                if ($hasRegistered && $hasGuest) {
+                    return 'Hybrid';
+                }
+            }
+
+            // If we only found one type
+            if ($hasRegistered) return 'Registered';
+            if ($hasGuest) return 'Guest';
         }
 
-        // If user_id is null, it means a guest created this report
-        return 'Guest';
+        // Single reporter fallback
+        return $userId ? 'Registered' : 'Guest';
     }
-
     /**
      * Find existing report for merging
      */
     protected function findExistingReportForMerging($zone, $barangay, $issueType, $latitude, $longitude, $purok)
     {
         try {
-            $radius = 5;
+            $radius = 0.1; // Reduced to 100 meters for more precise matching
             $earthRadius = 6371000;
 
             if (!is_numeric($latitude) || !is_numeric($longitude)) {
                 throw new \Exception('Invalid latitude or longitude values');
             }
 
-            $potentialReports = Report::where('zone', $zone)
+            Log::debug('Finding existing report for merging', [
+                'zone' => $zone,
+                'barangay' => $barangay,
+                'issueType' => $issueType,
+                'purok' => $purok,
+                'latitude' => $latitude,
+                'longitude' => $longitude
+            ]);
+
+            // First, try exact matches with same location and issue type
+            $exactMatches = Report::where('zone', $zone)
                 ->where('barangay', $barangay)
-                ->where('water_issue_type', $issueType)
                 ->where('purok', $purok)
+                ->where('water_issue_type', $issueType)
                 ->whereNull('deleted_at')
                 ->where('is_merged_reference', false)
                 ->where('status', '!=', 'resolved')
                 ->get();
+
+            Log::debug('Exact matches found', ['count' => $exactMatches->count()]);
+
+            // If we have exact matches, return the first one
+            if ($exactMatches->isNotEmpty()) {
+                Log::debug('Returning exact match', ['report_id' => $exactMatches->first()->id]);
+                return $exactMatches->first();
+            }
+
+            // If no exact matches, try proximity-based matching
+            $potentialReports = Report::where('zone', $zone)
+                ->where('barangay', $barangay)
+                ->where('water_issue_type', $issueType)
+                ->whereNull('deleted_at')
+                ->where('is_merged_reference', false)
+                ->where('status', '!=', 'resolved')
+                ->get();
+
+            Log::debug('Potential reports for proximity check', ['count' => $potentialReports->count()]);
 
             $matchingReports = $potentialReports->filter(function ($report) use ($latitude, $longitude, $radius, $earthRadius) {
                 if (is_null($report->latitude) || is_null($report->longitude)) {
                     return false;
                 }
 
-                $latFrom = deg2rad($latitude);
-                $lonFrom = deg2rad($longitude);
-                $latTo = deg2rad($report->latitude);
-                $lonTo = deg2rad($report->longitude);
+                try {
+                    $latFrom = deg2rad((float)$latitude);
+                    $lonFrom = deg2rad((float)$longitude);
+                    $latTo = deg2rad((float)$report->latitude);
+                    $lonTo = deg2rad((float)$report->longitude);
 
-                $latDelta = $latTo - $latFrom;
-                $lonDelta = $lonTo - $lonFrom;
+                    $latDelta = $latTo - $latFrom;
+                    $lonDelta = $lonTo - $lonFrom;
 
-                $angle = 2 * asin(sqrt(pow(sin($latDelta / 2), 2) +
-                    cos($latFrom) * cos($latTo) * pow(sin($lonDelta / 2), 2)));
+                    $angle = 2 * asin(sqrt(pow(sin($latDelta / 2), 2) +
+                        cos($latFrom) * cos($latTo) * pow(sin($lonDelta / 2), 2)));
 
-                $distance = $angle * $earthRadius;
+                    $distance = $angle * $earthRadius;
 
-                return $distance <= $radius;
+                    $isWithinRadius = $distance <= $radius;
+
+                    Log::debug('Proximity check', [
+                        'report_id' => $report->id,
+                        'distance' => $distance,
+                        'within_radius' => $isWithinRadius
+                    ]);
+
+                    return $isWithinRadius;
+                } catch (\Exception $e) {
+                    Log::error('Error calculating distance', [
+                        'error' => $e->getMessage(),
+                        'report_id' => $report->id
+                    ]);
+                    return false;
+                }
             });
 
-            return $matchingReports->first();
+            $result = $matchingReports->first();
+            Log::debug('Proximity match result', ['found' => !is_null($result), 'report_id' => $result ? $result->id : null]);
+
+            return $result;
         } catch (\Exception $e) {
             Log::error('Duplicate check failed', [
                 'error' => $e->getMessage(),
@@ -595,7 +681,14 @@ class ReportController extends Controller
             $barangay = $validated['barangay'];
             $purok = $validated['purok'];
 
-            // Find existing report to merge with
+            Log::debug('Checking for existing reports to merge', [
+                'zone' => $zone,
+                'barangay' => $barangay,
+                'purok' => $purok,
+                'issue_type' => $issueType
+            ]);
+
+            // Find existing report to merge with - RELAXED CONDITIONS
             $existingReport = $this->findExistingReportForMerging($zone, $barangay, $issueType, $latitude, $longitude, $purok);
 
             $trackingCode = null;
@@ -604,36 +697,60 @@ class ReportController extends Controller
             $mainReport = null;
 
             if ($existingReport) {
-                // MERGE WITH EXISTING REPORT - SIMPLE APPROACH
+                Log::debug('Found existing report to merge with', [
+                    'existing_report_id' => $existingReport->id,
+                    'existing_tracking_code' => $existingReport->tracking_code
+                ]);
+
+                // MERGE WITH EXISTING REPORT
                 $trackingCode = $existingReport->tracking_code;
                 $reportId = $existingReport->id;
                 $isMerged = true;
                 $mainReport = $existingReport;
 
-                // Update reporter names - combine all reporters
+                // Update reporter names
                 $existingReporters = array_filter(array_map('trim', explode(',', $existingReport->reporter_name)));
                 $newReporter = trim($validated['reporter_name']);
 
                 if (!in_array($newReporter, $existingReporters)) {
                     $existingReporters[] = $newReporter;
+                    $existingReport->reporter_name = implode(', ', $existingReporters);
                 }
 
-                $existingReport->reporter_name = implode(', ', $existingReporters);
-
-                // UPDATE USER TYPES - Combine user types like "Registered, Guest"
+                // UPDATE USER TYPES - RELIABLE HYBRID DETECTION
                 $existingUserTypes = $existingReport->user_types ? json_decode($existingReport->user_types, true) : [];
-                if (!is_array($existingUserTypes)) $existingUserTypes = [];
+                if (!is_array($existingUserTypes)) {
+                    $existingUserTypes = [];
+                }
 
                 $currentUserType = Auth::check() ? 'Registered' : 'Guest';
-                if (!in_array($currentUserType, $existingUserTypes)) {
+
+                // IMPORTANT: Make sure we maintain the correct order of user types
+                // The user_types array eould match the order of reporters in reporter_name
+
+                // Get current reporters array
+                $currentReporters = array_filter(array_map('trim', explode(',', $existingReport->reporter_name)));
+                $newReporterIndex = array_search(trim($validated['reporter_name']), $currentReporters);
+
+                if ($newReporterIndex === false) {
+                    // New reporter - add to the end
                     $existingUserTypes[] = $currentUserType;
+                } else {
+                    // Existing reporter - update their type if needed
+                    if (!isset($existingUserTypes[$newReporterIndex])) {
+                        $existingUserTypes[$newReporterIndex] = $currentUserType;
+                    } else {
+                        // If the reporter already has a type, only upgrade from Guest to Registered
+                        if ($existingUserTypes[$newReporterIndex] === 'Guest' && $currentUserType === 'Registered') {
+                            $existingUserTypes[$newReporterIndex] = 'Registered';
+                        }
+                    }
                 }
 
-                // Sort for consistent display: Registered first, then Guest
-                usort($existingUserTypes, function ($a, $b) {
-                    $order = ['Registered' => 1, 'Guest' => 2];
-                    return ($order[$a] ?? 3) - ($order[$b] ?? 4);
-                });
+                // Ensure the user_types array has the same length as reporters array
+                while (count($existingUserTypes) < count($currentReporters)) {
+                    $existingUserTypes[] = 'Guest'; // Fill missing types with Guest
+                }
 
                 $existingReport->user_types = json_encode($existingUserTypes);
 
@@ -656,11 +773,11 @@ class ReportController extends Controller
                 $additionalCodes[] = $newTrackingCode;
                 $existingReport->additional_tracking_codes = json_encode(array_unique($additionalCodes));
 
-                // Append new description in the format you want
+                // Append new description
                 $newDescription = "Additional Report From {$validated['reporter_name']}\n-> {$validated['description']}\n";
                 $existingReport->description = $existingReport->description . "\n" . $newDescription;
 
-                // Add photos to the main report (for both guest and registered users)
+                // Add photos to the main report
                 foreach ($request->file('photos') as $photo) {
                     $originalName = $photo->getClientOriginalName();
                     $extension = $photo->getClientOriginalExtension();
@@ -676,33 +793,28 @@ class ReportController extends Controller
                     ]);
                 }
 
-                // For registered users, also update their user_id in the main report
-                if (Auth::check()) {
-                    // If the existing report doesn't have a user_id, set it to the current user
-                    if (!$existingReport->user_id) {
-                        $existingReport->user_id = Auth::id();
-                    }
+                // For registered users, update user_id in the main report
+                if (Auth::check() && !$existingReport->user_id) {
+                    $existingReport->user_id = Auth::id();
                 }
 
                 $existingReport->save();
 
-                Log::info('Report merged', [
+                Log::info('Report merged successfully', [
                     'report_id' => $reportId,
                     'tracking_code' => $trackingCode,
-                    'new_tracking_code' => $newTrackingCode,
                     'merged_reporters' => $existingReport->reporter_name,
                     'user_types' => $existingReport->user_types,
-                    'user_type' => Auth::check() ? 'registered' : 'guest',
                 ]);
             } else {
+                Log::debug('No existing report found, creating new report');
                 // CREATE NEW REPORT
                 $datePart = now()->format('Ymd');
                 $randomPart = strtoupper(Str::random(4));
                 $trackingCode = 'AQT' . $datePart . '-' . $randomPart;
-                Log::debug('Generated new tracking code', ['tracking_code' => $trackingCode]);
 
-                // Set initial user types
-                $userTypes = [Auth::check() ? 'Registered' : 'Guest'];
+                $isAuthenticated = Auth::check();
+                $userTypes = [$isAuthenticated ? 'Registered' : 'Guest'];
 
                 $reportData = [
                     'municipality' => $validated['municipality'],
@@ -715,14 +827,14 @@ class ReportController extends Controller
                     'description' => $validated['description'],
                     'reporter_name' => $validated['reporter_name'],
                     'reporter_phone' => $validated['reporter_phone'] ?? null,
-                    'user_id' => Auth::id(),
+                    'user_id' => $isAuthenticated ? Auth::id() : null,
                     'status' => 'pending',
                     'tracking_code' => $trackingCode,
                     'latitude' => $validated['latitude'],
                     'longitude' => $validated['longitude'],
                     'priority' => $this->base_priorities[$issueType] ?? 'low',
                     'is_merged_reference' => false,
-                    'user_types' => json_encode($userTypes), // Store initial user type
+                    'user_types' => json_encode($userTypes),
                 ];
 
                 $report = Report::create($reportData);
@@ -747,38 +859,12 @@ class ReportController extends Controller
                 Log::info('New report created', [
                     'report_id' => $reportId,
                     'tracking_code' => $trackingCode,
-                    'user_type' => Auth::check() ? 'registered' : 'guest',
                 ]);
             }
 
             // Update priority based on number of reporters
             if ($mainReport) {
-                $base_priority = $this->base_priorities[$issueType] ?? 'low';
-                $reporters = explode(',', $mainReport->reporter_name);
-                $num_reporters = count(array_filter(array_map('trim', $reporters)));
-                $priority = $base_priority;
-
-                if ($base_priority === 'low') {
-                    if ($num_reporters >= 4) {
-                        $priority = 'high';
-                    } elseif ($num_reporters >= 2) {
-                        $priority = 'medium';
-                    }
-                } elseif ($base_priority === 'medium' && $num_reporters >= 3) {
-                    $priority = 'high';
-                }
-
-                if ($mainReport->priority != $priority) {
-                    $mainReport->priority = $priority;
-                    $mainReport->save();
-
-                    Log::info('Priority updated', [
-                        'report_id' => $mainReport->id,
-                        'old_priority' => $base_priority,
-                        'new_priority' => $priority,
-                        'num_reporters' => $num_reporters,
-                    ]);
-                }
+                $this->updateReportPriority($mainReport, $issueType);
             }
 
             // Log activity
@@ -820,7 +906,7 @@ class ReportController extends Controller
                         'icon' => 'success',
                         'title' => $isMerged ? 'Report Merged' : 'Report Submitted',
                         'text' => $isMerged ? 'Your report has been merged with an existing one! Use the main tracking code to monitor progress.' : 'Your report has been submitted successfully!',
-                        'trackingCode' => $trackingCode, // Always return the main tracking code
+                        'trackingCode' => $trackingCode,
                         'isMerged' => $isMerged,
                     ]);
             }
@@ -856,36 +942,97 @@ class ReportController extends Controller
         }
     }
 
+
+
+    /**
+     * Update report priority based on number of reporters
+     */
+    protected function updateReportPriority($report, $issueType)
+    {
+        $base_priority = $this->base_priorities[$issueType] ?? 'low';
+        $reporters = explode(',', $report->reporter_name);
+        $num_reporters = count(array_filter(array_map('trim', $reporters)));
+        $priority = $base_priority;
+
+        if ($base_priority === 'low') {
+            if ($num_reporters >= 4) {
+                $priority = 'high';
+            } elseif ($num_reporters >= 2) {
+                $priority = 'medium';
+            }
+        } elseif ($base_priority === 'medium' && $num_reporters >= 3) {
+            $priority = 'high';
+        }
+
+        if ($report->priority != $priority) {
+            $report->priority = $priority;
+            $report->save();
+
+            Log::info('Priority updated', [
+                'report_id' => $report->id,
+                'old_priority' => $base_priority,
+                'new_priority' => $priority,
+                'num_reporters' => $num_reporters,
+            ]);
+        }
+    }
+
     public function destroy(Request $request, Report $report)
     {
-        $validated = $request->validate([
-            'reason' => 'required|string|max:255',
-        ]);
+        try {
+            $validated = $request->validate([
+                'reason' => 'required|string|max:255',
+            ]);
 
-        $report->status = "Deleted: " . $validated['reason'];
-        $report->save();
-        $report->delete();
+            // Store the original tracking code before deletion
+            $trackingCode = $report->tracking_code;
 
-        Activity::create([
-            'event' => 'report_deleted',
-            'description' => "Report deleted with reason: {$validated['reason']}",
-            'subject_type' => get_class($report),
-            'subject_id' => $report->id,
-            'causer_type' => Auth::check() ? get_class(Auth::user()) : null,
-            'causer_id' => Auth::id(),
-            'properties' => [
-                'tracking_code' => $report->tracking_code,
-                'reason' => $validated['reason'],
-            ],
-        ]);
+            $report->status = "Deleted: " . $validated['reason'];
+            $report->save();
+            $report->delete();
 
-        return redirect()->route('admin.reports')->with([
-            'swal' => [
-                'icon' => 'success',
-                'title' => 'Report Deleted',
-                'text' => 'Report deleted successfully.',
-            ],
-        ]);
+            Activity::create([
+                'event' => 'report_deleted',
+                'description' => "Report deleted with reason: {$validated['reason']}",
+                'subject_type' => get_class($report),
+                'subject_id' => $report->id,
+                'causer_type' => Auth::check() ? get_class(Auth::user()) : null,
+                'causer_id' => Auth::id(),
+                'properties' => [
+                    'tracking_code' => $trackingCode,
+                    'reason' => $validated['reason'],
+                ],
+            ]);
+
+            return redirect()->route('admin.reports')->with([
+                'swal' => [
+                    'icon' => 'success',
+                    'title' => 'Report Deleted',
+                    'text' => 'Report deleted successfully.',
+                ],
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Report deletion validation failed', ['errors' => $e->errors()]);
+            return redirect()->back()->with([
+                'swal' => [
+                    'icon' => 'error',
+                    'title' => 'Validation Error',
+                    'text' => 'Please provide a valid reason for deletion.',
+                ],
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Report deletion failed', [
+                'error' => $e->getMessage(),
+                'report_id' => $report->id,
+            ]);
+            return redirect()->back()->with([
+                'swal' => [
+                    'icon' => 'error',
+                    'title' => 'Deletion Failed',
+                    'text' => 'Failed to delete report. Please try again.',
+                ],
+            ]);
+        }
     }
 
     public function create()
@@ -910,18 +1057,20 @@ class ReportController extends Controller
     public function customerIndex(Request $request)
     {
         try {
-            // For customer side, show reports where:
-            // 1. The user_id matches the current user OR
-            // 2. The user is listed in the reporter_name of merged reports
+            // For customer side, show ONLY reports where user_id matches the current logged-in user
             $reports = Report::with(['photos'])
                 ->whereNull('deleted_at')
                 ->where('is_merged_reference', false)
-                ->where(function ($query) {
-                    $query->where('user_id', Auth::id())
-                        ->orWhere('reporter_name', 'LIKE', '%' . Auth::user()->name . '%');
-                })
+                ->where('user_id', Auth::id()) // STRICTLY only reports with this user_id
                 ->latest()
                 ->paginate(10);
+
+            // Debug logging to see what's happening
+            Log::debug('Customer reports query results', [
+                'user_id' => Auth::id(),
+                'reports_count' => $reports->count(),
+                'report_ids' => $reports->pluck('id')->toArray()
+            ]);
 
             return Inertia::render('Customer/Reports', [
                 'reports' => $reports,
@@ -994,8 +1143,18 @@ class ReportController extends Controller
             $reports = $query->paginate(5)
                 ->appends($request->query())
                 ->through(function ($report) {
-                    // Format user_types for display - PASS user_id
-                    $report->formatted_user_types = $this->formatUserTypes($report->user_types, $report->user_id);
+                    // Format user_types for display - PASS ALL REQUIRED PARAMETERS
+                    $report->formatted_user_types = $this->formatUserTypes(
+                        $report->user_types,
+                        $report->user_id,
+                        $report->reporter_name
+                    );
+
+                    // Add avatar_url to user if exists
+                    if ($report->user && $report->user->avatar) {
+                        $report->user->avatar_url = Storage::url($report->user->avatar);
+                    }
+
                     return $report;
                 });
 
@@ -1006,8 +1165,12 @@ class ReportController extends Controller
                 if (!$selectedReport || $selectedReport->deleted_at) {
                     $selectedReport = null;
                 } else {
-                    // Format user_types for selected report - PASS user_id
-                    $selectedReport->formatted_user_types = $this->formatUserTypes($selectedReport->user_types, $selectedReport->user_id);
+                    // Format user_types for selected report - PASS ALL REQUIRED PARAMETERS
+                    $selectedReport->formatted_user_types = $this->formatUserTypes(
+                        $selectedReport->user_types,
+                        $selectedReport->user_id,
+                        $selectedReport->reporter_name
+                    );
                 }
             }
 
@@ -1207,6 +1370,44 @@ class ReportController extends Controller
             ]);
         }
     }
+
+
+
+    public function getReportersData(Request $request)
+    {
+        try {
+            $reporters = $request->input('reporters', []);
+            $existingUserTypes = $request->input('existingUserTypes', []);
+
+            $result = [];
+
+            foreach ($reporters as $index => $reporterName) {
+                $user = User::where('name', trim($reporterName))->first();
+
+                $reporterType = $existingUserTypes[$index] ?? ($user ? 'Registered' : 'Guest');
+
+                $result[] = [
+                    'name' => $reporterName,
+                    'type' => $reporterType,
+                    'avatar' => $user && $user->avatar ? Storage::url($user->avatar) : null,
+                    'isRegistered' => $reporterType === 'Registered',
+                    'index' => $index
+                ];
+            }
+
+            return response()->json([
+                'success' => true,
+                'reporters' => $result
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to get reporters data', ['error' => $e->getMessage()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch reporter data'
+            ], 500);
+        }
+    }
+
 
     /**
      * Get statistics API endpoint (for AJAX updates)

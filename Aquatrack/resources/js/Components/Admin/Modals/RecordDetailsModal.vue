@@ -1,5 +1,509 @@
+<template>
+    <transition
+        enter-active-class="ease-out duration-300"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+        leave-active-class="ease-in duration-200"
+        leave-from-class="opacity-100"
+        leave-to-class="opacity-0"
+    >
+        <div v-if="show" class="fixed inset-0 z-50 overflow-y-auto">
+            <!-- Overlay -->
+            <div
+                class="fixed inset-0 bg-black/50 transition-opacity duration-300"
+                @click="emit('close')"
+            />
+
+            <!-- Modal Container -->
+            <div class="flex min-h-full items-stretch p-0">
+                <div
+                    class="relative w-full transform transition-all duration-300"
+                >
+                    <div
+                        class="bg-white flex flex-col"
+                        :class="
+                            isMaximized
+                                ? 'h-screen'
+                                : 'h-[90vh] max-w-6xl mx-auto mt-8 rounded-xl shadow-2xl'
+                        "
+                    >
+                        <!-- Fixed Header -->
+                        <div
+                            class="flex items-center justify-between py-4 border-b border-gray-200 flex-shrink-0 bg-white px-6"
+                        >
+                            <h2 class="text-xl font-semibold text-gray-900">
+                                Concessioner's Record Details
+                            </h2>
+                            <div class="flex items-center space-x-2">
+                                <!-- Maximize/Minimize Button -->
+                                <button
+                                    @click="toggleMaximize"
+                                    class="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                                    :title="
+                                        isMaximized ? 'Minimize' : 'Maximize'
+                                    "
+                                >
+                                    <v-icon
+                                        :name="
+                                            isMaximized
+                                                ? 'bi-fullscreen-exit'
+                                                : 'bi-fullscreen'
+                                        "
+                                        class="w-5 h-5"
+                                    />
+                                </button>
+                                <!-- Close Button -->
+                                <button
+                                    @click="emit('close')"
+                                    class="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                                >
+                                    <v-icon name="bi-x-lg" class="w-5 h-5" />
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Loading State -->
+                        <div
+                            v-if="loading"
+                            class="flex-1 flex items-center justify-center"
+                        >
+                            <div class="text-center">
+                                <div
+                                    class="w-10 h-10 border-3 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"
+                                ></div>
+                                <p class="text-gray-500">
+                                    Loading record details...
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Scrollable Content -->
+                        <div
+                            v-else-if="record"
+                            class="flex-1 overflow-y-auto p-6"
+                        >
+                            <div class="space-y-6 max-w-7xl mx-auto">
+                                <!-- Status and Info Badges -->
+                                <div class="flex flex-wrap gap-4">
+                                    <div
+                                        class="flex items-center bg-gray-50 px-4 py-3 rounded-lg border border-gray-200"
+                                    >
+                                        <v-icon
+                                            name="bi-circle-fill"
+                                            class="w-5 h-5 text-blue-500 mr-2"
+                                        />
+                                        <span
+                                            class="text-base font-medium text-gray-700"
+                                            >Record ID: {{ record.id }}</span
+                                        >
+                                    </div>
+                                    <span
+                                        class="px-4 py-3 text-base font-semibold rounded-lg border"
+                                        :class="statusClass"
+                                    >
+                                        {{ statusLabel }}
+                                    </span>
+                                    <div
+                                        class="flex items-center bg-gray-50 px-4 py-3 rounded-lg border border-gray-200"
+                                    >
+                                        <v-icon
+                                            name="bi-calendar"
+                                            class="w-5 h-5 text-gray-500 mr-2"
+                                        />
+                                        <span class="text-base text-gray-700">
+                                            {{
+                                                formatDate(record.reading_date)
+                                            }}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- Main Grid Layout -->
+                                <div
+                                    class="grid grid-cols-1 xl:grid-cols-2 gap-8"
+                                >
+                                    <!-- Left Column -->
+                                    <div class="space-y-8">
+                                        <!-- Customer Information -->
+                                        <div
+                                            class="bg-white border border-gray-200 rounded-xl shadow-sm"
+                                        >
+                                            <div
+                                                class="bg-gray-50 px-6 py-4 border-b border-gray-200"
+                                            >
+                                                <h3
+                                                    class="text-lg font-semibold text-gray-900 flex items-center"
+                                                >
+                                                    <v-icon
+                                                        name="bi-person"
+                                                        class="w-5 h-5 text-blue-600 mr-2"
+                                                    />
+                                                    Customer Information
+                                                </h3>
+                                            </div>
+                                            <div class="p-6 space-y-4">
+                                                <div
+                                                    class="grid grid-cols-1 gap-4"
+                                                >
+                                                    <div>
+                                                        <label
+                                                            class="text-sm text-gray-500 font-medium"
+                                                            >Full Name</label
+                                                        >
+                                                        <p
+                                                            class="text-base font-medium text-gray-900 mt-2"
+                                                        >
+                                                            {{
+                                                                record.user.name
+                                                            }}
+                                                            {{
+                                                                record.user
+                                                                    .lastname
+                                                            }}
+                                                        </p>
+                                                    </div>
+                                                    <div
+                                                        class="grid grid-cols-2 gap-4"
+                                                    >
+                                                        <div>
+                                                            <label
+                                                                class="text-sm text-gray-500 font-medium"
+                                                                >Account
+                                                                Number</label
+                                                            >
+                                                            <p
+                                                                class="text-base font-medium text-gray-900 mt-2"
+                                                            >
+                                                                {{
+                                                                    record.user
+                                                                        .account_number
+                                                                }}
+                                                            </p>
+                                                        </div>
+                                                        <div>
+                                                            <label
+                                                                class="text-sm text-gray-500 font-medium"
+                                                                >Serial
+                                                                Number</label
+                                                            >
+                                                            <p
+                                                                class="text-base font-medium text-gray-900 mt-2"
+                                                            >
+                                                                {{
+                                                                    record.user
+                                                                        .serial_number
+                                                                }}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <label
+                                                            class="text-sm text-gray-500 font-medium"
+                                                            >Address</label
+                                                        >
+                                                        <p
+                                                            class="text-base font-medium text-gray-900 mt-2"
+                                                        >
+                                                            {{
+                                                                record.user
+                                                                    .zone
+                                                            }},
+                                                            {{
+                                                                record.user
+                                                                    .barangay
+                                                            }},
+                                                            {{
+                                                                record.user
+                                                                    .municipality
+                                                            }},
+                                                            {{
+                                                                record.user
+                                                                    .province
+                                                            }}
+                                                        </p>
+                                                    </div>
+                                                    <div
+                                                        class="grid grid-cols-2 gap-4"
+                                                    >
+                                                        <div>
+                                                            <label
+                                                                class="text-sm text-gray-500 font-medium"
+                                                                >Contact
+                                                                Number</label
+                                                            >
+                                                            <p
+                                                                class="text-base font-medium text-gray-900 mt-2"
+                                                            >
+                                                                {{
+                                                                    record.user
+                                                                        .phone ||
+                                                                    "N/A"
+                                                                }}
+                                                            </p>
+                                                        </div>
+                                                        <div>
+                                                            <label
+                                                                class="text-sm text-gray-500 font-medium"
+                                                                >Email</label
+                                                            >
+                                                            <p
+                                                                class="text-base font-medium text-gray-900 mt-2"
+                                                            >
+                                                                {{
+                                                                    record.user
+                                                                        .email ||
+                                                                    "N/A"
+                                                                }}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Right Column -->
+                                    <div class="space-y-8">
+                                        <!-- Reading Information -->
+                                        <div
+                                            class="bg-white border border-gray-200 rounded-xl shadow-sm"
+                                        >
+                                            <div
+                                                class="bg-gray-50 px-6 py-4 border-b border-gray-200"
+                                            >
+                                                <h3
+                                                    class="text-lg font-semibold text-gray-900 flex items-center"
+                                                >
+                                                    <v-icon
+                                                        name="bi-speedometer2"
+                                                        class="w-5 h-5 text-blue-600 mr-2"
+                                                    />
+                                                    Reading Information
+                                                </h3>
+                                            </div>
+                                            <div class="p-6 space-y-4">
+                                                <div
+                                                    class="grid grid-cols-2 gap-4"
+                                                >
+                                                    <div>
+                                                        <label
+                                                            class="text-sm text-gray-500 font-medium"
+                                                            >Reading Date</label
+                                                        >
+                                                        <p
+                                                            class="text-base font-medium text-gray-900 mt-2"
+                                                        >
+                                                            {{
+                                                                formatDate(
+                                                                    record.reading_date
+                                                                )
+                                                            }}
+                                                        </p>
+                                                    </div>
+                                                    <div>
+                                                        <label
+                                                            class="text-sm text-gray-500 font-medium"
+                                                            >Due Date</label
+                                                        >
+                                                        <p
+                                                            class="text-base font-medium text-gray-900 mt-2"
+                                                            :class="{
+                                                                'text-red-600':
+                                                                    record.status ===
+                                                                        'Overdue' &&
+                                                                    surcharge,
+                                                            }"
+                                                        >
+                                                            {{
+                                                                formatDate(
+                                                                    record.due_date
+                                                                )
+                                                            }}
+                                                        </p>
+                                                    </div>
+                                                    <div>
+                                                        <label
+                                                            class="text-sm text-gray-500 font-medium"
+                                                            >Current
+                                                            Reading</label
+                                                        >
+                                                        <p
+                                                            class="text-base font-medium text-gray-900 mt-2"
+                                                        >
+                                                            {{
+                                                                record.reading
+                                                            }}
+                                                            m³
+                                                        </p>
+                                                    </div>
+                                                    <div>
+                                                        <label
+                                                            class="text-sm text-gray-500 font-medium"
+                                                            >Consumption</label
+                                                        >
+                                                        <p
+                                                            class="text-base font-medium text-gray-900 mt-2"
+                                                        >
+                                                            {{
+                                                                record.consumption
+                                                            }}
+                                                            m³
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Payment Information -->
+                                        <div
+                                            class="bg-white border border-gray-200 rounded-xl shadow-sm"
+                                        >
+                                            <div
+                                                class="bg-gray-50 px-6 py-4 border-b border-gray-200"
+                                            >
+                                                <h3
+                                                    class="text-lg font-semibold text-gray-900 flex items-center"
+                                                >
+                                                    <v-icon
+                                                        name="bi-cash-coin"
+                                                        class="w-5 h-5 text-blue-600 mr-2"
+                                                    />
+                                                    Payment Information
+                                                </h3>
+                                            </div>
+                                            <div class="p-6 space-y-4">
+                                                <div
+                                                    class="grid grid-cols-2 gap-4"
+                                                >
+                                                    <div>
+                                                        <label
+                                                            class="text-sm text-gray-500 font-medium"
+                                                            >Base Amount</label
+                                                        >
+                                                        <p
+                                                            class="text-base font-medium text-gray-900 mt-2"
+                                                        >
+                                                            ₱{{ record.amount }}
+                                                        </p>
+                                                    </div>
+                                                    <div
+                                                        v-if="
+                                                            surcharge &&
+                                                            record.status !==
+                                                                'Paid'
+                                                        "
+                                                    >
+                                                        <label
+                                                            class="text-sm text-gray-500 font-medium"
+                                                            >Surcharge</label
+                                                        >
+                                                        <p
+                                                            class="text-base font-medium text-red-600 mt-2"
+                                                        >
+                                                            ₱{{ surcharge }}
+                                                        </p>
+                                                    </div>
+                                                    <div class="col-span-2">
+                                                        <label
+                                                            class="text-sm text-gray-500 font-medium"
+                                                            >Total Amount</label
+                                                        >
+                                                        <p
+                                                            class="text-2xl font-bold text-gray-900 mt-2"
+                                                        >
+                                                            ₱{{ totalAmount }}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Status Information -->
+                                        <div
+                                            class="bg-white border border-gray-200 rounded-xl shadow-sm"
+                                        >
+                                            <div
+                                                class="bg-gray-50 px-6 py-4 border-b border-gray-200"
+                                            >
+                                                <h3
+                                                    class="text-lg font-semibold text-gray-900 flex items-center"
+                                                >
+                                                    <v-icon
+                                                        name="bi-info-circle"
+                                                        class="w-5 h-5 text-blue-600 mr-2"
+                                                    />
+                                                    Status Information
+                                                </h3>
+                                            </div>
+                                            <div class="p-6 space-y-4">
+                                                <div
+                                                    class="grid grid-cols-2 gap-4"
+                                                >
+                                                    <div>
+                                                        <label
+                                                            class="text-sm text-gray-500 font-medium"
+                                                            >Payment
+                                                            Status</label
+                                                        >
+                                                        <div class="mt-2">
+                                                            <span
+                                                                class="px-3 py-1.5 text-sm font-semibold rounded-full"
+                                                                :class="
+                                                                    statusClass
+                                                                "
+                                                            >
+                                                                {{
+                                                                    statusLabel
+                                                                }}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <label
+                                                            class="text-sm text-gray-500 font-medium"
+                                                            >Days Status</label
+                                                        >
+                                                        <p
+                                                            class="text-base font-medium text-gray-900 mt-2"
+                                                            :class="{
+                                                                'text-red-600':
+                                                                    record.status ===
+                                                                    'Overdue',
+                                                            }"
+                                                        >
+                                                            {{ getDaysStatus }}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Fixed Footer -->
+                        <div
+                            class="border-t border-gray-200 px-6 py-4 bg-gray-50 flex justify-end flex-shrink-0"
+                        >
+                            <button
+                                @click="emit('close')"
+                                type="button"
+                                class="inline-flex items-center px-5 py-2 border border-gray-300 shadow-sm text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                            >
+                                <v-icon name="bi-x-lg" class="mr-2" />
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </transition>
+</template>
+
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed } from "vue";
 
 const props = defineProps({
     show: {
@@ -18,376 +522,74 @@ const props = defineProps({
 
 const emit = defineEmits(["close"]);
 
+// State
+const isMaximized = ref(false);
+
+// Computed Properties
 const statusClass = computed(() => {
-    if (!props.record || !props.record.status) return "";
-    switch (props.record.status.toLowerCase()) {
-        case "paid":
-            return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
-        case "pending":
-            return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
-        case "overdue":
-            return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
-        default:
-            return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
-    }
+    if (!props.record?.status)
+        return "bg-gray-100 text-gray-800 border-gray-200";
+
+    const classes = {
+        paid: "bg-green-100 text-green-800 border-green-200",
+        pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
+        overdue: "bg-red-100 text-red-800 border-red-200",
+    };
+
+    return (
+        classes[props.record.status.toLowerCase()] ||
+        "bg-gray-100 text-gray-800 border-gray-200"
+    );
 });
 
 const statusLabel = computed(() => {
-    if (!props.record || !props.record.status) return "";
+    if (!props.record?.status) return "Unknown";
     return (
         props.record.status.charAt(0).toUpperCase() +
         props.record.status.slice(1)
     );
 });
 
-// Format date for display
+const surcharge = computed(() => {
+    if (!props.record?.surcharge || props.record.status === "Paid") {
+        return null;
+    }
+    return props.record.surcharge;
+});
+
+const totalAmount = computed(() => {
+    const baseAmount = parseFloat(props.record?.amount) || 0;
+    const surchargeAmount = parseFloat(surcharge.value) || 0;
+    return (baseAmount + surchargeAmount).toFixed(2);
+});
+
+const getDaysStatus = computed(() => {
+    if (!props.record?.due_date) return "N/A";
+
+    const dueDate = new Date(props.record.due_date);
+    const today = new Date();
+    const diffTime = dueDate - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays > 0) {
+        return `Due in ${diffDays} day${diffDays !== 1 ? "s" : ""}`;
+    } else if (diffDays === 0) {
+        return "Due today";
+    } else {
+        return `Overdue by ${Math.abs(diffDays)} day${
+            Math.abs(diffDays) !== 1 ? "s" : ""
+        }`;
+    }
+});
+
+// Methods
+const toggleMaximize = () => {
+    isMaximized.value = !isMaximized.value;
+};
+
 const formatDate = (dateString) => {
     if (!dateString) return "N/A";
     const options = { year: "numeric", month: "long", day: "numeric" };
     return new Date(dateString).toLocaleDateString(undefined, options);
 };
-
-// Computed property for surcharge
-const surcharge = computed(() => {
-    if (!props.record || !props.record.surcharge || props.record.status === "Paid") {
-        return null;
-    }
-    return props.record.surcharge;
-});
 </script>
-
-<template>
-    <!-- Single transition wrapper for both overlay and panel -->
-    <transition name="modal">
-        <div v-if="show" class="fixed inset-0 z-[1000] overflow-hidden">
-            <!-- Overlay -->
-            <div class="absolute inset-0 bg-black/50 transition-opacity duration-300" @click="emit('close')"></div>
-
-            <!-- Sliding panel container -->
-            <div class="fixed inset-y-0 right-0 w-full max-w-2xl flex">
-                <!-- Panel with transform class for animation -->
-                <div class="relative w-full h-full transform transition-transform duration-300 ease-in-out">
-                    <div class="h-full flex flex-col bg-white dark:bg-gray-800 shadow-xl">
-                        <!-- Header -->
-                        <div
-                            class="flex items-center justify-between px-6 py-5 bg-gradient-to-r from-[#062F64] to-[#1E4272]">
-                            <div class="flex items-center space-x-3">
-                                <v-icon name="bi-clipboard-data" class="text-amber-300" scale="1.5" />
-                                <span class="text-white font-semibold text-xl">Concessioner's Record Details</span>
-                            </div>
-                            <button @click="emit('close')"
-                                class="text-white hover:text-gray-200 transition-colors duration-200 p-2 rounded-full hover:bg-white/10 flex items-center justify-center"
-                                aria-label="Close modal">
-                                <v-icon name="bi-x-lg" class="h-5 w-5" />
-                            </button>
-                        </div>
-
-                        <!-- Loading state -->
-                        <div v-if="loading" class="flex-1 flex items-center justify-center">
-                            <div class="text-center">
-                                <div
-                                    class="w-10 h-10 border-3 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4">
-                                </div>
-                                <p class="text-gray-500 dark:text-gray-400">
-                                    Loading record details...
-                                </p>
-                            </div>
-                        </div>
-
-                        <!-- Content -->
-                        <div v-else-if="record" class="flex-1 overflow-y-auto p-6">
-                            <div class="space-y-6">
-                                <!-- Customer Information -->
-                                <div
-                                    class="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 p-5 rounded-xl shadow-sm">
-                                    <h3
-                                        class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center pb-2 border-b border-gray-100 dark:border-gray-600">
-                                        <v-icon name="bi-person" class="mr-3 text-blue-600" />
-                                        Customer Information
-                                    </h3>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div class="flex items-start p-3 rounded-lg bg-gray-50 dark:bg-gray-600/30">
-                                            <v-icon name="bi-person-badge" class="mr-3 mt-0.5 text-blue-500" />
-                                            <div>
-                                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                                                    Customer Name
-                                                </p>
-                                                <p class="font-semibold text-gray-900 dark:text-white">
-                                                    {{ record.user.name }}
-                                                    {{ record.user.lastname }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-start p-3 rounded-lg bg-gray-50 dark:bg-gray-600/30">
-                                            <v-icon name="bi-hash" class="mr-3 mt-0.5 text-blue-500" />
-                                            <div>
-                                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                                                    Account Number
-                                                </p>
-                                                <p class="font-semibold text-gray-900 dark:text-white">
-                                                    {{
-                                                        record.user
-                                                            .account_number
-                                                    }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-start p-3 rounded-lg bg-gray-50 dark:bg-gray-600/30">
-                                            <v-icon name="bi-upc-scan" class="mr-3 mt-0.5 text-blue-500" />
-                                            <div>
-                                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                                                    Serial Number
-                                                </p>
-                                                <p class="font-semibold text-gray-900 dark:text-white">
-                                                    {{
-                                                        record.user
-                                                            .serial_number
-                                                    }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-start p-3 rounded-lg bg-gray-50 dark:bg-gray-600/30">
-                                            <v-icon name="bi-geo-alt" class="mr-3 mt-0.5 text-blue-500" />
-                                            <div>
-                                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                                                    Address
-                                                </p>
-                                                <p class="font-semibold text-gray-900 dark:text-white">
-                                                    {{ record.user.province }},
-                                                    {{
-                                                        record.user
-                                                            .municipality
-                                                    }},
-                                                    {{ record.user.barangay }},
-                                                    {{ record.user.zone }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-start p-3 rounded-lg bg-gray-50 dark:bg-gray-600/30">
-                                            <v-icon name="bi-telephone" class="mr-3 mt-0.5 text-blue-500" />
-                                            <div>
-                                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                                                    Contact Number
-                                                </p>
-                                                <p class="font-semibold text-gray-900 dark:text-white">
-                                                    {{
-                                                        record.user.phone ||
-                                                        "N/A"
-                                                    }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-start p-3 rounded-lg bg-gray-50 dark:bg-gray-600/30">
-                                            <v-icon name="bi-envelope" class="mr-3 mt-0.5 text-blue-500" />
-                                            <div>
-                                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                                                    Email
-                                                </p>
-                                                <p class="font-semibold text-gray-900 dark:text-white">
-                                                    {{
-                                                        record.user.email ||
-                                                        "N/A"
-                                                    }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Reading Information -->
-                                <div
-                                    class="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 p-5 rounded-xl shadow-sm">
-                                    <h3
-                                        class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center pb-2 border-b border-gray-100 dark:border-gray-600">
-                                        <v-icon name="bi-speedometer2" class="mr-3 text-blue-600" />
-                                        Reading Information
-                                    </h3>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div class="flex items-start p-3 rounded-lg bg-gray-50 dark:bg-gray-600/30">
-                                            <v-icon name="bi-calendar-check" class="mr-3 mt-0.5 text-blue-500" />
-                                            <div>
-                                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                                                    Reading Date
-                                                </p>
-                                                <p class="font-semibold text-gray-900 dark:text-white">
-                                                    {{
-                                                        formatDate(
-                                                            record.reading_date
-                                                        )
-                                                    }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-start p-3 rounded-lg bg-gray-50 dark:bg-gray-600/30">
-                                            <v-icon name="bi-calendar-x" class="mr-3 mt-0.5 text-blue-500" />
-                                            <div>
-                                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                                                    Due Date
-                                                </p>
-                                                <p class="font-semibold text-gray-900 dark:text-white" :class="{
-                                                    'text-red-600 dark:text-red-400':
-                                                        record.status ===
-                                                        'Overdue' &&
-                                                        surcharge,
-                                                }">
-                                                    {{ formatDate(record.due_date) }}
-                                                    <span v-if="record.status === 'Overdue' && surcharge"
-                                                        class="text-xs ml-2 px-2 py-1 bg-red-100 text-red-800 rounded-full">Overdue</span>
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-start p-3 rounded-lg bg-gray-50 dark:bg-gray-600/30">
-                                            <v-icon name="bi-water" class="mr-3 mt-0.5 text-blue-500" />
-                                            <div>
-                                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                                                    Current Reading (m³)
-                                                </p>
-                                                <p class="font-semibold text-gray-900 dark:text-white">
-                                                    {{ record.reading }} m³
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-start p-3 rounded-lg bg-gray-50 dark:bg-gray-600/30">
-                                            <v-icon name="bi-arrow-left-right" class="mr-3 mt-0.5 text-blue-500" />
-                                            <div>
-                                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                                                    Consumption (m³)
-                                                </p>
-                                                <p class="font-semibold text-gray-900 dark:text-white">
-                                                    {{ record.consumption }} m³
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-start p-3 rounded-lg bg-gray-50 dark:bg-gray-600/30">
-                                            <v-icon name="bi-cash-coin" class="mr-3 mt-0.5 text-blue-500" />
-                                            <div>
-                                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                                                    Amount
-                                                </p>
-                                                <p class="font-semibold text-gray-900 dark:text-white text-lg">
-                                                    ₱{{ record.amount }}
-                                                    <span v-if="surcharge && record.status !== 'Paid'"
-                                                        class="text-sm text-red-600 dark:text-red-400">
-                                                        (+₱{{ surcharge }} surcharge)
-                                                    </span>
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-start p-3 rounded-lg bg-gray-50 dark:bg-gray-600/30">
-                                            <v-icon name="bi-check-circle" class="mr-3 mt-0.5 text-blue-500" />
-                                            <div>
-                                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                                                    Status
-                                                </p>
-                                                <span class="px-3 py-1.5 text-sm font-semibold rounded-full"
-                                                    :class="statusClass">
-                                                    {{ statusLabel }}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Footer -->
-                        <div
-                            class="border-t border-gray-200 dark:border-gray-600 px-6 py-4 bg-gray-50 dark:bg-gray-700">
-                            <div class="flex justify-between items-center">
-                                <div class="text-sm text-gray-500 dark:text-gray-400">
-                                    Record ID: {{ record.id }}
-                                </div>
-                                <button @click="emit('close')" type="button"
-                                    class="inline-flex justify-center items-center rounded-lg border border-gray-300 dark:border-gray-500 shadow-sm px-4 py-2.5 bg-white dark:bg-gray-600 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
-                                    <v-icon name="bi-x-lg" class="mr-2" />
-                                    Close
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </transition>
-</template>
-
-<style scoped>
-/* Custom scrollbar for the content */
-.overflow-y-auto {
-    scrollbar-width: thin;
-    scrollbar-color: #e2e8f0 #f8fafc;
-}
-
-.overflow-y-auto::-webkit-scrollbar {
-    width: 8px;
-}
-
-.overflow-y-auto::-webkit-scrollbar-track {
-    background: #f8fafc;
-    border-radius: 4px;
-}
-
-.overflow-y-auto::-webkit-scrollbar-thumb {
-    background-color: #cbd5e1;
-    border-radius: 4px;
-}
-
-.overflow-y-auto::-webkit-scrollbar-thumb:hover {
-    background-color: #94a3b8;
-}
-
-/* Dark mode scrollbar */
-.dark .overflow-y-auto {
-    scrollbar-color: #4b5563 #1f2937;
-}
-
-.dark .overflow-y-auto::-webkit-scrollbar-track {
-    background: #1f2937;
-}
-
-.dark .overflow-y-auto::-webkit-scrollbar-thumb {
-    background-color: #4b5563;
-}
-
-.dark .overflow-y-auto::-webkit-scrollbar-thumb:hover {
-    background-color: #6b7280;
-}
-
-/* Modal transition styles */
-.modal-enter-active,
-.modal-leave-active {
-    transition: opacity 0.3s ease;
-}
-
-.modal-enter-from,
-.modal-leave-to {
-    opacity: 0;
-}
-
-.modal-enter-active .transform,
-.modal-leave-active .transform {
-    transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.5, 1);
-}
-
-.modal-enter-from .transform {
-    transform: translateX(100%);
-}
-
-.modal-leave-to .transform {
-    transform: translateX(100%);
-}
-
-/* Animation for info cards */
-.bg-gray-50 {
-    transition: all 0.2s ease;
-}
-
-.bg-gray-50:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-}
-
-.dark .bg-gray-50:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-</style>

@@ -20,7 +20,7 @@
                     <div class="h-full flex flex-col bg-white shadow-xl">
                         <!-- Header -->
                         <div
-                            class="flex items-center justify-between px-4 py-6 bg-gradient-to-r from-[#062F64] to-[#1E4272]"
+                            class="flex items-center justify-between px-4 py-4 border-b "
                         >
                             <div class="flex items-center space-x-2">
                                 <v-icon
@@ -28,7 +28,7 @@
                                     class="text-amber-300"
                                     scale="1.5"
                                 />
-                                <span class="text-white font-[200] text-xl"
+                                <span class="text-black font-md text-xl"
                                     >User Details</span
                                 >
                             </div>
@@ -53,7 +53,7 @@
                                 <!-- Close Button -->
                                 <button
                                     @click="emit('close')"
-                                    class="text-white hover:text-gray-200 transition-colors duration-200 p-1 rounded-full hover:bg-white/10"
+                                    class="text-black hover:text-gray-700 transition-colors duration-200 p-1 rounded-full hover:bg-white/10"
                                 >
                                     <v-icon name="bi-x-lg" class="h-6 w-6" />
                                 </button>

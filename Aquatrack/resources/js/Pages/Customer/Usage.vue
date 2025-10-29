@@ -1,30 +1,30 @@
 <template>
     <CustomerLayout>
         <div
-            class="w-full bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
+            class="w-full bg-white dark:bg-gray-800 rounded-lg shadow-xs border border-gray-200 dark:border-gray-700 overflow-hidden"
         >
             <!-- Header Section -->
-            <div
-                class=" p-6 border-b border-gray-200 dark:border-gray-700"
-            >
+            <div class="p-5 border-b border-gray-200 dark:border-gray-700">
                 <div
                     class="flex flex-col md:flex-row md:items-center justify-between gap-4"
                 >
                     <div>
                         <h2
-                            class="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-3"
+                            class="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-3"
                         >
                             <div
                                 class="p-2 bg-blue-100 dark:bg-blue-800 rounded-lg"
                             >
                                 <v-icon
                                     name="bi-graph-up"
-                                    class="w-6 h-6 text-blue-600 dark:text-blue-300"
+                                    class="w-5 h-5 text-blue-600 dark:text-blue-300"
                                 />
                             </div>
                             Water Usage History
                         </h2>
-                        <p class="text-gray-600 dark:text-gray-300 mt-2">
+                        <p
+                            class="text-gray-600 dark:text-gray-300 text-sm mt-1"
+                        >
                             Track your monthly water consumption and billing
                             information
                         </p>
@@ -38,10 +38,10 @@
                         <div class="flex items-center gap-2">
                             <v-icon
                                 name="bi-exclamation-triangle-fill"
-                                class="w-5 h-5 text-red-600 dark:text-red-400"
+                                class="w-4 h-4 text-red-600 dark:text-red-400"
                             />
                             <span
-                                class="text-red-700 dark:text-red-300 font-medium"
+                                class="text-red-700 dark:text-red-300 text-sm font-medium"
                             >
                                 {{ overdueBills }} overdue bill{{
                                     overdueBills > 1 ? "s" : ""
@@ -54,111 +54,16 @@
             </div>
 
             <!-- Main Content -->
-            <div class="p-6">
-                <!-- Stats Overview Cards -->
-                <!-- <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <div
-                        class="bg-blue-50 dark:bg-blue-900/20 p-5 rounded-xl border border-blue-100 dark:border-blue-800/30"
-                    >
-                        <div class="flex items-center justify-between">
-                            <h3
-                                class="text-sm font-medium text-blue-800 dark:text-blue-300"
-                            >
-                                Current Month Usage
-                            </h3>
-                            <v-icon
-                                name="bi-droplet-half"
-                                class="w-5 h-5 text-blue-500"
-                            />
-                        </div>
-                        <p
-                            class="text-2xl font-bold text-blue-900 dark:text-blue-100 mt-2"
-                        >
-                            {{ currentMonthUsage }} m³
-                        </p>
-                        <p
-                            class="text-sm text-blue-700 dark:text-blue-300 mt-1"
-                        >
-                            {{ currentMonthChange }}
-                        </p>
-                    </div>
-
-                    <div
-                        class="bg-green-50 dark:bg-green-900/20 p-5 rounded-xl border border-green-100 dark:border-green-800/30"
-                    >
-                        <div class="flex items-center justify-between">
-                            <h3
-                                class="text-sm font-medium text-green-800 dark:text-green-300"
-                            >
-                                Average Monthly Usage
-                            </h3>
-                            <v-icon
-                                name="bi-speedometer2"
-                                class="w-5 h-5 text-green-500"
-                            />
-                        </div>
-                        <p
-                            class="text-2xl font-bold text-green-900 dark:text-green-100 mt-2"
-                        >
-                            {{ averageUsage }} m³
-                        </p>
-                        <p
-                            class="text-sm text-green-700 dark:text-green-300 mt-1"
-                        >
-                            Last 6 months
-                        </p>
-                    </div>
-
-                    <div
-                        class="bg-purple-50 dark:bg-purple-900/20 p-5 rounded-xl border border-purple-100 dark:border-purple-800/30"
-                    >
-                        <div class="flex items-center justify-between">
-                            <h3
-                                class="text-sm font-medium text-purple-800 dark:text-purple-300"
-                            >
-                                Total Amount Due
-                            </h3>
-                            <v-icon
-                                name="bi-cash-coin"
-                                class="w-5 h-5 text-purple-500"
-                            />
-                        </div>
-                        <p
-                            class="text-2xl font-bold text-purple-900 dark:text-purple-100 mt-2"
-                        >
-                            ₱{{ totalAmountDue }}
-                        </p>
-                        <p
-                            class="text-sm mt-1"
-                            :class="
-                                overdueBills > 0
-                                    ? 'text-red-600 dark:text-red-400 font-medium'
-                                    : 'text-purple-700 dark:text-purple-300'
-                            "
-                        >
-                            <span v-if="overdueBills > 0">
-                                {{ overdueBills }} overdue bill{{
-                                    overdueBills > 1 ? "s" : ""
-                                }}
-                            </span>
-                            <span v-else>
-                                {{ pendingBills }} pending bill{{
-                                    pendingBills > 1 ? "s" : ""
-                                }}
-                            </span>
-                        </p>
-                    </div>
-                </div> -->
-
+            <div class="p-5">
                 <!-- Chart Section -->
                 <div
-                    class="bg-gray-50 dark:bg-gray-700/30 p-6 rounded-xl mb-8 border border-gray-200 dark:border-gray-600"
+                    class="bg-gray-50 dark:bg-gray-700/30 p-5 rounded-lg mb-6 border border-gray-200 dark:border-gray-600"
                 >
                     <div
-                        class="flex flex-col sm:flex-row sm:items-center justify-between mb-6"
+                        class="flex flex-col sm:flex-row sm:items-center justify-between mb-5"
                     >
                         <h3
-                            class="text-lg font-semibold text-gray-800 dark:text-white"
+                            class="text-base font-semibold text-gray-800 dark:text-white"
                         >
                             Monthly Usage and Billing Trend
                         </h3>
@@ -169,7 +74,7 @@
                                 :key="period"
                                 @click="selectedPeriod = period"
                                 :class="[
-                                    'px-3 py-1.5 text-sm rounded-lg transition-colors',
+                                    'px-3 py-1.5 text-xs rounded-lg transition-colors',
                                     selectedPeriod === period
                                         ? 'bg-blue-100 text-blue-700 dark:bg-blue-800 dark:text-blue-200 font-medium'
                                         : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600',
@@ -180,38 +85,38 @@
                         </div>
                     </div>
 
-                    <div class="h-72 md:h-80">
+                    <div class="h-64 md:h-72">
                         <canvas ref="usageChart"></canvas>
                     </div>
                 </div>
 
                 <!-- Usage Table -->
                 <div
-                    class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
+                    class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
                 >
                     <div
-                        class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row sm:items-center justify-between"
+                        class="px-5 py-4 border-b border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                     >
                         <h3
-                            class="text-lg font-semibold text-gray-800 dark:text-white"
+                            class="text-base font-semibold text-gray-800 dark:text-white"
                         >
                             Billing History
                         </h3>
 
-                        <div class="mt-3 sm:mt-0 relative">
+                        <div class="relative">
                             <div
                                 class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
                             >
                                 <v-icon
                                     name="hi-search"
-                                    class="h-4 w-4 text-gray-400"
+                                    class="h-3.5 w-3.5 text-gray-400"
                                 />
                             </div>
                             <input
                                 type="text"
                                 v-model="searchQuery"
                                 placeholder="Search months..."
-                                class="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                                class="pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white w-full sm:w-48"
                             />
                         </div>
                     </div>
@@ -223,7 +128,7 @@
                             <thead class="bg-gray-50 dark:bg-gray-700">
                                 <tr>
                                     <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
+                                        class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
                                         @click="sortTable('month')"
                                     >
                                         <div class="flex items-center">
@@ -242,7 +147,7 @@
                                         </div>
                                     </th>
                                     <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
+                                        class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
                                         @click="sortTable('usage')"
                                     >
                                         <div class="flex items-center">
@@ -261,7 +166,7 @@
                                         </div>
                                     </th>
                                     <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
+                                        class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
                                         @click="sortTable('amount')"
                                     >
                                         <div class="flex items-center">
@@ -280,17 +185,17 @@
                                         </div>
                                     </th>
                                     <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                        class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
                                     >
                                         Due Date
                                     </th>
                                     <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                        class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
                                     >
                                         Status
                                     </th>
                                     <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                        class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
                                     >
                                         Actions
                                     </th>
@@ -304,30 +209,30 @@
                                     :key="index"
                                     class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                                 >
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                    <td class="px-4 py-3 whitespace-nowrap">
                                         <div
                                             class="text-sm font-medium text-gray-900 dark:text-white"
                                         >
                                             {{ usage.month }}
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                    <td class="px-4 py-3 whitespace-nowrap">
                                         <div
                                             class="text-sm text-gray-900 dark:text-white"
                                         >
                                             {{ usage.usage }} m³
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                    <td class="px-4 py-3 whitespace-nowrap">
                                         <div
                                             class="text-sm font-medium text-gray-900 dark:text-white"
                                         >
                                             ₱{{ usage.amount }}
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                    <td class="px-4 py-3 whitespace-nowrap">
                                         <div
-                                            class="text-sm text-gray-600 dark:text-gray-400"
+                                            class="text-xs text-gray-600 dark:text-gray-400"
                                         >
                                             {{
                                                 usage.due_date_formatted ||
@@ -335,10 +240,10 @@
                                             }}
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                    <td class="px-4 py-3 whitespace-nowrap">
                                         <span
                                             :class="statusClasses(usage.status)"
-                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                                            class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
                                         >
                                             <v-icon
                                                 :name="
@@ -350,33 +255,19 @@
                                         </span>
                                     </td>
                                     <td
-                                        class="px-6 py-4 whitespace-nowrap text-sm font-medium"
+                                        class="px-4 py-3 whitespace-nowrap text-sm font-medium"
                                     >
-                                        <div class="flex space-x-2 ml-4">
+                                        <div class="flex space-x-1">
                                             <button
                                                 @click="openUsageModal(usage)"
-                                                class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 p-1.5 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
+                                                class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 p-1 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
                                                 title="View Details"
                                             >
                                                 <v-icon
                                                     name="bi-eye-fill"
-                                                    class="w-4 h-4"
+                                                    class="w-3.5 h-3.5"
                                                 />
                                             </button>
-                                            <!-- <button
-                                                v-if="
-                                                    usage.status ===
-                                                        'Pending' ||
-                                                    usage.status === 'Overdue'
-                                                "
-                                                class="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 p-1.5 rounded-md hover:bg-green-50 dark:hover:bg-green-900/30 transition-colors"
-                                                title="Pay Bill"
-                                            >
-                                                <v-icon
-                                                    name="bi-credit-card-fill"
-                                                    class="w-4 h-4"
-                                                />
-                                            </button> -->
                                         </div>
                                     </td>
                                 </tr>
@@ -387,13 +278,15 @@
                     <!-- Empty State -->
                     <div
                         v-if="filteredUsageData.length === 0"
-                        class="text-center py-12"
+                        class="text-center py-8"
                     >
                         <v-icon
                             name="hi-clipboard-list"
-                            class="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto"
+                            class="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto"
                         />
-                        <p class="mt-4 text-gray-500 dark:text-gray-400">
+                        <p
+                            class="mt-3 text-sm text-gray-500 dark:text-gray-400"
+                        >
                             No usage records found
                         </p>
                     </div>
@@ -546,7 +439,7 @@ const getStatusIcon = (status) => {
 
 const statusClasses = (status) => {
     const baseClasses =
-        "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium";
+        "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium";
 
     switch (status) {
         case "Pending":
@@ -588,7 +481,7 @@ onMounted(() => {
                     backgroundColor: "rgba(59, 130, 246, 0.7)",
                     borderColor: "rgb(59, 130, 246)",
                     borderWidth: 1,
-                    borderRadius: 6,
+                    borderRadius: 4,
                     barPercentage: 0.6,
                 },
                 {
@@ -597,7 +490,7 @@ onMounted(() => {
                     backgroundColor: "rgba(156, 163, 175, 0.7)",
                     borderColor: "rgb(156, 163, 175)",
                     borderWidth: 1,
-                    borderRadius: 6,
+                    borderRadius: 4,
                     barPercentage: 0.6,
                 },
             ],
@@ -610,7 +503,10 @@ onMounted(() => {
                     position: "top",
                     labels: {
                         usePointStyle: true,
-                        padding: 20,
+                        padding: 15,
+                        font: {
+                            size: 11,
+                        },
                     },
                 },
                 tooltip: {
@@ -630,9 +526,15 @@ onMounted(() => {
                     bodyColor: "#374151",
                     borderColor: "#e5e7eb",
                     borderWidth: 1,
-                    cornerRadius: 8,
+                    cornerRadius: 6,
                     displayColors: true,
                     usePointStyle: true,
+                    titleFont: {
+                        size: 11,
+                    },
+                    bodyFont: {
+                        size: 11,
+                    },
                 },
             },
             scales: {
@@ -642,7 +544,10 @@ onMounted(() => {
                         drawBorder: false,
                     },
                     ticks: {
-                        padding: 10,
+                        padding: 8,
+                        font: {
+                            size: 10,
+                        },
                     },
                 },
                 x: {
@@ -650,7 +555,10 @@ onMounted(() => {
                         display: false,
                     },
                     ticks: {
-                        padding: 10,
+                        padding: 8,
+                        font: {
+                            size: 10,
+                        },
                     },
                 },
             },
@@ -674,8 +582,13 @@ watch(selectedPeriod, (newPeriod) => {
 </script>
 
 <style scoped>
+/* Custom shadow utilities */
+.shadow-xs {
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
 /* Custom chart styles */
 canvas {
-    border-radius: 0.75rem;
+    border-radius: 0.5rem;
 }
 </style>

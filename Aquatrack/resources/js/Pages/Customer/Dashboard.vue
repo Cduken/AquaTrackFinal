@@ -1,6 +1,6 @@
 <template>
     <CustomerLayout>
-        <div class="min-h-screen bg-gray-50/40">
+        <div class="min-h-screen bg-gray-50/40 px-2">
             <!-- Header -->
             <div class=" ">
                 <div class="py-2">
@@ -10,7 +10,7 @@
                                 Dashboard Overview
                             </h1>
                             <p class="text-gray-500 text-sm mt-0.5">
-                                Welcome back,
+                                Welcome back!
                                 <span class="font-medium text-gray-700">{{ customerName }}</span>
                             </p>
                         </div>
@@ -65,14 +65,14 @@
                         <p class="text-2xl font-semibold text-gray-900 mb-2">
                             {{ monthlyUsage }}m³
                         </p>
-                        <div class="flex items-center">
+                        <!-- <div class="flex items-center">
                             <div class="flex items-center text-xs font-medium px-2 py-1 rounded-full"
                                 :class="monthlyUsage > 15 ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'">
                                 <TrendingUp v-if="monthlyUsage > 15" class="w-3 h-3 mr-1" />
                                 <TrendingDown v-else class="w-3 h-3 mr-1" />
                                 {{ monthlyUsage > 15 ? 'Above average' : 'Below average' }}
                             </div>
-                        </div>
+                        </div> -->
                     </div>
 
                     <!-- Current Bill -->
@@ -109,7 +109,7 @@
                         <p class="text-2xl font-semibold text-gray-900 mb-3">
                             ₱{{ currentBill.toFixed(2) }}
                         </p>
-                        <div class="w-full bg-gray-100 rounded-full h-1.5">
+                        <!-- <div class="w-full bg-gray-100 rounded-full h-1.5">
                             <div class="h-1.5 rounded-full transition-all duration-500"
                                 :class="{
                                     'bg-red-500': currentBillStatus === 'Overdue',
@@ -119,7 +119,7 @@
                                 }"
                                 :style="`width: ${Math.min((currentBill / 1000) * 100, 100)}%`">
                             </div>
-                        </div>
+                        </div> -->
                     </div>
 
                     <!-- Announcements -->
@@ -136,9 +136,9 @@
                         <p class="text-2xl font-semibold text-gray-900 mb-1">
                             {{ announcements }}
                         </p>
-                        <p class="text-xs text-gray-500">
+                        <!-- <p class="text-xs text-gray-500">
                             {{ announcements === 0 ? 'No new updates' : 'Unread notifications' }}
-                        </p>
+                        </p> -->
                     </div>
                 </div>
 

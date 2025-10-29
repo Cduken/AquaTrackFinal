@@ -1,7 +1,156 @@
-//Pages/Admin/Reports.vue
 <template>
     <AdminLayout>
         <div class="mx-auto w-full">
+            <!-- Floating Reporter Details Modal -->
+            <div
+                v-if="showReporterModal"
+                class="fixed inset-0 z-[9999] pointer-events-none"
+            >
+                <!-- Click outside to close - invisible overlay -->
+                <div
+                    class="fixed inset-0 bg-transparent"
+                    @click="closeReporterModal"
+                ></div>
+
+                <!-- Floating modal content -->
+                <div
+                    class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md pointer-events-auto"
+                >
+                    <div
+                        class="bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 mx-4"
+                    >
+                        <!-- Header -->
+                        <div
+                            class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700"
+                        >
+                            <h3
+                                class="text-lg font-semibold text-gray-900 dark:text-white"
+                            >
+                                Report Contributors
+                            </h3>
+                            <button
+                                @click="closeReporterModal"
+                                class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                            >
+                                <svg
+                                    class="w-5 h-5"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M6 18L18 6M6 6l12 12"
+                                    ></path>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <!-- Content -->
+                        <div class="max-h-96 overflow-y-auto p-4">
+                            <div class="space-y-3">
+                                <div
+                                    v-for="(
+                                        reporter, index
+                                    ) in selectedReportReporters"
+                                    :key="index"
+                                    class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                                >
+                                    <div class="flex items-center space-x-3">
+                                        <!-- Avatar -->
+                                        <div class="flex-shrink-0">
+                                            <!-- Show user avatar for registered users -->
+                                            <img
+                                                v-if="
+                                                    reporter.avatar &&
+                                                    reporter.isRegistered
+                                                "
+                                                :src="reporter.avatar"
+                                                :alt="reporter.name"
+                                                class="h-8 w-8 rounded-full object-cover"
+                                            />
+                                            <!-- Show colored initial for guests or users without avatar -->
+                                            <div
+                                                v-else
+                                                class="h-8 w-8 rounded-full flex items-center justify-center text-white font-semibold text-xs"
+                                                :class="
+                                                    getReporterAvatarColorForModal(
+                                                        reporter.name
+                                                    )
+                                                "
+                                            >
+                                                {{
+                                                    getReporterInitialsForModal(
+                                                        reporter.name
+                                                    )
+                                                }}
+                                            </div>
+                                        </div>
+
+                                        <!-- Name and Type -->
+                                        <div>
+                                            <div
+                                                class="font-medium text-gray-900 dark:text-white text-sm"
+                                            >
+                                                {{ reporter.name }}
+                                            </div>
+                                            <div
+                                                class="flex items-center space-x-2 mt-1"
+                                            >
+                                                <span
+                                                    :class="
+                                                        getReporterTypeClasses(
+                                                            reporter.type
+                                                        )
+                                                    "
+                                                    class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                                                >
+                                                    <span
+                                                        class="w-1.5 h-1.5 rounded-full mr-1.5"
+                                                        :class="
+                                                            reporter.type ===
+                                                            'Registered'
+                                                                ? 'bg-purple-400'
+                                                                : 'bg-gray-400'
+                                                        "
+                                                    ></span>
+                                                    {{ reporter.type }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Badge for main reporter -->
+                                    <span
+                                        v-if="
+                                            index === 0 &&
+                                            selectedReportReporters.length > 1
+                                        "
+                                        class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                                    >
+                                        Initial Reporter
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Footer -->
+                        <div
+                            class="flex justify-end p-4 border-t border-gray-200 dark:border-gray-700"
+                        >
+                            <button
+                                @click="closeReporterModal"
+                                class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600 transition-colors"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div
                 class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden"
             >
@@ -10,7 +159,7 @@
                     <div
                         class="flex flex-col md:flex-row md:items-center justify-between gap-4"
                     >
-                        <div class="flex items-center">
+                        <div class="flex items-center px-2 space-x-4">
                             <h5
                                 class="text-sm font-semibold text-gray-500 dark:text-gray-400"
                             >
@@ -280,15 +429,100 @@
                                 <!-- Reporter Column -->
                                 <td class="px-6 py-2">
                                     <div class="flex items-center">
-                                        <!-- <div class="flex-shrink-0 h-8 w-8 mr-3">
-                                            <div
-                                                class="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-xs"
+                                        <!-- Profile Avatar -->
+                                        <div class="flex-shrink-0 h-8 w-8 mr-3">
+                                            <!-- For merged reports (multiple reporters) - Show stacked avatars -->
+                                            <span v-if="isMergedReport(report)">
+                                                <div class="relative h-8 w-8">
+                                                    <!-- First reporter avatar -->
+                                                    <div
+                                                        class="absolute top-0 left-0 z-10"
+                                                    >
+                                                        <img
+                                                            v-if="
+                                                                report.user &&
+                                                                report.user
+                                                                    .avatar_url
+                                                            "
+                                                            :src="
+                                                                report.user
+                                                                    .avatar_url
+                                                            "
+                                                            :alt="
+                                                                getFirstReporterName(
+                                                                    report
+                                                                )
+                                                            "
+                                                            class="h-6 w-6 rounded-full object-cover border-2 border-white dark:border-gray-800"
+                                                        />
+                                                        <div
+                                                            v-else
+                                                            class="h-6 w-6 rounded-full flex items-center justify-center text-white font-semibold text-xs border-2 border-white dark:border-gray-800"
+                                                            :class="
+                                                                getReporterAvatarColor(
+                                                                    report
+                                                                )
+                                                            "
+                                                        >
+                                                            {{
+                                                                getFirstReporterInitials(
+                                                                    report
+                                                                )
+                                                            }}
+                                                        </div>
+                                                    </div>
+                                                    <!-- Second reporter avatar (overlapping) -->
+                                                    <div
+                                                        class="absolute bottom-0 right-0 z-0"
+                                                    >
+                                                        <div
+                                                            class="h-6 w-6 rounded-full flex items-center justify-center text-white font-semibold text-xs bg-gradient-to-br from-purple-500 to-pink-600 border-2 border-white dark:border-gray-800"
+                                                        >
+                                                            +{{
+                                                                getAdditionalReportersCount(
+                                                                    report
+                                                                )
+                                                            }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </span>
+
+                                            <!-- For single reporter with user avatar -->
+                                            <span
+                                                v-else-if="
+                                                    report.user &&
+                                                    report.user.avatar_url
+                                                "
                                             >
-                                                {{
-                                                    getReporterInitials(report)
-                                                }}
-                                            </div>
-                                        </div> -->
+                                                <img
+                                                    :src="
+                                                        report.user.avatar_url
+                                                    "
+                                                    :alt="report.user.name"
+                                                    class="h-8 w-8 rounded-full object-cover"
+                                                />
+                                            </span>
+
+                                            <!-- For single reporter without avatar (guest or no avatar) -->
+                                            <span v-else>
+                                                <div
+                                                    class="h-8 w-8 rounded-full flex items-center justify-center text-white font-semibold text-xs"
+                                                    :class="
+                                                        getReporterAvatarColor(
+                                                            report
+                                                        )
+                                                    "
+                                                >
+                                                    {{
+                                                        getReporterInitials(
+                                                            report
+                                                        )
+                                                    }}
+                                                </div>
+                                            </span>
+                                        </div>
+
                                         <div>
                                             <div
                                                 class="font-medium text-gray-900 dark:text-white text-xs"
@@ -307,19 +541,23 @@
                                                         "
                                                     >
                                                         {{
-                                                            getTruncatedReporters(
+                                                            getFirstTwoReporters(
                                                                 report
                                                             )
                                                         }}
                                                         <span
                                                             v-if="
-                                                                hasManyReporters(
+                                                                getAdditionalReportersCount(
+                                                                    report
+                                                                ) > 0
+                                                            "
+                                                            class="text-gray-600 dark:text-gray-400"
+                                                        >
+                                                            (+{{
+                                                                getAdditionalReportersCount(
                                                                     report
                                                                 )
-                                                            "
-                                                            class="ml-1"
-                                                        >
-                                                            ...
+                                                            }})
                                                         </span>
                                                     </span>
                                                 </span>
@@ -345,7 +583,7 @@
                                     <span
                                         :class="
                                             userTypeClasses(
-                                                report.formatted_user_types
+                                                getDisplayUserType(report)
                                             )
                                         "
                                         class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-sm"
@@ -354,14 +592,11 @@
                                             class="w-1.5 h-1.5 rounded-full mr-1.5"
                                             :class="
                                                 getUserTypeDotClass(
-                                                    report.formatted_user_types
+                                                    getDisplayUserType(report)
                                                 )
                                             "
                                         ></span>
-                                        {{
-                                            report.formatted_user_types ||
-                                            "Guest"
-                                        }}
+                                        {{ getDisplayUserType(report) }}
                                     </span>
                                 </td>
 
@@ -512,7 +747,7 @@
                                                         />
                                                         Change Status
                                                     </button>
-                                                    <button
+                                                    <!-- <button
                                                         v-if="
                                                             report.status !==
                                                                 'resolved' &&
@@ -527,7 +762,7 @@
                                                             class="w-4 h-4 mr-3"
                                                         />
                                                         Mark Resolved
-                                                    </button>
+                                                    </button> -->
                                                     <button
                                                         v-if="props.canDelete"
                                                         @click="
@@ -586,229 +821,13 @@
                 @close="closeModal"
             />
 
-            <!-- Status Change Modal -->
-            <div
-                v-if="showStatusModal"
-                class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 transition-opacity duration-300"
-                @click="closeStatusModal"
-            >
-                <div
-                    class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md mx-4 transform transition-all duration-300 scale-100"
-                    @click.stop
-                >
-                    <!-- Modal Header -->
-                    <div
-                        class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700"
-                    >
-                        <h3
-                            class="text-lg font-semibold text-gray-900 dark:text-white"
-                        >
-                            Change Report Status
-                        </h3>
-                        <button
-                            @click="closeStatusModal"
-                            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                        >
-                            <svg
-                                class="w-5 h-5"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M6 18L18 6M6 6l12 12"
-                                />
-                            </svg>
-                        </button>
-                    </div>
-
-                    <!-- Modal Body -->
-                    <div class="p-6">
-                        <div class="mb-6">
-                            <p
-                                class="text-sm text-gray-600 dark:text-gray-400 mb-2"
-                            >
-                                Report Details:
-                            </p>
-                            <div
-                                class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4"
-                            >
-                                <p
-                                    class="text-sm font-medium text-gray-900 dark:text-white"
-                                >
-                                    {{ statusReport?.tracking_code }} -
-                                    {{ statusReport?.reporter_name }}
-                                </p>
-                                <p
-                                    class="text-xs text-gray-500 dark:text-gray-400 mt-1"
-                                >
-                                    Current Status:
-                                    <span
-                                        :class="
-                                            statusClasses(statusReport?.status)
-                                        "
-                                        class="ml-1 px-2 py-1 rounded-full text-xs"
-                                    >
-                                        {{ formatStatus(statusReport?.status) }}
-                                    </span>
-                                </p>
-                            </div>
-                        </div>
-
-                        <div class="space-y-4">
-                            <label
-                                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                            >
-                                Select New Status:
-                            </label>
-
-                            <div class="grid grid-cols-1 gap-3">
-                                <label
-                                    v-for="status in statusOptions.filter(
-                                        (s) => s.value
-                                    )"
-                                    :key="status.value"
-                                    :class="[
-                                        'flex items-center p-4 border-2 rounded-lg cursor-pointer transition-all duration-200',
-                                        selectedStatus === status.value
-                                            ? getStatusBorderClass(status.value)
-                                            : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500',
-                                    ]"
-                                >
-                                    <input
-                                        type="radio"
-                                        :value="status.value"
-                                        v-model="selectedStatus"
-                                        class="hidden"
-                                    />
-                                    <div class="flex items-center w-full">
-                                        <div
-                                            class="w-4 h-4 rounded-full border-2 mr-3 flex items-center justify-center"
-                                            :class="
-                                                selectedStatus === status.value
-                                                    ? getStatusRadioClass(
-                                                          status.value
-                                                      )
-                                                    : 'border-gray-300 dark:border-gray-500'
-                                            "
-                                        >
-                                            <div
-                                                v-if="
-                                                    selectedStatus ===
-                                                    status.value
-                                                "
-                                                class="w-2 h-2 rounded-full"
-                                                :class="
-                                                    getStatusDotClass(
-                                                        status.value
-                                                    )
-                                                "
-                                            ></div>
-                                        </div>
-                                        <div class="flex items-center flex-1">
-                                            <span
-                                                :class="
-                                                    statusClasses(status.value)
-                                                "
-                                                class="px-3 py-1 rounded-full text-sm font-medium mr-3"
-                                            >
-                                                {{ status.label }}
-                                            </span>
-                                            <span
-                                                class="text-xs text-gray-500 dark:text-gray-400 flex-1"
-                                            >
-                                                {{
-                                                    getStatusDescription(
-                                                        status.value
-                                                    )
-                                                }}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Modal Footer -->
-                    <div
-                        class="flex justify-end space-x-3 p-6 border-t border-gray-200 dark:border-gray-700"
-                    >
-                        <button
-                            @click="closeStatusModal"
-                            :disabled="updatingStatus"
-                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            @click="confirmStatusChange"
-                            :disabled="
-                                !selectedStatus ||
-                                selectedStatus === statusReport?.status ||
-                                updatingStatus
-                            "
-                            class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
-                        >
-                            <span
-                                v-if="updatingStatus"
-                                class="flex items-center"
-                            >
-                                <RefreshCw class="w-4 h-4 mr-2 animate-spin" />
-                                Updating...
-                            </span>
-                            <span v-else class="flex items-center">
-                                <CheckCircle class="w-4 h-4 mr-2" />
-                                Update Status
-                            </span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Reporter Details Modal -->
-            <div
-                v-if="showReporterModal"
-                class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50"
-            >
-                <div
-                    class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-md"
-                >
-                    <h3
-                        class="text-lg font-semibold text-gray-900 dark:text-white mb-4"
-                    >
-                        All Reporters
-                    </h3>
-                    <div class="space-y-3 max-h-64 overflow-y-auto">
-                        <div
-                            v-for="(reporter, index) in selectedReportReporters"
-                            :key="index"
-                            class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
-                        >
-                            <span
-                                class="text-sm font-medium text-gray-900 dark:text-white"
-                            >
-                                {{ reporter.name }}
-                            </span>
-                            <span
-                                :class="getReporterTypeClasses(reporter.type)"
-                                class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
-                            >
-                                {{ reporter.type || "Guest" }}
-                            </span>
-                        </div>
-                    </div>
-                    <button
-                        @click="closeReporterModal"
-                        class="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                        Close
-                    </button>
-                </div>
-            </div>
+            <StatusChangeModal
+                :show="showStatusModal"
+                :report="statusReport"
+                :updating="updatingStatus"
+                @close="closeStatusModal"
+                @confirm="confirmStatusChange"
+            />
         </div>
     </AdminLayout>
 </template>
@@ -816,6 +835,7 @@
 <script setup>
 import AdminLayout from "@/Layouts/AdminLayout.vue";
 import ReportDetailsModal from "@/Components/Modals/ReportDetailsModal.vue";
+import StatusChangeModal from "@/Components/Admin/Reports/StatusChangeModal.vue";
 import Pagination from "@/Components/Pagination.vue";
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from "vue";
 import { router } from "@inertiajs/vue3";
@@ -867,7 +887,6 @@ const updatingStatus = ref(false);
 // Status modal state
 const showStatusModal = ref(false);
 const statusReport = ref(null);
-const selectedStatus = ref("");
 
 // Constants
 const statusOptions = [
@@ -1062,6 +1081,14 @@ watch(
     { deep: true }
 );
 
+// Add this method to your methods section
+const getFirstTwoReporters = (report) => {
+    if (!isMergedReport(report)) return report.reporter_name;
+
+    const reporters = report.reporter_name.split(",").map((r) => r.trim());
+    return reporters.slice(0, 2).join(", ");
+};
+
 // Modal functions
 const openModal = (report) => {
     selectedReport.value = report;
@@ -1086,7 +1113,6 @@ const openStatusModal = (report) => {
     }
 
     statusReport.value = report;
-    selectedStatus.value = report.status;
     showStatusModal.value = true;
     activeActionMenu.value = null;
 };
@@ -1094,15 +1120,14 @@ const openStatusModal = (report) => {
 const closeStatusModal = () => {
     showStatusModal.value = false;
     statusReport.value = null;
-    selectedStatus.value = "";
     updatingStatus.value = false;
 };
 
-const confirmStatusChange = async () => {
+const confirmStatusChange = async (newStatus) => {
     if (
-        !selectedStatus.value ||
+        !newStatus ||
         !statusReport.value ||
-        selectedStatus.value === statusReport.value.status
+        newStatus === statusReport.value.status
     ) {
         return;
     }
@@ -1112,7 +1137,7 @@ const confirmStatusChange = async () => {
         await router.post(
             route("admin.reports.updateStatus", statusReport.value.id),
             {
-                status: selectedStatus.value,
+                status: newStatus,
             },
             {
                 preserveScroll: true,
@@ -1121,9 +1146,7 @@ const confirmStatusChange = async () => {
                         toast: true,
                         position: "top-end",
                         icon: "success",
-                        title: `Status updated to "${formatStatus(
-                            selectedStatus.value
-                        )}"`,
+                        title: `Status updated to "${formatStatus(newStatus)}"`,
                         showConfirmButton: false,
                         timer: 2000,
                         timerProgressBar: true,
@@ -1153,91 +1176,157 @@ const confirmStatusChange = async () => {
     }
 };
 
-// Status modal styling helpers
-const getStatusBorderClass = (status) => {
-    switch (status) {
-        case "pending":
-            return "border-gray-400 bg-gray-50 dark:bg-gray-700";
-        case "in_progress":
-            return "border-blue-400 bg-blue-50 dark:bg-blue-900/20";
-        case "resolved":
-            return "border-green-400 bg-green-50 dark:bg-green-900/20";
-        default:
-            return "border-gray-400 bg-gray-50 dark:bg-gray-700";
-    }
-};
-
-const getStatusRadioClass = (status) => {
-    switch (status) {
-        case "pending":
-            return "border-gray-500";
-        case "in_progress":
-            return "border-blue-500";
-        case "resolved":
-            return "border-green-500";
-        default:
-            return "border-gray-500";
-    }
-};
-
-const getStatusDotClass = (status) => {
-    switch (status) {
-        case "pending":
-            return "bg-gray-500";
-        case "in_progress":
-            return "bg-blue-500";
-        case "resolved":
-            return "bg-green-500";
-        default:
-            return "bg-gray-500";
-    }
-};
-
-const getStatusDescription = (status) => {
-    switch (status) {
-        case "pending":
-            return "Report is waiting for review";
-        case "in_progress":
-            return "Team is working on this issue";
-        case "resolved":
-            return "Issue has been resolved";
-        default:
-            return "";
-    }
-};
-
 // Quick resolve function
 const quickResolve = (report) => {
     activeActionMenu.value = null;
     if (report.status !== "resolved") {
         statusReport.value = report;
-        selectedStatus.value = "resolved";
-        confirmStatusChange();
+        confirmStatusChange("resolved");
     }
 };
 
-// Reporter Modal Functions
-const showAllReporters = (report) => {
+// Avatar colors for consistent coloring
+const avatarColors = [
+    "bg-gradient-to-br from-blue-500 to-blue-600",
+    "bg-gradient-to-br from-green-500 to-green-600",
+    "bg-gradient-to-br from-purple-500 to-purple-600",
+    "bg-gradient-to-br from-pink-500 to-pink-600",
+    "bg-gradient-to-br from-indigo-500 to-indigo-600",
+    "bg-gradient-to-br from-yellow-500 to-yellow-600",
+    "bg-gradient-to-br from-red-500 to-red-600",
+    "bg-gradient-to-br from-teal-500 to-teal-600",
+    "bg-gradient-to-br from-orange-500 to-orange-600",
+];
+
+// Get avatar color based on reporter name
+const getReporterAvatarColor = (report) => {
+    const name = report.reporter_name || report.user?.name || "Guest";
+
+    // Simple hash function to get consistent color for same name
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+        hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+
+    const index = Math.abs(hash) % avatarColors.length;
+    return avatarColors[index];
+};
+
+// Get initials for single reporter
+const getReporterInitials = (report) => {
+    if (isMergedReport(report)) {
+        return "MR"; // Multiple Reporters
+    }
+
+    const name = report.reporter_name || report.user?.name || "N/A";
+    if (name === "N/A") return "N/A";
+
+    const names = name.split(" ").filter((n) => n.trim() !== "");
+    if (names.length === 0) return "N/A";
+    if (names.length === 1) return names[0].charAt(0).toUpperCase();
+
+    return (
+        names[0].charAt(0) + names[names.length - 1].charAt(0)
+    ).toUpperCase();
+};
+
+// Reporter methods
+// Add these new helper methods for merged avatars
+const getFirstReporterName = (report) => {
+    if (!isMergedReport(report))
+        return report.reporter_name || report.user?.name || "N/A";
+    const reporters = report.reporter_name.split(",").map((r) => r.trim());
+    return reporters[0] || "N/A";
+};
+
+const getFirstReporterInitials = (report) => {
+    const name = getFirstReporterName(report);
+    if (name === "N/A") return "N/A";
+    const names = name.split(" ").filter((n) => n.trim() !== "");
+    if (names.length === 0) return "N/A";
+    if (names.length === 1) return names[0].charAt(0).toUpperCase();
+    return (
+        names[0].charAt(0) + names[names.length - 1].charAt(0)
+    ).toUpperCase();
+};
+
+// Update this method to count reporters beyond the first 2
+const getAdditionalReportersCount = (report) => {
+    if (!isMergedReport(report)) return 0;
+    const reporters = report.reporter_name.split(",").map((r) => r.trim());
+    return Math.max(0, reporters.length - 2); // Count reporters beyond first 2
+};
+
+// Update the existing isMergedReport function to be more accurate
+const isMergedReport = (report) => {
+    return (
+        report.reporter_name &&
+        report.reporter_name.includes(",") &&
+        report.reporter_name.split(",").length > 1
+    );
+};
+
+const getTruncatedReporters = (report) => {
+    if (!isMergedReport(report)) return report.reporter_name;
+
+    const reporters = report.reporter_name.split(",").map((r) => r.trim());
+    return reporters.slice(0, 2).join(", ");
+};
+
+const hasManyReporters = (report) => {
+    if (!isMergedReport(report)) return false;
+    const reporters = report.reporter_name.split(",").map((r) => r.trim());
+    return reporters.length > 2;
+};
+
+const showAllReporters = async (report) => {
     if (isMergedReport(report)) {
         const reporters = report.reporter_name
             .split(",")
             .map((name) => name.trim());
+
+        // Parse user types from the report
         const userTypes = report.user_types
             ? JSON.parse(report.user_types)
             : [];
 
-        selectedReportReporters.value = reporters.map((reporterName, index) => {
-            let reporterType = "Guest";
-            if (index === 0 && report.user_id) {
-                reporterType = "Registered";
-            } else if (userTypes[index]) {
-                reporterType = userTypes[index];
-            }
-            return {
-                name: reporterName,
-                type: reporterType,
-            };
-        });
+        // Fetch user data for all reporters to get accurate avatars and types
+        try {
+            const response = await axios.post(
+                route("admin.reports.getReportersData"),
+                {
+                    reporters: reporters,
+                    existingUserTypes: userTypes,
+                }
+            );
+
+            selectedReportReporters.value = response.data.reporters;
+        } catch (error) {
+            console.error("Failed to fetch reporter data:", error);
+            // Fallback to basic logic
+            selectedReportReporters.value = reporters.map(
+                (reporterName, index) => {
+                    let reporterType = userTypes[index] || "Guest";
+
+                    if (!userTypes[index] && index === 0 && report.user_id) {
+                        reporterType = "Registered";
+                    }
+
+                    return {
+                        name: reporterName,
+                        type: reporterType,
+                        avatar:
+                            reporterType === "Registered" &&
+                            index === 0 &&
+                            report.user?.avatar_url
+                                ? report.user.avatar_url
+                                : null,
+                        isRegistered: reporterType === "Registered",
+                        index: index,
+                    };
+                }
+            );
+        }
 
         showReporterModal.value = true;
     }
@@ -1248,11 +1337,33 @@ const closeReporterModal = () => {
     selectedReportReporters.value = [];
 };
 
+// Add these new helper methods for the modal
+const getReporterAvatarColorForModal = (name) => {
+    // Simple hash function to get consistent color for same name
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+        hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const index = Math.abs(hash) % avatarColors.length;
+    return avatarColors[index];
+};
+
+const getReporterInitialsForModal = (name) => {
+    if (name === "N/A") return "N/A";
+    const names = name.split(" ").filter((n) => n.trim() !== "");
+    if (names.length === 0) return "N/A";
+    if (names.length === 1) return names[0].charAt(0).toUpperCase();
+    return (
+        names[0].charAt(0) + names[names.length - 1].charAt(0)
+    ).toUpperCase();
+};
+
 // Delete report function
-const confirmDelete = (report) => {
+const confirmDelete = async (report) => {
     activeActionMenu.value = null;
 
-    Swal.fire({
+    // First confirmation
+    const confirmResult = await Swal.fire({
         title: "Are you sure?",
         text: `You are about to delete the report from ${
             report.reporter_name || report.user?.name || "Unknown"
@@ -1263,16 +1374,36 @@ const confirmDelete = (report) => {
         cancelButtonColor: "#3085d6",
         confirmButtonText: "Yes, delete it!",
         cancelButtonText: "Cancel",
-    }).then((result) => {
-        if (result.isConfirmed) {
-            deleteReport(report);
-        }
     });
+
+    if (!confirmResult.isConfirmed) return;
+
+    // Reason prompt
+    const { value: reason } = await Swal.fire({
+        title: "Reason for Deletion",
+        input: "text",
+        inputLabel: "Please provide a reason for deleting this report",
+        inputPlaceholder: "Enter the reason...",
+        showCancelButton: true,
+        confirmButtonText: "Confirm Delete",
+        cancelButtonText: "Cancel",
+        inputValidator: (value) => {
+            if (!value) {
+                return "Please provide a reason for deletion!";
+            }
+        },
+    });
+
+    if (reason) {
+        deleteReport(report, reason);
+    }
 };
 
-const deleteReport = async (report) => {
+// Update deleteReport to accept reason parameter
+const deleteReport = async (report, reason) => {
     try {
         await router.delete(route("admin.reports.destroy", report.id), {
+            data: { reason: reason },
             preserveScroll: true,
             onSuccess: () => {
                 Swal.fire({
@@ -1286,10 +1417,13 @@ const deleteReport = async (report) => {
                 });
             },
             onError: (error) => {
+                console.error("Delete error:", error);
                 Swal.fire({
                     icon: "error",
                     title: "Error",
-                    text: "Failed to delete report. Please try again.",
+                    text:
+                        error.message ||
+                        "Failed to delete report. Please try again.",
                 });
             },
         });
@@ -1430,35 +1564,6 @@ const exportToJSON = (data) => {
 };
 
 // Utility functions
-const isMergedReport = (report) => {
-    return report.reporter_name && report.reporter_name.includes(",");
-};
-
-const hasManyReporters = (report) => {
-    return report.reporter_name.split(",").length > 2;
-};
-
-const getTruncatedReporters = (report) => {
-    const reporters = report.reporter_name.split(",");
-    return reporters
-        .slice(0, 2)
-        .map((name) => name.trim())
-        .join(", ");
-};
-
-const getReporterInitials = (report) => {
-    if (isMergedReport(report)) {
-        return "MR"; // Multiple Reporters
-    }
-    const name = report.reporter_name || report.user?.name || "N/A";
-    return name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-        .substring(0, 2);
-};
-
 const truncateText = (text, length) => {
     if (!text) return "";
     return text.length > length ? text.substring(0, length) + "..." : text;
@@ -1478,33 +1583,56 @@ const formatTime = (dateString) => {
     });
 };
 
-// Styling helpers
-const userTypeClasses = (userTypes) => {
-    if (
-        userTypes &&
-        userTypes.includes("Registered") &&
-        userTypes.includes("Guest")
-    ) {
-        return "bg-gradient-to-r from-purple-100 to-gray-100 text-purple-800 dark:from-purple-900 dark:to-gray-900 dark:text-purple-200";
-    } else if (userTypes && userTypes.includes("Registered")) {
+// Enhanced styling helpers for Hybrid type
+const userTypeClasses = (userType) => {
+    if (userType === "Hybrid") {
+        return "bg-gradient-to-r from-purple-100 to-gray-100 text-purple-800 dark:from-purple-900 dark:to-gray-900 dark:text-purple-200 border border-purple-200 dark:border-purple-700";
+    } else if (userType === "Registered") {
         return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200";
     } else {
         return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
     }
 };
 
-const getUserTypeDotClass = (userTypes) => {
-    if (
-        userTypes &&
-        userTypes.includes("Registered") &&
-        userTypes.includes("Guest")
-    ) {
-        return "bg-purple-400";
-    } else if (userTypes && userTypes.includes("Registered")) {
+const getUserTypeDotClass = (userType) => {
+    if (userType === "Hybrid") {
+        return "bg-gradient-to-r from-purple-400 to-gray-400";
+    } else if (userType === "Registered") {
         return "bg-purple-400";
     } else {
         return "bg-gray-400";
     }
+};
+
+const getDisplayUserType = (report) => {
+    // Always use backend formatted_user_types if available
+    if (report.formatted_user_types) {
+        return report.formatted_user_types;
+    }
+
+    // Check if this is a merged report with mixed types
+    if (isMergedReport(report)) {
+        const userTypes = report.user_types
+            ? JSON.parse(report.user_types)
+            : [];
+        const uniqueTypes = [...new Set(userTypes)];
+
+        // If we have multiple unique user types, it's Hybrid
+        if (uniqueTypes.length > 1) {
+            return "Hybrid";
+        }
+        // If we have only one type but multiple reporters, show that type
+        else if (uniqueTypes.length === 1) {
+            return uniqueTypes[0];
+        }
+        // Fallback: check if we have mixed types based on user_id and multiple reporters
+        else if (report.user_id && report.reporter_name.includes(",")) {
+            return "Hybrid";
+        }
+    }
+
+    // Single reporter fallback
+    return report.user_id ? "Registered" : "Guest";
 };
 
 const priorityClasses = (priority) => {
@@ -1538,12 +1666,12 @@ const statusClasses = (status) => {
         "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200":
             status === "resolved",
         "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200":
-            status.startsWith("Deleted"),
+            status?.startsWith("Deleted"),
     };
 };
 
 const statusDotClasses = (status) => {
-    if (status.startsWith("Deleted")) return "bg-red-400";
+    if (status?.startsWith("Deleted")) return "bg-red-400";
     switch (status) {
         case "pending":
             return "bg-gray-400";
@@ -1563,7 +1691,7 @@ const getStatusRowClass = (status) => {
         ? "bg-blue-50 dark:bg-blue-900/20"
         : status === "resolved"
         ? "bg-green-50 dark:bg-green-900/20"
-        : status.startsWith("Deleted")
+        : status?.startsWith("Deleted")
         ? "bg-red-50 dark:bg-red-900/20"
         : "";
 };
@@ -1574,13 +1702,15 @@ const getReporterTypeClasses = (type) => {
             return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200";
         case "Guest":
             return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
+        case "Hybrid":
+            return "bg-gradient-to-r from-purple-100 to-gray-100 text-purple-800 dark:from-purple-900 dark:to-gray-900 dark:text-purple-200";
         default:
             return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
     }
 };
 
 const formatStatus = (status) => {
-    if (status.startsWith("Deleted")) return status;
+    if (status?.startsWith("Deleted")) return status;
     const statusMap = {
         pending: "Pending",
         in_progress: "In Progress",
@@ -1606,5 +1736,73 @@ const formatStatus = (status) => {
 
 .cursor-pointer {
     cursor: pointer;
+}
+
+/* Modal animations */
+.modal-enter-active,
+.modal-leave-active {
+    transition: opacity 0.3s ease;
+}
+
+.modal-enter-from,
+.modal-leave-to {
+    opacity: 0;
+}
+
+.modal-content-enter-active,
+.modal-content-leave-active {
+    transition: all 0.3s ease;
+}
+
+.modal-content-enter-from,
+.modal-content-leave-to {
+    opacity: 0;
+    transform: scale(0.95);
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+/* Hover effect for reporter names */
+.reporter-link:hover {
+    text-decoration: underline;
+    color: #2563eb; /* blue-600 */
+}
+
+.dark .reporter-link:hover {
+    color: #60a5fa; /* blue-400 */
+}
+
+/* Custom scrollbar styling */
+.scrollbar-custom {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e0 transparent;
+}
+
+.scrollbar-custom::-webkit-scrollbar {
+    width: 6px;
+}
+
+.scrollbar-custom::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 3px;
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb {
+    background-color: #cbd5e0;
+    border-radius: 3px;
+}
+
+.dark .scrollbar-custom::-webkit-scrollbar-thumb {
+    background-color: #4b5563;
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb:hover {
+    background-color: #a0aec0;
+}
+
+.dark .scrollbar-custom::-webkit-scrollbar-thumb:hover {
+    background-color: #6b7280;
 }
 </style>

@@ -64,6 +64,8 @@ Route::get('/dashboard', function () {
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
 
+    Route::post('/admin/reports/get-reporters-data', [ReportController::class, 'getReportersData'])->name('admin.reports.getReportersData');
+
     // ADMIN REPORTS ROUTES - Keep these inside the admin middleware
     Route::get('/admin/reports', [ReportController::class, 'adminIndex'])->name('admin.reports');
     Route::delete('/admin/reports/{report}', [ReportController::class, 'destroy'])->name('admin.reports.destroy');

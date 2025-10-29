@@ -9,7 +9,7 @@
     >
         <div class="flex justify-between items-center">
             <!-- Left section with breadcrumbs, mobile menu -->
-            <div class="flex items-center flex-1 max-w-3xl">
+            <div class="flex items-center flex-1 max-w-3xl px-3 opacity-70">
                 <!-- Mobile menu button -->
                 <button
                     @click="$emit('toggle-mobile-menu')"
@@ -44,7 +44,7 @@
                 <div class="relative">
                     <button
                         type="button"
-                        @click="showNotificationModal = true"
+                        @click="openNotificationModal"
                         class="relative p-2.5 text-gray-500 rounded-xl hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-700 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-all duration-200 group"
                     >
                         <Bell
@@ -70,7 +70,7 @@
                     >
                         <img
                             v-if="user.avatar_url"
-                            class="w-6 h-6 rounded-full border-2 border-gray-200 dark:border-gray-600 shadow-sm group-hover:border-blue-400 transition-all"
+                            class="w-8 h-8 rounded-full border-2 border-gray-200 dark:border-gray-600 shadow-sm group-hover:border-blue-400 transition-all"
                             :src="user.avatar_url"
                             :alt="userDisplayName"
                         />
@@ -217,28 +217,12 @@
                                         </p>
                                     </div>
                                 </div>
-                                <div class="flex items-center space-x-2">
-                                    <button
-                                        v-if="
-                                            modalNotifications.length > 0 &&
-                                            modalUnreadCount > 0
-                                        "
-                                        @click="markAllAsReadInModal"
-                                        class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 px-3 py-1 rounded transition-colors duration-200"
-                                        :disabled="markingAllAsRead"
-                                    >
-                                        <span v-if="!markingAllAsRead"
-                                            >Mark all read</span
-                                        >
-                                        <span v-else>Marking...</span>
-                                    </button>
-                                    <button
-                                        @click="showNotificationModal = false"
-                                        class="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded transition-colors"
-                                    >
-                                        <X :size="20" />
-                                    </button>
-                                </div>
+                                <button
+                                    @click="showNotificationModal = false"
+                                    class="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded transition-colors"
+                                >
+                                    <X :size="20" />
+                                </button>
                             </div>
                         </div>
 
@@ -288,10 +272,6 @@
                                     v-for="notification in modalNotifications"
                                     :key="notification.id"
                                     class="p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150 cursor-pointer"
-                                    :class="{
-                                        'bg-blue-50 dark:bg-blue-900/20':
-                                            notification.unread,
-                                    }"
                                     @click="
                                         handleNotificationClickInModal(
                                             notification
@@ -326,18 +306,6 @@
                                                 >
                                                     {{ notification.title }}
                                                 </p>
-                                                <div
-                                                    class="flex items-center space-x-1 ml-2"
-                                                >
-                                                    <span
-                                                        v-if="
-                                                            notification.unread
-                                                        "
-                                                        class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
-                                                    >
-                                                        New
-                                                    </span>
-                                                </div>
                                             </div>
                                             <p
                                                 class="text-sm text-gray-600 dark:text-gray-300 mb-2"
@@ -360,17 +328,6 @@
                                                         )
                                                     }}</span>
                                                 </div>
-                                                <button
-                                                    v-if="notification.unread"
-                                                    @click.stop="
-                                                        markAsReadInModal(
-                                                            notification.id
-                                                        )
-                                                    "
-                                                    class="text-xs text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 font-medium transition-colors"
-                                                >
-                                                    Mark read
-                                                </button>
                                             </div>
                                         </div>
                                     </div>
@@ -454,7 +411,6 @@ const userInitials = computed(() => {
 const showNotificationModal = ref(false);
 const modalNotifications = ref([]);
 const modalLoading = ref(false);
-const markingAllAsRead = ref(false);
 
 // Computed
 const modalUnreadCount = computed(
@@ -605,31 +561,7 @@ const fetchModalNotifications = async () => {
     }
 };
 
-const markAsReadInModal = async (id) => {
-    try {
-        const response = await fetch(`/customer/notifications/${id}/read`, {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRF-TOKEN": document.querySelector(
-                    'meta[name="csrf-token"]'
-                ).content,
-            },
-        });
-
-        if (response.ok) {
-            const notification = modalNotifications.value.find(
-                (n) => n.id === id
-            );
-            if (notification) notification.unread = false;
-        }
-    } catch {
-        // Silent fail
-    }
-};
-
-const markAllAsReadInModal = async () => {
-    markingAllAsRead.value = true;
+const markAllAsRead = async () => {
     try {
         const response = await fetch("/customer/notifications/mark-all-read", {
             method: "PUT",
@@ -648,13 +580,15 @@ const markAllAsReadInModal = async () => {
         }
     } catch {
         // Silent fail
-    } finally {
-        markingAllAsRead.value = false;
     }
 };
 
+const openNotificationModal = async () => {
+    showNotificationModal.value = true;
+    await markAllAsRead();
+};
+
 const handleNotificationClickInModal = (notification) => {
-    if (notification.unread) markAsReadInModal(notification.id);
     if (notification.action_url) {
         router.visit(notification.action_url);
         showNotificationModal.value = false;

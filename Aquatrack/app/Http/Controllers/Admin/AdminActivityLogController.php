@@ -41,7 +41,7 @@ class AdminActivityLogController extends Controller
             });
         }
 
-        $activities = $query->paginate(5)->withQueryString();
+        $activities = $query->paginate(6)->withQueryString();
 
         return Inertia::render('Admin/ActivityLogs', [
             'activities' => $activities->through(function ($activity) {

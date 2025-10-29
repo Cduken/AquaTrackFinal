@@ -9,7 +9,7 @@
                     <div
                         class="flex flex-col md:flex-row md:items-center justify-between gap-4"
                     >
-                        <div class="flex items-center">
+                        <div class="flex items-center px-2 space-x-4">
                             <h5
                                 class="text-sm font-semibold text-gray-500 dark:text-gray-400"
                             >
@@ -258,8 +258,7 @@
                                                 class="text-xs text-gray-500 dark:text-gray-400"
                                             >
                                                 {{
-                                                    record.user.email ||
-                                                    "No email"
+                                                    record.user.email
                                                 }}
                                             </div>
                                         </div>
@@ -292,7 +291,7 @@
                                     <div
                                         class="text-gray-500 dark:text-gray-400"
                                     >
-                                        {{ record.consumption }} m³
+                                       Consumption: {{ record.consumption }} m³
                                     </div>
                                 </td>
 
@@ -460,7 +459,7 @@
                                                         />
                                                         Mark as Pending
                                                     </button>
-                                                    <button
+                                                    <!-- <button
                                                         v-if="
                                                             record.status !==
                                                             'Overdue'
@@ -477,7 +476,7 @@
                                                             class="w-4 h-4 mr-3"
                                                         />
                                                         Mark as Overdue
-                                                    </button>
+                                                    </button> -->
                                                 </div>
                                             </div>
                                         </div>

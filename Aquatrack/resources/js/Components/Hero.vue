@@ -285,7 +285,7 @@ const handleReportSuccess = (data) => {
         <Navigation />
 
         <div
-            class="relative px-4 sm:px-8 lg:px-[120px] flex flex-col lg:flex-row gap-12 lg:gap-20 items-center justify-center min-h-[85vh] py-16 lg:py-0"
+            class="relative px-4 sm:px-8 lg:px-[120px] flex flex-col lg:flex-row gap-12 lg:gap-20 items-center justify-center min-h-[85vh] py-6lg:py-0"
         >
             <!-- Left Content -->
             <div

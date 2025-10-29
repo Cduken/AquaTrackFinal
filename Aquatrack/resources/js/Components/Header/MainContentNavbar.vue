@@ -20,8 +20,7 @@
                 </button>
 
                 <!-- Breadcrumbs -->
-                <div class="hidden md:flex items-center space-x-2 text-lg ">
-
+                <div class="hidden md:flex items-center space-x-2 text-lg">
                     <span
                         class="text-gray-900 dark:text-white font-semibold capitalize"
                     >
@@ -29,7 +28,7 @@
                     </span>
                 </div>
 
-                <!-- Mobile Breadcrumbs (simplified) -->
+                <!-- Mobile Breadcrumbs -->
                 <div class="flex md:hidden items-center space-x-2 text-sm ml-2">
                     <span
                         class="text-gray-900 dark:text-white font-semibold capitalize"
@@ -48,7 +47,6 @@
                         @click="showNotificationModal = true"
                         class="relative p-2.5 text-gray-500 rounded-xl hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-700 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-all duration-200 group"
                     >
-
                         <Bell
                             :size="18"
                             class="group-hover:scale-110 transition-transform"
@@ -89,10 +87,7 @@
                                 {{ userDisplayName }}
                             </p>
                             <p class="text-xs text-gray-500 dark:text-gray-400">
-                                {{
-                                    userRole.charAt(0).toUpperCase() +
-                                    userRole.slice(1)
-                                }}
+                                {{ capitalizedUserRole }}
                             </p>
                         </div>
                         <ChevronDown
@@ -184,29 +179,30 @@
             >
                 <!-- Background Overlay -->
                 <div
-                    class="fixed inset-0 bg-black/60  transition-opacity"
+                    class="fixed inset-0 bg-black/60 transition-opacity"
                     @click="showNotificationModal = false"
                 ></div>
 
                 <!-- Modal Container -->
-                <div class="flex items-center justify-center min-h-screen p-4">
+                <div
+                    class="flex items-start justify-center min-h-screen p-4 pt-20"
+                >
                     <div
-                        class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all"
+                        class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-xl overflow-hidden transform transition-all"
                     >
                         <!-- Header -->
                         <div
-                            class="bg-[#172554] px-6 py-5"
+                            class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4"
                         >
                             <div class="flex justify-between items-center">
                                 <div class="flex items-center space-x-3">
-                                    <div
-                                        class="p-2 bg-white/20 rounded-lg backdrop-blur-sm"
-                                    >
-                                        <Bell :size="24" class="text-white" />
-                                    </div>
+                                    <Bell
+                                        :size="20"
+                                        class="text-gray-700 dark:text-gray-300"
+                                    />
                                     <div>
                                         <h3
-                                            class="text-xl font-bold text-white"
+                                            class="text-lg font-semibold text-gray-900 dark:text-white"
                                         >
                                             Notifications
                                         </h3>
@@ -215,14 +211,9 @@
                                                 modalNotifications.length > 0 &&
                                                 !modalLoading
                                             "
-                                            class="text-sm text-blue-100"
+                                            class="text-sm text-gray-500 dark:text-gray-400"
                                         >
                                             {{ modalUnreadCount }} unread
-                                            notification{{
-                                                modalUnreadCount !== 1
-                                                    ? "s"
-                                                    : ""
-                                            }}
                                         </p>
                                     </div>
                                 </div>
@@ -233,18 +224,17 @@
                                             modalUnreadCount > 0
                                         "
                                         @click="markAllAsReadInModal"
-                                        class="flex items-center space-x-1.5 text-sm bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded-lg transition-all duration-200 backdrop-blur-sm"
+                                        class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 px-3 py-1 rounded transition-colors duration-200"
                                         :disabled="markingAllAsRead"
                                     >
-                                        <CheckCheck :size="16" />
                                         <span v-if="!markingAllAsRead"
-                                            >Mark All Read</span
+                                            >Mark all read</span
                                         >
                                         <span v-else>Marking...</span>
                                     </button>
                                     <button
                                         @click="showNotificationModal = false"
-                                        class="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+                                        class="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded transition-colors"
                                     >
                                         <X :size="20" />
                                     </button>
@@ -254,22 +244,17 @@
 
                         <!-- Notifications List -->
                         <div
-                            class="max-h-[500px] overflow-y-auto bg-gray-50 dark:bg-gray-900"
+                            class="max-h-96 overflow-y-auto bg-white dark:bg-gray-800"
                         >
                             <div
                                 v-if="modalLoading"
                                 class="flex flex-col items-center justify-center py-12"
                             >
-                                <div class="relative">
-                                    <div
-                                        class="w-16 h-16 border-4 border-blue-200 dark:border-blue-900 rounded-full"
-                                    ></div>
-                                    <div
-                                        class="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin absolute top-0 left-0"
-                                    ></div>
-                                </div>
+                                <div
+                                    class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"
+                                ></div>
                                 <p
-                                    class="mt-4 text-gray-600 dark:text-gray-400 font-medium"
+                                    class="mt-3 text-gray-600 dark:text-gray-400 text-sm"
                                 >
                                     Loading notifications...
                                 </p>
@@ -279,36 +264,33 @@
                                 v-else-if="modalNotifications.length === 0"
                                 class="flex flex-col items-center justify-center py-12 px-4"
                             >
-                                <div
-                                    class="w-20 h-20 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900 dark:to-indigo-900 rounded-full flex items-center justify-center mb-4"
-                                >
-                                    <BellOff
-                                        :size="40"
-                                        class="text-blue-600 dark:text-blue-400"
-                                    />
-                                </div>
+                                <BellOff
+                                    :size="48"
+                                    class="text-gray-400 dark:text-gray-500 mb-3"
+                                />
                                 <p
-                                    class="text-gray-900 dark:text-white font-semibold text-lg"
+                                    class="text-gray-900 dark:text-white font-medium"
                                 >
-                                    All caught up!
+                                    No notifications
                                 </p>
                                 <p
                                     class="text-gray-500 dark:text-gray-400 text-sm mt-1"
                                 >
-                                    No notifications at the moment
+                                    You're all caught up
                                 </p>
                             </div>
 
-                            <div v-else class="p-4 space-y-3">
+                            <div
+                                v-else
+                                class="divide-y divide-gray-100 dark:divide-gray-700"
+                            >
                                 <div
                                     v-for="notification in modalNotifications"
                                     :key="notification.id"
-                                    class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:shadow-md cursor-pointer transition-all duration-200 group"
+                                    class="p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150 cursor-pointer"
                                     :class="{
-                                        'ring-2 ring-blue-400 dark:ring-blue-500 bg-blue-50 dark:bg-blue-900/20':
+                                        'bg-blue-50 dark:bg-blue-900/20':
                                             notification.unread,
-                                        'border-l-4 border-l-orange-500':
-                                            notification.important,
                                     }"
                                     @click="
                                         handleNotificationClickInModal(
@@ -316,61 +298,49 @@
                                         )
                                     "
                                 >
-                                    <div class="flex items-start space-x-4">
-                                        <div class="flex-shrink-0">
-                                            <div
-                                                class="w-10 h-10 rounded-xl bg-gradient-to-br flex items-center justify-center text-xl"
-                                                :class="
-                                                    getNotificationIconBg(
-                                                        notification.type
-                                                    )
-                                                "
-                                            >
-                                                {{
+                                    <div class="flex items-start space-x-3">
+                                        <div
+                                            class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center"
+                                            :class="
+                                                getNotificationIconBg(
+                                                    notification.type
+                                                )
+                                            "
+                                        >
+                                            <component
+                                                :is="
                                                     getNotificationIcon(
                                                         notification.type
                                                     )
-                                                }}
-                                            </div>
+                                                "
+                                                :size="18"
+                                                class="text-white"
+                                            />
                                         </div>
                                         <div class="flex-1 min-w-0">
                                             <div
                                                 class="flex items-start justify-between mb-1"
                                             >
                                                 <p
-                                                    class="text-sm font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"
+                                                    class="text-sm font-medium text-gray-900 dark:text-white"
                                                 >
                                                     {{ notification.title }}
                                                 </p>
                                                 <div
-                                                    class="flex items-center space-x-2 ml-2"
+                                                    class="flex items-center space-x-1 ml-2"
                                                 >
                                                     <span
                                                         v-if="
                                                             notification.unread
                                                         "
-                                                        class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
+                                                        class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
                                                     >
                                                         New
-                                                    </span>
-                                                    <span
-                                                        :class="
-                                                            getStatusBadgeClass(
-                                                                notification.type
-                                                            )
-                                                        "
-                                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold"
-                                                    >
-                                                        {{
-                                                            formatNotificationType(
-                                                                notification.type
-                                                            )
-                                                        }}
                                                     </span>
                                                 </div>
                                             </div>
                                             <p
-                                                class="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 mb-2"
+                                                class="text-sm text-gray-600 dark:text-gray-300 mb-2"
                                             >
                                                 {{
                                                     notification.message ||
@@ -381,9 +351,9 @@
                                                 class="flex justify-between items-center"
                                             >
                                                 <div
-                                                    class="flex items-center space-x-1.5 text-xs text-gray-500 dark:text-gray-400"
+                                                    class="flex items-center space-x-1 text-xs text-gray-500 dark:text-gray-400"
                                                 >
-                                                    <Clock :size="14" />
+                                                    <Clock :size="12" />
                                                     <span>{{
                                                         formatTime(
                                                             notification.created_at
@@ -397,10 +367,9 @@
                                                             notification.id
                                                         )
                                                     "
-                                                    class="flex items-center space-x-1 text-xs text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 font-medium transition-colors"
+                                                    class="text-xs text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 font-medium transition-colors"
                                                 >
-                                                    <CheckCircle2 :size="14" />
-                                                    <span>Mark read</span>
+                                                    Mark read
                                                 </button>
                                             </div>
                                         </div>
@@ -411,14 +380,14 @@
 
                         <!-- Footer -->
                         <div
-                            class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-end space-x-3"
+                            class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-6 py-4"
                         >
                             <button
                                 type="button"
-                                class="flex items-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-200"
+                                class="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md font-medium transition-colors duration-200"
                                 @click="viewAllNotifications"
                             >
-                                <List :size="18" />
+                                <List :size="16" />
                                 <span>View All Notifications</span>
                             </button>
                         </div>
@@ -446,6 +415,12 @@ import {
     CheckCircle2,
     CheckCheck,
     List,
+    AlertCircle,
+    Info,
+    RefreshCw,
+    Megaphone,
+    AlertTriangle,
+    Calendar,
 } from "lucide-vue-next";
 import Swal from "sweetalert2";
 
@@ -462,6 +437,9 @@ const { props: pageProps } = usePage();
 const user = computed(() => pageProps.auth?.user ?? {});
 const userRole = computed(() => user.value?.role || "customer");
 const userDisplayName = computed(() => user.value?.name || "Unknown User");
+const capitalizedUserRole = computed(
+    () => userRole.value.charAt(0).toUpperCase() + userRole.value.slice(1)
+);
 const userInitials = computed(() => {
     if (!user.value?.name) return "??";
     return user.value.name
@@ -479,13 +457,10 @@ const modalLoading = ref(false);
 const markingAllAsRead = ref(false);
 
 // Computed
-const modalUnreadCount = computed(() => {
-    return modalNotifications.value.filter((n) => n.unread).length;
-});
-
-const unreadCount = computed(() => {
-    return modalUnreadCount.value;
-});
+const modalUnreadCount = computed(
+    () => modalNotifications.value.filter((n) => n.unread).length
+);
+const unreadCount = computed(() => modalUnreadCount.value);
 
 // Breadcrumbs data
 const currentPageName = computed(() => {
@@ -498,6 +473,7 @@ const currentPageName = computed(() => {
 
     if (filteredSegments.length === 0) return "Dashboard";
     const lastSegment = filteredSegments[filteredSegments.length - 1];
+
     const pageNames = {
         dashboard: "Dashboard",
         reports: "Reports",
@@ -513,6 +489,7 @@ const currentPageName = computed(() => {
         payments: "Payments",
         notifications: "Notifications",
     };
+
     return (
         pageNames[lastSegment] ||
         lastSegment
@@ -530,6 +507,7 @@ const dashboardRoute = computed(() =>
         ? "/staff/dashboard"
         : "/customer/dashboard"
 );
+
 const notificationRoute = computed(() =>
     userRole.value === "admin"
         ? "/admin/notifications"
@@ -554,84 +532,34 @@ const handleResize = () => {
 // Notification methods
 const getNotificationIcon = (type) => {
     const icons = {
-        info: "ℹ️",
-        report_update: "🔄",
-        announcement: "📢",
-        bill_overdue: "🚨",
-        bill_due_soon: "📅",
-        bill_final_reminder: "⏰",
-        bill_due_today: "⚠️",
-        alert: "⚠️",
-        reminder: "⏰",
-        system: "⚙️",
-        order: "📦",
+        info: Info,
+        report_update: RefreshCw,
+        announcement: Megaphone,
+        bill_overdue: AlertTriangle,
+        bill_due_soon: Calendar,
+        bill_final_reminder: AlertCircle,
+        bill_due_today: AlertTriangle,
+        alert: AlertTriangle,
+        reminder: Calendar,
+        system: Info,
+        order: Bell,
     };
-    return icons[type] || "🔔";
+    return icons[type] || Bell;
 };
 
 const getNotificationIconBg = (type) => {
     const backgrounds = {
-        info: "from-blue-100 to-blue-200 dark:from-blue-900 dark:to-blue-800",
-        report_update:
-            "from-purple-100 to-purple-200 dark:from-purple-900 dark:to-purple-800",
-        announcement:
-            "from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600",
-        bill_overdue:
-            "from-red-100 to-red-200 dark:from-red-900 dark:to-red-800",
-        bill_due_soon:
-            "from-orange-100 to-orange-200 dark:from-orange-900 dark:to-orange-800",
-        bill_final_reminder:
-            "from-yellow-100 to-yellow-200 dark:from-yellow-900 dark:to-yellow-800",
-        bill_due_today:
-            "from-red-100 to-red-200 dark:from-red-900 dark:to-red-800",
-        alert: "from-red-100 to-red-200 dark:from-red-900 dark:to-red-800",
-        reminder:
-            "from-yellow-100 to-yellow-200 dark:from-yellow-900 dark:to-yellow-800",
+        info: "bg-blue-500",
+        report_update: "bg-purple-500",
+        announcement: "bg-gray-500",
+        bill_overdue: "bg-red-500",
+        bill_due_soon: "bg-orange-500",
+        bill_final_reminder: "bg-yellow-500",
+        bill_due_today: "bg-red-500",
+        alert: "bg-red-500",
+        reminder: "bg-yellow-500",
     };
-    return (
-        backgrounds[type] ||
-        "from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600"
-    );
-};
-
-const getStatusBadgeClass = (type) => {
-    const classes = {
-        info: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
-        report_update:
-            "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300",
-        announcement:
-            "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300",
-        bill_overdue:
-            "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
-        bill_due_soon:
-            "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300",
-        bill_final_reminder:
-            "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300",
-        bill_due_today:
-            "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
-        alert: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
-        reminder:
-            "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300",
-    };
-    return (
-        classes[type] ||
-        "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
-    );
-};
-
-const formatNotificationType = (type) => {
-    const types = {
-        info: "Information",
-        report_update: "Report Update",
-        announcement: "Announcement",
-        bill_overdue: "Overdue",
-        bill_due_soon: "Due Soon",
-        bill_final_reminder: "Final Reminder",
-        bill_due_today: "Due Today",
-        alert: "Alert",
-        reminder: "Reminder",
-    };
-    return types[type] || type;
+    return backgrounds[type] || "bg-gray-500";
 };
 
 const formatTime = (timestamp) => {
@@ -640,22 +568,17 @@ const formatTime = (timestamp) => {
     const notificationTime = new Date(timestamp);
     const diff = now - notificationTime;
 
-    if (diff < 60 * 1000) {
-        return "Just now";
-    }
-
+    if (diff < 60 * 1000) return "Just now";
     if (diff < 60 * 60 * 1000) {
         const minutes = Math.floor(diff / (60 * 1000));
-        return `${minutes} minute${minutes > 1 ? "s" : ""} ago`;
+        return `${minutes}m ago`;
     }
-
     if (diff < 24 * 60 * 60 * 1000) {
         const hours = Math.floor(diff / (60 * 60 * 1000));
-        return `${hours} hour${hours > 1 ? "s" : ""} ago`;
+        return `${hours}h ago`;
     }
-
     const days = Math.floor(diff / (24 * 60 * 60 * 1000));
-    return `${days} day${days > 1 ? "s" : ""} ago`;
+    return `${days}d ago`;
 };
 
 // Modal methods
@@ -673,11 +596,9 @@ const fetchModalNotifications = async () => {
             const data = await response.json();
             modalNotifications.value = data.notifications || [];
         } else {
-            console.error("Failed to fetch notifications");
             modalNotifications.value = [];
         }
-    } catch (error) {
-        console.error("Error fetching notifications:", error);
+    } catch {
         modalNotifications.value = [];
     } finally {
         modalLoading.value = false;
@@ -700,12 +621,10 @@ const markAsReadInModal = async (id) => {
             const notification = modalNotifications.value.find(
                 (n) => n.id === id
             );
-            if (notification) {
-                notification.unread = false;
-            }
+            if (notification) notification.unread = false;
         }
-    } catch (error) {
-        console.error("Failed to mark notification as read:", error);
+    } catch {
+        // Silent fail
     }
 };
 
@@ -727,18 +646,15 @@ const markAllAsReadInModal = async () => {
                 notification.unread = false;
             });
         }
-    } catch (error) {
-        console.error("Failed to mark all notifications as read:", error);
+    } catch {
+        // Silent fail
     } finally {
         markingAllAsRead.value = false;
     }
 };
 
 const handleNotificationClickInModal = (notification) => {
-    if (notification.unread) {
-        markAsReadInModal(notification.id);
-    }
-
+    if (notification.unread) markAsReadInModal(notification.id);
     if (notification.action_url) {
         router.visit(notification.action_url);
         showNotificationModal.value = false;
@@ -773,6 +689,7 @@ const handleLogout = async () => {
         confirmButtonText: "Yes, log out!",
         cancelButtonText: "Cancel",
     });
+
     if (result.isConfirmed) {
         closeUserDropdown();
         emit("logout");
@@ -781,9 +698,7 @@ const handleLogout = async () => {
 
 // Watch for modal open state
 watch(showNotificationModal, (isOpen) => {
-    if (isOpen) {
-        fetchModalNotifications();
-    }
+    if (isOpen) fetchModalNotifications();
 });
 
 // Click outside directive
@@ -839,40 +754,6 @@ button:focus {
 .transition-all {
     transition-property: all;
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Custom scrollbar */
-.max-h-\[500px\]::-webkit-scrollbar {
-    width: 8px;
-}
-
-.max-h-\[500px\]::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.max-h-\[500px\]::-webkit-scrollbar-thumb {
-    background: linear-gradient(
-        to bottom,
-        rgb(191, 219, 254),
-        rgb(147, 197, 253)
-    );
-    border-radius: 4px;
-}
-
-.max-h-\[500px\]::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(
-        to bottom,
-        rgb(147, 197, 253),
-        rgb(96, 165, 250)
-    );
-}
-
-.dark .max-h-\[500px\]::-webkit-scrollbar-thumb {
-    background: linear-gradient(to bottom, rgb(30, 58, 138), rgb(29, 78, 216));
-}
-
-.dark .max-h-\[500px\]::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(to bottom, rgb(29, 78, 216), rgb(37, 99, 235));
 }
 
 /* Modal animations */

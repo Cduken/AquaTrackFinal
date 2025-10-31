@@ -22,7 +22,7 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             RolesAndPermissionsSeeder::class,
-            MeterReadingSeeder::class,
+            // MeterReadingSeeder::class,
         ]);
     }
 }

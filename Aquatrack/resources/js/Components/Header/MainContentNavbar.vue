@@ -41,7 +41,7 @@
             <!-- Right section with notifications and user menu -->
             <div class="flex items-center space-x-3 ml-4">
                 <!-- Notifications Button -->
-                <div class="relative">
+                 <div v-if="showNotifications" class="relative">
                     <button
                         type="button"
                         @click="openNotificationModal"
@@ -417,6 +417,12 @@ const modalUnreadCount = computed(
     () => modalNotifications.value.filter((n) => n.unread).length
 );
 const unreadCount = computed(() => modalUnreadCount.value);
+
+
+const showNotifications = computed(() => {
+    const allowedRoles = ['admin', 'customer']; // Only show for admin and customer
+    return allowedRoles.includes(userRole.value);
+});
 
 // Breadcrumbs data
 const currentPageName = computed(() => {

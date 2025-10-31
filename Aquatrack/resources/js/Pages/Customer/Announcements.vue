@@ -1,530 +1,410 @@
 <template>
     <CustomerLayout>
-        <div class="w-full bg-white rounded-2xl shadow-sm overflow-hidden">
-            <!-- Header Section -->
-            <!-- <div
-                class="border-b border-gray-100 p-8 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50"
-            >
-                <div class="flex items-center gap-4">
-                    <div
-                        class="p-3 bg-white rounded-xl shadow-sm border border-blue-100"
-                    >
-                        <Megaphone class="text-blue-600 w-7 h-7" />
-                    </div>
-                    <div class="flex-1">
-                        <h1 class="text-3xl font-bold text-gray-900 mb-2">
-                            Announcements
-                        </h1>
-                        <p class="text-gray-600 text-base">
-                            Stay informed with the latest updates and important
-                            notices
-                        </p>
-                    </div>
-                    <div
-                        class="hidden lg:flex items-center gap-3 bg-white px-4 py-3 rounded-xl shadow-sm border border-gray-200"
-                    >
-                        <div
-                            class="w-3 h-3 bg-green-500 rounded-full animate-pulse"
-                        ></div>
-                        <span class="text-sm font-medium text-gray-700">
-                            {{ announcements.length }} Total Announcements
-                        </span>
-                    </div>
+        <!-- Main Content -->
+        <div class="flex flex-col xl:flex-row p-2 gap-4">
+            <!-- Announcements Section -->
+            <div class="xl:w-2/3">
+                <!-- Header -->
+                <div class="mb-6">
+                    <h1 class="text-xl font-semibold text-gray-900">
+                        Announcements
+                    </h1>
+                    <p class="text-gray-600 text-sm">
+                        Stay updated with the latest news and updates
+                    </p>
                 </div>
-            </div> -->
 
-            <!-- Main Content -->
-            <div class="flex flex-col xl:flex-row p-6 gap-8">
-                <!-- Announcements Section -->
-                <div class="xl:w-2/3">
-                    <!-- Filter & Stats Bar -->
-                    <div
-                        class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 p-5 bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl border border-gray-200"
-                    >
-                        <div class="flex-1">
-                            <h2 class="text-xl font-bold text-gray-900 mb-1">
-                                Latest Announcements
-                            </h2>
-                            <div class="flex items-center gap-3 flex-wrap">
-                                <p class="text-sm text-gray-600">
-                                    Showing
-                                    <span class="font-semibold text-blue-600">{{
-                                        filteredAnnouncements.length
-                                    }}</span>
-                                    of
-                                    <span class="font-semibold">{{
-                                        announcements.length
-                                    }}</span>
-                                    items
-                                </p>
-                                <span
-                                    v-if="selectedDate"
-                                    class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium flex items-center gap-1"
-                                >
-                                    <Filter class="w-3 h-3" />
-                                    Filtered by
-                                    {{ formatDisplayDate(selectedDate) }}
-                                </span>
-                            </div>
-                        </div>
-                        <div class="flex gap-2">
-                            <button
-                                @click="clearDateFilter"
-                                class="px-4 py-2.5 text-sm bg-white hover:bg-gray-50 text-gray-700 rounded-xl transition-all duration-200 flex items-center gap-2 border border-gray-300 hover:border-gray-400 shadow-sm hover:shadow-md"
-                                :class="{
-                                    'opacity-50 cursor-not-allowed pointer-events-none':
-                                        !selectedDate,
-                                }"
-                                :disabled="!selectedDate"
-                            >
-                                <RefreshCw class="w-4 h-4" />
-                                Clear Filter
-                            </button>
-                        </div>
-                    </div>
 
-                    <!-- Announcements Grid -->
-                    <div class="space-y-5">
-                        <!-- Announcement Cards -->
-                        <div
-                            v-for="announcement in filteredAnnouncements"
-                            :key="announcement.id"
-                            @click="openAnnouncementModal(announcement)"
-                            class="group cursor-pointer transition-all duration-300 hover:scale-[1.02]"
-                        >
-                            <div
-                                class="bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 rounded-2xl p-6 hover:shadow-xl hover:border-blue-300 transition-all duration-300 relative overflow-hidden"
-                            >
-                                <!-- Background Decoration -->
-                                <div
-                                    class="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full -translate-y-16 translate-x-16 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                                ></div>
-
-                                <div class="relative z-10">
-                                    <div
-                                        class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-4"
+                <!-- Announcements Table with Fixed Height -->
+                <div
+                    class="bg-white border border-gray-200 rounded-lg overflow-hidden"
+                >
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th
+                                        class="w-20 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200"
                                     >
-                                        <div class="flex-1">
-                                            <h3
-                                                class="text-xl font-bold text-gray-900 group-hover:text-blue-700 transition-colors duration-200 line-clamp-2 mb-2"
+                                        Status
+                                    </th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200"
+                                    >
+                                        Title
+                                    </th>
+                                    <th
+                                        class="w-32 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200"
+                                    >
+                                        Start Date
+                                    </th>
+                                    <th
+                                        class="w-32 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200"
+                                    >
+                                        End Date
+                                    </th>
+                                    <th
+                                        class="w-24 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                    >
+                                        Updated
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                <tr
+                                    v-for="announcement in paginatedAnnouncements"
+                                    :key="announcement.id"
+                                    @click="openAnnouncementModal(announcement)"
+                                    class="hover:bg-blue-50 cursor-pointer transition-colors group"
+                                >
+                                    <td
+                                        class="px-4 py-3 whitespace-nowrap border-r border-gray-200"
+                                    >
+                                        <span
+                                            :class="
+                                                getStatusClasses(
+                                                    announcement.status
+                                                )
+                                            "
+                                            class="px-2 py-1 rounded text-xs font-medium"
+                                        >
+                                            {{ announcement.status }}
+                                        </span>
+                                    </td>
+                                    <td
+                                        class="px-4 py-3 border-r border-gray-200"
+                                    >
+                                        <div class="flex flex-col">
+                                            <div
+                                                class="text-sm font-medium text-gray-900 group-hover:text-blue-600 line-clamp-1"
                                             >
                                                 {{ announcement.title }}
-                                            </h3>
-                                            <p
-                                                class="text-gray-600 text-sm leading-relaxed line-clamp-2"
+                                            </div>
+                                            <div
+                                                class="text-xs text-gray-500 line-clamp-1 mt-1"
                                             >
                                                 {{ announcement.content }}
-                                            </p>
-                                        </div>
-                                        <div
-                                            class="flex sm:flex-col items-center sm:items-end gap-3"
-                                        >
-                                            <span
-                                                :class="
-                                                    getStatusClasses(
-                                                        announcement.status
-                                                    )
-                                                "
-                                                class="px-4 py-2 rounded-full text-sm font-semibold border shadow-sm whitespace-nowrap"
-                                            >
-                                                {{ announcement.status }}
-                                            </span>
-                                            <div
-                                                class="hidden sm:flex items-center gap-1 text-xs text-gray-500"
-                                            >
-                                                <Eye class="w-3 h-3" />
-                                                <span
-                                                    >Click to view details</span
-                                                >
                                             </div>
                                         </div>
-                                    </div>
-
-                                    <!-- Date & Time Info -->
-                                    <div
-                                        class="flex flex-wrap items-center gap-4 pt-4 border-t border-gray-100"
+                                    </td>
+                                    <td
+                                        class="px-4 py-3 whitespace-nowrap text-sm text-gray-600 border-r border-gray-200"
                                     >
-                                        <div
-                                            class="flex items-center gap-2 text-sm text-gray-600"
-                                        >
+                                        {{
+                                            formatDisplayDate(
+                                                announcement.start_date
+                                            )
+                                        }}
+                                    </td>
+                                    <td
+                                        class="px-4 py-3 whitespace-nowrap text-sm text-gray-600 border-r border-gray-200"
+                                    >
+                                        {{
+                                            formatDisplayDate(
+                                                announcement.end_date
+                                            )
+                                        }}
+                                    </td>
+                                    <td
+                                        class="px-4 py-3 whitespace-nowrap text-xs text-gray-500"
+                                    >
+                                        {{
+                                            formatRelativeTime(
+                                                announcement.updated_at
+                                            )
+                                        }}
+                                    </td>
+                                </tr>
+                                <tr v-if="filteredAnnouncements.length === 0">
+                                    <td
+                                        colspan="5"
+                                        class="px-6 py-8 text-center"
+                                    >
+                                        <div class="max-w-md mx-auto">
                                             <div
-                                                class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center"
+                                                class="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center mx-auto mb-3"
                                             >
-                                                <Calendar
-                                                    class="text-blue-600 w-4 h-4"
+                                                <Megaphone
+                                                    class="text-gray-500 w-6 h-6"
                                                 />
                                             </div>
-                                            <div>
-                                                <div
-                                                    class="text-xs text-gray-500"
-                                                >
-                                                    Starts
-                                                </div>
-                                                <div class="font-medium">
+                                            <h3
+                                                class="text-lg font-semibold text-gray-700 mb-2"
+                                            >
+                                                No announcements found
+                                            </h3>
+                                            <p class="text-gray-500 text-sm">
+                                                <span v-if="selectedDate">
+                                                    No announcements scheduled
+                                                    for
                                                     {{
                                                         formatDisplayDate(
-                                                            announcement.start_date
+                                                            selectedDate
                                                         )
                                                     }}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="text-gray-300">→</div>
-                                        <div
-                                            class="flex items-center gap-2 text-sm text-gray-600"
-                                        >
-                                            <div
-                                                class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center"
+                                                </span>
+                                                <span v-else>
+                                                    No announcements available
+                                                    at the moment.
+                                                </span>
+                                            </p>
+                                            <button
+                                                v-if="selectedDate"
+                                                @click="clearDateFilter"
+                                                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm flex items-center gap-2 mx-auto mt-3"
                                             >
-                                                <CalendarCheck
-                                                    class="text-green-600 w-4 h-4"
-                                                />
-                                            </div>
-                                            <div>
-                                                <div
-                                                    class="text-xs text-gray-500"
-                                                >
-                                                    Ends
-                                                </div>
-                                                <div class="font-medium">
-                                                    {{
-                                                        formatDisplayDate(
-                                                            announcement.end_date
-                                                        )
-                                                    }}
-                                                </div>
-                                            </div>
+                                                <RefreshCw class="w-4 h-4" />
+                                                Show All Announcements
+                                            </button>
                                         </div>
-                                        <div class="flex-1"></div>
-                                        <div
-                                            class="flex items-center gap-2 text-xs text-gray-500 bg-gray-100 px-3 py-1.5 rounded-full"
-                                        >
-                                            <Clock class="w-3 h-3" />
-                                            <span
-                                                >Updated
-                                                {{
-                                                    formatRelativeTime(
-                                                        announcement.updated_at
-                                                    )
-                                                }}</span
-                                            >
-                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Fixed Height Container for Table Body -->
+                    <div class="max-h-96 overflow-y-auto">
+                        <!-- Table content is rendered above, this is just for the scrollable area -->
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                <div
+                    v-if="filteredAnnouncements.length > 0"
+                    class="flex items-center justify-between border-t border-gray-200 pt-4 mt-4"
+                >
+                    <div class="text-sm text-gray-600">
+                        Showing
+                        <span class="font-medium">{{ startIndex + 1 }}</span>
+                        to
+                        <span class="font-medium">{{ endIndex }}</span>
+                        of
+                        <span class="font-medium">{{
+                            filteredAnnouncements.length
+                        }}</span>
+                        announcements
+                    </div>
+                    <div class="flex items-center space-x-1">
+                        <button
+                            @click="prevPage"
+                            :disabled="currentPage === 1"
+                            class="px-3 py-1.5 text-sm rounded border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            Previous
+                        </button>
+                        <div class="flex space-x-1">
+                            <button
+                                v-for="page in totalPages"
+                                :key="page"
+                                @click="currentPage = page"
+                                :class="[
+                                    'px-3 py-1.5 text-sm rounded min-w-8',
+                                    currentPage === page
+                                        ? 'bg-blue-600 text-white'
+                                        : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50',
+                                ]"
+                            >
+                                {{ page }}
+                            </button>
+                        </div>
+                        <button
+                            @click="nextPage"
+                            :disabled="currentPage === totalPages"
+                            class="px-3 py-1.5 text-sm rounded border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            Next
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calendar & Sidebar Section -->
+            <div class="xl:w-1/3 mt-6">
+                <div class="space-y-4 mt-12">
+                    <!-- Calendar Card -->
+                    <div
+                        class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden"
+                    >
+                        <div class="p-4 border-b border-gray-100">
+                            <h3
+                                class="text-base font-semibold text-gray-900 mb-1 flex items-center gap-2"
+                            >
+                                <Calendar class="text-blue-600 w-4 h-4" />
+                                Calendar
+                            </h3>
+                            <p class="text-xs text-gray-500">
+                                Click dates to filter announcements
+                            </p>
+                        </div>
+
+                        <!-- Mini Calendar -->
+                        <div class="p-4">
+                            <!-- Calendar Header -->
+                            <div class="flex justify-between items-center mb-4">
+                                <button
+                                    @click="prevMonth"
+                                    class="w-8 h-8 rounded-lg hover:bg-gray-100 transition-colors flex items-center justify-center"
+                                >
+                                    <ChevronLeft
+                                        class="text-gray-600 w-4 h-4"
+                                    />
+                                </button>
+                                <h4
+                                    class="text-sm font-semibold text-gray-900 px-3 py-1 bg-gray-100 rounded"
+                                >
+                                    {{ currentMonthYear }}
+                                </h4>
+                                <button
+                                    @click="nextMonth"
+                                    class="w-8 h-8 rounded-lg hover:bg-gray-100 transition-colors flex items-center justify-center"
+                                >
+                                    <ChevronRight
+                                        class="text-gray-600 w-4 h-4"
+                                    />
+                                </button>
+                            </div>
+
+                            <!-- Calendar Grid -->
+                            <div class="space-y-2">
+                                <!-- Week Days Header -->
+                                <div class="grid grid-cols-7 gap-1">
+                                    <div
+                                        v-for="day in daysOfWeek"
+                                        :key="day"
+                                        class="text-center text-xs font-medium text-gray-500 py-1"
+                                    >
+                                        {{ day }}
+                                    </div>
+                                </div>
+
+                                <!-- Calendar Days -->
+                                <div class="grid grid-cols-7 gap-1">
+                                    <div
+                                        v-for="day in calendarDays"
+                                        :key="day.date"
+                                        @click="selectDate(day.date)"
+                                        :class="getDayClasses(day)"
+                                        class="h-8 flex items-center justify-center rounded text-xs transition-colors relative group cursor-pointer"
+                                    >
+                                        <span class="relative z-10">{{
+                                            day.day
+                                        }}</span>
+                                        <span
+                                            v-if="
+                                                hasAnnouncementOnDate(
+                                                    day.date
+                                                ) && day.isCurrentMonth
+                                            "
+                                            class="absolute bottom-1 w-1 h-1 bg-blue-500 rounded-full"
+                                        ></span>
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Today Button -->
+                            <button
+                                @click="goToToday"
+                                class="w-full mt-3 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-sm transition-colors flex items-center justify-center gap-2"
+                            >
+                                <CalendarCheck class="text-gray-600 w-4 h-4" />
+                                Today
+                            </button>
                         </div>
 
-                        <!-- Empty State -->
+                        <!-- Selected Date Info -->
                         <div
-                            v-if="filteredAnnouncements.length === 0"
-                            class="text-center py-16 bg-gradient-to-br from-gray-50 to-blue-50 rounded-2xl border-2 border-dashed border-gray-300"
+                            v-if="selectedDate"
+                            class="border-t border-gray-100 p-3 bg-blue-50"
                         >
-                            <div class="max-w-md mx-auto">
-                                <div
-                                    class="w-20 h-20 bg-white rounded-2xl shadow-sm border border-gray-200 flex items-center justify-center mx-auto mb-6"
-                                >
-                                    <Megaphone class="text-gray-400 w-8 h-8" />
-                                </div>
-                                <h3
-                                    class="text-2xl font-bold text-gray-700 mb-3"
-                                >
-                                    No announcements found
-                                </h3>
-                                <p
-                                    class="text-gray-500 text-lg mb-6 leading-relaxed"
-                                >
-                                    <span v-if="selectedDate">
-                                        There are no announcements scheduled
-                                        for<br />
-                                        <span
-                                            class="font-semibold text-blue-600"
-                                            >{{
-                                                formatDisplayDate(selectedDate)
-                                            }}</span
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <Filter class="text-blue-600 w-4 h-4" />
+                                    <div class="text-sm">
+                                        <div class="text-blue-900 font-medium">
+                                            Filtered by:
+                                        </div>
+                                        <div
+                                            class="text-blue-700 font-semibold"
                                         >
-                                    </span>
-                                    <span v-else>
-                                        No announcements available at the
-                                        moment.<br />
-                                        Check back later for updates.
-                                    </span>
-                                </p>
+                                            {{
+                                                formatDisplayDate(selectedDate)
+                                            }}
+                                        </div>
+                                    </div>
+                                </div>
                                 <button
-                                    v-if="selectedDate"
                                     @click="clearDateFilter"
-                                    class="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl transition-all duration-200 inline-flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                                    class="w-6 h-6 rounded hover:bg-blue-200 transition-colors flex items-center justify-center"
                                 >
-                                    <RefreshCw class="w-4 h-4" />
-                                    Show All Announcements
+                                    <X class="text-blue-600 w-4 h-4" />
                                 </button>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Calendar & Sidebar Section -->
-                <div class="xl:w-1/3">
-                    <div class="space-y-6 sticky top-6">
-                        <!-- Calendar Card -->
-                        <div
-                            class="bg-white border-2 border-gray-200 rounded-2xl shadow-sm overflow-hidden"
-                        >
-                            <div class="p-6 border-b border-gray-100">
-                                <h3
-                                    class="text-lg font-bold text-gray-900 mb-1 flex items-center gap-2"
-                                >
-                                    <Calendar class="text-blue-600 w-5 h-5" />
-                                    Announcement Calendar
-                                </h3>
-                                <p class="text-sm text-gray-500">
-                                    Click on dates to filter announcements
-                                </p>
-                            </div>
-
-                            <!-- Mini Calendar -->
-                            <div class="p-6">
-                                <!-- Calendar Header -->
-                                <div
-                                    class="flex justify-between items-center mb-6"
-                                >
-                                    <button
-                                        @click="prevMonth"
-                                        class="w-10 h-10 rounded-xl hover:bg-gray-100 transition-all duration-200 flex items-center justify-center group"
-                                    >
-                                        <ChevronLeft
-                                            class="text-gray-600 group-hover:text-blue-600 w-5 h-5"
-                                        />
-                                    </button>
-                                    <h4
-                                        class="text-lg font-bold text-gray-900 px-4 py-2 bg-gray-100 rounded-xl"
-                                    >
-                                        {{ currentMonthYear }}
-                                    </h4>
-                                    <button
-                                        @click="nextMonth"
-                                        class="w-10 h-10 rounded-xl hover:bg-gray-100 transition-all duration-200 flex items-center justify-center group"
-                                    >
-                                        <ChevronRight
-                                            class="text-gray-600 group-hover:text-blue-600 w-5 h-5"
-                                        />
-                                    </button>
-                                </div>
-
-                                <!-- Calendar Grid -->
-                                <div class="space-y-3">
-                                    <!-- Week Days Header -->
-                                    <div class="grid grid-cols-7 gap-1">
-                                        <div
-                                            v-for="day in daysOfWeek"
-                                            :key="day"
-                                            class="text-center text-sm font-semibold text-gray-500 py-2"
-                                        >
-                                            {{ day }}
-                                        </div>
-                                    </div>
-
-                                    <!-- Calendar Days -->
-                                    <div class="grid grid-cols-7 gap-1">
-                                        <div
-                                            v-for="day in calendarDays"
-                                            :key="day.date"
-                                            @click="selectDate(day.date)"
-                                            :class="getDayClasses(day)"
-                                            class="h-12 flex flex-col items-center justify-center rounded-xl text-sm transition-all duration-200 relative group cursor-pointer"
-                                        >
-                                            <span class="font-medium z-10">{{
-                                                day.day
-                                            }}</span>
-                                            <span
-                                                v-if="
-                                                    hasAnnouncementOnDate(
-                                                        day.date
-                                                    )
-                                                "
-                                                class="absolute top-1 right-1 w-2 h-2 bg-blue-500 rounded-full z-10"
-                                            ></span>
-                                            <!-- Hover effect -->
-                                            <div
-                                                class="absolute inset-1 bg-blue-600 rounded-lg opacity-0 group-hover:opacity-10 transition-opacity duration-200"
-                                            ></div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Today Button -->
-                                <button
-                                    @click="goToToday"
-                                    class="w-full mt-4 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 font-medium"
-                                >
-                                    <CalendarCheck
-                                        class="text-gray-600 w-4 h-4"
-                                    />
-                                    Go to Today
-                                </button>
-                            </div>
-
-                            <!-- Selected Date Info -->
-                            <div
-                                v-if="selectedDate"
-                                class="border-t border-gray-100 p-4 bg-blue-50"
+                    <!-- Upcoming Announcements -->
+                    <div
+                        class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden"
+                    >
+                        <div class="p-4 border-b border-gray-100">
+                            <h4
+                                class="text-base font-semibold text-gray-900 mb-1 flex items-center gap-2"
                             >
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center gap-3">
+                                <Clock class="text-green-600 w-4 h-4" />
+                                Upcoming
+                            </h4>
+                            <p class="text-xs text-gray-500">
+                                Next {{ upcomingAnnouncements.length }} events
+                            </p>
+                        </div>
+                        <div class="max-h-48 overflow-y-auto">
+                            <div class="space-y-2 p-2">
+                                <div
+                                    v-for="announcement in upcomingAnnouncements"
+                                    :key="announcement.id"
+                                    @click="openAnnouncementModal(announcement)"
+                                    class="p-3 rounded border border-transparent hover:border-blue-300 hover:bg-blue-50 cursor-pointer transition-colors"
+                                >
+                                    <div class="flex items-start gap-2">
                                         <div
-                                            class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center"
+                                            class="w-8 h-8 bg-blue-100 rounded flex items-center justify-center flex-shrink-0"
                                         >
-                                            <Filter
-                                                class="text-blue-600 w-4 h-4"
+                                            <Calendar
+                                                class="text-blue-600 w-3 h-3"
                                             />
                                         </div>
-                                        <div>
+                                        <div class="flex-1 min-w-0">
                                             <div
-                                                class="text-sm font-medium text-blue-900"
-                                            >
-                                                Filtering by:
-                                            </div>
-                                            <div
-                                                class="text-lg font-bold text-blue-700"
+                                                class="text-xs font-medium text-blue-600 mb-1"
                                             >
                                                 {{
                                                     formatDisplayDate(
-                                                        selectedDate
+                                                        announcement.start_date
                                                     )
                                                 }}
                                             </div>
-                                        </div>
-                                    </div>
-                                    <button
-                                        @click="clearDateFilter"
-                                        class="w-8 h-8 rounded-lg hover:bg-blue-200 transition-colors flex items-center justify-center"
-                                    >
-                                        <X class="text-blue-600 w-5 h-5" />
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Upcoming Announcements Card -->
-                        <div
-                            class="bg-white border-2 border-gray-200 rounded-2xl shadow-sm overflow-hidden"
-                        >
-                            <div class="p-6 border-b border-gray-100">
-                                <h4
-                                    class="text-lg font-bold text-gray-900 mb-1 flex items-center gap-2"
-                                >
-                                    <Clock class="text-green-600 w-5 h-5" />
-                                    Upcoming Events
-                                </h4>
-                                <p class="text-sm text-gray-500">
-                                    Next
-                                    {{ upcomingAnnouncements.length }} scheduled
-                                    announcements
-                                </p>
-                            </div>
-                            <div class="p-1">
-                                <div class="space-y-2 max-h-80 overflow-y-auto">
-                                    <div
-                                        v-for="announcement in upcomingAnnouncements"
-                                        :key="announcement.id"
-                                        @click="
-                                            openAnnouncementModal(announcement)
-                                        "
-                                        class="p-4 rounded-xl border-2 border-transparent hover:border-blue-300 hover:bg-blue-50 cursor-pointer transition-all duration-200 group"
-                                    >
-                                        <div class="flex items-start gap-3">
                                             <div
-                                                class="w-12 h-12 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0"
+                                                class="text-sm font-medium text-gray-900 line-clamp-1"
                                             >
-                                                <Calendar
-                                                    class="text-blue-600 w-5 h-5"
-                                                />
-                                            </div>
-                                            <div class="flex-1 min-w-0">
-                                                <div
-                                                    class="text-xs font-semibold text-blue-600 mb-1"
-                                                >
-                                                    {{
-                                                        formatDisplayDate(
-                                                            announcement.start_date
-                                                        )
-                                                    }}
-                                                </div>
-                                                <div
-                                                    class="text-sm font-bold text-gray-900 truncate group-hover:text-blue-700 transition-colors"
-                                                >
-                                                    {{ announcement.title }}
-                                                </div>
-                                                <div
-                                                    class="text-xs text-gray-500 mt-1 flex items-center gap-1"
-                                                >
-                                                    <User class="w-3 h-3" />
-                                                    {{
-                                                        announcement.author ||
-                                                        "Administrator"
-                                                    }}
-                                                </div>
+                                                {{ announcement.title }}
                                             </div>
                                         </div>
                                     </div>
-                                    <div
-                                        v-if="
-                                            upcomingAnnouncements.length === 0
-                                        "
-                                        class="text-center py-8 text-gray-500"
-                                    >
-                                        <CalendarX
-                                            class="text-gray-300 w-8 h-8 mb-2 mx-auto"
-                                        />
-                                        <div class="text-sm">
-                                            No upcoming announcements
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Quick Stats -->
-                        <div
-                            class="bg-gradient-to-br from-blue-50 to-indigo-100 border-2 border-blue-200 rounded-2xl p-6"
-                        >
-                            <h4
-                                class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2"
-                            >
-                                <BarChart3 class="text-blue-600 w-5 h-5" />
-                                Quick Stats
-                            </h4>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div
-                                    class="text-center p-4 bg-white rounded-xl shadow-sm border border-blue-100"
-                                >
-                                    <div
-                                        class="text-2xl font-bold text-blue-600 mb-1"
-                                    >
-                                        {{ activeAnnouncements.length }}
-                                    </div>
-                                    <div
-                                        class="text-xs text-gray-600 font-medium"
-                                    >
-                                        Active
-                                    </div>
                                 </div>
                                 <div
-                                    class="text-center p-4 bg-white rounded-xl shadow-sm border border-blue-100"
+                                    v-if="upcomingAnnouncements.length === 0"
+                                    class="text-center py-4 text-gray-500 text-sm"
                                 >
-                                    <div
-                                        class="text-2xl font-bold text-purple-600 mb-1"
-                                    >
-                                        {{ upcomingAnnouncements.length }}
-                                    </div>
-                                    <div
-                                        class="text-xs text-gray-600 font-medium"
-                                    >
-                                        Upcoming
-                                    </div>
+                                    <CalendarX
+                                        class="text-gray-300 w-6 h-6 mb-1 mx-auto"
+                                    />
+                                    No upcoming announcements
                                 </div>
                             </div>
                         </div>
                     </div>
+
                 </div>
             </div>
         </div>
@@ -534,50 +414,45 @@
             v-if="selectedAnnouncement"
             class="fixed inset-0 z-50 overflow-y-auto"
         >
-            <!-- Backdrop -->
             <div
-                class="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+                class="fixed inset-0 bg-black bg-opacity-50"
                 @click="closeAnnouncementModal"
             ></div>
-
-            <!-- Modal Container -->
             <div class="flex min-h-full items-center justify-center p-4">
-                <!-- Modal Content -->
                 <div
-                    class="relative bg-white rounded-2xl shadow-xl w-full max-w-2xl transform transition-all"
+                    class="relative bg-white rounded-lg shadow-lg w-full max-w-md"
                 >
                     <!-- Header -->
-                    <div class="border-b border-gray-100 p-6">
+                    <div class="border-b border-gray-200 p-4">
                         <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-3">
+                            <div class="flex items-center gap-2">
                                 <div
-                                    class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center"
+                                    class="w-8 h-8 bg-blue-100 rounded flex items-center justify-center"
                                 >
-                                    <Megaphone class="text-blue-600 w-5 h-5" />
+                                    <Megaphone class="text-blue-600 w-4 h-4" />
                                 </div>
                                 <div>
-                                    <h2 class="text-xl font-bold text-gray-900">
+                                    <h2
+                                        class="text-lg font-semibold text-gray-900"
+                                    >
                                         Announcement Details
                                     </h2>
-                                    <p class="text-gray-500 text-sm">
-                                        Complete information
-                                    </p>
                                 </div>
                             </div>
                             <button
                                 @click="closeAnnouncementModal"
-                                class="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors"
+                                class="w-6 h-6 rounded hover:bg-gray-100 flex items-center justify-center"
                             >
-                                <X class="text-gray-500 w-5 h-5" />
+                                <X class="text-gray-500 w-4 h-4" />
                             </button>
                         </div>
                     </div>
 
                     <!-- Content -->
-                    <div class="p-6 max-h-[60vh] overflow-y-auto">
+                    <div class="p-4 max-h-96 overflow-y-auto">
                         <!-- Status and Dates -->
                         <div
-                            class="flex items-center justify-between mb-6 pb-4 border-b border-gray-100"
+                            class="flex items-center justify-between mb-4 pb-3 border-b border-gray-200"
                         >
                             <span
                                 :class="{
@@ -591,61 +466,44 @@
                                         selectedAnnouncement.status ===
                                         'Scheduled',
                                 }"
-                                class="px-4 py-2 rounded-full text-sm font-semibold"
+                                class="px-3 py-1 rounded text-xs font-medium"
                             >
                                 {{ selectedAnnouncement.status }}
                             </span>
-                            <div class="text-right text-sm text-gray-600">
-                                <div class="flex items-center gap-4">
-                                    <div class="flex items-center gap-2">
-                                        <Calendar
-                                            class="text-blue-500 w-4 h-4"
-                                        />
-                                        <span>{{
-                                            formatDisplayDate(
-                                                selectedAnnouncement.start_date
-                                            )
-                                        }}</span>
-                                    </div>
-                                    <div class="text-gray-300">•</div>
-                                    <div class="flex items-center gap-2">
-                                        <CalendarCheck
-                                            class="text-green-500 w-4 h-4"
-                                        />
-                                        <span>{{
-                                            formatDisplayDate(
-                                                selectedAnnouncement.end_date
-                                            )
-                                        }}</span>
-                                    </div>
+                            <div class="text-right text-xs text-gray-600">
+                                <div class="flex items-center gap-2">
+                                    <Calendar class="text-blue-500 w-3 h-3" />
+                                    <span>{{
+                                        formatDisplayDate(
+                                            selectedAnnouncement.start_date
+                                        )
+                                    }}</span>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Title -->
-                        <h3 class="text-2xl font-bold text-gray-900 mb-4">
+                        <h3 class="text-lg font-bold text-gray-900 mb-3">
                             {{ selectedAnnouncement.title }}
                         </h3>
 
                         <!-- Content -->
-                        <div class="prose prose-lg max-w-none">
-                            <p
-                                class="text-gray-700 leading-relaxed whitespace-pre-line"
-                            >
-                                {{ selectedAnnouncement.content }}
-                            </p>
+                        <div
+                            class="text-sm text-gray-700 leading-relaxed whitespace-pre-line"
+                        >
+                            {{ selectedAnnouncement.content }}
                         </div>
                     </div>
 
                     <!-- Footer -->
                     <div
-                        class="border-t border-gray-100 px-6 py-4 bg-gray-50 rounded-b-2xl"
+                        class="border-t border-gray-200 px-4 py-3 bg-gray-50 rounded-b-lg"
                     >
                         <div
-                            class="flex items-center justify-between text-sm text-gray-500"
+                            class="flex items-center justify-between text-xs text-gray-500"
                         >
-                            <div class="flex items-center gap-2">
-                                <Clock class="w-4 h-4" />
+                            <div class="flex items-center gap-1">
+                                <Clock class="w-3 h-3" />
                                 <span
                                     >Created:
                                     {{
@@ -655,8 +513,8 @@
                                     }}</span
                                 >
                             </div>
-                            <div class="flex items-center gap-2">
-                                <User class="w-4 h-4" />
+                            <div class="flex items-center gap-1">
+                                <User class="w-3 h-3" />
                                 <span
                                     >By:
                                     {{
@@ -680,7 +538,6 @@ import {
     Megaphone,
     Filter,
     RefreshCw,
-    Eye,
     Calendar,
     CalendarCheck,
     Clock,
@@ -706,12 +563,48 @@ const selectedDate = ref(null);
 const currentMonth = ref(new Date().getMonth());
 const currentYear = ref(new Date().getFullYear());
 
+// Pagination
+const currentPage = ref(1);
+const itemsPerPage = 10;
+
+// Computed properties for pagination
+const totalPages = computed(() => {
+    return Math.ceil(filteredAnnouncements.value.length / itemsPerPage);
+});
+
+const startIndex = computed(() => {
+    return (currentPage.value - 1) * itemsPerPage;
+});
+
+const endIndex = computed(() => {
+    return Math.min(
+        startIndex.value + itemsPerPage,
+        filteredAnnouncements.value.length
+    );
+});
+
+const paginatedAnnouncements = computed(() => {
+    return filteredAnnouncements.value.slice(startIndex.value, endIndex.value);
+});
+
+// Pagination methods
+const nextPage = () => {
+    if (currentPage.value < totalPages.value) {
+        currentPage.value++;
+    }
+};
+
+const prevPage = () => {
+    if (currentPage.value > 1) {
+        currentPage.value--;
+    }
+};
+
 // Constants
-const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const daysOfWeek = ["S", "M", "T", "W", "T", "F", "S"];
 
 // Date utilities
 const dateUtils = {
-    // Get today's date in YYYY-MM-DD format (timezone safe)
     getToday() {
         const now = new Date();
         return new Date(now.getTime() - now.getTimezoneOffset() * 60000)
@@ -719,7 +612,6 @@ const dateUtils = {
             .split("T")[0];
     },
 
-    // Create date string without timezone issues
     createDateString(year, month, day) {
         const date = new Date(year, month, day);
         return new Date(date.getTime() - date.getTimezoneOffset() * 60000)
@@ -727,7 +619,6 @@ const dateUtils = {
             .split("T")[0];
     },
 
-    // Check if two dates are the same (ignoring time)
     isSameDate(date1, date2) {
         if (!date1 || !date2) return false;
         return (
@@ -735,7 +626,6 @@ const dateUtils = {
         );
     },
 
-    // Format date for display
     formatDisplay(dateString) {
         if (!dateString) return "Not specified";
         try {
@@ -752,7 +642,6 @@ const dateUtils = {
         }
     },
 
-    // Format date and time
     formatDateTime(dateString) {
         if (!dateString) return "Not available";
         try {
@@ -772,7 +661,6 @@ const dateUtils = {
         }
     },
 
-    // Format relative time
     formatRelative(dateString) {
         if (!dateString) return "Recently";
         try {
@@ -809,15 +697,14 @@ const calendarDays = computed(() => {
         0
     );
 
-    // Get the starting day of the week (0 = Sunday, 6 = Saturday)
     const startDay = firstDayOfMonth.getDay();
-
-    // Days from previous month
     const prevMonthLastDay = new Date(
         currentYear.value,
         currentMonth.value,
         0
     ).getDate();
+
+    // Previous month days
     for (let i = startDay - 1; i >= 0; i--) {
         const dayNumber = prevMonthLastDay - i;
         days.push({
@@ -860,7 +747,7 @@ const calendarDays = computed(() => {
         });
     }
 
-    // Next month days to complete the grid (6 rows × 7 columns = 42 cells)
+    // Next month days
     const remainingDays = 42 - days.length;
     for (let i = 1; i <= remainingDays; i++) {
         days.push({
@@ -895,7 +782,6 @@ const filteredAnnouncements = computed(() => {
         const endDate = new Date(announcement.end_date);
         const selected = new Date(selectedDate.value);
 
-        // Reset times to compare dates only
         startDate.setHours(0, 0, 0, 0);
         endDate.setHours(0, 0, 0, 0);
         selected.setHours(0, 0, 0, 0);
@@ -938,16 +824,15 @@ const activeAnnouncements = computed(() => {
 
 // Methods
 const getStatusClasses = (status) => {
-    const baseClasses =
-        "px-4 py-2 rounded-full text-sm font-semibold border shadow-sm whitespace-nowrap";
     const statusClasses = {
-        Active: "bg-green-100 text-green-800 border-green-200",
-        Inactive: "bg-red-100 text-red-800 border-red-200",
-        Scheduled: "bg-blue-100 text-blue-800 border-blue-200",
+        Active: "bg-green-100 text-green-800 border border-green-200",
+        Inactive: "bg-red-100 text-red-800 border border-red-200",
+        Scheduled: "bg-blue-100 text-blue-800 border border-blue-200",
     };
-    return `${baseClasses} ${
-        statusClasses[status] || "bg-gray-100 text-gray-800 border-gray-200"
-    }`;
+    return (
+        statusClasses[status] ||
+        "bg-gray-100 text-gray-800 border border-gray-200"
+    );
 };
 
 const getDayClasses = (day) => {
@@ -960,15 +845,11 @@ const getDayClasses = (day) => {
     }
 
     if (day.isToday) {
-        classes.push("bg-blue-100 text-blue-800 font-bold");
+        classes.push("bg-blue-100 text-blue-800 font-semibold");
     }
 
     if (dateUtils.isSameDate(day.date, selectedDate.value)) {
-        classes.push("bg-blue-600 text-white font-bold shadow-md");
-    }
-
-    if (hasAnnouncementOnDate(day.date) && day.isCurrentMonth) {
-        classes.push("relative");
+        classes.push("bg-blue-600 text-white font-semibold");
     }
 
     return classes.join(" ");
@@ -986,21 +867,12 @@ const formatRelativeTime = (dateString) => {
     return dateUtils.formatRelative(dateString);
 };
 
-const isSelectedDate = (date) => {
-    return dateUtils.isSameDate(date, selectedDate.value);
-};
-
-const isToday = (date) => {
-    return dateUtils.isSameDate(date, dateUtils.getToday());
-};
-
 const hasAnnouncementOnDate = (date) => {
     return props.announcements.some((announcement) => {
         const startDate = new Date(announcement.start_date);
         const endDate = new Date(announcement.end_date);
         const checkDate = new Date(date);
 
-        // Reset times to compare dates only
         startDate.setHours(0, 0, 0, 0);
         endDate.setHours(0, 0, 0, 0);
         checkDate.setHours(0, 0, 0, 0);
@@ -1011,10 +883,12 @@ const hasAnnouncementOnDate = (date) => {
 
 const selectDate = (date) => {
     selectedDate.value = date;
+    currentPage.value = 1; // Reset to first page when filtering
 };
 
 const clearDateFilter = () => {
     selectedDate.value = null;
+    currentPage.value = 1; // Reset to first page when clearing filter
 };
 
 const prevMonth = () => {
@@ -1040,6 +914,7 @@ const goToToday = () => {
     currentMonth.value = today.getMonth();
     currentYear.value = today.getFullYear();
     selectedDate.value = dateUtils.getToday();
+    currentPage.value = 1;
 };
 
 // Modal functions
@@ -1071,44 +946,47 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.line-clamp-2 {
+.line-clamp-1 {
     display: -webkit-box;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 1;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
 
-.line-clamp-3 {
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+/* Fixed height table container */
+.max-h-96 {
+    max-height: 24rem; /* 384px */
 }
 
-.transition-all {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+/* Custom scrollbar */
+.max-h-48::-webkit-scrollbar,
+.max-h-96::-webkit-scrollbar {
+    width: 4px;
 }
 
-.hover-lift:hover {
-    transform: translateY(-4px);
-}
-
-/* Custom scrollbar for upcoming events */
-.scrollbar-thin::-webkit-scrollbar {
-    width: 6px;
-}
-
-.scrollbar-thin::-webkit-scrollbar-track {
+.max-h-48::-webkit-scrollbar-track,
+.max-h-96::-webkit-scrollbar-track {
     background: #f1f5f9;
-    border-radius: 3px;
 }
 
-.scrollbar-thin::-webkit-scrollbar-thumb {
+.max-h-48::-webkit-scrollbar-thumb,
+.max-h-96::-webkit-scrollbar-thumb {
     background: #cbd5e1;
-    border-radius: 3px;
+    border-radius: 2px;
 }
 
-.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+.max-h-48::-webkit-scrollbar-thumb:hover,
+.max-h-96::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
+}
+
+/* Table styling */
+table {
+    border-collapse: collapse;
+}
+
+th,
+td {
+    border-color: #e5e7eb;
 }
 </style>

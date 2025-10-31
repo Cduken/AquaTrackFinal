@@ -1,402 +1,259 @@
 <template>
     <CustomerLayout>
-        <div
-            class="w-full bg-white shadow-xl rounded-xl overflow-hidden border border-gray-100"
-        >
-            <!-- Header Section - Redesigned to match announcement style -->
-           <div class=" px-6 py-4">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div>
-                        <h1 class="text-2xl md:text-3xl font-bold text-black">
-                            Water Reports
-                        </h1>
-                        <p class="text-black-400 mt-1">
-                            Track and manage your water reports
-                        </p>
+        <!-- Content Section -->
+        <div class="p-2">
+            <!-- Header Section -->
+            <div class="mb-4">
+                <h1 class="text-xl font-semibold text-gray-900">
+                    Water Reports
+                </h1>
+               <p class="text-gray-600 text-sm">
+                    Track and manage your water reports
+                </p>
+            </div>
+
+            <!-- Filters and Search -->
+            <div class="flex flex-col md:flex-row gap-3 mb-6">
+                <div class="flex-1">
+                    <div class="relative">
+                        <div
+                            class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                        >
+                            <v-icon
+                                name="bi-search"
+                                class="text-gray-400 w-4 h-4"
+                            />
+                        </div>
+                        <input
+                            type="text"
+                            placeholder="Search reports..."
+                            class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        />
                     </div>
+                </div>
+                <button
+                    @click="showAddModal = true"
+                    class="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white border border-transparent rounded-lg font-medium text-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                >
+                    <v-icon name="bi-plus-lg" class="mr-2 w-4 h-4" />
+                    Submit New Report
+                </button>
+
+                <div class="flex items-center gap-2">
+                    <select
+                        class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                        <option>All Status</option>
+                        <option>Pending</option>
+                        <option>In Progress</option>
+                        <option>Resolved</option>
+                    </select>
+                    <button
+                        class="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                        <v-icon
+                            name="bi-filter"
+                            class="text-gray-600 w-4 h-4"
+                        />
+                    </button>
                 </div>
             </div>
 
-            <!-- Stats Overview - Redesigned to match announcement style -->
-            <!-- <div
-                class="grid grid-cols-1 md:grid-cols-4 gap-4 p-6 border-b border-gray-200"
+            <!-- Reports Table -->
+            <div
+                class="bg-white rounded-lg border border-gray-200 overflow-hidden"
             >
-                <div
-                    class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm"
-                >
-                    <div class="flex items-center">
-                        <div class="p-3 bg-blue-100 rounded-xl mr-4">
-                            <v-icon
-                                name="bi-file-earmark-text"
-                                class="text-blue-600 w-6 h-6"
-                            />
-                        </div>
-
-                        <div class="ml-4">
-                            <p
-                                class="text-sm font-medium text-gray-600 dark:text-gray-400"
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th
+                                    class="w-12 px-3 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                >
+                                    ID
+                                </th>
+                                <th
+                                    class="w-28 px-3 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                >
+                                    Tracking Code
+                                </th>
+                                <th
+                                    class="w-36 px-3 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                >
+                                    Location
+                                </th>
+                                <th
+                                    class="px-3 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                >
+                                    Description
+                                </th>
+                                <th
+                                    class="w-24 px-3 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                >
+                                    Status
+                                </th>
+                                <th
+                                    class="w-24 px-3 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                >
+                                    Date
+                                </th>
+                                <th
+                                    class="w-16 px-3 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                >
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            <tr
+                                v-for="report in paginatedReports"
+                                :key="report.id"
+                                class="hover:bg-gray-50 transition-colors"
                             >
-                                Total Reports
-                            </p>
-                            <h3
-                                class="text-2xl font-bold text-gray-900 dark:text-white"
-                            >
-                                {{ reports.total || 0 }}
-                            </h3>
-                        </div>
+                                <td
+                                    class="px-3 py-3 whitespace-nowrap text-sm font-medium text-gray-900"
+                                >
+                                    {{ report.id }}
+                                </td>
+                                <td class="px-3 py-3 whitespace-nowrap">
+                                    <span
+                                        class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100"
+                                    >
+                                        {{ report.tracking_code }}
+                                    </span>
+                                </td>
+                                <td
+                                    class="px-3 py-3 whitespace-nowrap text-sm text-gray-700"
+                                >
+                                    <div class="flex items-center">
+                                        <v-icon
+                                            name="bi-geo-alt"
+                                            class="text-gray-400 mr-1.5 w-3.5 h-3.5"
+                                        />
+                                        {{ report.barangay }},
+                                        {{ report.municipality }}
+                                    </div>
+                                </td>
+                                <td class="px-3 py-3 text-sm text-gray-700">
+                                    <div class="line-clamp-2">
+                                        {{ report.description }}
+                                    </div>
+                                </td>
+                                <td class="px-3 py-3 whitespace-nowrap">
+                                    <span
+                                        :class="statusClasses(report.status)"
+                                        class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                                    >
+                                        <span
+                                            class="w-1.5 h-1.5 rounded-full mr-1.5"
+                                            :class="{
+                                                'bg-gray-500':
+                                                    report.status === 'pending',
+                                                'bg-blue-500':
+                                                    report.status ===
+                                                    'in_progress',
+                                                'bg-green-500':
+                                                    report.status ===
+                                                    'resolved',
+                                            }"
+                                        ></span>
+                                        {{ formatStatus(report.status) }}
+                                    </span>
+                                </td>
+                                <td
+                                    class="px-3 py-3 whitespace-nowrap text-sm text-gray-600"
+                                >
+                                    {{ formatDate(report.created_at) }}
+                                </td>
+                                <td
+                                    class="px-3 py-3 whitespace-nowrap text-sm font-medium"
+                                >
+                                    <button
+                                        class="text-blue-600 hover:text-blue-800 p-1.5 rounded hover:bg-blue-50 transition-colors"
+                                        title="View Details"
+                                        @click="openReportDetails(report)"
+                                    >
+                                        <v-icon
+                                            name="bi-eye-fill"
+                                            class="w-4 h-4"
+                                        />
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr v-if="reports.data.length === 0">
+                                <td colspan="7" class="px-6 py-8 text-center">
+                                    <div
+                                        class="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4"
+                                    >
+                                        <v-icon
+                                            name="bi-file-earmark-excel"
+                                            class="text-gray-400 w-8 h-8"
+                                        />
+                                    </div>
+                                    <h3
+                                        class="text-base font-semibold text-gray-900 mb-1"
+                                    >
+                                        No reports found
+                                    </h3>
+                                    <p
+                                        class="text-gray-500 text-sm max-w-md mx-auto"
+                                    >
+                                        You haven't submitted any water quality
+                                        reports yet. Click "Submit New Report"
+                                        to get started.
+                                    </p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
 
-
-                    </div>
-                </div>
+                <!-- Pagination -->
                 <div
-                    class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm"
+                    v-if="reports.data.length > 0"
+                    class="px-4 py-3 flex items-center justify-between border-t border-gray-200 bg-gray-50"
                 >
-                    <div class="flex items-center">
-                        <div class="p-3 bg-amber-100 rounded-xl mr-4">
-                            <v-icon
-                                name="bi-clock-history"
-                                class="text-amber-600 w-6 h-6"
-                            />
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-600">
-                                Pending
-                            </p>
-                            <p class="text-2xl font-bold text-gray-900">
-                                {{
-                                    reports.data.filter(
-                                        (r) => r.status === "pending"
-                                    ).length
-                                }}
-                            </p>
-                        </div>
+                    <div class="text-xs text-gray-600">
+                        Showing
+                        <span class="font-medium">{{ startIndex + 1 }}</span>
+                        to
+                        <span class="font-medium">{{ endIndex }}</span>
+                        of
+                        <span class="font-medium">{{
+                            reports.data.length
+                        }}</span>
+                        results
                     </div>
-                </div>
-                <div
-                    class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm"
-                >
-                    <div class="flex items-center">
-                        <div class="p-3 bg-purple-100 rounded-xl mr-4">
-                            <v-icon
-                                name="bi-arrow-repeat"
-                                class="text-purple-600 w-6 h-6"
-                            />
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-600">
-                                In Progress
-                            </p>
-                            <p class="text-2xl font-bold text-gray-900">
-                                {{
-                                    reports.data.filter(
-                                        (r) => r.status === "in_progress"
-                                    ).length
-                                }}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-                <div
-                    class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm"
-                >
-                    <div class="flex items-center">
-                        <div class="p-3 bg-green-100 rounded-xl mr-4">
-                            <v-icon
-                                name="bi-check-circle"
-                                class="text-green-600 w-6 h-6"
-                            />
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-600">
-                                Resolved
-                            </p>
-                            <p class="text-2xl font-bold text-gray-900">
-                                {{
-                                    reports.data.filter(
-                                        (r) => r.status === "resolved"
-                                    ).length
-                                }}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div> -->
-
-            <!-- Content Section -->
-            <div class="p-6">
-                <!-- Filters and Search - Redesigned to match announcement style -->
-                <div
-                    class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 p-4 bg-gray-50 rounded-xl"
-                >
-                    <div class="flex-1">
-                        <div class="relative">
-                            <div
-                                class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
-                            >
-                                <v-icon
-                                    name="bi-search"
-                                    class="text-gray-400 w-5 h-5"
-                                />
-                            </div>
-                            <input
-                                type="text"
-                                placeholder="Search reports..."
-                                class="pl-10 pr-4 py-2.5 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            />
-                        </div>
-                    </div>
-                    <button
-                        @click="showAddModal = true"
-                        class="inline-flex items-center justify-center px-5 py-3 bg-blue-600 text-white border border-transparent rounded-lg font-semibold text-sm uppercase tracking-widest hover:bg-blue-700 active:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl"
-                    >
-                        <v-icon name="bi-plus-lg" class="mr-2" />
-                        Submit New Report
-                    </button>
-                    <div class="flex items-center gap-3">
-                        <select
-                            class="border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        >
-                            <option>All Status</option>
-                            <option>Pending</option>
-                            <option>In Progress</option>
-                            <option>Resolved</option>
-                        </select>
+                    <div class="flex items-center space-x-1">
                         <button
-                            class="p-2.5 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+                            @click="prevPage"
+                            :disabled="currentPage === 1"
+                            class="px-2.5 py-1.5 text-xs font-medium rounded border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            <v-icon
-                                name="bi-filter"
-                                class="text-gray-600 w-5 h-5"
-                            />
+                            Previous
                         </button>
-                    </div>
-                </div>
-
-                <!-- Reports Table - Redesigned to match announcement style -->
-                <div
-                    class="bg-white rounded-xl border border-gray-200 overflow-hidden"
-                >
-                    <div class="overflow-x-auto">
-                        <table class="w-full">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th
-                                        class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"
-                                    >
-                                        ID
-                                    </th>
-                                    <th
-                                        class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"
-                                    >
-                                        Tracking Code
-                                    </th>
-                                    <th
-                                        class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"
-                                    >
-                                        Location
-                                    </th>
-                                    <th
-                                        class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"
-                                    >
-                                        Description
-                                    </th>
-                                    <th
-                                        class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"
-                                    >
-                                        Status
-                                    </th>
-                                    <th
-                                        class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"
-                                    >
-                                        Date
-                                    </th>
-                                    <th
-                                        class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"
-                                    >
-                                        Actions
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-200">
-                                <tr
-                                    v-for="report in reports.data"
-                                    :key="report.id"
-                                    class="hover:bg-gray-50 transition-colors"
-                                >
-                                    <td
-                                        class="px-6 py-5 whitespace-nowrap text-sm font-semibold text-gray-900"
-                                    >
-                                        {{ report.id }}
-                                    </td>
-                                    <td class="px-6 py-5 whitespace-nowrap">
-                                        <span
-                                            class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-                                        >
-                                            {{ report.tracking_code }}
-                                        </span>
-                                    </td>
-                                    <td
-                                        class="px-6 py-5 whitespace-nowrap text-sm text-gray-700"
-                                    >
-                                        <div class="flex items-center">
-                                            <v-icon
-                                                name="bi-geo-alt"
-                                                class="text-gray-400 mr-2 w-4 h-4"
-                                            />
-                                            {{ report.barangay }},
-                                            {{ report.municipality }}
-                                        </div>
-                                    </td>
-                                    <td
-                                        class="px-6 py-5 text-sm text-gray-700 max-w-xs"
-                                    >
-                                        <div class="line-clamp-2">
-                                            {{ report.description }}
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-5 whitespace-nowrap">
-                                        <span
-                                            :class="
-                                                statusClasses(report.status)
-                                            "
-                                            class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
-                                        >
-                                            <span
-                                                class="w-2 h-2 rounded-full mr-2"
-                                                :class="{
-                                                    'bg-gray-500':
-                                                        report.status ===
-                                                        'pending',
-                                                    'bg-blue-500':
-                                                        report.status ===
-                                                        'in_progress',
-                                                    'bg-green-500':
-                                                        report.status ===
-                                                        'resolved',
-                                                }"
-                                            ></span>
-                                            {{ formatStatus(report.status) }}
-                                        </span>
-                                    </td>
-                                    <td
-                                        class="px-6 py-5 whitespace-nowrap text-sm text-gray-600"
-                                    >
-                                        {{ formatDate(report.created_at) }}
-                                    </td>
-                                    <td
-                                        class="px-6 py-5 whitespace-nowrap text-sm font-medium"
-                                    >
-                                        <button
-                                            class="text-blue-600 hover:text-blue-800 p-2 rounded-lg hover:bg-blue-50 transition-colors"
-                                            title="View Details"
-                                            @click="openReportDetails(report)"
-                                        >
-                                            <v-icon
-                                                name="bi-eye-fill"
-                                                class="w-5 h-5"
-                                            />
-                                        </button>
-                                    </td>
-                                </tr>
-                                <tr v-if="reports.data.length === 0">
-                                    <td
-                                        colspan="7"
-                                        class="px-6 py-12 text-center"
-                                    >
-                                        <div
-                                            class="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6"
-                                        >
-                                            <v-icon
-                                                name="bi-file-earmark-excel"
-                                                class="text-gray-400 w-10 h-10"
-                                            />
-                                        </div>
-                                        <h3
-                                            class="text-lg font-semibold text-gray-900 mb-2"
-                                        >
-                                            No reports found
-                                        </h3>
-                                        <p
-                                            class="text-gray-500 mb-6 max-w-md mx-auto"
-                                        >
-                                            You haven't submitted any water
-                                            quality reports yet. Click "Submit
-                                            New Report" to get started.
-                                        </p>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Pagination -->
-                    <div
-                        v-if="reports.meta && reports.meta.last_page > 1"
-                        class="px-6 py-4 flex items-center justify-between border-t border-gray-200 bg-gray-50"
-                    >
-                        <div class="flex-1 flex justify-between sm:hidden">
-                            <Link
-                                v-if="reports.links.prev"
-                                :href="reports.links.prev"
-                                class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                        <div class="flex space-x-1">
+                            <button
+                                v-for="page in totalPages"
+                                :key="page"
+                                @click="currentPage = page"
+                                :class="[
+                                    'px-3 py-1.5 text-xs font-medium rounded',
+                                    currentPage === page
+                                        ? 'bg-blue-600 text-white'
+                                        : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50',
+                                ]"
                             >
-                                Previous
-                            </Link>
-                            <Link
-                                v-if="reports.links.next"
-                                :href="reports.links.next"
-                                class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                            >
-                                Next
-                            </Link>
+                                {{ page }}
+                            </button>
                         </div>
-                        <div
-                            class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between"
+                        <button
+                            @click="nextPage"
+                            :disabled="currentPage === totalPages"
+                            class="px-2.5 py-1.5 text-xs font-medium rounded border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            <div>
-                                <p class="text-sm text-gray-700">
-                                    Showing
-                                    <span class="font-medium">{{
-                                        reports.meta.from
-                                    }}</span>
-                                    to
-                                    <span class="font-medium">{{
-                                        reports.meta.to
-                                    }}</span>
-                                    of
-                                    <span class="font-medium">{{
-                                        reports.meta.total
-                                    }}</span>
-                                    results
-                                </p>
-                            </div>
-                            <div>
-                                <nav
-                                    class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
-                                    aria-label="Pagination"
-                                >
-                                    <Link
-                                        v-for="(link, index) in reports.meta
-                                            .links"
-                                        :key="index"
-                                        :href="link.url"
-                                        :disabled="!link.url"
-                                        :class="[
-                                            'relative inline-flex items-center px-4 py-2 border text-sm font-medium',
-                                            link.active
-                                                ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
-                                                : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50',
-                                            index === 0 ? 'rounded-l-md' : '',
-                                            index ===
-                                            reports.meta.links.length - 1
-                                                ? 'rounded-r-md'
-                                                : '',
-                                        ]"
-                                        v-html="link.label"
-                                    />
-                                </nav>
-                            </div>
-                        </div>
+                            Next
+                        </button>
                     </div>
                 </div>
             </div>
@@ -450,14 +307,47 @@ const props = defineProps({
     swal: Object,
 });
 
+// Pagination variables
+const currentPage = ref(1);
+const itemsPerPage = 10;
+
+// Computed properties for pagination
+const totalPages = computed(() => {
+    return Math.ceil(props.reports.data.length / itemsPerPage);
+});
+
+const startIndex = computed(() => {
+    return (currentPage.value - 1) * itemsPerPage;
+});
+
+const endIndex = computed(() => {
+    return Math.min(startIndex.value + itemsPerPage, props.reports.data.length);
+});
+
+const paginatedReports = computed(() => {
+    return props.reports.data.slice(startIndex.value, endIndex.value);
+});
+
+// Pagination methods
+const nextPage = () => {
+    if (currentPage.value < totalPages.value) {
+        currentPage.value++;
+    }
+};
+
+const prevPage = () => {
+    if (currentPage.value > 1) {
+        currentPage.value--;
+    }
+};
+
 // Watch for SweetAlert notifications
-// In the <script setup> section, update the watch and onMounted:
 watch(
     () => page.props.swal,
     (newSwal) => {
         if (newSwal) {
             Swal.fire({
-                toast: true, // Make it a toast for consistency
+                toast: true,
                 position: "top-end",
                 showConfirmButton: false,
                 timer: 5000,
@@ -518,9 +408,11 @@ const handleReportAdded = (successData) => {
 const statusClasses = (status) => {
     return {
         "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium": true,
-        "bg-blue-100 text-blue-800": status === "in_progress",
-        "bg-green-100 text-green-800": status === "resolved",
-        "bg-gray-100 text-gray-800": status === "pending",
+        "bg-blue-50 text-blue-700 border border-blue-100":
+            status === "in_progress",
+        "bg-green-50 text-green-700 border border-green-100":
+            status === "resolved",
+        "bg-gray-50 text-gray-700 border border-gray-100": status === "pending",
     };
 };
 
@@ -546,19 +438,6 @@ const formatDate = (dateString) => {
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
-}
-
-table {
-    width: 100%;
-    table-layout: auto;
-}
-
-.w-full {
-    width: 100%;
-}
-
-.p-6 {
-    padding: 1.5rem;
 }
 
 /* Improved responsive behavior */
@@ -590,30 +469,10 @@ table {
     .mobile-card {
         background: white;
         border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 1.25rem;
-        margin-bottom: 1rem;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     }
-}
-
-/* Custom animations */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.hover\:shadow-md {
-    transition: box-shadow 0.2s ease;
-}
-
-.hover\:shadow-md:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 </style>

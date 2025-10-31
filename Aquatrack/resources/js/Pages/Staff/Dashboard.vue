@@ -1,9 +1,8 @@
-//Pages/Staff/Dashboard.vue
 <template>
     <StaffLayout>
         <div class="min-h-screen p-4">
             <!-- Compact Header -->
-            <div class="mb-6">
+            <div class="mb-2">
                 <div class="flex items-center justify-between">
                     <div>
                         <h1 class="text-2xl font-bold text-gray-900">
@@ -32,10 +31,10 @@
             </div>
 
             <!-- Compact Metrics Grid -->
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6 ">
                 <!-- Today's Readings -->
                 <div
-                    class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
+                    class="bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
                 >
                     <div class="flex items-center justify-between mb-3">
                         <div class="p-2 bg-blue-50 rounded-lg">
@@ -51,35 +50,12 @@
                         {{ dashboardData.todaysReadings || 0 }}
                     </h3>
                     <p class="text-xs text-gray-600 mt-1">Meter Readings</p>
-                    <div class="mt-3 flex items-center gap-2">
-                        <div class="flex-1 bg-gray-100 rounded-full h-1">
-                            <div
-                                class="bg-blue-500 h-1 rounded-full transition-all duration-500"
-                                :style="{
-                                    width: `${Math.min(
-                                        ((dashboardData.todaysReadings || 0) /
-                                            dashboardData.dailyTarget) *
-                                            100,
-                                        100
-                                    )}%`,
-                                }"
-                            ></div>
-                        </div>
-                        <span class="text-xs text-gray-500">
-                            {{
-                                Math.round(
-                                    ((dashboardData.todaysReadings || 0) /
-                                        dashboardData.dailyTarget) *
-                                        100
-                                )
-                            }}%
-                        </span>
-                    </div>
+
                 </div>
 
                 <!-- Weekly -->
                 <div
-                    class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
+                    class="bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
                 >
                     <div class="flex items-center justify-between mb-3">
                         <div class="p-2 bg-purple-50 rounded-lg">
@@ -95,29 +71,11 @@
                         {{ dashboardData.weeklyReadings || 0 }}
                     </h3>
                     <p class="text-xs text-gray-600 mt-1">Total Readings</p>
-                    <div
-                        class="mt-3 flex items-center gap-1"
-                        :class="
-                            dashboardData.weeklyTrend >= 0
-                                ? 'text-green-600'
-                                : 'text-red-600'
-                        "
-                    >
-                        <TrendingUp
-                            v-if="dashboardData.weeklyTrend >= 0"
-                            class="w-3 h-3"
-                        />
-                        <TrendingDown v-else class="w-3 h-3" />
-                        <span class="text-xs font-medium">
-                            {{ dashboardData.weeklyTrend >= 0 ? "+" : ""
-                            }}{{ dashboardData.weeklyTrend }}% vs last week
-                        </span>
-                    </div>
                 </div>
 
                 <!-- Monthly -->
                 <div
-                    class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
+                    class="bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
                 >
                     <div class="flex items-center justify-between mb-3">
                         <div class="p-2 bg-emerald-50 rounded-lg">
@@ -133,94 +91,11 @@
                         {{ dashboardData.monthlyReadings || 0 }}
                     </h3>
                     <p class="text-xs text-gray-600 mt-1">Monthly Total</p>
-                    <div
-                        class="mt-3 flex items-center gap-1"
-                        :class="
-                            dashboardData.monthlyTrend >= 0
-                                ? 'text-green-600'
-                                : 'text-red-600'
-                        "
-                    >
-                        <TrendingUp
-                            v-if="dashboardData.monthlyTrend >= 0"
-                            class="w-3 h-3"
-                        />
-                        <TrendingDown v-else class="w-3 h-3" />
-                        <span class="text-xs font-medium">
-                            {{ dashboardData.monthlyTrend >= 0 ? "+" : ""
-                            }}{{ dashboardData.monthlyTrend }}% vs last month
-                        </span>
-                    </div>
                 </div>
 
                 <!-- Performance -->
                 <div
-                    class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-4 shadow-sm text-white hover:shadow-md transition-shadow"
-                >
-                    <div class="flex items-center justify-between mb-3">
-                        <div class="p-2 bg-white/20 rounded-lg">
-                            <Target class="w-4 h-4" />
-                        </div>
-                        <span
-                            class="text-xs font-medium bg-white/20 px-2 py-0.5 rounded-full"
-                        >
-                            Goal
-                        </span>
-                    </div>
-                    <h3 class="text-2xl font-bold">
-                        {{
-                            Math.round(
-                                ((dashboardData.todaysReadings || 0) /
-                                    dashboardData.dailyTarget) *
-                                    100
-                            )
-                        }}%
-                    </h3>
-                    <p class="text-xs text-blue-100 mt-1">Daily Target</p>
-                    <p class="text-xs text-blue-200 mt-2">
-                        {{ dashboardData.dailyTarget }} readings goal
-                    </p>
-                </div>
-            </div>
-
-            <!-- Analytics and Status Grid -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
-                <!-- Weekly Trend Chart Card -->
-                <div
-                    class="bg-white rounded-xl p-4 shadow-sm border border-gray-100"
-                >
-                    <div class="flex items-center justify-between mb-3">
-                        <h3 class="text-sm font-semibold text-gray-900">
-                            Weekly Trend
-                        </h3>
-                        <Activity class="w-4 h-4 text-gray-400" />
-                    </div>
-                    <div class="flex items-end justify-between h-20 gap-1">
-                        <div
-                            v-for="(
-                                day, index
-                            ) in dashboardData.weeklyChartData || []"
-                            :key="index"
-                            class="flex-1 bg-blue-100 rounded-t transition-all hover:bg-blue-200"
-                            :style="{ height: `${day.percentage}%` }"
-                            :title="`${day.day}: ${day.readings} readings`"
-                        ></div>
-                    </div>
-                    <div
-                        class="flex items-center justify-between mt-2 text-xs text-gray-500"
-                    >
-                        <span
-                            v-for="day in dashboardData.weeklyChartData || []"
-                            :key="day.day"
-                        >
-                            {{ day.day }}
-                        </span>
-                    </div>
-                </div>
-
-                <!-- Status Overview - Compact -->
-                <div
-                    class="bg-white rounded-xl p-4 shadow-sm border border-gray-100"
+                    class="bg-white rounded-xl p-4 shadow-sm border border-gray-200"
                 >
                     <div class="flex items-center justify-between mb-3">
                         <h3 class="text-sm font-semibold text-gray-900">
@@ -267,85 +142,10 @@
                             </span>
                         </div>
                     </div>
-                    <div class="mt-3 pt-3 border-t border-gray-100">
-                        <div
-                            class="flex gap-1 h-2 rounded-full overflow-hidden"
-                        >
-                            <div
-                                class="bg-green-500"
-                                :style="{
-                                    width: `${getStatusPercentage('paid')}%`,
-                                }"
-                            ></div>
-                            <div
-                                class="bg-yellow-500"
-                                :style="{
-                                    width: `${getStatusPercentage('pending')}%`,
-                                }"
-                            ></div>
-                            <div
-                                class="bg-red-500"
-                                :style="{
-                                    width: `${getStatusPercentage('overdue')}%`,
-                                }"
-                            ></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Performance Metrics -->
-                <div
-                    class="bg-white rounded-xl p-4 shadow-sm border border-gray-100"
-                >
-                    <div class="flex items-center justify-between mb-3">
-                        <h3 class="text-sm font-semibold text-gray-900">
-                            Performance
-                        </h3>
-                        <Zap class="w-4 h-4 text-gray-400" />
-                    </div>
-                    <div class="space-y-3">
-                        <div
-                            class="flex items-center justify-between p-2 bg-blue-50 rounded-lg"
-                        >
-                            <div class="flex items-center gap-2">
-                                <CheckCircle2 class="w-4 h-4 text-blue-600" />
-                                <span class="text-xs text-gray-700"
-                                    >Completion Rate</span
-                                >
-                            </div>
-                            <span class="text-sm font-bold text-blue-600">
-                                {{ dashboardData.completionRate || 0 }}%
-                            </span>
-                        </div>
-                        <div
-                            class="flex items-center justify-between p-2 bg-green-50 rounded-lg"
-                        >
-                            <div class="flex items-center gap-2">
-                                <Clock class="w-4 h-4 text-green-600" />
-                                <span class="text-xs text-gray-700"
-                                    >Avg. Reading Time</span
-                                >
-                            </div>
-                            <span class="text-sm font-bold text-green-600">
-                                {{ dashboardData.avgReadingTime || "0m" }}
-                            </span>
-                        </div>
-                        <div
-                            class="flex items-center justify-between p-2 bg-purple-50 rounded-lg"
-                        >
-                            <div class="flex items-center gap-2">
-                                <Award class="w-4 h-4 text-purple-600" />
-                                <span class="text-xs text-gray-700"
-                                    >Efficiency Score</span
-                                >
-                            </div>
-                            <span class="text-sm font-bold text-purple-600">
-                                {{ dashboardData.efficiencyScore || 0 }}/10
-                            </span>
-                        </div>
-                    </div>
                 </div>
             </div>
+
+
 
             <!-- Recent Activity - Compact -->
             <div

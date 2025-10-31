@@ -295,7 +295,6 @@ watch(
 <template>
     <AdminLayout>
         <div class="max-w-[1600px] mx-auto px-5 py-5">
-
             <!-- Stats Grid -->
             <div
                 class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
@@ -353,9 +352,12 @@ watch(
 
                     <!-- Recent Reports -->
                     <div
-                        class="bg-white rounded-lg border border-gray-300 shadow-sm overflow-hidden"
+                        class="bg-white rounded-lg border border-gray-300 shadow-sm overflow-hidden flex flex-col"
+                        style="height: 500px; min-height: 630px"
                     >
-                        <div class="px-6 py-5 border-b border-gray-200">
+                        <div
+                            class="px-6 py-5 border-b border-gray-200 flex-shrink-0"
+                        >
                             <div class="flex items-center justify-between">
                                 <h2 class="text-lg font-semibold text-gray-900">
                                     Recent Reports
@@ -368,19 +370,22 @@ watch(
                                 </Link>
                             </div>
                         </div>
-                        <div class="p-6">
-                            <div class="space-y-3">
-                                <ReportItem
-                                    v-for="report in safeRecentReports"
-                                    :key="report.id"
-                                    :report="report"
-                                />
-                                <EmptyState
-                                    v-if="safeRecentReports.length === 0"
-                                    icon="AlertCircle"
-                                    title="No reports found"
-                                    description="Reports will appear here once submitted"
-                                />
+                        <div class="flex-1 overflow-hidden p-6">
+                            <div class="h-full overflow-y-auto">
+                                <div class="space-y-3 min-h-full">
+                                    <ReportItem
+                                        v-for="report in safeRecentReports"
+                                        :key="report.id"
+                                        :report="report"
+                                    />
+                                    <EmptyState
+                                        v-if="safeRecentReports.length === 0"
+                                        icon="AlertCircle"
+                                        title="No reports found"
+                                        description="Reports will appear here once submitted"
+                                        class="h-full flex items-center justify-center"
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -453,7 +458,8 @@ watch(
 
                     <!-- Recent Customers -->
                     <div
-                        class="bg-white rounded-lg border border-gray-300 shadow-sm overflow-hidden"
+                        class="bg-white rounded-lg border border-gray-300 shadow-sm overflow-hidden flex flex-col"
+                        style="height: 260px; min-height: 200px"
                     >
                         <div class="px-6 py-5 border-b border-gray-200">
                             <div class="flex items-center justify-between">

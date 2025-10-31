@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Response;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class AdminRecordController extends Controller
 {
@@ -71,10 +73,9 @@ class AdminRecordController extends Controller
             try {
                 $dueDate = $this->getDueDate($record->user, $record->reading_date);
                 $record->due_date = $dueDate;
-                $record->save(); // Use save() instead of update to ensure it works
+                $record->save();
                 $fixedCount++;
             } catch (\Exception $e) {
-                // Log error but continue with other records
                 Log::error("Failed to fix due date for record {$record->id}: " . $e->getMessage());
             }
         }
@@ -96,21 +97,21 @@ class AdminRecordController extends Controller
         }
 
         $dueDate = Carbon::parse($dueDate);
-        $today = Carbon::today('America/Los_Angeles');
+        $today = Carbon::now('Asia/Manila');
 
         // Check if record is overdue (the day after due date)
         if ($today->gt($dueDate)) {
-            $originalAmount = $record->amount; // This is the base amount without surcharge
-            $surcharge = round($originalAmount * 0.10, 2); // 10% surcharge
+            $originalAmount = $record->amount;
+            $surcharge = round($originalAmount * 0.10, 2);
             $totalAmount = $originalAmount + $surcharge;
 
             // Auto-update status to Overdue if it's currently Pending
             if ($record->status === 'Pending') {
                 $record->update([
                     'status' => 'Overdue',
-                    'amount' => $totalAmount // Save the total amount with surcharge to database
+                    'amount' => $totalAmount
                 ]);
-                $record->refresh(); // Refresh the record to get updated status and amount
+                $record->refresh();
             }
 
             return [
@@ -149,7 +150,7 @@ class AdminRecordController extends Controller
             }
 
             $dueDate = Carbon::parse($dueDate);
-            $today = Carbon::today('America/Los_Angeles');
+            $today = Carbon::now('Asia/Manila');
 
             if ($today->gt($dueDate)) {
                 $originalAmount = $record->amount;
@@ -158,7 +159,7 @@ class AdminRecordController extends Controller
 
                 $record->update([
                     'status' => 'Overdue',
-                    'amount' => $totalAmount // Save the total amount with surcharge
+                    'amount' => $totalAmount
                 ]);
                 $updatedCount++;
             }
@@ -169,7 +170,7 @@ class AdminRecordController extends Controller
 
     public function index(Request $request)
     {
-        // Fix missing due dates first - FORCE it to run
+        // Fix missing due dates first
         $fixedDueDates = $this->fixMissingDueDates();
 
         // Log for debugging
@@ -367,5 +368,219 @@ class AdminRecordController extends Controller
 
         return redirect()->route('admin.records.index')
             ->with('success', "Fixed {$fixedDueDates} due dates. {$remainingNull} records still without due dates.");
+    }
+
+    /**
+     * Export records in CSV or PDF format using month and year filters
+     */
+    public function export(Request $request)
+    {
+        $format = $request->get('format', 'csv');
+        $filters = $request->only(['search', 'status', 'month', 'year']);
+
+        // Build the query with relationships
+        $query = MeterReading::with('user');
+
+        // Apply month filter for export
+        if (!empty($filters['month'])) {
+            $query->whereMonth('reading_date', $filters['month']);
+        }
+
+        // Apply year filter for export
+        if (!empty($filters['year'])) {
+            $query->whereYear('reading_date', $filters['year']);
+        }
+
+        // If no month/year specified, default to current month
+        if (empty($filters['month']) && empty($filters['year'])) {
+            $currentMonth = Carbon::now('Asia/Manila')->format('m');
+            $currentYear = Carbon::now('Asia/Manila')->format('Y');
+            $query->whereMonth('reading_date', $currentMonth)
+                ->whereYear('reading_date', $currentYear);
+        }
+
+        // Apply other filters
+        if (!empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->whereHas('user', function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('lastname', 'like', "%{$search}%")
+                    ->orWhere('account_number', 'like', "%{$search}%");
+            });
+        }
+
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        // Get all records for export
+        $records = $query->orderBy('reading_date', 'desc')->get();
+
+        // Calculate revenue statistics for the filtered period
+        $paidRecords = $records->where('status', 'Paid');
+        $totalRevenue = $paidRecords->sum('amount');
+        $totalRecords = $records->count();
+        $paidCount = $paidRecords->count();
+        $pendingCount = $records->where('status', 'Pending')->count();
+        $overdueCount = $records->where('status', 'Overdue')->count();
+
+        // Determine period title based on filters
+        $periodTitle = $this->getPeriodTitle($filters);
+
+        $revenueStats = [
+            'Period' => $periodTitle,
+            'Total Revenue' => '₱' . number_format($totalRevenue, 2),
+            'Total Records' => $totalRecords,
+            'Paid Records' => $paidCount,
+            'Pending Records' => $pendingCount,
+            'Overdue Records' => $overdueCount,
+            'Collection Rate' => $totalRecords > 0 ? round(($paidCount / $totalRecords) * 100, 2) . '%' : '0%',
+        ];
+
+        $timestamp = Carbon::now('Asia/Manila')->format('Y-m-d_H-i-s');
+        $filename = "records_export_{$periodTitle}_{$timestamp}.{$format}";
+
+        if ($format === 'csv') {
+            return $this->exportCsv($records, $revenueStats, $filename, $periodTitle);
+        } elseif ($format === 'pdf') {
+            return $this->exportPdf($records, $revenueStats, $filename, $periodTitle);
+        }
+
+        return redirect()->back()->with('error', 'Invalid export format.');
+    }
+
+    /**
+     * Get formatted period title based on month/year filters
+     */
+    private function getPeriodTitle($filters)
+    {
+        $month = $filters['month'] ?? null;
+        $year = $filters['year'] ?? null;
+
+        if ($month && $year) {
+            // Specific month and year
+            $date = Carbon::createFromDate($year, $month, 1);
+            return $date->format('F Y');
+        } elseif ($month && !$year) {
+            // Month only (current year)
+            $currentYear = Carbon::now('Asia/Manila')->format('Y');
+            $date = Carbon::createFromDate($currentYear, $month, 1);
+            return $date->format('F Y');
+        } elseif (!$month && $year) {
+            // Year only
+            return "Year {$year}";
+        } else {
+            // No filters - current month
+            return Carbon::now('Asia/Manila')->format('F Y');
+        }
+    }
+
+    /**
+     * Export data as CSV with period info
+     */
+    private function exportCsv($records, $revenueStats, $filename, $periodTitle)
+    {
+        $headers = [
+            'Content-Type' => 'text/csv; charset=utf-8',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0'
+        ];
+
+        $callback = function () use ($records, $revenueStats, $periodTitle) {
+            $file = fopen('php://output', 'w');
+
+            // Add BOM for UTF-8
+            fwrite($file, "\xEF\xBB\xBF");
+
+            // Add period and revenue statistics section
+            fputcsv($file, ['PERIOD REPORT: ' . $periodTitle]);
+            fputcsv($file, []); // Empty line
+            foreach ($revenueStats as $key => $value) {
+                fputcsv($file, [$key, $value]);
+            }
+            fputcsv($file, []); // Empty line
+            fputcsv($file, []); // Empty line
+
+            // Add records section header
+            fputcsv($file, ['RECORDS DATA']);
+            fputcsv($file, []); // Empty line
+
+            // Add column headers
+            $headers = [
+                'Customer Name',
+                'Account Number',
+                'Serial Number',
+                'Reading',
+                'Consumption',
+                'Amount',
+                'Surcharge',
+                'Total Amount',
+                'Due Date',
+                'Status',
+                'Reading Date'
+            ];
+            fputcsv($file, $headers);
+
+            // Add data rows
+            foreach ($records as $record) {
+                // Ensure due date is set
+                if (!$record->due_date) {
+                    $record->due_date = $this->getDueDate($record->user, $record->reading_date);
+                    $record->save();
+                }
+
+                $surchargeData = $this->calculateSurchargeAndUpdateStatus($record, $record->due_date);
+
+                $row = [
+                    'Customer Name' => $record->user->name . ' ' . $record->user->lastname,
+                    'Account Number' => $record->user->account_number ?? 'N/A',
+                    'Serial Number' => $record->user->serial_number ?? 'N/A',
+                    'Reading' => $record->reading . ' m³',
+                    'Consumption' => $record->consumption . ' m³',
+                    'Amount' => '₱' . number_format($record->amount, 2),
+                    'Surcharge' => $surchargeData['surcharge'] ? '₱' . number_format($surchargeData['surcharge'], 2) : 'None',
+                    'Total Amount' => '₱' . number_format($surchargeData['total_amount'], 2),
+                    'Due Date' => Carbon::parse($record->due_date)->format('M d, Y'),
+                    'Status' => $record->status,
+                    'Reading Date' => Carbon::parse($record->reading_date)->format('M d, Y'),
+                ];
+
+                fputcsv($file, $row);
+            }
+
+            fclose($file);
+        };
+
+        return Response::stream($callback, 200, $headers);
+    }
+
+    /**
+     * Export data as PDF with period info
+     */
+    private function exportPdf($records, $revenueStats, $filename, $periodTitle)
+    {
+        try {
+            // Use Philippine time for export date
+            $exportDate = Carbon::now('Asia/Manila')->format('F d, Y g:i A');
+
+            $pdfData = [
+                'records' => $records,
+                'revenueStats' => $revenueStats,
+                'exportDate' => $exportDate,
+                'totalRecords' => $records->count(),
+                'periodTitle' => $periodTitle,
+            ];
+
+            $pdf = PDF::loadView('admin.exports.records-pdf', $pdfData)
+                ->setPaper('a4', 'landscape')
+                ->setOption('defaultFont', 'Arial');
+
+            return $pdf->download($filename);
+        } catch (\Exception $e) {
+            Log::error('PDF Export Error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to generate PDF: ' . $e->getMessage());
+        }
     }
 }

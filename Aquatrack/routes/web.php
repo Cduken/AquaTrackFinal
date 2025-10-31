@@ -71,10 +71,18 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::delete('/admin/reports/{report}', [ReportController::class, 'destroy'])->name('admin.reports.destroy');
     Route::post('/admin/reports/{report}/update-status', [ReportController::class, 'updateStatus'])->name('admin.reports.updateStatus');
 
+
+    Route::get('/admin/reports/export/pdf', [ReportController::class, 'exportPdf'])->name('admin.reports.export.pdf');
+
     Route::get('/admin/records/update-overdue', [AdminRecordController::class, 'manualUpdateOverdue'])
         ->name('admin.records.update-overdue');
     Route::get('/admin/records/force-fix-due-dates', [AdminRecordController::class, 'forceFixDueDates'])
         ->name('admin.records.force-fix-due-dates');
+
+    Route::get('/admin/records/export', [AdminRecordController::class, 'export'])->name('admin.records.export');
+    Route::get('/admin/records/period-stats', [AdminRecordController::class, 'getPeriodStats'])->name('admin.records.period-stats');
+    Route::get('/admin/records/available-periods', [AdminRecordController::class, 'getAvailablePeriodsApi'])->name('admin.records.available-periods');
+
 
     Route::get('/admin/records/{record}/details', [AdminRecordController::class, 'details'])->name('admin.records.details');
     Route::get('/admin/users', [AdminUsersController::class, 'index'])->name('admin.users');
@@ -105,6 +113,13 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/activity-logs/export', [AdminActivityLogController::class, 'export'])->name('admin.activity-logs.export');
 
     Route::get('/admin/notifications', [NotificationController::class, 'adminIndex'])->name('admin.notifications');
+    // ADD THESE NOTIFICATION DELETE ROUTES:
+    Route::delete('/admin/notifications/{id}', [NotificationController::class, 'destroy'])->name('admin.notifications.destroy');
+    Route::post('/admin/notifications/bulk-delete', [NotificationController::class, 'bulkDelete'])->name('admin.notifications.bulk-delete');
+
+
+    Route::delete('/customer/notifications/{id}', [NotificationController::class, 'destroy'])->name('customer.notifications.destroy');
+
 
     Route::post('/notifications/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
     Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
@@ -142,6 +157,10 @@ Route::middleware(['auth', 'role:customer'])->group(function () {
 
     // ✅ This is the correct route for customer notifications page
     Route::get('/customer/notifications', [NotificationController::class, 'customerIndex'])->name('customer.notifications');
+
+    Route::delete('/customer/notifications/{id}', [NotificationController::class, 'destroy'])->name('customer.notifications.destroy');
+    Route::put('/customer/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('customer.notifications.read');
+    Route::put('/customer/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('customer.notifications.mark-all-read');
 });
 
 

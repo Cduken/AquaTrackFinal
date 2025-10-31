@@ -1,4 +1,3 @@
-//Pages/Admin/ActivityLogs.vue
 <template>
     <AdminLayout>
         <div class="mx-auto w-full">
@@ -157,9 +156,7 @@
                                                     <PlusCircle
                                                         class="w-3 h-3 mr-1"
                                                     />
-                                                    {{
-                                                        createdEventsCount
-                                                    }}
+                                                    {{ createdEventsCount }}
                                                     Created
                                                 </div>
                                                 <div
@@ -168,9 +165,7 @@
                                                     <Edit
                                                         class="w-3 h-3 mr-1"
                                                     />
-                                                    {{
-                                                        updatedEventsCount
-                                                    }}
+                                                    {{ updatedEventsCount }}
                                                     Updated
                                                 </div>
                                                 <div
@@ -179,9 +174,7 @@
                                                     <Users
                                                         class="w-3 h-3 mr-1"
                                                     />
-                                                    {{
-                                                        userActivitiesCount
-                                                    }}
+                                                    {{ userActivitiesCount }}
                                                     User
                                                 </div>
                                             </div>
@@ -202,7 +195,6 @@
                                             />
                                             Reset
                                         </button>
-
                                     </div>
                                 </div>
                             </div>
@@ -238,165 +230,69 @@
                     </div>
                 </div>
 
-                <!-- Activity Timeline -->
-                <div class="p-4">
-                    <!-- Grid View -->
-                    <div
-                        v-if="viewMode === 'grid'"
-                        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-                    >
+                <!-- Activity Timeline Container with Fixed Height -->
+                <div
+                    class="flex flex-col"
+                    style="height: 613px; min-height: 600px"
+                >
+                    <!-- Activity Content with Scrollable Body -->
+                    <div class="flex-1 overflow-x-auto overflow-y-auto p-4">
+                        <!-- Grid View -->
                         <div
-                            v-for="activity in activities.data"
-                            :key="activity.id"
-                            class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition-all duration-200 cursor-pointer transform hover:-translate-y-1"
-                            @click="showActivityDetails(activity)"
+                            v-if="viewMode === 'grid'"
+                            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
                         >
-                            <div class="flex items-start justify-between mb-3">
-                                <div class="flex items-center space-x-2">
-                                    <div
-                                        class="p-2 rounded-lg"
-                                        :class="getActivityBgColor(activity)"
-                                    >
-                                        <component
-                                            :is="getActivityIcon(activity)"
-                                            class="w-4 h-4"
-                                            :class="
-                                                getActivityIconColor(activity)
-                                            "
-                                        />
-                                    </div>
-                                    <span
-                                        class="text-xs font-medium px-2 py-1 rounded-full capitalize"
-                                        :class="getTypeBadgeClass(activity)"
-                                    >
-                                        {{ formatEventType(activity.event) }}
-                                    </span>
-                                </div>
-                                <span
-                                    class="text-xs text-gray-500 dark:text-gray-400"
-                                >
-                                    {{ formatTimeAgo(activity.created_at) }}
-                                </span>
-                            </div>
-
-                            <!-- Activity Content -->
-                            <div class="mb-3">
-                                <h3
-                                    class="text-sm font-semibold text-gray-900 dark:text-white mb-2 line-clamp-2"
-                                >
-                                    {{ getActivityTitle(activity) }}
-                                </h3>
-                                <p
-                                    class="text-xs text-gray-600 dark:text-gray-300 line-clamp-3"
-                                >
-                                    {{ activity.description }}
-                                    <span
-                                        v-if="
-                                            activity.properties?.tracking_code
-                                        "
-                                        class="font-medium text-blue-600 dark:text-blue-400 ml-1"
-                                    >
-                                        ({{
-                                            activity.properties.tracking_code
-                                        }})
-                                    </span>
-                                </p>
-                            </div>
-
-                            <!-- Activity Metadata -->
                             <div
-                                class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400"
-                            >
-                                <div class="flex items-center space-x-2">
-                                    <User class="w-3 h-3" />
-                                    <span>
-                                        {{ activity.causer_name || "System" }}
-                                    </span>
-                                </div>
-                                <div
-                                    class="flex items-center space-x-2"
-                                    v-if="activity.properties?.old_status"
-                                >
-                                    <ArrowRight class="w-3 h-3" />
-                                    <span class="text-xs">
-                                        {{ activity.properties.old_status }} →
-                                        {{ activity.properties.new_status }}
-                                    </span>
-                                </div>
-                            </div>
-
-                            <!-- Additional Info -->
-                            <div
-                                class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-600"
+                                v-for="activity in activities.data"
+                                :key="activity.id"
+                                class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition-all duration-200 cursor-pointer transform hover:-translate-y-1"
+                                @click="showActivityDetails(activity)"
                             >
                                 <div
-                                    class="flex items-center justify-between text-xs"
+                                    class="flex items-start justify-between mb-3"
                                 >
-                                    <span
-                                        class="text-gray-500 dark:text-gray-400"
-                                    >
-                                        {{ formatDate(activity.created_at) }}
-                                    </span>
-                                    <span
-                                        class="text-gray-400 dark:text-gray-500"
-                                    >
-                                        ID: {{ activity.id }}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- List View -->
-                    <div v-else class="space-y-3">
-                        <div
-                            v-for="activity in activities.data"
-                            :key="activity.id"
-                            class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition-all duration-200"
-                        >
-                            <div class="flex items-start space-x-4">
-                                <!-- Timeline Icon -->
-                                <div class="flex flex-col items-center">
-                                    <div
-                                        class="p-2 rounded-lg"
-                                        :class="getActivityBgColor(activity)"
-                                    >
-                                        <component
-                                            :is="getActivityIcon(activity)"
-                                            class="w-4 h-4"
+                                    <div class="flex items-center space-x-2">
+                                        <div
+                                            class="p-2 rounded-lg"
                                             :class="
-                                                getActivityIconColor(activity)
+                                                getActivityBgColor(activity)
                                             "
-                                        />
-                                    </div>
-                                    <div
-                                        class="w-0.5 h-full bg-gray-200 dark:bg-gray-600 mt-2"
-                                    ></div>
-                                </div>
-
-                                <!-- Activity Content -->
-                                <div class="flex-1 min-w-0">
-                                    <div
-                                        class="flex items-center justify-between mb-2"
-                                    >
-                                        <h3
-                                            class="text-sm font-semibold text-gray-900 dark:text-white"
                                         >
-                                            {{ getActivityTitle(activity) }}
-                                        </h3>
+                                            <component
+                                                :is="getActivityIcon(activity)"
+                                                class="w-4 h-4"
+                                                :class="
+                                                    getActivityIconColor(
+                                                        activity
+                                                    )
+                                                "
+                                            />
+                                        </div>
                                         <span
-                                            class="text-xs text-gray-500 dark:text-gray-400"
+                                            class="text-xs font-medium px-2 py-1 rounded-full capitalize"
+                                            :class="getTypeBadgeClass(activity)"
                                         >
                                             {{
-                                                formatTimeAgo(
-                                                    activity.created_at
-                                                )
+                                                formatEventType(activity.event)
                                             }}
                                         </span>
                                     </div>
+                                    <span
+                                        class="text-xs text-gray-500 dark:text-gray-400"
+                                    >
+                                        {{ formatTimeAgo(activity.created_at) }}
+                                    </span>
+                                </div>
 
+                                <!-- Activity Content -->
+                                <div class="mb-3">
+                                    <h3
+                                        class="text-sm font-semibold text-gray-900 dark:text-white mb-2 line-clamp-2"
+                                    >
+                                        {{ getActivityTitle(activity) }}
+                                    </h3>
                                     <p
-                                        class="text-sm text-gray-600 dark:text-gray-300 mb-2"
+                                        class="text-xs text-gray-600 dark:text-gray-300 line-clamp-3"
                                     >
                                         {{ activity.description }}
                                         <span
@@ -412,113 +308,244 @@
                                             }})
                                         </span>
                                     </p>
+                                </div>
 
+                                <!-- Activity Metadata -->
+                                <div
+                                    class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400"
+                                >
+                                    <div class="flex items-center space-x-2">
+                                        <User class="w-3 h-3" />
+                                        <span>
+                                            {{
+                                                activity.causer_name || "System"
+                                            }}
+                                        </span>
+                                    </div>
                                     <div
-                                        class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400"
+                                        class="flex items-center space-x-2"
+                                        v-if="activity.properties?.old_status"
                                     >
-                                        <div
-                                            class="flex items-center space-x-4"
-                                        >
-                                            <div
-                                                class="flex items-center space-x-1"
-                                            >
-                                                <User class="w-3 h-3" />
-                                                <span>{{
-                                                    activity.causer_name ||
-                                                    "System"
-                                                }}</span>
-                                            </div>
-                                            <div
-                                                class="flex items-center space-x-1"
-                                                v-if="
-                                                    activity.properties
-                                                        ?.old_status
-                                                "
-                                            >
-                                                <ArrowRight class="w-3 h-3" />
-                                                <span>
-                                                    {{
-                                                        activity.properties
-                                                            .old_status
-                                                    }}
-                                                    →
-                                                    {{
-                                                        activity.properties
-                                                            .new_status
-                                                    }}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <span>{{
-                                            formatDate(activity.created_at)
-                                        }}</span>
+                                        <ArrowRight class="w-3 h-3" />
+                                        <span class="text-xs">
+                                            {{
+                                                activity.properties.old_status
+                                            }}
+                                            →
+                                            {{ activity.properties.new_status }}
+                                        </span>
                                     </div>
                                 </div>
 
-                                <!-- Quick Actions -->
-                                <div class="flex items-center space-x-2">
-                                    <button
-                                        @click="showActivityDetails(activity)"
-                                        class="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded transition-colors"
-                                        title="View Details"
+                                <!-- Additional Info -->
+                                <div
+                                    class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-600"
+                                >
+                                    <div
+                                        class="flex items-center justify-between text-xs"
                                     >
-                                        <Eye class="w-4 h-4" />
-                                    </button>
+                                        <span
+                                            class="text-gray-500 dark:text-gray-400"
+                                        >
+                                            {{
+                                                formatDate(activity.created_at)
+                                            }}
+                                        </span>
+                                        <span
+                                            class="text-gray-400 dark:text-gray-500"
+                                        >
+                                            ID: {{ activity.id }}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Empty State -->
-                    <div
-                        v-if="activities.data.length === 0"
-                        class="col-span-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center"
-                    >
+                        <!-- List View -->
+                        <div v-else class="space-y-3">
+                            <div
+                                v-for="activity in activities.data"
+                                :key="activity.id"
+                                class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition-all duration-200"
+                            >
+                                <div class="flex items-start space-x-4">
+                                    <!-- Timeline Icon -->
+                                    <div class="flex flex-col items-center">
+                                        <div
+                                            class="p-2 rounded-lg"
+                                            :class="
+                                                getActivityBgColor(activity)
+                                            "
+                                        >
+                                            <component
+                                                :is="getActivityIcon(activity)"
+                                                class="w-4 h-4"
+                                                :class="
+                                                    getActivityIconColor(
+                                                        activity
+                                                    )
+                                                "
+                                            />
+                                        </div>
+                                        <div
+                                            class="w-0.5 h-full bg-gray-200 dark:bg-gray-600 mt-2"
+                                        ></div>
+                                    </div>
+
+                                    <!-- Activity Content -->
+                                    <div class="flex-1 min-w-0">
+                                        <div
+                                            class="flex items-center justify-between mb-2"
+                                        >
+                                            <h3
+                                                class="text-sm font-semibold text-gray-900 dark:text-white"
+                                            >
+                                                {{ getActivityTitle(activity) }}
+                                            </h3>
+                                            <span
+                                                class="text-xs text-gray-500 dark:text-gray-400"
+                                            >
+                                                {{
+                                                    formatTimeAgo(
+                                                        activity.created_at
+                                                    )
+                                                }}
+                                            </span>
+                                        </div>
+
+                                        <p
+                                            class="text-sm text-gray-600 dark:text-gray-300 mb-2"
+                                        >
+                                            {{ activity.description }}
+                                            <span
+                                                v-if="
+                                                    activity.properties
+                                                        ?.tracking_code
+                                                "
+                                                class="font-medium text-blue-600 dark:text-blue-400 ml-1"
+                                            >
+                                                ({{
+                                                    activity.properties
+                                                        .tracking_code
+                                                }})
+                                            </span>
+                                        </p>
+
+                                        <div
+                                            class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400"
+                                        >
+                                            <div
+                                                class="flex items-center space-x-4"
+                                            >
+                                                <div
+                                                    class="flex items-center space-x-1"
+                                                >
+                                                    <User class="w-3 h-3" />
+                                                    <span>{{
+                                                        activity.causer_name ||
+                                                        "System"
+                                                    }}</span>
+                                                </div>
+                                                <div
+                                                    class="flex items-center space-x-1"
+                                                    v-if="
+                                                        activity.properties
+                                                            ?.old_status
+                                                    "
+                                                >
+                                                    <ArrowRight
+                                                        class="w-3 h-3"
+                                                    />
+                                                    <span>
+                                                        {{
+                                                            activity.properties
+                                                                .old_status
+                                                        }}
+                                                        →
+                                                        {{
+                                                            activity.properties
+                                                                .new_status
+                                                        }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <span>{{
+                                                formatDate(activity.created_at)
+                                            }}</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Quick Actions -->
+                                    <div class="flex items-center space-x-2">
+                                        <button
+                                            @click="
+                                                showActivityDetails(activity)
+                                            "
+                                            class="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded transition-colors"
+                                            title="View Details"
+                                        >
+                                            <Eye class="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Empty State -->
                         <div
-                            class="flex flex-col items-center justify-center space-y-3"
+                            v-if="activities.data.length === 0"
+                            class="col-span-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center"
                         >
                             <div
-                                class="p-4 bg-gray-100 dark:bg-gray-700 rounded-full"
+                                class="flex flex-col items-center justify-center space-y-4"
                             >
-                                <Activity
-                                    class="w-8 h-8 text-gray-400 dark:text-gray-500"
-                                />
+                                <div
+                                    class="p-4 bg-gray-100 dark:bg-gray-700 rounded-full"
+                                >
+                                    <Activity
+                                        class="w-20 h-20 text-gray-300 dark:text-gray-500"
+                                    />
+                                </div>
+                                <h3
+                                    class="text-2xl font-medium text-gray-500 dark:text-gray-400"
+                                >
+                                    No activities found
+                                </h3>
+                                <p
+                                    class="text-sm text-gray-400 dark:text-gray-500 max-w-md"
+                                >
+                                    {{
+                                        searchTerm ||
+                                        eventType !== "all" ||
+                                        dateFrom ||
+                                        dateTo
+                                            ? "Try adjusting your filters or search keywords."
+                                            : "No activities recorded yet."
+                                    }}
+                                </p>
+                                <button
+                                    v-if="
+                                        searchTerm ||
+                                        eventType !== 'all' ||
+                                        dateFrom ||
+                                        dateTo
+                                    "
+                                    @click="clearFilters"
+                                    class="mt-2 px-4 py-2 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                                >
+                                    Clear filters
+                                </button>
                             </div>
-                            <h3
-                                class="text-lg font-semibold text-gray-500 dark:text-gray-400"
-                            >
-                                No activities found
-                            </h3>
-                            <p
-                                class="text-sm text-gray-400 dark:text-gray-500 max-w-md"
-                            >
-                                {{
-                                    searchTerm ||
-                                    eventType !== "all" ||
-                                    dateFrom ||
-                                    dateTo
-                                        ? "Try adjusting your filters or search keywords."
-                                        : "No activities recorded yet."
-                                }}
-                            </p>
-                            <button
-                                v-if="
-                                    searchTerm ||
-                                    eventType !== 'all' ||
-                                    dateFrom ||
-                                    dateTo
-                                "
-                                @click="clearFilters"
-                                class="mt-2 px-4 py-2 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                            >
-                                Clear filters
-                            </button>
                         </div>
                     </div>
-                </div>
 
-                <!-- Pagination -->
-                <Pagination :data="activities" />
+                    <!-- Pagination - Fixed at Bottom -->
+                    <div
+                        class="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+                    >
+                        <Pagination :data="activities" />
+                    </div>
+                </div>
 
                 <!-- Activity Details Modal -->
                 <div
@@ -624,34 +651,6 @@
                                         {{ selectedActivity.description }}
                                     </p>
                                 </div>
-
-                                <!-- Properties -->
-                                <!-- <div
-                                    v-if="
-                                        selectedActivity.properties &&
-                                        Object.keys(selectedActivity.properties)
-                                            .length > 0
-                                    "
-                                >
-                                    <label
-                                        class="text-xs text-gray-500 dark:text-gray-400 font-medium"
-                                        >Additional Data</label
-                                    >
-                                    <div
-                                        class="mt-1 bg-gray-50 dark:bg-gray-700 p-3 rounded-lg"
-                                    >
-                                        <pre
-                                            class="text-xs text-gray-700 dark:text-gray-300 whitespace-pre-wrap"
-                                            >{{
-                                                JSON.stringify(
-                                                    selectedActivity.properties,
-                                                    null,
-                                                    2
-                                                )
-                                            }}</pre
-                                        >
-                                    </div>
-                                </div> -->
                             </div>
                         </div>
                     </div>
@@ -909,8 +908,6 @@ const clearFilters = () => {
         applyFilters();
     }, 500);
 };
-
-
 
 // Activity details modal
 const showActivityDetails = (activity) => {

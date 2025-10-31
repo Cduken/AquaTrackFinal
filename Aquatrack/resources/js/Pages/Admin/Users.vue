@@ -162,261 +162,297 @@
                     </div>
                 </div>
 
-                <!-- Table -->
-                <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead
-                            class="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600"
-                        >
-                            <tr>
-                                <th
-                                    class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-                                >
-                                    User
-                                </th>
-                                <th
-                                    class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-                                >
-                                    Account No.
-                                </th>
-                                <th
-                                    class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-                                >
-                                    Serial No.
-                                </th>
-                                <th
-                                    class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-                                >
-                                    Role(s)
-                                </th>
-                                <th
-                                    class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-                                >
-                                    Status
-                                </th>
-                                <th
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-                                >
-                                    Created
-                                </th>
-                                <th
-                                    class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-                                >
-                                    Actions
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody
-                            class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"
-                        >
-                            <tr
-                                v-for="user in users.data"
-                                :key="user.id"
-                                class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150"
+                <!-- Table Container with Fixed Height -->
+                <div
+                    class="flex flex-col"
+                    style="height: 613px; min-height: 600px"
+                >
+                    <!-- Table with Scrollable Body -->
+                    <div class="flex-1 overflow-x-auto overflow-y-auto">
+                        <table class="w-full">
+                            <thead
+                                class="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 sticky top-0 z-10"
                             >
-                                <td class="px-6 py-2">
-                                    <div class="flex items-center">
-                                        <div class="flex-shrink-0 h-8 w-8 mr-3">
-                                            <img
-                                                v-if="user.avatar_url"
-                                                :src="user.avatar_url"
-                                                :alt="user.name"
-                                                class="h-8 w-8 rounded-full object-cover"
-                                            />
-                                            <div
-                                                v-else
-                                                class="h-8 w-8 rounded-full flex items-center justify-center text-white font-semibold text-xs"
-                                                :class="
-                                                    getAvatarColor(user.name)
-                                                "
-                                            >
-                                                {{ userInitials(user.name) }}
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <div
-                                                class="font-medium text-gray-900 dark:text-white text-xs"
-                                            >
-                                                {{ user.name }}
-                                            </div>
-                                            <div
-                                                class="text-xs text-gray-500 dark:text-gray-400"
-                                            >
-                                                {{ user.email || "N/A" }}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-
-                                <td
-                                    class="px-6 py-2 text-xs text-gray-900 dark:text-white whitespace-nowrap"
-                                >
-                                    {{ user.account_number || "N/A" }}
-                                </td>
-
-                                <td
-                                    class="px-6 py-2 text-xs text-gray-900 dark:text-white whitespace-nowrap"
-                                >
-                                    {{ user.serial_number || "N/A" }}
-                                </td>
-
-                                <td class="px-6 py-2">
-                                    <span
-                                        :class="roleClasses(user.role)"
-                                        class="inline-flex items-center border px-2 py-0.5 rounded-full text-xs font-sm"
+                                <tr>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
                                     >
-                                        {{ capitalizeRole(user.role) }}
-                                    </span>
-                                </td>
-
-                                <td class="px-6 py-3">
-                                    <span
-                                        :class="statusClasses(user.enabled)"
-                                        class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-sm"
+                                        User
+                                    </th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
                                     >
-                                        <span
-                                            class="w-1.5 h-1.5 rounded-full mr-1.5"
-                                            :class="
-                                                user.enabled
-                                                    ? 'bg-green-400'
-                                                    : 'bg-red-400'
-                                            "
-                                        ></span>
-                                        {{
-                                            user.enabled ? "Active" : "Inactive"
-                                        }}
-                                    </span>
-                                </td>
-
-                                <td
-                                    class="px-6 py-2 text-xs text-gray-900 dark:text-white whitespace-nowrap"
+                                        Account No.
+                                    </th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                    >
+                                        Serial No.
+                                    </th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                    >
+                                        Role(s)
+                                    </th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                    >
+                                        Status
+                                    </th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                    >
+                                        Created
+                                    </th>
+                                    <th
+                                        class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                    >
+                                        Actions
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody
+                                class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"
+                            >
+                                <tr
+                                    v-for="user in users.data"
+                                    :key="user.id"
+                                    class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150"
                                 >
-                                    {{ formatDate(user.created_at) }}
-                                </td>
-
-                                <td class="px-6 py-3 text-right">
-                                    <div class="flex justify-end">
-                                        <div class="relative">
-                                            <button
-                                                @click="
-                                                    toggleActionMenu(user.id)
-                                                "
-                                                class="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-200 dark:hover:text-gray-300 rounded-lg transition-colors"
-                                                :data-action-button="user.id"
+                                    <td class="px-6 py-3">
+                                        <div class="flex items-center">
+                                            <div
+                                                class="flex-shrink-0 h-8 w-8 mr-3"
                                             >
-                                                <MoreHorizontal
-                                                    class="w-4 h-4"
+                                                <img
+                                                    v-if="user.avatar_url"
+                                                    :src="user.avatar_url"
+                                                    :alt="user.name"
+                                                    class="h-8 w-8 rounded-full object-cover"
                                                 />
-                                            </button>
-
-                                            <div
-                                                v-if="
-                                                    activeActionMenu === user.id
-                                                "
-                                                class="fixed z-[1000] mt-1 w-48 bg-white dark:bg-gray-700 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600"
-                                                :style="
-                                                    getActionDropdownStyle(
-                                                        user.id
-                                                    )
-                                                "
-                                            >
-                                                <div class="py-1">
-                                                    <button
-                                                        @click="viewUser(user)"
-                                                        class="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
-                                                    >
-                                                        <Eye
-                                                            class="w-4 h-4 mr-3"
-                                                        />
-                                                        View Details
-                                                    </button>
-                                                    <button
-                                                        v-if="
-                                                            user.role !==
-                                                            'admin'
-                                                        "
-                                                        @click="editUser(user)"
-                                                        class="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
-                                                    >
-                                                        <Edit
-                                                            class="w-4 h-4 mr-3"
-                                                        />
-                                                        Edit User
-                                                    </button>
-                                                    <button
-                                                        v-if="
-                                                            user.role !==
-                                                            'admin'
-                                                        "
-                                                        @click="
-                                                            toggleUserStatus(
-                                                                user
-                                                            )
-                                                        "
-                                                        class="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
-                                                    >
-                                                        <Lock
-                                                            v-if="user.enabled"
-                                                            class="w-4 h-4 mr-3"
-                                                        />
-                                                        <Unlock
-                                                            v-else
-                                                            class="w-4 h-4 mr-3"
-                                                        />
-                                                        {{
-                                                            user.enabled
-                                                                ? "Deactivate"
-                                                                : "Activate"
-                                                        }}
-                                                    </button>
-                                                    <button
-                                                        v-if="
-                                                            user.role !==
-                                                            'admin'
-                                                        "
-                                                        @click="
-                                                            confirmDelete(user)
-                                                        "
-                                                        class="flex items-center w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
-                                                    >
-                                                        <Trash2
-                                                            class="w-4 h-4 mr-3"
-                                                        />
-                                                        Delete User
-                                                    </button>
+                                                <div
+                                                    v-else
+                                                    class="h-8 w-8 rounded-full flex items-center justify-center text-white font-semibold text-xs"
+                                                    :class="
+                                                        getAvatarColor(
+                                                            user.name
+                                                        )
+                                                    "
+                                                >
+                                                    {{
+                                                        userInitials(user.name)
+                                                    }}
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <div
+                                                    class="font-medium text-gray-900 dark:text-white text-sm"
+                                                >
+                                                    {{ user.name }}
+                                                </div>
+                                                <div
+                                                    class="text-xs text-gray-500 dark:text-gray-400"
+                                                >
+                                                    {{ user.email || "N/A" }}
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </td>
-                            </tr>
+                                    </td>
 
-                            <tr v-if="users.data.length === 0">
-                                <td colspan="7" class="px-6 py-8 text-center">
-                                    <div
-                                        class="flex flex-col items-center justify-center space-y-2"
+                                    <td
+                                        class="px-6 py-3 text-sm text-gray-900 dark:text-white whitespace-nowrap"
                                     >
-                                        <Users
-                                            class="w-12 h-12 text-gray-300"
-                                        />
-                                        <span
-                                            class="font-medium text-gray-500 dark:text-gray-400"
-                                            >No users found</span
-                                        >
-                                        <span
-                                            class="text-xs text-gray-400 dark:text-gray-500"
-                                        >
-                                            Try adjusting your filters or search
-                                            keywords.
-                                        </span>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                                        {{ user.account_number || "N/A" }}
+                                    </td>
 
-                <Pagination :data="users" />
+                                    <td
+                                        class="px-6 py-3 text-sm text-gray-900 dark:text-white whitespace-nowrap"
+                                    >
+                                        {{ user.serial_number || "N/A" }}
+                                    </td>
+
+                                    <td class="px-6 py-3">
+                                        <span
+                                            :class="roleClasses(user.role)"
+                                            class="inline-flex items-center border px-2.5 py-1 rounded-full text-xs font-medium"
+                                        >
+                                            {{ capitalizeRole(user.role) }}
+                                        </span>
+                                    </td>
+
+                                    <td class="px-6 py-3">
+                                        <span
+                                            :class="statusClasses(user.enabled)"
+                                            class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium"
+                                        >
+                                            <span
+                                                class="w-1.5 h-1.5 rounded-full mr-1.5"
+                                                :class="
+                                                    user.enabled
+                                                        ? 'bg-green-400'
+                                                        : 'bg-red-400'
+                                                "
+                                            ></span>
+                                            {{
+                                                user.enabled
+                                                    ? "Active"
+                                                    : "Inactive"
+                                            }}
+                                        </span>
+                                    </td>
+
+                                    <td
+                                        class="px-6 py-3 text-sm text-gray-900 dark:text-white whitespace-nowrap"
+                                    >
+                                        {{ formatDate(user.created_at) }}
+                                    </td>
+
+                                    <td class="px-6 py-3 text-right">
+                                        <div class="flex justify-end">
+                                            <div class="relative">
+                                                <button
+                                                    @click="
+                                                        toggleActionMenu(
+                                                            user.id
+                                                        )
+                                                    "
+                                                    class="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-200 dark:hover:text-gray-300 rounded-lg transition-colors"
+                                                    :data-action-button="
+                                                        user.id
+                                                    "
+                                                >
+                                                    <MoreHorizontal
+                                                        class="w-4 h-4"
+                                                    />
+                                                </button>
+
+                                                <div
+                                                    v-if="
+                                                        activeActionMenu ===
+                                                        user.id
+                                                    "
+                                                    class="fixed z-[1000] mt-1 w-48 bg-white dark:bg-gray-700 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600"
+                                                    :style="
+                                                        getActionDropdownStyle(
+                                                            user.id
+                                                        )
+                                                    "
+                                                >
+                                                    <div class="py-1">
+                                                        <button
+                                                            @click="
+                                                                viewUser(user)
+                                                            "
+                                                            class="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                                                        >
+                                                            <Eye
+                                                                class="w-4 h-4 mr-3"
+                                                            />
+                                                            View Details
+                                                        </button>
+                                                        <button
+                                                            v-if="
+                                                                user.role !==
+                                                                'admin'
+                                                            "
+                                                            @click="
+                                                                editUser(user)
+                                                            "
+                                                            class="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                                                        >
+                                                            <Edit
+                                                                class="w-4 h-4 mr-3"
+                                                            />
+                                                            Edit User
+                                                        </button>
+                                                        <button
+                                                            v-if="
+                                                                user.role !==
+                                                                'admin'
+                                                            "
+                                                            @click="
+                                                                toggleUserStatus(
+                                                                    user
+                                                                )
+                                                            "
+                                                            class="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                                                        >
+                                                            <Lock
+                                                                v-if="
+                                                                    user.enabled
+                                                                "
+                                                                class="w-4 h-4 mr-3"
+                                                            />
+                                                            <Unlock
+                                                                v-else
+                                                                class="w-4 h-4 mr-3"
+                                                            />
+                                                            {{
+                                                                user.enabled
+                                                                    ? "Deactivate"
+                                                                    : "Activate"
+                                                            }}
+                                                        </button>
+                                                        <button
+                                                            v-if="
+                                                                user.role !==
+                                                                'admin'
+                                                            "
+                                                            @click="
+                                                                confirmDelete(
+                                                                    user
+                                                                )
+                                                            "
+                                                            class="flex items-center w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                                                        >
+                                                            <Trash2
+                                                                class="w-4 h-4 mr-3"
+                                                            />
+                                                            Delete User
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- Empty State -->
+                                <tr v-if="users.data.length === 0">
+                                    <td
+                                        colspan="7"
+                                        class="px-6 py-24 text-center"
+                                    >
+                                        <div
+                                            class="flex flex-col items-center justify-center space-y-4"
+                                        >
+                                            <Users
+                                                class="w-20 h-20 text-gray-300"
+                                            />
+                                            <span
+                                                class="text-2xl font-medium text-gray-500 dark:text-gray-400"
+                                                >No users found</span
+                                            >
+                                            <span
+                                                class="text-sm text-gray-400 dark:text-gray-500"
+                                            >
+                                                Try adjusting your filters or
+                                                search keywords.
+                                            </span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination - Fixed at Bottom -->
+                    <div
+                        class="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+                    >
+                        <Pagination :data="users" />
+                    </div>
+                </div>
             </div>
 
             <!-- Modals -->

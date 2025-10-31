@@ -248,7 +248,7 @@
                                                         type="text"
                                                         required
                                                         class="w-full pl-11 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                                        placeholder="John"
+                                                        placeholder="Enter First Name"
                                                     />
                                                 </div>
                                             </div>
@@ -269,7 +269,7 @@
                                                         type="text"
                                                         required
                                                         class="w-full pl-11 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                                        placeholder="Doe"
+                                                        placeholder="Enter Last Name"
                                                         @input="
                                                             updateGeneratedPassword
                                                         "
@@ -296,7 +296,7 @@
                                                             'staff'
                                                         "
                                                         class="w-full pl-11 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                                        placeholder="john.doe@company.com"
+                                                        placeholder="Enter Email Address"
                                                     />
                                                 </div>
                                             </div>
@@ -314,7 +314,7 @@
                                                         v-model="userData.phone"
                                                         type="tel"
                                                         class="w-full pl-11 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                                        placeholder="09123456789 (Optional)"
+                                                        placeholder="Enter Phone Number (Optional)"
                                                         @input="
                                                             validatePhoneNumber
                                                         "
@@ -367,7 +367,7 @@
                                                             type="text"
                                                             required
                                                             class="w-full pl-11 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                                            placeholder="XXX-XX-XXXA"
+                                                            placeholder="Enter Account Number"
                                                             @input="
                                                                 formatAccountNumber
                                                             "
@@ -418,7 +418,7 @@
                                                             type="text"
                                                             required
                                                             class="w-full pl-11 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                                            placeholder="Brand name"
+                                                            placeholder="Enter Brand Name"
                                                         />
                                                     </div>
                                                 </div>
@@ -439,7 +439,7 @@
                                                             type="text"
                                                             required
                                                             class="w-full pl-11 pr-16 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                                            placeholder="123456789"
+                                                            placeholder="Enter Serial Number"
                                                             @input="
                                                                 validateSerialNumber
                                                             "

@@ -368,450 +368,473 @@
                     </div>
                 </div>
 
-                <!-- Table -->
-                <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead
-                            class="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600"
-                        >
-                            <tr>
-                                <th
-                                    class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-                                >
-                                    Reporter
-                                </th>
-                                <th
-                                    class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-                                >
-                                    User Type
-                                </th>
-                                <th
-                                    class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-                                >
-                                    Location
-                                </th>
-                                <th
-                                    class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-                                >
-                                    Issue Type
-                                </th>
-                                <th
-                                    class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-                                >
-                                    Priority
-                                </th>
-                                <th
-                                    class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-                                >
-                                    Status
-                                </th>
-                                <th
-                                    class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-                                >
-                                    Date
-                                </th>
-                                <th
-                                    class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-                                >
-                                    Actions
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody
-                            class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"
-                        >
-                            <tr
-                                v-for="report in filteredReports"
-                                :key="report.id"
-                                class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150"
-                                :class="getStatusRowClass(report.status)"
+                <!-- Table Container with Fixed Height -->
+                <div
+                    class="flex flex-col"
+                    style="height: 613px; min-height: 600px"
+                >
+                    <!-- Table with Scrollable Body -->
+                    <div class="flex-1 overflow-x-auto overflow-y-auto">
+                        <table class="w-full">
+                            <thead
+                                class="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 sticky top-0 z-10"
                             >
-                                <!-- Reporter Column -->
-                                <td class="px-6 py-2">
-                                    <div class="flex items-center">
-                                        <!-- Profile Avatar -->
-                                        <div class="flex-shrink-0 h-8 w-8 mr-3">
-                                            <!-- For merged reports (multiple reporters) - Show stacked avatars -->
-                                            <span v-if="isMergedReport(report)">
-                                                <div class="relative h-8 w-8">
-                                                    <!-- First reporter avatar -->
-                                                    <div
-                                                        class="absolute top-0 left-0 z-10"
-                                                    >
-                                                        <img
-                                                            v-if="
-                                                                report.user &&
-                                                                report.user
-                                                                    .avatar_url
-                                                            "
-                                                            :src="
-                                                                report.user
-                                                                    .avatar_url
-                                                            "
-                                                            :alt="
-                                                                getFirstReporterName(
-                                                                    report
-                                                                )
-                                                            "
-                                                            class="h-6 w-6 rounded-full object-cover border-2 border-white dark:border-gray-800"
-                                                        />
-                                                        <div
-                                                            v-else
-                                                            class="h-6 w-6 rounded-full flex items-center justify-center text-white font-semibold text-xs border-2 border-white dark:border-gray-800"
-                                                            :class="
-                                                                getReporterAvatarColor(
-                                                                    report
-                                                                )
-                                                            "
-                                                        >
-                                                            {{
-                                                                getFirstReporterInitials(
-                                                                    report
-                                                                )
-                                                            }}
-                                                        </div>
-                                                    </div>
-                                                    <!-- Second reporter avatar (overlapping) -->
-                                                    <div
-                                                        class="absolute bottom-0 right-0 z-0"
-                                                    >
-                                                        <div
-                                                            class="h-6 w-6 rounded-full flex items-center justify-center text-white font-semibold text-xs bg-gradient-to-br from-purple-500 to-pink-600 border-2 border-white dark:border-gray-800"
-                                                        >
-                                                            +{{
-                                                                getAdditionalReportersCount(
-                                                                    report
-                                                                )
-                                                            }}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </span>
-
-                                            <!-- For single reporter with user avatar -->
-                                            <span
-                                                v-else-if="
-                                                    report.user &&
-                                                    report.user.avatar_url
-                                                "
-                                            >
-                                                <img
-                                                    :src="
-                                                        report.user.avatar_url
-                                                    "
-                                                    :alt="report.user.name"
-                                                    class="h-8 w-8 rounded-full object-cover"
-                                                />
-                                            </span>
-
-                                            <!-- For single reporter without avatar (guest or no avatar) -->
-                                            <span v-else>
-                                                <div
-                                                    class="h-8 w-8 rounded-full flex items-center justify-center text-white font-semibold text-xs"
-                                                    :class="
-                                                        getReporterAvatarColor(
-                                                            report
-                                                        )
-                                                    "
-                                                >
-                                                    {{
-                                                        getReporterInitials(
-                                                            report
-                                                        )
-                                                    }}
-                                                </div>
-                                            </span>
-                                        </div>
-
-                                        <div>
+                                <tr>
+                                    <th
+                                        class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                    >
+                                        Reporter
+                                    </th>
+                                    <th
+                                        class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                    >
+                                        User Type
+                                    </th>
+                                    <th
+                                        class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                    >
+                                        Location
+                                    </th>
+                                    <th
+                                        class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                    >
+                                        Issue Type
+                                    </th>
+                                    <th
+                                        class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                    >
+                                        Priority
+                                    </th>
+                                    <th
+                                        class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                    >
+                                        Status
+                                    </th>
+                                    <th
+                                        class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                    >
+                                        Date
+                                    </th>
+                                    <th
+                                        class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                    >
+                                        Actions
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody
+                                class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"
+                            >
+                                <tr
+                                    v-for="report in filteredReports"
+                                    :key="report.id"
+                                    class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150"
+                                    :class="getStatusRowClass(report.status)"
+                                >
+                                    <!-- Reporter Column -->
+                                    <td class="px-6 py-2">
+                                        <div class="flex items-center">
+                                            <!-- Profile Avatar -->
                                             <div
-                                                class="font-medium text-gray-900 dark:text-white text-xs"
+                                                class="flex-shrink-0 h-8 w-8 mr-3"
                                             >
+                                                <!-- For merged reports (multiple reporters) - Show stacked avatars -->
                                                 <span
                                                     v-if="
                                                         isMergedReport(report)
                                                     "
                                                 >
-                                                    <span
-                                                        class="cursor-pointer text-blue-600 hover:underline"
-                                                        @click="
-                                                            showAllReporters(
+                                                    <div
+                                                        class="relative h-8 w-8"
+                                                    >
+                                                        <!-- First reporter avatar -->
+                                                        <div
+                                                            class="absolute top-0 left-0 z-10"
+                                                        >
+                                                            <img
+                                                                v-if="
+                                                                    report.user &&
+                                                                    report.user
+                                                                        .avatar_url
+                                                                "
+                                                                :src="
+                                                                    report.user
+                                                                        .avatar_url
+                                                                "
+                                                                :alt="
+                                                                    getFirstReporterName(
+                                                                        report
+                                                                    )
+                                                                "
+                                                                class="h-6 w-6 rounded-full object-cover border-2 border-white dark:border-gray-800"
+                                                            />
+                                                            <div
+                                                                v-else
+                                                                class="h-6 w-6 rounded-full flex items-center justify-center text-white font-semibold text-xs border-2 border-white dark:border-gray-800"
+                                                                :class="
+                                                                    getReporterAvatarColor(
+                                                                        report
+                                                                    )
+                                                                "
+                                                            >
+                                                                {{
+                                                                    getFirstReporterInitials(
+                                                                        report
+                                                                    )
+                                                                }}
+                                                            </div>
+                                                        </div>
+                                                        <!-- Second reporter avatar (overlapping) -->
+                                                        <div
+                                                            class="absolute bottom-0 right-0 z-0"
+                                                        >
+                                                            <div
+                                                                class="h-6 w-6 rounded-full flex items-center justify-center text-white font-semibold text-xs bg-gradient-to-br from-purple-500 to-pink-600 border-2 border-white dark:border-gray-800"
+                                                            >
+                                                                +{{
+                                                                    getAdditionalReportersCount(
+                                                                        report
+                                                                    )
+                                                                }}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </span>
+
+                                                <!-- For single reporter with user avatar -->
+                                                <span
+                                                    v-else-if="
+                                                        report.user &&
+                                                        report.user.avatar_url
+                                                    "
+                                                >
+                                                    <img
+                                                        :src="
+                                                            report.user
+                                                                .avatar_url
+                                                        "
+                                                        :alt="report.user.name"
+                                                        class="h-8 w-8 rounded-full object-cover"
+                                                    />
+                                                </span>
+
+                                                <!-- For single reporter without avatar (guest or no avatar) -->
+                                                <span v-else>
+                                                    <div
+                                                        class="h-8 w-8 rounded-full flex items-center justify-center text-white font-semibold text-xs"
+                                                        :class="
+                                                            getReporterAvatarColor(
                                                                 report
                                                             )
                                                         "
                                                     >
                                                         {{
-                                                            getFirstTwoReporters(
+                                                            getReporterInitials(
                                                                 report
                                                             )
                                                         }}
+                                                    </div>
+                                                </span>
+                                            </div>
+
+                                            <div>
+                                                <div
+                                                    class="font-medium text-gray-900 dark:text-white text-xs"
+                                                >
+                                                    <span
+                                                        v-if="
+                                                            isMergedReport(
+                                                                report
+                                                            )
+                                                        "
+                                                    >
                                                         <span
-                                                            v-if="
-                                                                getAdditionalReportersCount(
-                                                                    report
-                                                                ) > 0
-                                                            "
-                                                            class="text-gray-600 dark:text-gray-400"
-                                                        >
-                                                            (+{{
-                                                                getAdditionalReportersCount(
+                                                            class="cursor-pointer text-blue-600 hover:underline"
+                                                            @click="
+                                                                showAllReporters(
                                                                     report
                                                                 )
-                                                            }})
+                                                            "
+                                                        >
+                                                            {{
+                                                                getFirstTwoReporters(
+                                                                    report
+                                                                )
+                                                            }}
+                                                            <span
+                                                                v-if="
+                                                                    getAdditionalReportersCount(
+                                                                        report
+                                                                    ) > 0
+                                                                "
+                                                                class="text-gray-600 dark:text-gray-400"
+                                                            >
+                                                                (+{{
+                                                                    getAdditionalReportersCount(
+                                                                        report
+                                                                    )
+                                                                }})
+                                                            </span>
                                                         </span>
                                                     </span>
-                                                </span>
-                                                <span v-else>
-                                                    {{
-                                                        report.reporter_name ||
-                                                        report.user?.name ||
-                                                        "N/A"
-                                                    }}
-                                                </span>
-                                            </div>
-                                            <div
-                                                class="text-xs text-gray-500 dark:text-gray-400"
-                                            >
-                                                {{ report.tracking_code }}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-
-                                <!-- User Type -->
-                                <td class="px-6 py-2">
-                                    <span
-                                        :class="
-                                            userTypeClasses(
-                                                getDisplayUserType(report)
-                                            )
-                                        "
-                                        class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-sm"
-                                    >
-                                        <span
-                                            class="w-1.5 h-1.5 rounded-full mr-1.5"
-                                            :class="
-                                                getUserTypeDotClass(
-                                                    getDisplayUserType(report)
-                                                )
-                                            "
-                                        ></span>
-                                        {{ getDisplayUserType(report) }}
-                                    </span>
-                                </td>
-
-                                <!-- Location -->
-                                <td
-                                    class="px-6 py-2 text-xs text-gray-900 dark:text-white"
-                                >
-                                    <div class="font-medium">
-                                        {{ report.zone || "N/A" }}
-                                    </div>
-                                    <div
-                                        class="text-gray-500 dark:text-gray-400"
-                                    >
-                                        {{ report.barangay }},
-                                        {{ report.purok }}
-                                    </div>
-                                </td>
-
-                                <!-- Issue Type -->
-                                <td class="px-6 py-2">
-                                    <div class="text-xs">
-                                        <div
-                                            class="font-medium text-gray-900 dark:text-white"
-                                        >
-                                            {{
-                                                report.water_issue_type ===
-                                                "others"
-                                                    ? report.custom_water_issue ||
-                                                      "Custom Issue"
-                                                    : report.water_issue_type
-                                            }}
-                                        </div>
-                                        <div
-                                            class="text-gray-500 dark:text-gray-400 truncate max-w-xs"
-                                        >
-                                            {{
-                                                truncateText(
-                                                    report.description,
-                                                    30
-                                                )
-                                            }}
-                                        </div>
-                                    </div>
-                                </td>
-
-                                <!-- Priority -->
-                                <td class="px-6 py-2">
-                                    <span
-                                        :class="
-                                            priorityClasses(report.priority)
-                                        "
-                                        class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-sm"
-                                    >
-                                        <span
-                                            class="w-1.5 h-1.5 rounded-full mr-1.5"
-                                            :class="
-                                                priorityDotClasses(
-                                                    report.priority
-                                                )
-                                            "
-                                        ></span>
-                                        {{ report.priority || "N/A" }}
-                                    </span>
-                                </td>
-
-                                <!-- Status -->
-                                <td class="px-6 py-2">
-                                    <span
-                                        :class="statusClasses(report.status)"
-                                        class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-sm"
-                                    >
-                                        <span
-                                            class="w-1.5 h-1.5 rounded-full mr-1.5"
-                                            :class="
-                                                statusDotClasses(report.status)
-                                            "
-                                        ></span>
-                                        {{ formatStatus(report.status) }}
-                                    </span>
-                                </td>
-
-                                <!-- Date -->
-                                <td
-                                    class="px-6 py-2 text-xs text-gray-900 dark:text-white"
-                                >
-                                    <div>
-                                        {{ formatDate(report.created_at) }}
-                                    </div>
-                                    <div
-                                        class="text-gray-500 dark:text-gray-400"
-                                    >
-                                        {{ formatTime(report.created_at) }}
-                                    </div>
-                                </td>
-
-                                <!-- Actions -->
-                                <td class="px-6 py-3 text-right">
-                                    <div class="flex justify-end">
-                                        <div class="relative">
-                                            <button
-                                                @click="
-                                                    toggleActionMenu(report.id)
-                                                "
-                                                class="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-200 dark:hover:text-gray-300 rounded-lg transition-colors"
-                                                :data-action-button="report.id"
-                                            >
-                                                <MoreHorizontal
-                                                    class="w-4 h-4"
-                                                />
-                                            </button>
-
-                                            <!-- Action Menu Dropdown -->
-                                            <div
-                                                v-if="
-                                                    activeActionMenu ===
-                                                    report.id
-                                                "
-                                                class="fixed z-[1000] mt-1 w-48 bg-white dark:bg-gray-700 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600"
-                                                :style="
-                                                    getActionDropdownStyle(
-                                                        report.id
-                                                    )
-                                                "
-                                            >
-                                                <div class="py-1">
-                                                    <button
-                                                        @click="
-                                                            openModal(report)
-                                                        "
-                                                        class="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
-                                                    >
-                                                        <Eye
-                                                            class="w-4 h-4 mr-3"
-                                                        />
-                                                        View Details
-                                                    </button>
-                                                    <button
-                                                        v-if="props.canEdit"
-                                                        @click="
-                                                            openStatusModal(
-                                                                report
-                                                            )
-                                                        "
-                                                        class="flex items-center w-full px-4 py-2 text-sm text-yellow-600 dark:text-yellow-400 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
-                                                    >
-                                                        <Edit
-                                                            class="w-4 h-4 mr-3"
-                                                        />
-                                                        Change Status
-                                                    </button>
-                                                    <!-- <button
-                                                        v-if="
-                                                            report.status !==
-                                                                'resolved' &&
-                                                            props.canEdit
-                                                        "
-                                                        @click="
-                                                            quickResolve(report)
-                                                        "
-                                                        class="flex items-center w-full px-4 py-2 text-sm text-green-600 dark:text-green-400 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
-                                                    >
-                                                        <CheckCircle
-                                                            class="w-4 h-4 mr-3"
-                                                        />
-                                                        Mark Resolved
-                                                    </button> -->
-                                                    <button
-                                                        v-if="props.canDelete"
-                                                        @click="
-                                                            confirmDelete(
-                                                                report
-                                                            )
-                                                        "
-                                                        class="flex items-center w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
-                                                    >
-                                                        <Trash2
-                                                            class="w-4 h-4 mr-3"
-                                                        />
-                                                        Delete Report
-                                                    </button>
+                                                    <span v-else>
+                                                        {{
+                                                            report.reporter_name ||
+                                                            report.user?.name ||
+                                                            "N/A"
+                                                        }}
+                                                    </span>
+                                                </div>
+                                                <div
+                                                    class="text-xs text-gray-500 dark:text-gray-400"
+                                                >
+                                                    {{ report.tracking_code }}
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </td>
-                            </tr>
+                                    </td>
 
-                            <!-- Empty State -->
-                            <tr v-if="filteredReports.length === 0">
-                                <td colspan="8" class="px-6 py-8 text-center">
-                                    <div
-                                        class="flex flex-col items-center justify-center space-y-2"
-                                    >
-                                        <FileText
-                                            class="w-12 h-12 text-gray-300"
-                                        />
+                                    <!-- User Type -->
+                                    <td class="px-6 py-2">
                                         <span
-                                            class="font-medium text-gray-500 dark:text-gray-400"
-                                            >No reports found</span
+                                            :class="
+                                                userTypeClasses(
+                                                    getDisplayUserType(report)
+                                                )
+                                            "
+                                            class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-sm"
                                         >
-                                        <span
-                                            class="text-xs text-gray-400 dark:text-gray-500"
-                                        >
-                                            Try adjusting your filters or search
-                                            keywords.
+                                            <span
+                                                class="w-1.5 h-1.5 rounded-full mr-1.5"
+                                                :class="
+                                                    getUserTypeDotClass(
+                                                        getDisplayUserType(
+                                                            report
+                                                        )
+                                                    )
+                                                "
+                                            ></span>
+                                            {{ getDisplayUserType(report) }}
                                         </span>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                                    </td>
 
-                <!-- Pagination -->
-                <Pagination :data="reports" />
+                                    <!-- Location -->
+                                    <td
+                                        class="px-6 py-2 text-xs text-gray-900 dark:text-white"
+                                    >
+                                        <div class="font-medium">
+                                            {{ report.zone || "N/A" }}
+                                        </div>
+                                        <div
+                                            class="text-gray-500 dark:text-gray-400"
+                                        >
+                                            {{ report.barangay }},
+                                            {{ report.purok }}
+                                        </div>
+                                    </td>
+
+                                    <!-- Issue Type -->
+                                    <td class="px-6 py-2">
+                                        <div class="text-xs">
+                                            <div
+                                                class="font-medium text-gray-900 dark:text-white"
+                                            >
+                                                {{
+                                                    report.water_issue_type ===
+                                                    "others"
+                                                        ? report.custom_water_issue ||
+                                                          "Custom Issue"
+                                                        : report.water_issue_type
+                                                }}
+                                            </div>
+                                            <div
+                                                class="text-gray-500 dark:text-gray-400 truncate max-w-xs"
+                                            >
+                                                {{
+                                                    truncateText(
+                                                        report.description,
+                                                        30
+                                                    )
+                                                }}
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    <!-- Priority -->
+                                    <td class="px-6 py-2">
+                                        <span
+                                            :class="
+                                                priorityClasses(report.priority)
+                                            "
+                                            class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-sm"
+                                        >
+                                            <span
+                                                class="w-1.5 h-1.5 rounded-full mr-1.5"
+                                                :class="
+                                                    priorityDotClasses(
+                                                        report.priority
+                                                    )
+                                                "
+                                            ></span>
+                                            {{ report.priority || "N/A" }}
+                                        </span>
+                                    </td>
+
+                                    <!-- Status -->
+                                    <td class="px-6 py-2">
+                                        <span
+                                            :class="
+                                                statusClasses(report.status)
+                                            "
+                                            class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-sm"
+                                        >
+                                            <span
+                                                class="w-1.5 h-1.5 rounded-full mr-1.5"
+                                                :class="
+                                                    statusDotClasses(
+                                                        report.status
+                                                    )
+                                                "
+                                            ></span>
+                                            {{ formatStatus(report.status) }}
+                                        </span>
+                                    </td>
+
+                                    <!-- Date -->
+                                    <td
+                                        class="px-6 py-2 text-xs text-gray-900 dark:text-white"
+                                    >
+                                        <div>
+                                            {{ formatDate(report.created_at) }}
+                                        </div>
+                                        <div
+                                            class="text-gray-500 dark:text-gray-400"
+                                        >
+                                            {{ formatTime(report.created_at) }}
+                                        </div>
+                                    </td>
+
+                                    <!-- Actions -->
+                                    <td class="px-6 py-3 text-right">
+                                        <div class="flex justify-end">
+                                            <div class="relative">
+                                                <button
+                                                    @click="
+                                                        toggleActionMenu(
+                                                            report.id
+                                                        )
+                                                    "
+                                                    class="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-200 dark:hover:text-gray-300 rounded-lg transition-colors"
+                                                    :data-action-button="
+                                                        report.id
+                                                    "
+                                                >
+                                                    <MoreHorizontal
+                                                        class="w-4 h-4"
+                                                    />
+                                                </button>
+
+                                                <!-- Action Menu Dropdown -->
+                                                <div
+                                                    v-if="
+                                                        activeActionMenu ===
+                                                        report.id
+                                                    "
+                                                    class="fixed z-[1000] mt-1 w-48 bg-white dark:bg-gray-700 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600"
+                                                    :style="
+                                                        getActionDropdownStyle(
+                                                            report.id
+                                                        )
+                                                    "
+                                                >
+                                                    <div class="py-1">
+                                                        <button
+                                                            @click="
+                                                                openModal(
+                                                                    report
+                                                                )
+                                                            "
+                                                            class="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                                                        >
+                                                            <Eye
+                                                                class="w-4 h-4 mr-3"
+                                                            />
+                                                            View Details
+                                                        </button>
+                                                        <button
+                                                            v-if="props.canEdit"
+                                                            @click="
+                                                                openStatusModal(
+                                                                    report
+                                                                )
+                                                            "
+                                                            class="flex items-center w-full px-4 py-2 text-sm text-yellow-600 dark:text-yellow-400 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                                                        >
+                                                            <Edit
+                                                                class="w-4 h-4 mr-3"
+                                                            />
+                                                            Change Status
+                                                        </button>
+                                                        <button
+                                                            v-if="
+                                                                props.canDelete
+                                                            "
+                                                            @click="
+                                                                confirmDelete(
+                                                                    report
+                                                                )
+                                                            "
+                                                            class="flex items-center w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                                                        >
+                                                            <Trash2
+                                                                class="w-4 h-4 mr-3"
+                                                            />
+                                                            Delete Report
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- Empty State -->
+                                <tr v-if="filteredReports.length === 0">
+                                    <td
+                                        colspan="8"
+                                        class="px-6 py-24 text-center"
+                                    >
+                                        <div
+                                            class="flex flex-col items-center justify-center space-y-4"
+                                        >
+                                            <FileText
+                                                class="w-20 h-20 text-gray-300"
+                                            />
+                                            <span
+                                                class="text-2xl font-medium text-gray-500 dark:text-gray-400"
+                                            >
+                                                No reports found
+                                            </span>
+                                            <span
+                                                class="text-sm text-gray-400 dark:text-gray-500"
+                                            >
+                                                Try adjusting your filters or
+                                                search keywords.
+                                            </span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination - Fixed at Bottom -->
+                    <div
+                        class="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+                    >
+                        <Pagination :data="reports" />
+                    </div>
+                </div>
             </div>
 
             <!-- Modals -->
@@ -1437,7 +1460,7 @@ const deleteReport = async (report, reason) => {
     }
 };
 
-// Export function
+// Export function - UPDATED WITH PDF OPTION
 const exportReports = async () => {
     try {
         const { value: format } = await Swal.fire({
@@ -1447,7 +1470,7 @@ const exportReports = async () => {
             input: "select",
             inputOptions: {
                 csv: "CSV (Excel)",
-                json: "JSON Data",
+                pdf: "PDF Document",
             },
             inputPlaceholder: "Select format",
             showCancelButton: true,
@@ -1467,32 +1490,33 @@ const exportReports = async () => {
             },
         });
 
-        // Generate export data
-        const exportData = filteredReports.value.map((report) => ({
-            ID: report.id,
-            "Tracking Code": report.tracking_code,
-            "Reporter Name": report.reporter_name || report.user?.name || "N/A",
-            "User Type": report.formatted_user_types || "Guest",
-            Zone: report.zone || "N/A",
-            Barangay: report.barangay || "N/A",
-            Purok: report.purok || "N/A",
-            "Issue Type":
-                report.water_issue_type === "others"
-                    ? report.custom_water_issue || "Custom Issue"
-                    : report.water_issue_type,
-            Priority: report.priority || "N/A",
-            Status: formatStatus(report.status),
-            "Date Created": formatDate(report.created_at),
-            "Time Created": formatTime(report.created_at),
-            Description: report.description || "",
-            "Reporter Phone": report.reporter_phone || "N/A",
-        }));
-
-        // Generate file based on format
         if (format === "csv") {
+            // Generate export data for CSV
+            const exportData = filteredReports.value.map((report) => ({
+                ID: report.id,
+                "Tracking Code": report.tracking_code,
+                "Reporter Name":
+                    report.reporter_name || report.user?.name || "N/A",
+                "User Type": report.formatted_user_types || "Guest",
+                Zone: report.zone || "N/A",
+                Barangay: report.barangay || "N/A",
+                Purok: report.purok || "N/A",
+                "Issue Type":
+                    report.water_issue_type === "others"
+                        ? report.custom_water_issue || "Custom Issue"
+                        : report.water_issue_type,
+                Priority: report.priority || "N/A",
+                Status: formatStatus(report.status),
+                "Date Created": formatDate(report.created_at),
+                "Time Created": formatTime(report.created_at),
+                Description: report.description || "",
+                "Reporter Phone": report.reporter_phone || "N/A",
+            }));
+
             exportToCSV(exportData);
-        } else if (format === "json") {
-            exportToJSON(exportData);
+        } else if (format === "pdf") {
+            // Export to PDF using server-side generation
+            await exportToPDF();
         }
 
         Swal.fire({
@@ -1544,23 +1568,34 @@ const exportToCSV = (data) => {
     document.body.removeChild(link);
 };
 
-// JSON Export Function
-const exportToJSON = (data) => {
-    const jsonContent = JSON.stringify(data, null, 2);
-    const blob = new Blob([jsonContent], {
-        type: "application/json;charset=utf-8;",
-    });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute(
-        "download",
-        `aquatrack-reports-${new Date().toISOString().split("T")[0]}.json`
-    );
-    link.style.visibility = "hidden";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+// PDF Export Function - Server-side generation
+const exportToPDF = async () => {
+    try {
+        // Build query parameters from current filters
+        const params = new URLSearchParams();
+
+        if (filters.value.search) params.append("search", filters.value.search);
+        if (filters.value.status) params.append("status", filters.value.status);
+        if (filters.value.userType && filters.value.userType !== "all") {
+            params.append("userType", filters.value.userType);
+        }
+
+        // Add timestamp to prevent caching
+        params.append("_t", new Date().getTime());
+
+        // Create a temporary link to trigger the download
+        const link = document.createElement("a");
+        link.href = route("admin.reports.export.pdf") + "?" + params.toString();
+        link.setAttribute("download", "");
+        link.style.display = "none";
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    } catch (error) {
+        console.error("PDF export error:", error);
+        throw new Error("Failed to generate PDF");
+    }
 };
 
 // Utility functions

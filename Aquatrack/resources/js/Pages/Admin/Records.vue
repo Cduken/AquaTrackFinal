@@ -167,351 +167,377 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Export Button -->
+                            <button
+                                @click="showExportOptions"
+                                class="flex items-center px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-sm hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800 dark:hover:bg-green-900/30"
+                            >
+                                <Download class="w-4 h-4 mr-2" />
+                                Export
+                            </button>
                         </div>
                     </div>
                 </div>
 
-                <!-- Table -->
-                <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead
-                            class="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600"
-                        >
-                            <tr>
-                                <th
-                                    class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-                                >
-                                    Customer
-                                </th>
-                                <th
-                                    class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-                                >
-                                    Account Details
-                                </th>
-                                <th
-                                    class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-                                >
-                                    Reading
-                                </th>
-                                <th
-                                    class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-                                >
-                                    Amount
-                                </th>
-                                <th
-                                    class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-                                >
-                                    Due Date
-                                </th>
-                                <th
-                                    class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-                                >
-                                    Status
-                                </th>
-                                <th
-                                    class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-                                >
-                                    Actions
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody
-                            class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"
-                        >
-                            <tr
-                                v-for="record in records.data"
-                                :key="record.id"
-                                class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150"
+                <!-- Table Container with Fixed Height -->
+                <div
+                    class="flex flex-col"
+                    style="height: 613px; min-height: 600px"
+                >
+                    <!-- Table with Scrollable Body -->
+                    <div class="flex-1 overflow-x-auto overflow-y-auto">
+                        <table class="w-full">
+                            <thead
+                                class="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 sticky top-0 z-10"
                             >
-                                <!-- Customer Column -->
-                                <td class="px-6 py-2">
-                                    <div class="flex items-center">
-                                        <div class="flex-shrink-0 h-8 w-8 mr-3">
-                                            <img
-                                                v-if="record.user.avatar_url"
-                                                :src="record.user.avatar_url"
-                                                :alt="record.user.name"
-                                                class="h-8 w-8 rounded-full object-cover"
-                                            />
-                                            <div
-                                                v-else
-                                                class="h-8 w-8 rounded-full flex items-center justify-center text-white font-semibold text-xs"
-                                                :class="
-                                                    getAvatarColor(
-                                                        record.user.name
-                                                    )
-                                                "
-                                            >
-                                                {{
-                                                    getUserInitials(record.user)
-                                                }}
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <div
-                                                class="font-medium text-gray-900 dark:text-white text-xs"
-                                            >
-                                                {{ record.user.name }}
-                                                {{ record.user.lastname }}
-                                            </div>
-                                            <div
-                                                class="text-xs text-gray-500 dark:text-gray-400"
-                                            >
-                                                {{
-                                                    record.user.email
-                                                }}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-
-                                <!-- Account Details -->
-                                <td
-                                    class="px-6 py-2 text-xs text-gray-900 dark:text-white"
-                                >
-                                    <div class="font-medium">
-                                        {{
-                                            record.user.account_number || "N/A"
-                                        }}
-                                    </div>
-                                    <div
-                                        class="text-gray-500 dark:text-gray-400"
+                                <tr>
+                                    <th
+                                        class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
                                     >
-                                        Serial: {{ record.user.serial_number }}
-                                    </div>
-                                </td>
-
-                                <!-- Reading Data -->
-                                <td
-                                    class="px-6 py-2 text-xs text-gray-900 dark:text-white"
-                                >
-                                    <div class="font-medium">
-                                        {{ record.reading }} m³
-                                    </div>
-                                    <div
-                                        class="text-gray-500 dark:text-gray-400"
+                                        Customer
+                                    </th>
+                                    <th
+                                        class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
                                     >
-                                       Consumption: {{ record.consumption }} m³
-                                    </div>
-                                </td>
+                                        Account Details
+                                    </th>
+                                    <th
+                                        class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                    >
+                                        Reading
+                                    </th>
+                                    <th
+                                        class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                    >
+                                        Amount
+                                    </th>
+                                    <th
+                                        class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                    >
+                                        Due Date
+                                    </th>
+                                    <th
+                                        class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                    >
+                                        Status
+                                    </th>
+                                    <th
+                                        class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                    >
+                                        Actions
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody
+                                class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"
+                            >
+                                <tr
+                                    v-for="record in records.data"
+                                    :key="record.id"
+                                    class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150"
+                                >
+                                    <!-- Customer Column -->
+                                    <td class="px-6 py-2">
+                                        <div class="flex items-center">
+                                            <div
+                                                class="flex-shrink-0 h-8 w-8 mr-3"
+                                            >
+                                                <img
+                                                    v-if="
+                                                        record.user.avatar_url
+                                                    "
+                                                    :src="
+                                                        record.user.avatar_url
+                                                    "
+                                                    :alt="record.user.name"
+                                                    class="h-8 w-8 rounded-full object-cover"
+                                                />
+                                                <div
+                                                    v-else
+                                                    class="h-8 w-8 rounded-full flex items-center justify-center text-white font-semibold text-xs"
+                                                    :class="
+                                                        getAvatarColor(
+                                                            record.user.name
+                                                        )
+                                                    "
+                                                >
+                                                    {{
+                                                        getUserInitials(
+                                                            record.user
+                                                        )
+                                                    }}
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <div
+                                                    class="font-medium text-gray-900 dark:text-white text-xs"
+                                                >
+                                                    {{ record.user.name }}
+                                                    {{ record.user.lastname }}
+                                                </div>
+                                                <div
+                                                    class="text-xs text-gray-500 dark:text-gray-400"
+                                                >
+                                                    {{ record.user.email }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
 
-                                <!-- Amount -->
-                                <td class="px-6 py-2">
-                                    <div class="text-xs">
-                                        <div
-                                            v-if="record.status === 'Paid'"
-                                            class="font-medium text-green-600 dark:text-green-400"
-                                        >
-                                            ₱{{ record.amount }}
+                                    <!-- Account Details -->
+                                    <td
+                                        class="px-6 py-2 text-xs text-gray-900 dark:text-white"
+                                    >
+                                        <div class="font-medium">
+                                            {{
+                                                record.user.account_number ||
+                                                "N/A"
+                                            }}
                                         </div>
                                         <div
-                                            v-else-if="record.surcharge"
-                                            class="space-y-1"
+                                            class="text-gray-500 dark:text-gray-400"
                                         >
+                                            Serial:
+                                            {{ record.user.serial_number }}
+                                        </div>
+                                    </td>
+
+                                    <!-- Reading Data -->
+                                    <td
+                                        class="px-6 py-2 text-xs text-gray-900 dark:text-white"
+                                    >
+                                        <div class="font-medium">
+                                            {{ record.reading }} m³
+                                        </div>
+                                        <div
+                                            class="text-gray-500 dark:text-gray-400"
+                                        >
+                                            Consumption:
+                                            {{ record.consumption }} m³
+                                        </div>
+                                    </td>
+
+                                    <!-- Amount -->
+                                    <td class="px-6 py-2">
+                                        <div class="text-xs">
                                             <div
-                                                class="line-through text-gray-400"
-                                            >
-                                                ₱{{
-                                                    (
-                                                        record.amount -
-                                                        record.surcharge
-                                                    ).toFixed(2)
-                                                }}
-                                            </div>
-                                            <div
-                                                class="font-medium text-red-600 dark:text-red-400"
+                                                v-if="record.status === 'Paid'"
+                                                class="font-medium text-green-600 dark:text-green-400"
                                             >
                                                 ₱{{ record.amount }}
                                             </div>
                                             <div
-                                                class="text-red-600 dark:text-red-400"
+                                                v-else-if="record.surcharge"
+                                                class="space-y-1"
                                             >
-                                                +₱{{ record.surcharge }}
-                                                surcharge
+                                                <div
+                                                    class="line-through text-gray-400"
+                                                >
+                                                    ₱{{
+                                                        (
+                                                            record.amount -
+                                                            record.surcharge
+                                                        ).toFixed(2)
+                                                    }}
+                                                </div>
+                                                <div
+                                                    class="font-medium text-red-600 dark:text-red-400"
+                                                >
+                                                    ₱{{ record.amount }}
+                                                </div>
+                                                <div
+                                                    class="text-red-600 dark:text-red-400"
+                                                >
+                                                    +₱{{ record.surcharge }}
+                                                    surcharge
+                                                </div>
+                                            </div>
+                                            <div
+                                                v-else
+                                                class="font-medium text-gray-900 dark:text-white"
+                                            >
+                                                ₱{{ record.amount }}
                                             </div>
                                         </div>
-                                        <div
-                                            v-else
-                                            class="font-medium text-gray-900 dark:text-white"
-                                        >
-                                            ₱{{ record.amount }}
+                                    </td>
+
+                                    <!-- Due Date -->
+                                    <td
+                                        class="px-6 py-2 text-xs text-gray-900 dark:text-white"
+                                    >
+                                        <div>
+                                            {{ formatDate(record.due_date) }}
                                         </div>
-                                    </div>
-                                </td>
+                                        <div
+                                            class="text-gray-500 dark:text-gray-400"
+                                        >
+                                            {{
+                                                getDaysUntilDue(record.due_date)
+                                            }}
+                                        </div>
+                                    </td>
 
-                                <!-- Due Date -->
-                                <td
-                                    class="px-6 py-2 text-xs text-gray-900 dark:text-white"
-                                >
-                                    <div>{{ formatDate(record.due_date) }}</div>
-                                    <div
-                                        class="text-gray-500 dark:text-gray-400"
-                                    >
-                                        {{ getDaysUntilDue(record.due_date) }}
-                                    </div>
-                                </td>
-
-                                <!-- Status -->
-                                <td class="px-6 py-2">
-                                    <span
-                                        :class="statusClasses(record.status)"
-                                        class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-sm"
-                                    >
+                                    <!-- Status -->
+                                    <td class="px-6 py-2">
                                         <span
-                                            class="w-1.5 h-1.5 rounded-full mr-1.5"
                                             :class="
-                                                statusDotClasses(record.status)
+                                                statusClasses(record.status)
                                             "
-                                        ></span>
-                                        {{ record.status }}
-                                    </span>
-                                </td>
-
-                                <!-- Actions -->
-                                <td class="px-6 py-3 text-right">
-                                    <div class="flex justify-end">
-                                        <div class="relative">
-                                            <button
-                                                @click="
-                                                    toggleActionMenu(record.id)
-                                                "
-                                                class="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-200 dark:hover:text-gray-300 rounded-lg transition-colors"
-                                                :data-action-button="record.id"
-                                            >
-                                                <MoreHorizontal
-                                                    class="w-4 h-4"
-                                                />
-                                            </button>
-
-                                            <!-- Action Menu Dropdown -->
-                                            <div
-                                                v-if="
-                                                    activeActionMenu ===
-                                                    record.id
-                                                "
-                                                class="fixed z-[1000] mt-1 w-48 bg-white dark:bg-gray-700 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600"
-                                                :style="
-                                                    getActionDropdownStyle(
-                                                        record.id
+                                            class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-sm"
+                                        >
+                                            <span
+                                                class="w-1.5 h-1.5 rounded-full mr-1.5"
+                                                :class="
+                                                    statusDotClasses(
+                                                        record.status
                                                     )
                                                 "
-                                            >
-                                                <div class="py-1">
-                                                    <button
-                                                        @click="
-                                                            showRecordDetails(
-                                                                record
-                                                            )
-                                                        "
-                                                        class="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
-                                                    >
-                                                        <Eye
-                                                            class="w-4 h-4 mr-3"
-                                                        />
-                                                        View Details
-                                                    </button>
-                                                    <button
-                                                        @click="
-                                                            showEditModal(
-                                                                record
-                                                            )
-                                                        "
-                                                        class="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
-                                                    >
-                                                        <Edit
-                                                            class="w-4 h-4 mr-3"
-                                                        />
-                                                        Edit Record
-                                                    </button>
-                                                    <button
-                                                        v-if="
-                                                            record.status !==
-                                                            'Paid'
-                                                        "
-                                                        @click="
-                                                            updateRecordStatus(
-                                                                record,
+                                            ></span>
+                                            {{ record.status }}
+                                        </span>
+                                    </td>
+
+                                    <!-- Actions -->
+                                    <td class="px-6 py-3 text-right">
+                                        <div class="flex justify-end">
+                                            <div class="relative">
+                                                <button
+                                                    @click="
+                                                        toggleActionMenu(
+                                                            record.id
+                                                        )
+                                                    "
+                                                    class="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-200 dark:hover:text-gray-300 rounded-lg transition-colors"
+                                                    :data-action-button="
+                                                        record.id
+                                                    "
+                                                >
+                                                    <MoreHorizontal
+                                                        class="w-4 h-4"
+                                                    />
+                                                </button>
+
+                                                <!-- Action Menu Dropdown -->
+                                                <div
+                                                    v-if="
+                                                        activeActionMenu ===
+                                                        record.id
+                                                    "
+                                                    class="fixed z-[1000] mt-1 w-48 bg-white dark:bg-gray-700 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600"
+                                                    :style="
+                                                        getActionDropdownStyle(
+                                                            record.id
+                                                        )
+                                                    "
+                                                >
+                                                    <div class="py-1">
+                                                        <button
+                                                            @click="
+                                                                showRecordDetails(
+                                                                    record
+                                                                )
+                                                            "
+                                                            class="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                                                        >
+                                                            <Eye
+                                                                class="w-4 h-4 mr-3"
+                                                            />
+                                                            View Details
+                                                        </button>
+                                                        <button
+                                                            @click="
+                                                                showEditModal(
+                                                                    record
+                                                                )
+                                                            "
+                                                            class="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                                                        >
+                                                            <Edit
+                                                                class="w-4 h-4 mr-3"
+                                                            />
+                                                            Edit Record
+                                                        </button>
+                                                        <button
+                                                            v-if="
+                                                                record.status !==
                                                                 'Paid'
-                                                            )
-                                                        "
-                                                        class="flex items-center w-full px-4 py-2 text-sm text-green-600 dark:text-green-400 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
-                                                    >
-                                                        <CheckCircle
-                                                            class="w-4 h-4 mr-3"
-                                                        />
-                                                        Mark as Paid
-                                                    </button>
-                                                    <button
-                                                        v-if="
-                                                            record.status !==
-                                                            'Pending'
-                                                        "
-                                                        @click="
-                                                            updateRecordStatus(
-                                                                record,
+                                                            "
+                                                            @click="
+                                                                updateRecordStatus(
+                                                                    record,
+                                                                    'Paid'
+                                                                )
+                                                            "
+                                                            class="flex items-center w-full px-4 py-2 text-sm text-green-600 dark:text-green-400 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                                                        >
+                                                            <CheckCircle
+                                                                class="w-4 h-4 mr-3"
+                                                            />
+                                                            Mark as Paid
+                                                        </button>
+                                                        <button
+                                                            v-if="
+                                                                record.status !==
                                                                 'Pending'
-                                                            )
-                                                        "
-                                                        class="flex items-center w-full px-4 py-2 text-sm text-yellow-600 dark:text-yellow-400 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
-                                                    >
-                                                        <Clock
-                                                            class="w-4 h-4 mr-3"
-                                                        />
-                                                        Mark as Pending
-                                                    </button>
-                                                    <!-- <button
-                                                        v-if="
-                                                            record.status !==
-                                                            'Overdue'
-                                                        "
-                                                        @click="
-                                                            updateRecordStatus(
-                                                                record,
-                                                                'Overdue'
-                                                            )
-                                                        "
-                                                        class="flex items-center w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
-                                                    >
-                                                        <AlertCircle
-                                                            class="w-4 h-4 mr-3"
-                                                        />
-                                                        Mark as Overdue
-                                                    </button> -->
+                                                            "
+                                                            @click="
+                                                                updateRecordStatus(
+                                                                    record,
+                                                                    'Pending'
+                                                                )
+                                                            "
+                                                            class="flex items-center w-full px-4 py-2 text-sm text-yellow-600 dark:text-yellow-400 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                                                        >
+                                                            <Clock
+                                                                class="w-4 h-4 mr-3"
+                                                            />
+                                                            Mark as Pending
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </td>
-                            </tr>
+                                    </td>
+                                </tr>
 
-                            <!-- Empty State -->
-                            <tr v-if="records.data.length === 0">
-                                <td colspan="7" class="px-6 py-8 text-center">
-                                    <div
-                                        class="flex flex-col items-center justify-center space-y-2"
+                                <!-- Empty State -->
+                                <tr v-if="records.data.length === 0">
+                                    <td
+                                        colspan="7"
+                                        class="px-6 py-24 text-center"
                                     >
-                                        <FileText
-                                            class="w-12 h-12 text-gray-300"
-                                        />
-                                        <span
-                                            class="font-medium text-gray-500 dark:text-gray-400"
-                                            >No records found</span
+                                        <div
+                                            class="flex flex-col items-center justify-center space-y-4"
                                         >
-                                        <span
-                                            class="text-xs text-gray-400 dark:text-gray-500"
-                                        >
-                                            Try adjusting your filters or search
-                                            keywords.
-                                        </span>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                                            <FileText
+                                                class="w-20 h-20 text-gray-300"
+                                            />
+                                            <span
+                                                class="text-2xl font-medium text-gray-500 dark:text-gray-400"
+                                            >
+                                                No records found
+                                            </span>
+                                            <span
+                                                class="text-sm text-gray-400 dark:text-gray-500"
+                                            >
+                                                Try adjusting your filters or
+                                                search keywords.
+                                            </span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
 
-                <!-- Pagination -->
-                <Pagination :data="records" />
+                    <!-- Pagination - Fixed at Bottom -->
+                    <div
+                        class="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+                    >
+                        <Pagination :data="records" />
+                    </div>
+                </div>
             </div>
 
             <!-- Modals -->
@@ -554,6 +580,7 @@ import {
     CheckCircle,
     Clock,
     AlertCircle,
+    Download,
 } from "lucide-vue-next";
 
 // Props
@@ -573,8 +600,9 @@ const showRecordModal = ref(false);
 const selectedRecord = ref(null);
 const loadingRecord = ref(false);
 const showEditRecordModal = ref(false);
+const isExporting = ref(false);
 
-// Local filters
+// Local filters - SIMPLIFIED (removed period filters)
 const filters = ref({
     search: props.filters.search || "",
     status: props.filters.status || "",
@@ -630,6 +658,97 @@ const overdueRecordsCount = computed(() => {
             .length || 0
     );
 });
+
+// Export functionality
+const showExportOptions = async () => {
+    const { value: format } = await Swal.fire({
+        title: "Export Reports",
+        text: "Choose export format",
+        icon: "info",
+        showCancelButton: true,
+        confirmButtonText: "Export",
+        cancelButtonText: "Cancel",
+        input: "select",
+        inputOptions: {
+            csv: "CSV (Excel)",
+            pdf: "PDF Document",
+        },
+        inputPlaceholder: "Select format",
+        inputValidator: (value) => {
+            if (!value) {
+                return "You need to select a format!";
+            }
+        },
+    });
+
+    if (format) {
+        exportRecords(format);
+    }
+};
+
+const exportRecords = async (format) => {
+    isExporting.value = true;
+
+    try {
+        // Show loading state
+        Swal.fire({
+            title: "Exporting...",
+            text: "Please wait while we prepare your export",
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            },
+        });
+
+        // Build export parameters with current filters (month and year)
+        const exportParams = {
+            ...pickBy(filters.value),
+            format: format,
+            _t: new Date().getTime(), // Cache busting
+        };
+
+        // Create a temporary form to submit the export request
+        const form = document.createElement("form");
+        form.method = "GET";
+        form.action = route("admin.records.export");
+
+        // Add parameters to the form
+        Object.keys(exportParams).forEach((key) => {
+            if (exportParams[key] !== null && exportParams[key] !== undefined) {
+                const input = document.createElement("input");
+                input.type = "hidden";
+                input.name = key;
+                input.value = exportParams[key];
+                form.appendChild(input);
+            }
+        });
+
+        // Append form to body and submit
+        document.body.appendChild(form);
+        form.submit();
+        document.body.removeChild(form);
+
+        // Close the loading SweetAlert
+        Swal.close();
+
+        Swal.fire({
+            icon: "success",
+            title: "Export Complete!",
+            text: `Reports exported as ${format.toUpperCase()} successfully`,
+            timer: 2000,
+            showConfirmButton: false,
+        });
+    } catch (error) {
+        console.error("Export failed:", error);
+        Swal.fire({
+            icon: "error",
+            title: "Export Failed",
+            text: "Failed to generate export. Please try again.",
+        });
+    } finally {
+        isExporting.value = false;
+    }
+};
 
 // Dropdown handlers
 const toggleFilterDropdown = async () => {
@@ -774,9 +893,9 @@ watch(
         year: filters.value.year,
         perPage: filters.value.perPage,
     }),
-    (newFilters) => {
+    debounce((newFilters) => {
         getRecords();
-    },
+    }, 300),
     { deep: true, immediate: true }
 );
 

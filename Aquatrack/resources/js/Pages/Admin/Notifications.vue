@@ -1,4 +1,3 @@
-//Pages/Admin/Notifications.vue
 <template>
     <AdminLayout>
         <div class="mx-auto w-full">
@@ -63,7 +62,7 @@
 
                         <!-- Filter Controls -->
                         <div class="flex flex-wrap items-center gap-3">
-                            <!-- Type Filter -->
+                            <!-- Type Filter - UPDATED -->
                             <div class="relative">
                                 <select
                                     v-model="filters.type"
@@ -71,16 +70,15 @@
                                     class="px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                                 >
                                     <option value="">All Types</option>
+                                    <option value="info">Information</option>
+                                    <option value="alert">Alerts</option>
+                                    <option value="reminder">Reminders</option>
                                     <option value="announcement">
                                         Announcements
                                     </option>
-                                    <option value="overdue_warning">
-                                        Overdue Warnings
+                                    <option value="new_report">
+                                        New Reports
                                     </option>
-                                    <option value="report_status">
-                                        Report Updates
-                                    </option>
-                                    <option value="system">System</option>
                                 </select>
                             </div>
 
@@ -113,217 +111,246 @@
                     </div>
                 </div>
 
-                <!-- Notifications Table -->
-                <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead class="bg-gray-50 dark:bg-gray-700/50">
-                            <tr>
-                                <th
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                                >
-                                    <div class="flex items-center space-x-2">
-                                        <input
-                                            type="checkbox"
-                                            :checked="allSelected"
-                                            @change="toggleSelectAll"
-                                            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                                        />
-                                        <span>Notification</span>
-                                    </div>
-                                </th>
-                                <th
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                                >
-                                    Type
-                                </th>
-                                <th
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                                >
-                                    Date
-                                </th>
-                                <th
-                                    class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                                >
-                                    Actions
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody
-                            class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"
-                        >
-                            <tr
-                                v-for="notification in filteredNotifications"
-                                :key="notification.id"
-                                class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                <!-- Notifications Table Container with Fixed Height -->
+                <div
+                    class="flex flex-col"
+                    style="height: 613px; min-height: 600px"
+                >
+                    <!-- Table with Scrollable Body -->
+                    <div class="flex-1 overflow-x-auto overflow-y-auto">
+                        <table class="w-full">
+                            <thead
+                                class="bg-gray-50 dark:bg-gray-700/50 sticky top-0 z-10"
                             >
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex items-start space-x-3">
-                                        <input
-                                            type="checkbox"
-                                            :checked="
-                                                selectedNotifications.includes(
-                                                    notification.id
-                                                )
-                                            "
-                                            @change="
-                                                toggleNotificationSelection(
-                                                    notification.id
-                                                )
-                                            "
-                                            class="mt-1 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                                        />
-                                        <div class="flex-shrink-0">
-                                            <div
-                                                class="p-2 rounded-lg"
-                                                :class="
-                                                    getNotificationIconClass(
-                                                        notification
+                                <tr>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >
+                                        <div
+                                            class="flex items-center space-x-2"
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                :checked="allSelected"
+                                                @change="toggleSelectAll"
+                                                class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                                            />
+                                            <span>Notification</span>
+                                        </div>
+                                    </th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >
+                                        Type
+                                    </th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >
+                                        Date
+                                    </th>
+                                    <th
+                                        class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >
+                                        Actions
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody
+                                class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"
+                            >
+                                <tr
+                                    v-for="notification in filteredNotifications"
+                                    :key="notification.id"
+                                    class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                                >
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-start space-x-3">
+                                            <input
+                                                type="checkbox"
+                                                :checked="
+                                                    selectedNotifications.includes(
+                                                        notification.id
                                                     )
                                                 "
-                                            >
-                                                <component
-                                                    :is="
-                                                        getNotificationIcon(
-                                                            notification
-                                                        )
-                                                    "
-                                                    class="w-4 h-4"
+                                                @change="
+                                                    toggleNotificationSelection(
+                                                        notification.id
+                                                    )
+                                                "
+                                                class="mt-1 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                                            />
+                                            <div class="flex-shrink-0">
+                                                <div
+                                                    class="p-2 rounded-lg"
                                                     :class="
-                                                        getNotificationIconColor(
+                                                        getNotificationIconClass(
                                                             notification
                                                         )
                                                     "
-                                                />
-                                            </div>
-                                        </div>
-                                        <div class="min-w-0 flex-1">
-                                            <div
-                                                class="flex items-start justify-between"
-                                            >
-                                                <div>
-                                                    <p
-                                                        class="text-sm font-medium text-gray-900 dark:text-white line-clamp-1"
-                                                    >
-                                                        {{
-                                                            getNotificationTitle(
+                                                >
+                                                    <component
+                                                        :is="
+                                                            getNotificationIcon(
                                                                 notification
                                                             )
-                                                        }}
-                                                    </p>
-                                                    <p
-                                                        class="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2"
-                                                    >
-                                                        {{
-                                                            notification.message
-                                                        }}
-                                                    </p>
+                                                        "
+                                                        class="w-4 h-4"
+                                                        :class="
+                                                            getNotificationIconColor(
+                                                                notification
+                                                            )
+                                                        "
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div class="min-w-0 flex-1">
+                                                <div
+                                                    class="flex items-start justify-between"
+                                                >
+                                                    <div>
+                                                        <p
+                                                            class="text-sm font-medium text-gray-900 dark:text-white line-clamp-1"
+                                                        >
+                                                            {{
+                                                                getNotificationTitle(
+                                                                    notification
+                                                                )
+                                                            }}
+                                                        </p>
+                                                        <p
+                                                            class="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2"
+                                                        >
+                                                            {{
+                                                                notification.message
+                                                            }}
+                                                        </p>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span
-                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize"
-                                        :class="getTypeBadgeClass(notification)"
-                                    >
-                                        {{
-                                            formatNotificationType(
-                                                notification.type
-                                            )
-                                        }}
-                                    </span>
-                                </td>
-                                <td
-                                    class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400"
-                                >
-                                    <div class="flex items-center space-x-1">
-                                        <Clock class="w-4 h-4" />
-                                        <span>{{
-                                            getRelativeTime(
-                                                getDateField(notification)
-                                            )
-                                        }}</span>
-                                    </div>
-                                    <div
-                                        class="text-xs text-gray-400 dark:text-gray-500 mt-1"
-                                    >
-                                        {{
-                                            formatDate(
-                                                getDateField(notification)
-                                            )
-                                        }}
-                                    </div>
-                                </td>
-                                <td
-                                    class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"
-                                >
-                                    <div
-                                        class="flex items-center justify-end space-x-2"
-                                    >
-                                        <button
-                                            @click="
-                                                viewNotification(notification)
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span
+                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize"
+                                            :class="
+                                                getTypeBadgeClass(notification)
                                             "
-                                            class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 transition-colors p-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                                            title="View Details"
                                         >
-                                            <Eye class="w-4 h-4" />
-                                        </button>
-                                        <button
-                                            @click="
-                                                deleteNotification(
-                                                    notification.id
+                                            {{
+                                                formatNotificationType(
+                                                    notification.type
                                                 )
-                                            "
-                                            class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition-colors p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20"
-                                            title="Delete"
+                                            }}
+                                        </span>
+                                    </td>
+                                    <td
+                                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400"
+                                    >
+                                        <div
+                                            class="flex items-center space-x-1"
                                         >
-                                            <Trash2 class="w-4 h-4" />
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                                            <Clock class="w-4 h-4" />
+                                            <span>{{
+                                                getRelativeTime(
+                                                    getDateField(notification)
+                                                )
+                                            }}</span>
+                                        </div>
+                                        <div
+                                            class="text-xs text-gray-400 dark:text-gray-500 mt-1"
+                                        >
+                                            {{
+                                                formatDate(
+                                                    getDateField(notification)
+                                                )
+                                            }}
+                                        </div>
+                                    </td>
+                                    <td
+                                        class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"
+                                    >
+                                        <div
+                                            class="flex items-center justify-end space-x-2"
+                                        >
+                                            <button
+                                                @click="
+                                                    viewNotification(
+                                                        notification
+                                                    )
+                                                "
+                                                class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 transition-colors p-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                                                title="View Details"
+                                            >
+                                                <Eye class="w-4 h-4" />
+                                            </button>
+                                            <button
+                                                @click="
+                                                    deleteNotification(
+                                                        notification.id
+                                                    )
+                                                "
+                                                class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition-colors p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20"
+                                                title="Delete"
+                                            >
+                                                <Trash2 class="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
 
-                <!-- Empty State -->
-                <div
-                    v-if="filteredNotifications.length === 0"
-                    class="text-center py-12 px-6"
-                >
+                                <!-- Empty State -->
+                                <tr v-if="filteredNotifications.length === 0">
+                                    <td
+                                        colspan="4"
+                                        class="px-6 py-24 text-center"
+                                    >
+                                        <div
+                                            class="flex flex-col items-center justify-center space-y-4"
+                                        >
+                                            <div
+                                                class="p-4 bg-gray-100 dark:bg-gray-700 rounded-full"
+                                            >
+                                                <Bell
+                                                    class="w-20 h-20 text-gray-300 dark:text-gray-500"
+                                                />
+                                            </div>
+                                            <h3
+                                                class="text-2xl font-medium text-gray-500 dark:text-gray-400"
+                                            >
+                                                No notifications found
+                                            </h3>
+                                            <p
+                                                class="text-sm text-gray-400 dark:text-gray-500 max-w-md"
+                                            >
+                                                {{
+                                                    filters.search ||
+                                                    filters.type
+                                                        ? "Try adjusting your filters or search keywords."
+                                                        : "All caught up! No notifications to display."
+                                                }}
+                                            </p>
+                                            <button
+                                                v-if="
+                                                    filters.search ||
+                                                    filters.type
+                                                "
+                                                @click="clearFilters"
+                                                class="mt-2 px-4 py-2 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                                            >
+                                                Clear all filters
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination - Fixed at Bottom -->
                     <div
-                        class="flex flex-col items-center justify-center space-y-4"
+                        class="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
                     >
-                        <div
-                            class="p-4 bg-gray-100 dark:bg-gray-700 rounded-full"
-                        >
-                            <Bell
-                                class="w-8 h-8 text-gray-400 dark:text-gray-500"
-                            />
-                        </div>
-                        <h3
-                            class="text-lg font-semibold text-gray-500 dark:text-gray-400"
-                        >
-                            No notifications found
-                        </h3>
-                        <p
-                            class="text-sm text-gray-400 dark:text-gray-500 max-w-md"
-                        >
-                            {{
-                                filters.search || filters.type
-                                    ? "Try adjusting your filters or search keywords."
-                                    : "All caught up! No notifications to display."
-                            }}
-                        </p>
-                        <button
-                            v-if="filters.search || filters.type"
-                            @click="clearFilters"
-                            class="mt-2 px-4 py-2 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                        >
-                            Clear all filters
-                        </button>
+                        <Pagination :data="notifications" />
                     </div>
                 </div>
 
@@ -584,7 +611,6 @@
                                     </p>
                                 </div>
                             </div>
-
                             <!-- Additional Data (if any) -->
                             <div
                                 v-if="
@@ -657,7 +683,6 @@
 <script setup>
 import AdminLayout from "@/Layouts/AdminLayout.vue";
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from "vue";
-
 import { router } from "@inertiajs/vue3";
 import { pickBy, debounce } from "lodash";
 import { usePage } from "@inertiajs/vue3";
@@ -683,7 +708,8 @@ const props = defineProps({
     filters: Object,
 });
 
-// Reactive state
+// Reactive state - use a ref for notifications so we can update them
+const notifications = ref([...props.notifications]);
 const filters = ref({
     search: props.filters?.search || "",
     type: props.filters?.type || "",
@@ -695,25 +721,36 @@ const showNotificationModal = ref(false);
 const modalVisible = ref(false);
 const selectedNotification = ref(null);
 
-// Computed properties
+// Computed properties - UPDATED FILTER LOGIC
 const filteredNotifications = computed(() => {
-    let filtered = [...props.notifications];
+    let filtered = [...notifications.value];
 
     // Apply search filter
     if (filters.value.search) {
         const searchTerm = filters.value.search.toLowerCase();
         filtered = filtered.filter(
             (notification) =>
-                notification.type.toLowerCase().includes(searchTerm) ||
-                notification.message.toLowerCase().includes(searchTerm) ||
+                notification.type?.toLowerCase().includes(searchTerm) ||
+                notification.message?.toLowerCase().includes(searchTerm) ||
                 (notification.title &&
                     notification.title.toLowerCase().includes(searchTerm))
         );
     }
 
-    // Apply type filter
+    // Apply type filter - UPDATED
     if (filters.value.type) {
-        filtered = filtered.filter((n) => n.type === filters.value.type);
+        if (filters.value.type === "announcement") {
+            // Filter for announcements (check if ID starts with 'announcement_')
+            filtered = filtered.filter((n) =>
+                n.id?.startsWith("announcement_")
+            );
+        } else if (filters.value.type === "new_report") {
+            // Filter for new reports (check if ID starts with 'new_report_')
+            filtered = filtered.filter((n) => n.id?.startsWith("new_report_"));
+        } else {
+            // Filter by actual type field for other types
+            filtered = filtered.filter((n) => n.type === filters.value.type);
+        }
     }
 
     // Apply sorting
@@ -726,8 +763,8 @@ const filteredNotifications = computed(() => {
                 bValue = new Date(b.created_at).getTime();
                 return aValue - bValue;
             case "type":
-                aValue = a.type.toLowerCase();
-                bValue = b.type.toLowerCase();
+                aValue = a.type?.toLowerCase() || "";
+                bValue = b.type?.toLowerCase() || "";
                 return aValue.localeCompare(bValue);
             default: // 'created_at' - newest first
                 aValue = new Date(a.created_at).getTime();
@@ -748,7 +785,6 @@ const allSelected = computed(() => {
 });
 
 const hasMoreNotifications = computed(() => {
-    // You can implement pagination logic here
     return false;
 });
 
@@ -757,10 +793,7 @@ const viewNotification = async (notification) => {
     selectedNotification.value = notification;
     showNotificationModal.value = true;
 
-    // Wait for the next tick to ensure the modal is in the DOM
     await nextTick();
-
-    // Trigger the animation
     setTimeout(() => {
         modalVisible.value = true;
     }, 50);
@@ -817,9 +850,10 @@ const debouncedFetchNotifications = debounce((filters, requestId) => {
     router.get("/admin/notifications", pickBy(filters), {
         preserveState: true,
         replace: true,
-        onSuccess: () => {
+        onSuccess: (page) => {
             if (requestId === latestRequestId) {
-                // Handle success if needed
+                // Update the notifications with fresh data
+                notifications.value = [...page.props.notifications];
             }
         },
         onError: (errors) => {
@@ -869,10 +903,36 @@ const deleteNotification = async (notificationId) => {
     if (result.isConfirmed) {
         try {
             await router.delete(
-                route("notifications.destroy", notificationId),
+                route("admin.notifications.destroy", notificationId),
                 {
                     preserveScroll: true,
                     onSuccess: () => {
+                        // Remove the notification from the local state immediately
+                        const index = notifications.value.findIndex(
+                            (n) => n.id === notificationId
+                        );
+                        if (index > -1) {
+                            notifications.value.splice(index, 1);
+                        }
+
+                        // Remove from selected notifications if it's there
+                        const selectedIndex =
+                            selectedNotifications.value.indexOf(notificationId);
+                        if (selectedIndex > -1) {
+                            selectedNotifications.value.splice(
+                                selectedIndex,
+                                1
+                            );
+                        }
+
+                        // Close modal if the deleted notification is currently open
+                        if (
+                            selectedNotification.value &&
+                            selectedNotification.value.id === notificationId
+                        ) {
+                            closeModal();
+                        }
+
                         Swal.fire({
                             toast: true,
                             position: "top-end",
@@ -882,13 +942,13 @@ const deleteNotification = async (notificationId) => {
                             timer: 2000,
                             timerProgressBar: true,
                         });
-                        // Close modal if the deleted notification is currently open
-                        if (
-                            selectedNotification.value &&
-                            selectedNotification.value.id === notificationId
-                        ) {
-                            closeModal();
-                        }
+                    },
+                    onError: (errors) => {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Error",
+                            text: "Failed to delete notification.",
+                        });
                     },
                 }
             );
@@ -919,11 +979,26 @@ const bulkDelete = async () => {
     if (result.isConfirmed) {
         try {
             await router.post(
-                route("notifications.bulk-delete"),
+                route("admin.notifications.bulk-delete"),
                 { notification_ids: selectedNotifications.value },
                 {
                     preserveScroll: true,
                     onSuccess: () => {
+                        // Remove all selected notifications from local state
+                        selectedNotifications.value.forEach(
+                            (notificationId) => {
+                                const index = notifications.value.findIndex(
+                                    (n) => n.id === notificationId
+                                );
+                                if (index > -1) {
+                                    notifications.value.splice(index, 1);
+                                }
+                            }
+                        );
+
+                        // Clear selected notifications
+                        selectedNotifications.value = [];
+
                         Swal.fire({
                             toast: true,
                             position: "top-end",
@@ -933,7 +1008,13 @@ const bulkDelete = async () => {
                             timer: 2000,
                             timerProgressBar: true,
                         });
-                        selectedNotifications.value = [];
+                    },
+                    onError: (errors) => {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Error",
+                            text: "Failed to delete notifications.",
+                        });
                     },
                 }
             );
@@ -948,88 +1029,118 @@ const bulkDelete = async () => {
 };
 
 const loadMore = () => {
-    // Implement load more functionality if using pagination
     console.log("Load more notifications");
 };
 
-// Helper functions
+// Helper functions - UPDATED
 const getNotificationIcon = (notification) => {
+    // Check notification ID first for specific types
+    if (notification.id?.startsWith("announcement_")) {
+        return Megaphone;
+    }
+    if (notification.id?.startsWith("new_report_")) {
+        return UserCheck;
+    }
+
+    // Then check type field
     switch (notification.type) {
-        case "announcement":
-            return Megaphone;
-        case "overdue_warning":
+        case "alert":
             return AlertTriangle;
-        case "report_status":
-            return UserCheck;
-        case "system":
+        case "reminder":
             return Bell;
+        case "info":
         default:
             return Bell;
     }
 };
 
 const getNotificationIconClass = (notification) => {
+    // Check notification ID first for specific types
+    if (notification.id?.startsWith("announcement_")) {
+        return "bg-blue-100 dark:bg-blue-900/30";
+    }
+    if (notification.id?.startsWith("new_report_")) {
+        return "bg-green-100 dark:bg-green-900/30";
+    }
+
+    // Then check type field
     switch (notification.type) {
-        case "announcement":
-            return "bg-blue-100 dark:bg-blue-900/30";
-        case "overdue_warning":
+        case "alert":
             return "bg-orange-100 dark:bg-orange-900/30";
-        case "report_status":
-            return "bg-green-100 dark:bg-green-900/30";
-        case "system":
-            return "bg-purple-100 dark:bg-purple-900/30";
+        case "reminder":
+            return "bg-yellow-100 dark:bg-yellow-900/30";
+        case "info":
         default:
             return "bg-gray-100 dark:bg-gray-700";
     }
 };
 
 const getNotificationIconColor = (notification) => {
+    // Check notification ID first for specific types
+    if (notification.id?.startsWith("announcement_")) {
+        return "text-blue-600 dark:text-blue-400";
+    }
+    if (notification.id?.startsWith("new_report_")) {
+        return "text-green-600 dark:text-green-400";
+    }
+
+    // Then check type field
     switch (notification.type) {
-        case "announcement":
-            return "text-blue-600 dark:text-blue-400";
-        case "overdue_warning":
+        case "alert":
             return "text-orange-600 dark:text-orange-400";
-        case "report_status":
-            return "text-green-600 dark:text-green-400";
-        case "system":
-            return "text-purple-600 dark:text-purple-400";
+        case "reminder":
+            return "text-yellow-600 dark:text-yellow-400";
+        case "info":
         default:
             return "text-gray-600 dark:text-gray-400";
     }
 };
 
 const getNotificationTitle = (notification) => {
-    const typeMap = {
-        announcement: "New Announcement",
-        overdue_warning: "Overdue Warning",
-        report_status: "Report Status Update",
-        system: "System Notification",
-    };
-    return notification.title || typeMap[notification.type] || "Notification";
+    return notification.title || "Notification";
 };
 
 const getTypeBadgeClass = (notification) => {
+    // Check notification ID first for specific types
+    if (notification.id?.startsWith("announcement_")) {
+        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
+    }
+    if (notification.id?.startsWith("new_report_")) {
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+    }
+
+    // Then check type field
     switch (notification.type) {
-        case "announcement":
-            return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
-        case "overdue_warning":
+        case "alert":
             return "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200";
-        case "report_status":
-            return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
-        case "system":
-            return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200";
+        case "reminder":
+            return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
+        case "info":
         default:
             return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300";
     }
 };
 
 const formatNotificationType = (type) => {
-    return type.replace(/_/g, " ");
+    if (!type) return "Unknown";
+
+    // Handle specific types with custom formatting
+    const typeMap = {
+        info: "Information",
+        alert: "Alert",
+        reminder: "Reminder",
+        announcement: "Announcement",
+        new_report: "New Report",
+    };
+
+    // Return formatted type if found in map, otherwise format the string
+    return (
+        typeMap[type] ||
+        type.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())
+    );
 };
 
 const getDateField = (notification) => {
-    if (notification.type === "overdue_warning") return notification.due_date;
-    if (notification.type === "announcement") return notification.created_at;
     return notification.updated_at || notification.created_at;
 };
 

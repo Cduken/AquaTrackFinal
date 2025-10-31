@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Announcements;
 use App\Models\MeterReading;
 use App\Models\User;
+use App\Models\Report; // Make sure this import exists
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
@@ -35,14 +36,12 @@ class CustomerDashboardController extends Controller
         // Get area average
         $areaAverage = $this->calculateAreaAverage($user);
 
-        // Prepare billing data with proper status calculation
+        // Prepare billing data
         $billingData = $readings->map(function ($reading) {
             $dueDate = $reading->due_date ? Carbon::parse($reading->due_date) : null;
             $today = now();
 
-            // Determine status based on actual data
             $status = 'Pending';
-
             if ($reading->status === 'Paid') {
                 $status = 'Paid';
             } elseif ($dueDate && $today->greaterThan($dueDate)) {
@@ -69,6 +68,14 @@ class CustomerDashboardController extends Controller
             ];
         })->reverse()->values();
 
+        // Get reports data for the current user - COUNT BY STATUS (like in admin)
+        $reportStats = [
+            'pending' => Report::where('user_id', $user->id)->where('status', 'pending')->count(),
+            'in_progress' => Report::where('user_id', $user->id)->where('status', 'in_progress')->count(),
+            'resolved' => Report::where('user_id', $user->id)->where('status', 'resolved')->count(),
+            'total' => Report::where('user_id', $user->id)->count(),
+        ];
+
         return Inertia::render('Customer/Dashboard', [
             'customerName' => $customer_name,
             'announcements' => $announcements,
@@ -77,7 +84,8 @@ class CustomerDashboardController extends Controller
             'yearlyConsumption' => $yearlyConsumption,
             'areaAverage' => $areaAverage,
             'chartData' => $chartData,
-            'billingData' => $billingData, // Add this line
+            'billingData' => $billingData,
+            'reportStats' => $reportStats, // Changed from reportsData to reportStats
         ]);
     }
 

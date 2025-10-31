@@ -1,25 +1,36 @@
 <template>
     <CustomerLayout>
-        <div class="min-h-screen bg-gray-50/40 px-2">
+        <div class=" bg-gray-50 px-2 py-1">
             <!-- Header -->
-            <div class=" ">
-                <div class="py-2">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <h1 class="text-xl font-semibold text-gray-900">
-                                Dashboard Overview
-                            </h1>
-                            <p class="text-gray-500 text-sm mt-0.5">
-                                Welcome back!
-                                <span class="font-medium text-gray-700">{{ customerName }}</span>
-                            </p>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-xs text-gray-400 font-medium uppercase tracking-wide">
+            <div class="mb-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-xl font-semibold text-gray-900">
+                            Dashboard Overview
+                        </h1>
+                        <p class="text-gray-600 mt-1">
+                            Welcome back,
+                            <span class="font-semibold text-gray-800">{{
+                                customerName
+                            }}</span>
+                        </p>
+                    </div>
+                    <div class="text-right">
+                        <div
+                            class="bg-white px-4 py-2 rounded-lg border border-gray-200 shadow-xs"
+                        >
+                            <p
+                                class="text-xs text-gray-500 font-medium uppercase tracking-wide"
+                            >
                                 Billing Period
                             </p>
-                            <p class="text-gray-800 font-medium text-sm">
-                                {{ new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" }) }}
+                            <p class="text-sm font-semibold text-gray-800">
+                                {{
+                                    new Date().toLocaleDateString("en-US", {
+                                        month: "long",
+                                        year: "numeric",
+                                    })
+                                }}
                             </p>
                         </div>
                     </div>
@@ -27,193 +38,227 @@
             </div>
 
             <!-- Overdue Alert -->
-            <div v-if="overdueBills > 0" class="bg-red-500 px-4 py-3 my-4">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-2">
-                        <div class="w-2 h-2 bg-white rounded-full"></div>
-                        <span class="text-white text-sm font-medium">
-                            {{ overdueBills }} overdue bill{{ overdueBills > 1 ? 's' : '' }} • ₱{{ overdueAmount.toFixed(2) }}
-                        </span>
+            <div v-if="overdueBills > 0" class="mb-6">
+                <div
+                    class="bg-gradient-to-r from-red-500 to-red-600 rounded-xl p-4 shadow-sm"
+                >
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="w-2 h-2 bg-white rounded-full animate-pulse"
+                            ></div>
+                            <div>
+                                <p class="text-white font-semibold text-sm">
+                                    {{ overdueBills }} overdue bill{{
+                                        overdueBills > 1 ? "s" : ""
+                                    }}
+                                </p>
+                                <p class="text-red-100 text-xs">
+                                    Total amount due: ₱{{
+                                        overdueAmount.toFixed(2)
+                                    }}
+                                </p>
+                            </div>
+                        </div>
+                        <button
+                            @click="$inertia.visit(route('customer.usage'))"
+                            class="bg-white/20 hover:bg-white/30 text-white px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2"
+                        >
+                            <span>View Bills</span>
+                            <ArrowRight class="w-3 h-3" />
+                        </button>
                     </div>
-                    <button
-                        @click="$inertia.visit(route('customer.usage'))"
-                        class="text-white hover:text-gray-100 text-sm font-medium flex items-center space-x-1 transition-colors"
-                    >
-                        <span>View</span>
-                        <ArrowRight class="w-3 h-3" />
-                    </button>
                 </div>
             </div>
 
             <!-- Main Content -->
-            <div class="">
+            <div class="space-y-6">
                 <!-- Key Metrics Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <!-- Monthly Usage -->
-                    <div class="bg-white rounded-lg border border-gray-100 p-4 shadow-xs hover:shadow-sm transition-all duration-200">
-                        <div class="flex items-start justify-between mb-3">
-                            <div class="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
+                    <div class="bg-white rounded-lg p-4 border border-gray-300">
+                        <div class="flex items-center justify-between mb-3">
+                            <div
+                                class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center"
+                            >
                                 <Droplets class="w-5 h-5 text-blue-600" />
                             </div>
-                            <span class="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                            <div
+                                class="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs font-medium"
+                            >
                                 m³
-                            </span>
+                            </div>
                         </div>
-                        <h3 class="text-gray-500 text-xs font-medium uppercase tracking-wide mb-1">
+                        <h3
+                            class="text-gray-500 text-xs uppercase tracking-wide mb-1"
+                        >
                             Monthly Usage
                         </h3>
-                        <p class="text-2xl font-semibold text-gray-900 mb-2">
-                            {{ monthlyUsage }}m³
+                        <p class="text-2xl font-semibold text-gray-900">
+                            {{ monthlyUsage }}
                         </p>
-                        <!-- <div class="flex items-center">
-                            <div class="flex items-center text-xs font-medium px-2 py-1 rounded-full"
-                                :class="monthlyUsage > 15 ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'">
-                                <TrendingUp v-if="monthlyUsage > 15" class="w-3 h-3 mr-1" />
-                                <TrendingDown v-else class="w-3 h-3 mr-1" />
-                                {{ monthlyUsage > 15 ? 'Above average' : 'Below average' }}
-                            </div>
-                        </div> -->
                     </div>
 
                     <!-- Current Bill -->
-                    <div class="bg-white rounded-lg border border-gray-100 p-4 shadow-xs hover:shadow-sm transition-all duration-200">
-                        <div class="flex items-start justify-between mb-3">
-                            <div class="w-10 h-10 rounded-lg flex items-center justify-center"
+                    <div class="bg-white rounded-lg p-4 border border-gray-300">
+                        <div class="flex items-center justify-between mb-3">
+                            <div
+                                class="w-10 h-10 rounded-lg flex items-center justify-center"
                                 :class="{
-                                    'bg-red-50': currentBillStatus === 'Overdue',
-                                    'bg-yellow-50': currentBillStatus === 'Due Soon',
-                                    'bg-green-50': currentBillStatus === 'Paid',
-                                    'bg-gray-50': currentBillStatus === 'No Bills',
-                                }">
-                                <Receipt class="w-5 h-5"
+                                    'bg-red-100':
+                                        currentBillStatus === 'Overdue',
+                                    'bg-yellow-100':
+                                        currentBillStatus === 'Due Soon',
+                                    'bg-green-100':
+                                        currentBillStatus === 'Paid',
+                                    'bg-gray-100':
+                                        currentBillStatus === 'No Bills',
+                                }"
+                            >
+                                <Receipt
+                                    class="w-5 h-5"
                                     :class="{
-                                        'text-red-600': currentBillStatus === 'Overdue',
-                                        'text-yellow-600': currentBillStatus === 'Due Soon',
-                                        'text-green-600': currentBillStatus === 'Paid',
-                                        'text-gray-600': currentBillStatus === 'No Bills',
-                                    }" />
+                                        'text-red-600':
+                                            currentBillStatus === 'Overdue',
+                                        'text-yellow-600':
+                                            currentBillStatus === 'Due Soon',
+                                        'text-green-600':
+                                            currentBillStatus === 'Paid',
+                                        'text-gray-600':
+                                            currentBillStatus === 'No Bills',
+                                    }"
+                                />
                             </div>
-                            <span class="text-xs font-medium px-2 py-1 rounded"
+                            <span
+                                class="px-2 py-1 rounded text-xs font-medium"
                                 :class="{
-                                    'text-red-700 bg-red-50': currentBillStatus === 'Overdue',
-                                    'text-yellow-700 bg-yellow-50': currentBillStatus === 'Due Soon',
-                                    'text-green-700 bg-green-50': currentBillStatus === 'Paid',
-                                    'text-gray-700 bg-gray-50': currentBillStatus === 'No Bills',
-                                }">
+                                    'bg-red-50 text-red-700':
+                                        currentBillStatus === 'Overdue',
+                                    'bg-yellow-50 text-yellow-700':
+                                        currentBillStatus === 'Due Soon',
+                                    'bg-green-50 text-green-700':
+                                        currentBillStatus === 'Paid',
+                                    'bg-gray-50 text-gray-700':
+                                        currentBillStatus === 'No Bills',
+                                }"
+                            >
                                 {{ currentBillStatusText }}
                             </span>
                         </div>
-                        <h3 class="text-gray-500 text-xs font-medium uppercase tracking-wide mb-1">
+                        <h3
+                            class="text-gray-500 text-xs uppercase tracking-wide mb-1"
+                        >
                             Current Bill
                         </h3>
-                        <p class="text-2xl font-semibold text-gray-900 mb-3">
+                        <p class="text-2xl font-semibold text-gray-900">
                             ₱{{ currentBill.toFixed(2) }}
                         </p>
-                        <!-- <div class="w-full bg-gray-100 rounded-full h-1.5">
-                            <div class="h-1.5 rounded-full transition-all duration-500"
-                                :class="{
-                                    'bg-red-500': currentBillStatus === 'Overdue',
-                                    'bg-yellow-500': currentBillStatus === 'Due Soon',
-                                    'bg-green-500': currentBillStatus === 'Paid',
-                                    'bg-gray-400': currentBillStatus === 'No Bills',
-                                }"
-                                :style="`width: ${Math.min((currentBill / 1000) * 100, 100)}%`">
-                            </div>
-                        </div> -->
                     </div>
 
                     <!-- Announcements -->
-                    <div class="bg-white rounded-lg border border-gray-100 p-4 shadow-xs hover:shadow-sm transition-all duration-200">
-                        <div class="flex items-start justify-between mb-3">
-                            <div class="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center">
+                    <div class="bg-white rounded-lg p-4 border border-gray-300">
+                        <div class="flex items-center justify-between mb-3">
+                            <div
+                                class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center"
+                            >
                                 <Bell class="w-5 h-5 text-purple-600" />
                             </div>
-                            <div v-if="announcements > 0" class="w-2 h-2 bg-purple-500 rounded-full"></div>
+                            <div
+                                v-if="announcements > 0"
+                                class="w-2 h-2 bg-purple-500 rounded-full animate-pulse"
+                            ></div>
                         </div>
-                        <h3 class="text-gray-500 text-xs font-medium uppercase tracking-wide mb-1">
+                        <h3
+                            class="text-gray-500 text-xs uppercase tracking-wide mb-1"
+                        >
                             Announcements
                         </h3>
-                        <p class="text-2xl font-semibold text-gray-900 mb-1">
+                        <p class="text-2xl font-semibold text-gray-900">
                             {{ announcements }}
                         </p>
-                        <!-- <p class="text-xs text-gray-500">
-                            {{ announcements === 0 ? 'No new updates' : 'Unread notifications' }}
-                        </p> -->
                     </div>
                 </div>
 
-                <!-- Charts Section -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6">
-                    <!-- Consumption Chart -->
-                    <div class="bg-white rounded-lg border border-gray-100 p-5 shadow-xs">
-                        <div class="flex items-center justify-between mb-5">
-                            <h2 class="text-base font-semibold text-gray-900">Water Consumption</h2>
-                            <div class="flex items-center space-x-3 text-xs text-gray-500">
-                                <div class="flex items-center">
-                                    <div class="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
-                                    <span class="font-medium">Your Usage</span>
-                                </div>
-                                <div class="flex items-center">
-                                    <div class="w-2 h-2 bg-gray-400 rounded-full mr-2"></div>
-                                    <span class="font-medium">Area Average</span>
-                                </div>
+                <!-- Analytics Section -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Left Column - Charts -->
+                    <div class="lg:col-span-2 space-y-6">
+                        <!-- Meter Readings Chart -->
+                        <div
+                            class="bg-white rounded-lg p-5 border border-gray-200"
+                        >
+                            <div class="mb-5">
+                                <h2
+                                    class="text-base font-semibold text-gray-900"
+                                >
+                                    Meter Readings History
+                                </h2>
+                                <p class="text-gray-600 text-sm">
+                                    Monthly consumption tracking
+                                </p>
                             </div>
-                        </div>
-                        <div class="h-64">
-                            <canvas ref="waterChart"></canvas>
+                            <div class="h-72">
+                                <canvas ref="yieldChart"></canvas>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Meter Readings -->
-                    <div class="bg-white rounded-lg border border-gray-100 p-5 shadow-xs">
-                        <h2 class="text-base font-semibold text-gray-900 mb-5">Meter Readings</h2>
-                        <div class="h-64">
-                            <canvas ref="yieldChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Stats Summary -->
-                <div class="bg-white rounded-lg border border-gray-100 p-5 shadow-xs">
-                    <h2 class="text-base font-semibold text-gray-900 mb-4">Usage Summary</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div class="p-4 bg-blue-50/50 rounded-lg border border-blue-100">
-                            <div class="flex items-center justify-between mb-2">
-                                <h3 class="text-sm font-medium text-blue-700">Year Total</h3>
-                                <Calendar class="w-4 h-4 text-blue-600" />
-                            </div>
-                            <p class="text-xl font-semibold text-blue-900">{{ yearlyConsumption }} m³</p>
-                            <p class="text-xs text-blue-600 mt-1">Total consumption</p>
-                        </div>
-
-                        <div class="p-4 bg-gray-50/50 rounded-lg border border-gray-100">
-                            <div class="flex items-center justify-between mb-2">
-                                <h3 class="text-sm font-medium text-gray-700">Area Average</h3>
-                                <Users class="w-4 h-4 text-gray-600" />
-                            </div>
-                            <p class="text-xl font-semibold text-gray-900">{{ areaAverage }} m³</p>
-                            <p class="text-xs text-gray-600 mt-1">Area average</p>
-                        </div>
-
-                        <div class="p-4 rounded-lg border"
-                            :class="yearlyConsumption > areaAverage
-                                ? 'bg-red-50/50 border-red-100'
-                                : 'bg-green-50/50 border-green-100'">
-                            <div class="flex items-center justify-between mb-2">
-                                <h3 class="text-sm font-medium"
-                                    :class="yearlyConsumption > areaAverage ? 'text-red-700' : 'text-green-700'">
-                                    Your Status
-                                </h3>
-                                <TrendingUp v-if="yearlyConsumption > areaAverage" class="w-4 h-4 text-red-600" />
-                                <TrendingDown v-else class="w-4 h-4 text-green-600" />
-                            </div>
-                            <p class="text-xl font-semibold"
-                                :class="yearlyConsumption > areaAverage ? 'text-red-900' : 'text-green-900'">
-                                {{ yearlyConsumption > areaAverage ? 'Above' : 'Below' }} Average
+                    <!-- Reports Pie Chart -->
+                    <div class="bg-white rounded-lg p-5 border border-gray-200">
+                        <div class="mb-5">
+                            <h2 class="text-base font-semibold text-gray-900">
+                                Reports Status
+                            </h2>
+                            <p class="text-gray-600 text-sm">
+                                Your reports distribution
                             </p>
-                            <p class="text-xs mt-1"
-                                :class="yearlyConsumption > areaAverage ? 'text-red-600' : 'text-green-600'">
-                                Compared to area
+                        </div>
+
+                        <!-- Pie Chart Container -->
+                        <div class="flex justify-center mb-5">
+                            <div class="relative w-40 h-40">
+                                <canvas ref="reportsChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Status Legend - Minimalist -->
+                        <div class="space-y-2">
+                            <div
+                                v-for="(
+                                    status, index
+                                ) in reportStatusData.labels"
+                                :key="status"
+                                class="flex items-center justify-between"
+                            >
+                                <div class="flex items-center gap-2">
+                                    <div
+                                        class="w-2.5 h-2.5 rounded-full"
+                                        :style="`background-color: ${reportStatusData.colors[index]}`"
+                                    ></div>
+                                    <span class="text-sm text-gray-700">{{
+                                        status
+                                    }}</span>
+                                </div>
+                                <span
+                                    class="text-sm font-semibold text-gray-900"
+                                >
+                                    {{ reportStatusData.data[index] }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- No Reports State -->
+                        <div
+                            v-if="!hasReportStatusData"
+                            class="text-center py-6"
+                        >
+                            <div
+                                class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2"
+                            >
+                                <FileText class="w-6 h-6 text-gray-400" />
+                            </div>
+                            <p class="text-gray-500 text-sm">
+                                No reports submitted
                             </p>
                         </div>
                     </div>
@@ -237,9 +282,15 @@ import {
     TrendingDown,
     Calendar,
     Users,
+    FileText,
 } from "lucide-vue-next";
 
 const page = usePage();
+
+// Debug: Check what data is being received
+console.log("All page props:", page.props);
+console.log("Report stats:", page.props.reportStats);
+
 const announcements = page.props.announcements ?? 0;
 const monthlyUsage = page.props.monthlyUsage ?? 0;
 const currentBill = page.props.currentBill ?? 0;
@@ -248,9 +299,15 @@ const areaAverage = page.props.areaAverage ?? 0;
 const chartData = page.props.chartData ?? [];
 const customerName = page.props.customerName ?? "Customer";
 const billingData = page.props.billingData ?? [];
+const reportStats = page.props.reportStats ?? {
+    pending: 0,
+    in_progress: 0,
+    resolved: 0,
+    total: 0,
+};
 
-const waterChart = ref(null);
 const yieldChart = ref(null);
+const reportsChart = ref(null);
 
 // Compute billing statistics
 const overdueBills = computed(() => {
@@ -264,13 +321,15 @@ const overdueAmount = computed(() => {
 });
 
 const currentBillStatus = computed(() => {
-    const currentBillData = billingData.find((bill) => bill.is_current) || billingData[0];
+    const currentBillData =
+        billingData.find((bill) => bill.is_current) || billingData[0];
     if (!currentBillData) return "No Bills";
     return currentBillData.status || "Pending";
 });
 
 const currentBillStatusText = computed(() => {
-    const currentBillData = billingData.find((bill) => bill.is_current) || billingData[0];
+    const currentBillData =
+        billingData.find((bill) => bill.is_current) || billingData[0];
     if (!currentBillData) return "No bills";
 
     switch (currentBillStatus.value) {
@@ -280,7 +339,9 @@ const currentBillStatusText = computed(() => {
             if (currentBillData.due_date) {
                 const dueDate = new Date(currentBillData.due_date);
                 const today = new Date();
-                const daysUntilDue = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+                const daysUntilDue = Math.ceil(
+                    (dueDate - today) / (1000 * 60 * 60 * 24)
+                );
                 if (daysUntilDue > 0) {
                     return `Due in ${daysUntilDue}d`;
                 }
@@ -293,85 +354,37 @@ const currentBillStatusText = computed(() => {
     }
 });
 
+// Reports data computations for pie chart
+const totalReports = computed(() => {
+    return reportStats.total || 0;
+});
+
+const reportStatusData = computed(() => ({
+    labels: ["Pending", "In Progress", "Resolved"],
+    data: [
+        reportStats.pending || 0,
+        reportStats.in_progress || 0,
+        reportStats.resolved || 0,
+    ],
+    colors: ["#F59E0B", "#3B82F6", "#10B981"],
+}));
+
+const hasReportStatusData = computed(() => {
+    return reportStatusData.value.data.some((count) => count > 0);
+});
+
+const calculatePercentage = (count) => {
+    return totalReports.value > 0
+        ? Math.round((count / totalReports.value) * 100)
+        : 0;
+};
+
 onMounted(() => {
     const labels = chartData.map((item) => item.month);
-    const consumptionData = chartData.map((item) => item.consumption);
     const readingData = chartData.map((item) => item.reading);
-    const areaAvgData = Array(consumptionData.length).fill(areaAverage / 12);
-
-    // Water Consumption Chart
-    if (waterChart.value) {
-        new Chart(waterChart.value, {
-            type: "line",
-            data: {
-                labels: labels,
-                datasets: [
-                    {
-                        label: "Your Consumption",
-                        data: consumptionData,
-                        borderColor: "rgb(59, 130, 246)",
-                        backgroundColor: "rgba(59, 130, 246, 0.05)",
-                        borderWidth: 2,
-                        tension: 0.4,
-                        fill: true,
-                        pointBackgroundColor: "rgb(59, 130, 246)",
-                        pointBorderColor: "#fff",
-                        pointBorderWidth: 2,
-                        pointRadius: 3,
-                        pointHoverRadius: 5,
-                    },
-                    {
-                        label: "Area Average",
-                        data: areaAvgData,
-                        borderColor: "rgb(156, 163, 175)",
-                        backgroundColor: "transparent",
-                        borderWidth: 1,
-                        tension: 0.4,
-                        borderDash: [5, 5],
-                        pointRadius: 0,
-                    },
-                ],
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false,
-                    },
-                },
-                scales: {
-                    y: {
-                        beginAtZero: false,
-                        grid: {
-                            color: "rgba(0, 0, 0, 0.03)",
-                        },
-                        ticks: {
-                            font: {
-                                size: 11,
-                            },
-                            callback: function (value) {
-                                return value + " m³";
-                            },
-                        },
-                    },
-                    x: {
-                        grid: {
-                            display: false,
-                        },
-                        ticks: {
-                            font: {
-                                size: 11,
-                            },
-                        },
-                    },
-                },
-            },
-        });
-    }
 
     // Meter Readings Chart
-    if (yieldChart.value) {
+    if (yieldChart.value && readingData.length > 0) {
         new Chart(yieldChart.value, {
             type: "bar",
             data: {
@@ -380,12 +393,11 @@ onMounted(() => {
                     {
                         label: "Meter Readings",
                         data: readingData,
-                        backgroundColor: "rgba(99, 102, 241, 0.1)",
+                        backgroundColor: "rgba(99, 102, 241, 0.15)",
                         borderColor: "rgb(99, 102, 241)",
-                        borderWidth: 1,
-                        borderRadius: 4,
-                        barThickness: "flex",
-                        maxBarThickness: 32,
+                        borderWidth: 2,
+                        borderRadius: 6,
+                        barThickness: 28,
                     },
                 ],
             },
@@ -396,16 +408,27 @@ onMounted(() => {
                     legend: {
                         display: false,
                     },
+                    tooltip: {
+                        backgroundColor: "rgba(255, 255, 255, 0.95)",
+                        titleColor: "#1f2937",
+                        bodyColor: "#374151",
+                        borderColor: "#e5e7eb",
+                        borderWidth: 1,
+                        cornerRadius: 8,
+                        displayColors: true,
+                        usePointStyle: true,
+                    },
                 },
                 scales: {
                     y: {
-                        beginAtZero: false,
+                        beginAtZero: true,
                         grid: {
-                            color: "rgba(0, 0, 0, 0.03)",
+                            color: "rgba(0, 0, 0, 0.05)",
                         },
                         ticks: {
                             font: {
                                 size: 11,
+                                family: "'Inter', sans-serif",
                             },
                             callback: function (value) {
                                 return value + " m³";
@@ -419,10 +442,57 @@ onMounted(() => {
                         ticks: {
                             font: {
                                 size: 11,
+                                family: "'Inter', sans-serif",
                             },
                         },
                     },
                 },
+            },
+        });
+    }
+
+    // Reports Pie Chart
+    if (reportsChart.value && hasReportStatusData.value) {
+        new Chart(reportsChart.value, {
+            type: "pie",
+            data: {
+                labels: reportStatusData.value.labels,
+                datasets: [
+                    {
+                        data: reportStatusData.value.data,
+                        backgroundColor: reportStatusData.value.colors,
+                        borderColor: "#ffffff",
+                        borderWidth: 2,
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false,
+                    },
+                    tooltip: {
+                        backgroundColor: "rgba(0, 0, 0, 0.8)",
+                        padding: 8,
+                        titleFont: {
+                            size: 12,
+                        },
+                        bodyFont: {
+                            size: 11,
+                        },
+                        cornerRadius: 4,
+                        displayColors: false,
+                        callbacks: {
+                            label: function (context) {
+                                // Show count like in the image: "7" instead of "Pending: 7"
+                                return context.raw.toString();
+                            },
+                        },
+                    },
+                },
+                cutout: "0%",
             },
         });
     }
@@ -431,6 +501,19 @@ onMounted(() => {
 
 <style scoped>
 .shadow-xs {
-    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+/* Smooth transitions for interactive elements */
+* {
+    transition-property: color, background-color, border-color, transform,
+        box-shadow;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 200ms;
+}
+
+/* Custom hover effects */
+.group:hover {
+    transform: translateY(-2px);
 }
 </style>

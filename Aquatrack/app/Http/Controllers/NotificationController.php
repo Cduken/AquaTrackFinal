@@ -27,17 +27,12 @@ class NotificationController extends Controller
             return redirect()->route('login');
         }
 
+        // Always get fresh notifications
         $notifications = $this->getAdminNotifications();
 
         $notifications = $notifications->sortByDesc(function ($item) {
             return $item['created_at'] ?? $item['updated_at'] ?? now();
         })->values();
-
-        // Debug log
-        Log::info('Admin notifications sent to page', [
-            'count' => $notifications->count(),
-            'user_id' => $user->id
-        ]);
 
         return Inertia::render('Admin/Notifications', [
             'notifications' => $notifications,
@@ -417,7 +412,12 @@ class NotificationController extends Controller
     private function getAdminNotifications()
     {
         $notifications = collect();
+        $user = Auth::user();
 
+        // Get all dismissed notification IDs for this admin user
+        $dismissedNotifications = DismissedNotification::where('user_id', $user->id)
+            ->pluck('notification_id')
+            ->toArray();
 
         // New reports from customers/guests
         $newReports = Report::with('user')
@@ -427,8 +427,15 @@ class NotificationController extends Controller
             ->get();
 
         foreach ($newReports as $report) {
+            $notificationId = 'new_report_' . $report->id;
+
+            // Skip if notification is dismissed
+            if (in_array($notificationId, $dismissedNotifications)) {
+                continue;
+            }
+
             $notifications->push([
-                'id' => 'new_report_' . $report->id,
+                'id' => $notificationId,
                 'type' => 'info',
                 'title' => 'New Report Submitted',
                 'message' => "New water quality report from " . ($report->user ? $report->user->name : ($report->reporter_name ?? 'Guest User')),
@@ -454,8 +461,15 @@ class NotificationController extends Controller
             ->get();
 
         foreach ($announcements as $announcement) {
+            $notificationId = 'announcement_' . $announcement->id;
+
+            // Skip if notification is dismissed
+            if (in_array($notificationId, $dismissedNotifications)) {
+                continue;
+            }
+
             $notifications->push([
-                'id' => 'announcement_' . $announcement->id,
+                'id' => $notificationId,
                 'type' => 'info',
                 'title' => $announcement->title ?? 'Announcement',
                 'message' => $announcement->content ?? 'No content',
@@ -466,9 +480,18 @@ class NotificationController extends Controller
             ]);
         }
 
+        Log::info('Admin notifications filtered', [
+            'total_found' => $notifications->count(),
+            'dismissed_count' => count($dismissedNotifications),
+            'user_id' => $user->id
+        ]);
+
         return $notifications;
     }
 
+    /**
+     * Get notifications for staff users
+     */
     /**
      * Get notifications for staff users
      */
@@ -476,6 +499,11 @@ class NotificationController extends Controller
     {
         $notifications = collect();
         $user = Auth::user();
+
+        // Get all dismissed notification IDs for this staff user
+        $dismissedNotifications = DismissedNotification::where('user_id', $user->id)
+            ->pluck('notification_id')
+            ->toArray();
 
         // Assigned reports
         $assignedReports = Report::with('user')
@@ -485,8 +513,15 @@ class NotificationController extends Controller
             ->get();
 
         foreach ($assignedReports as $report) {
+            $notificationId = 'assigned_report_' . $report->id;
+
+            // Skip if notification is dismissed
+            if (in_array($notificationId, $dismissedNotifications)) {
+                continue;
+            }
+
             $notifications->push([
-                'id' => 'assigned_report_' . $report->id,
+                'id' => $notificationId,
                 'type' => 'info',
                 'title' => 'Report Assigned',
                 'message' => "Report assigned to you from " . ($report->user ? $report->user->name : ($report->reporter_name ?? 'System')),
@@ -507,8 +542,15 @@ class NotificationController extends Controller
             ->get();
 
         foreach ($announcements as $announcement) {
+            $notificationId = 'announcement_' . $announcement->id;
+
+            // Skip if notification is dismissed
+            if (in_array($notificationId, $dismissedNotifications)) {
+                continue;
+            }
+
             $notifications->push([
-                'id' => 'announcement_' . $announcement->id,
+                'id' => $notificationId,
                 'type' => 'info',
                 'title' => $announcement->title ?? 'Announcement',
                 'message' => $announcement->message ?? 'No message',
@@ -741,38 +783,117 @@ class NotificationController extends Controller
     /**
      * Delete a notification
      */
-    /**
-     * Delete a notification
-     */
     public function destroy($id)
     {
         try {
             $user = Auth::user();
 
             if (!$user) {
-                return response()->json(['error' => 'Unauthorized'], 401);
+                return redirect()->back()->with('error', 'Unauthorized');
             }
 
-            Log::info('Deleting notification', ['notification_id' => $id, 'user_id' => $user->id]);
+            Log::info('Deleting notification', [
+                'notification_id' => $id,
+                'user_id' => $user->id,
+                'user_role' => $user->role
+            ]);
 
-            // Store the dismissed notification
-            DismissedNotification::create([
+            // Handle different notification types based on ID pattern
+            if (str_starts_with($id, 'new_report_')) {
+                // For new report notifications - just dismiss them
+                $reportId = (int) str_replace('new_report_', '', $id);
+
+                // Mark report as viewed by admin
+                $report = Report::find($reportId);
+                if ($report) {
+                    $report->viewed_by_admin = true;
+                    $report->update_viewed_by_admin = true;
+                    $report->save();
+
+                    Log::info('Report marked as viewed by admin', [
+                        'report_id' => $reportId,
+                        'notification_id' => $id
+                    ]);
+                }
+            } elseif (str_starts_with($id, 'announcement_')) {
+                // For announcement notifications
+                $announcementId = (int) str_replace('announcement_', '', $id);
+                $this->markAnnouncementAsRead($announcementId);
+            }
+
+            // Always store in dismissed notifications
+            DismissedNotification::firstOrCreate([
                 'user_id' => $user->id,
                 'notification_id' => $id,
+            ], [
                 'type' => $this->getNotificationType($id),
                 'dismissed_at' => now()
             ]);
 
-            // Also mark as read in the respective tables
-            $this->markAsRead($id);
-
-            return response()->json(['success' => true, 'message' => 'Notification deleted successfully']);
+            // Return proper Inertia redirect instead of JSON
+            return redirect()->back()->with('success', 'Notification deleted successfully');
         } catch (\Exception $e) {
             Log::error('Notification deletion failed: ' . $e->getMessage(), [
                 'notification_id' => $id,
                 'user_id' => Auth::id()
             ]);
-            return response()->json(['error' => 'Failed to delete notification'], 500);
+
+            return redirect()->back()->with('error', 'Failed to delete notification');
+        }
+    }
+
+    /**
+     * Bulk delete notifications
+     */
+    public function bulkDelete(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            $notificationIds = $request->input('notification_ids', []);
+
+            if (!$user) {
+                return redirect()->back()->with('error', 'Unauthorized');
+            }
+
+            Log::info('Bulk deleting notifications', [
+                'count' => count($notificationIds),
+                'user_id' => $user->id,
+                'notification_ids' => $notificationIds
+            ]);
+
+            foreach ($notificationIds as $notificationId) {
+                // Use the same logic as the destroy method
+                if (str_starts_with($notificationId, 'new_report_')) {
+                    $reportId = (int) str_replace('new_report_', '', $notificationId);
+                    $report = Report::find($reportId);
+                    if ($report) {
+                        $report->viewed_by_admin = true;
+                        $report->update_viewed_by_admin = true;
+                        $report->save();
+                    }
+                } elseif (str_starts_with($notificationId, 'announcement_')) {
+                    $announcementId = (int) str_replace('announcement_', '', $notificationId);
+                    $this->markAnnouncementAsRead($announcementId);
+                }
+
+                // Store in dismissed notifications
+                DismissedNotification::firstOrCreate([
+                    'user_id' => $user->id,
+                    'notification_id' => $notificationId,
+                ], [
+                    'type' => $this->getNotificationType($notificationId),
+                    'dismissed_at' => now()
+                ]);
+            }
+
+            return redirect()->back()->with('success', count($notificationIds) . ' notifications deleted successfully');
+        } catch (\Exception $e) {
+            Log::error('Bulk delete notifications failed: ' . $e->getMessage(), [
+                'user_id' => Auth::id(),
+                'notification_ids' => $notificationIds
+            ]);
+
+            return redirect()->back()->with('error', 'Failed to delete notifications');
         }
     }
 

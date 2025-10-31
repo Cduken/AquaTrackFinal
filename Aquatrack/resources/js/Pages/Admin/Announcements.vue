@@ -177,213 +177,230 @@
                             </div>
                         </div>
 
-                        <!-- Table -->
-                        <div class="overflow-x-auto">
-                            <table class="w-full">
-                                <thead
-                                    class="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600"
-                                >
-                                    <tr>
-                                        <th
-                                            scope="col"
-                                            class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-                                        >
-                                            ID
-                                        </th>
-                                        <th
-                                            scope="col"
-                                            class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
-                                            @click="sortBy('title')"
-                                        >
-                                            <div class="flex items-center">
-                                                Title
-                                                <ChevronsUpDown
-                                                    v-if="
-                                                        filters.sort === 'title'
-                                                    "
-                                                    class="w-4 h-4 ml-1"
-                                                />
-                                            </div>
-                                        </th>
-                                        <th
-                                            scope="col"
-                                            class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-                                        >
-                                            Content Preview
-                                        </th>
-                                        <th
-                                            scope="col"
-                                            class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-                                        >
-                                            Start Date
-                                        </th>
-                                        <th
-                                            scope="col"
-                                            class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-                                        >
-                                            End Date
-                                        </th>
-                                        <th
-                                            scope="col"
-                                            class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-                                        >
-                                            Status
-                                        </th>
-                                        <th
-                                            scope="col"
-                                            class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-                                        >
-                                            Actions
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody
-                                    class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"
-                                >
-                                    <tr
-                                        v-for="announcement in announcements.data"
-                                        :key="announcement.id"
-                                        class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150"
+                        <!-- Table Container with Fixed Height -->
+                        <div
+                            class="flex flex-col"
+                            style="height: 613px; min-height: 600px"
+                        >
+                            <!-- Table with Scrollable Body -->
+                            <div class="flex-1 overflow-x-auto overflow-y-auto">
+                                <table class="w-full">
+                                    <thead
+                                        class="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 sticky top-0 z-10"
                                     >
-                                        <!-- ID Column -->
-                                        <td
-                                            class="px-6 py-2 text-xs text-gray-900 dark:text-white whitespace-nowrap"
+                                        <tr>
+                                            <th
+                                                scope="col"
+                                                class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                            >
+                                                ID
+                                            </th>
+                                            <th
+                                                scope="col"
+                                                class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
+                                                @click="sortBy('title')"
+                                            >
+                                                <div class="flex items-center">
+                                                    Title
+                                                    <ChevronsUpDown
+                                                        v-if="
+                                                            filters.sort ===
+                                                            'title'
+                                                        "
+                                                        class="w-4 h-4 ml-1"
+                                                    />
+                                                </div>
+                                            </th>
+                                            <th
+                                                scope="col"
+                                                class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                            >
+                                                Content Preview
+                                            </th>
+                                            <th
+                                                scope="col"
+                                                class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                            >
+                                                Start Date
+                                            </th>
+                                            <th
+                                                scope="col"
+                                                class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                            >
+                                                End Date
+                                            </th>
+                                            <th
+                                                scope="col"
+                                                class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                            >
+                                                Status
+                                            </th>
+                                            <th
+                                                scope="col"
+                                                class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                            >
+                                                Actions
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody
+                                        class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"
+                                    >
+                                        <tr
+                                            v-for="announcement in announcements.data"
+                                            :key="announcement.id"
+                                            class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150"
                                         >
-                                            {{ announcement.id }}
-                                        </td>
+                                            <!-- ID Column -->
+                                            <td
+                                                class="px-6 py-2 text-xs text-gray-900 dark:text-white whitespace-nowrap"
+                                            >
+                                                {{ announcement.id }}
+                                            </td>
 
-                                        <!-- Title Column -->
-                                        <td
-                                            class="px-6 py-2 text-xs text-gray-900 dark:text-white whitespace-nowrap"
-                                        >
-                                            {{ announcement.title }}
-                                        </td>
+                                            <!-- Title Column -->
+                                            <td
+                                                class="px-6 py-2 text-xs text-gray-900 dark:text-white whitespace-nowrap"
+                                            >
+                                                {{ announcement.title }}
+                                            </td>
 
-                                        <!-- Content Preview -->
-                                        <td
-                                            class="px-6 py-2 text-xs text-gray-900 dark:text-white"
-                                        >
-                                            <span class="truncate max-w-xs">{{
-                                                truncateContent(
-                                                    announcement.content,
-                                                    50
-                                                )
-                                            }}</span>
-                                        </td>
-
-                                        <!-- Start Date -->
-                                        <td
-                                            class="px-6 py-2 text-xs text-gray-900 dark:text-white whitespace-nowrap"
-                                        >
-                                            {{
-                                                formatDate(
-                                                    announcement.start_date
-                                                ) || "N/A"
-                                            }}
-                                        </td>
-
-                                        <!-- End Date -->
-                                        <td
-                                            class="px-6 py-2 text-xs text-gray-900 dark:text-white whitespace-nowrap"
-                                        >
-                                            {{
-                                                formatDate(
-                                                    announcement.end_date
-                                                ) || "N/A"
-                                            }}
-                                        </td>
-
-                                        <!-- Status -->
-                                        <td class="px-6 py-2">
-                                            <span
-                                                :class="
-                                                    statusClasses(
-                                                        announcement.status
-                                                    )
-                                                "
-                                                class="inline-flex items-center border px-2 py-0.5 rounded-full text-xs font-sm"
+                                            <!-- Content Preview -->
+                                            <td
+                                                class="px-6 py-2 text-xs text-gray-900 dark:text-white"
                                             >
                                                 <span
-                                                    class="w-1.5 h-1.5 rounded-full mr-1.5"
+                                                    class="truncate max-w-xs"
+                                                    >{{
+                                                        truncateContent(
+                                                            announcement.content,
+                                                            50
+                                                        )
+                                                    }}</span
+                                                >
+                                            </td>
+
+                                            <!-- Start Date -->
+                                            <td
+                                                class="px-6 py-2 text-xs text-gray-900 dark:text-white whitespace-nowrap"
+                                            >
+                                                {{
+                                                    formatDate(
+                                                        announcement.start_date
+                                                    ) || "N/A"
+                                                }}
+                                            </td>
+
+                                            <!-- End Date -->
+                                            <td
+                                                class="px-6 py-2 text-xs text-gray-900 dark:text-white whitespace-nowrap"
+                                            >
+                                                {{
+                                                    formatDate(
+                                                        announcement.end_date
+                                                    ) || "N/A"
+                                                }}
+                                            </td>
+
+                                            <!-- Status -->
+                                            <td class="px-6 py-2">
+                                                <span
                                                     :class="
-                                                        announcement.status.toLowerCase() ===
-                                                        'active'
-                                                            ? 'bg-green-400'
-                                                            : 'bg-yellow-400'
-                                                    "
-                                                ></span>
-                                                {{ announcement.status }}
-                                            </span>
-                                        </td>
-
-                                        <!-- Actions -->
-                                        <td class="px-6 py-3 text-right">
-                                            <div
-                                                class="flex justify-end space-x-2"
-                                            >
-                                                <button
-                                                    @click="
-                                                        editAnnouncement(
-                                                            announcement
+                                                        statusClasses(
+                                                            announcement.status
                                                         )
                                                     "
-                                                    class="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
-                                                    title="Edit"
+                                                    class="inline-flex items-center border px-2 py-0.5 rounded-full text-xs font-sm"
                                                 >
-                                                    <Edit class="w-4 h-4" />
-                                                </button>
-                                                <button
-                                                    @click="
-                                                        deleteAnnouncement(
-                                                            announcement.id
-                                                        )
-                                                    "
-                                                    class="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
-                                                    title="Delete"
-                                                >
-                                                    <Trash2 class="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-
-                                    <!-- Empty State -->
-                                    <tr
-                                        v-if="
-                                            !announcements.data ||
-                                            announcements.data.length === 0
-                                        "
-                                    >
-                                        <td
-                                            colspan="7"
-                                            class="px-6 py-8 text-center"
-                                        >
-                                            <div
-                                                class="flex flex-col items-center justify-center space-y-2"
-                                            >
-                                                <Speaker
-                                                    class="w-12 h-12 text-gray-300"
-                                                />
-                                                <span
-                                                    class="font-medium text-gray-500 dark:text-gray-400"
-                                                    >No announcements
-                                                    found</span
-                                                >
-                                                <span
-                                                    class="text-xs text-gray-400 dark:text-gray-500"
-                                                >
-                                                    Try adjusting your filters
-                                                    or search keywords.
+                                                    <span
+                                                        class="w-1.5 h-1.5 rounded-full mr-1.5"
+                                                        :class="
+                                                            announcement.status.toLowerCase() ===
+                                                            'active'
+                                                                ? 'bg-green-400'
+                                                                : 'bg-yellow-400'
+                                                        "
+                                                    ></span>
+                                                    {{ announcement.status }}
                                                 </span>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
+                                            </td>
 
-                        <!-- Pagination Component -->
-                        <Pagination :data="announcements" />
+                                            <!-- Actions -->
+                                            <td class="px-6 py-3 text-right">
+                                                <div
+                                                    class="flex justify-end space-x-2"
+                                                >
+                                                    <button
+                                                        @click="
+                                                            editAnnouncement(
+                                                                announcement
+                                                            )
+                                                        "
+                                                        class="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
+                                                        title="Edit"
+                                                    >
+                                                        <Edit class="w-4 h-4" />
+                                                    </button>
+                                                    <button
+                                                        @click="
+                                                            deleteAnnouncement(
+                                                                announcement.id
+                                                            )
+                                                        "
+                                                        class="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
+                                                        title="Delete"
+                                                    >
+                                                        <Trash2
+                                                            class="w-4 h-4"
+                                                        />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Empty State -->
+                                        <tr
+                                            v-if="
+                                                !announcements.data ||
+                                                announcements.data.length === 0
+                                            "
+                                        >
+                                            <td
+                                                colspan="7"
+                                                class="px-6 py-24 text-center"
+                                            >
+                                                <div
+                                                    class="flex flex-col items-center justify-center space-y-4"
+                                                >
+                                                    <Speaker
+                                                        class="w-20 h-20 text-gray-300"
+                                                    />
+                                                    <span
+                                                        class="text-2xl font-medium text-gray-500 dark:text-gray-400"
+                                                        >No announcements
+                                                        found</span
+                                                    >
+                                                    <span
+                                                        class="text-sm text-gray-400 dark:text-gray-500"
+                                                    >
+                                                        Try adjusting your
+                                                        filters or search
+                                                        keywords.
+                                                    </span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Pagination - Fixed at Bottom -->
+                            <div
+                                class="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+                            >
+                                <Pagination :data="announcements" />
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -392,11 +409,12 @@
                     :class="[
                         'transition-all duration-500 ease-in-out transform',
                         showCalendar
-                            ? 'xl:col-span-1 opacity-100 translate-x-0 max-h-[800px]'
+                            ? 'xl:col-span-1 opacity-100 translate-x-0'
                             : 'xl:col-span-0 opacity-0 -translate-x-full max-h-0 overflow-hidden',
                     ]"
+                    style="height: 613px; min-height: 613px; max-height: 613px"
                 >
-                    <div class="relative h-full">
+                    <div class="relative w-full h-full" style="height: 613px">
                         <!-- Calendar Toggle Button -->
                         <button
                             @click="toggleCalendar"
@@ -414,9 +432,17 @@
                             />
                         </button>
 
-                        <AnnouncementCalendar
-                            :announcements="announcements.data || []"
-                        />
+                        <!-- Calendar Container -->
+                        <div
+                            class="w-full h-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden"
+                            style="height: 668px"
+                        >
+                            <AnnouncementCalendar
+                                :announcements="announcements.data || []"
+                                class="w-full h-full"
+                                style="height: 668px"
+                            />
+                        </div>
                     </div>
                 </div>
 
@@ -436,7 +462,6 @@
                     </button>
                 </div>
             </div>
-
             <!-- Announcement Modal Component -->
             <AnnouncementModal
                 :show="showModal"

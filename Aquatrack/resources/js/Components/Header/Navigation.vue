@@ -1,4 +1,3 @@
-//Navigation.vue
 <script setup>
 import { ref, computed } from "vue";
 import { Link, usePage, router } from "@inertiajs/vue3";
@@ -98,11 +97,12 @@ const scrollToSection = (sectionId) => {
                         class="inline-flex items-center px-4 py-[10px] text-sm bg-white/20 border border-gray-300/30 text-gray-900  rounded-[50px] hover:bg-white/40 hover:text-gray-700 hover:border-gray-300/90 transition duration-300"
                     >
                         <!-- Right arrow icon (visible only on small screens) -->
-                        <v-icon
+
+                        <span class="hidden md:inline ">Get Started</span>
+                         <v-icon
                             name="bi-arrow-bar-right"
                             class="h-6 w-6 md:hidden"
                         />
-                        <span class="hidden md:inline ">Get Started</span>
 
                     </Link>
                 </div>

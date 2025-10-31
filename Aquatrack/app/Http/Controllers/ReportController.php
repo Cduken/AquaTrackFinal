@@ -7,12 +7,14 @@ use App\Models\Report;
 use App\Models\ReportPhoto;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ReportController extends Controller
 {
@@ -1428,6 +1430,81 @@ class ReportController extends Controller
                 'message' => 'Failed to fetch statistics',
                 'data' => $this->getDashboardStats()
             ], 500);
+        }
+    }
+
+    public function exportPdf(Request $request)
+    {
+        try {
+            // Build the query based on filters
+            $query = Report::with('user');
+
+            // Apply search filter
+            if ($request->has('search') && !empty($request->search)) {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+                    $q->where('id', 'like', "%{$search}%")
+                        ->orWhere('tracking_code', 'like', "%{$search}%")
+                        ->orWhere('reporter_name', 'like', "%{$search}%")
+                        ->orWhere('water_issue_type', 'like', "%{$search}%")
+                        ->orWhere('custom_water_issue', 'like', "%{$search}%")
+                        ->orWhereHas('user', function ($userQuery) use ($search) {
+                            $userQuery->where('name', 'like', "%{$search}%");
+                        });
+                });
+            }
+
+            // Apply status filter
+            if ($request->has('status') && !empty($request->status)) {
+                $query->where('status', $request->status);
+            }
+
+            // Apply user type filter
+            if ($request->has('userType') && !empty($request->userType) && $request->userType !== 'all') {
+                if ($request->userType === 'guest') {
+                    $query->whereNull('user_id');
+                } elseif ($request->userType === 'authenticated') {
+                    $query->whereNotNull('user_id');
+                }
+            }
+
+            // Get filtered reports
+            $reports = $query->orderBy('created_at', 'desc')->get();
+
+            // Calculate statistics
+            $totalReports = $reports->count();
+            $pendingCount = $reports->where('status', 'pending')->count();
+            $inProgressCount = $reports->where('status', 'in_progress')->count();
+            $resolvedCount = $reports->where('status', 'resolved')->count();
+            $deletedCount = $reports->filter(fn($report) => str_starts_with($report->status, 'Deleted'))->count();
+
+            // Prepare data for PDF
+            $pdfData = [
+                'reports' => $reports,
+                'totalReports' => $totalReports,
+                'pendingCount' => $pendingCount,
+                'inProgressCount' => $inProgressCount,
+                'resolvedCount' => $resolvedCount,
+                'deletedCount' => $deletedCount,
+                'exportDate' => Carbon::now('Asia/Manila')->format('F d, Y g:i A'),
+                'filters' => [
+                    'search' => $request->search,
+                    'status' => $request->status,
+                    'userType' => $request->userType,
+                ],
+            ];
+
+            // Generate PDF
+            $pdf = PDF::loadView('admin.exports.reports-pdf', $pdfData)
+                ->setPaper('a4', 'landscape')
+                ->setOption('defaultFont', 'Arial');
+
+            $filename = 'aquatrack-reports-' . Carbon::now()->format('Y-m-d-H-i-s') . '.pdf';
+
+            return $pdf->download($filename);
+        } catch (\Exception $e) {
+            Log::error('PDF Export Error: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to generate PDF'], 500);
         }
     }
 }

@@ -1,4 +1,3 @@
-// ApplicationLogo.vue
 <script setup>
 defineProps({
     size: {

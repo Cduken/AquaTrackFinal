@@ -1,28 +1,16 @@
 <template>
     <StaffLayout>
         <div
-            class="min-h-screen  py-8 px-4 sm:px-6 lg:px-8"
+            class="min-h-screen py-1 px-2 sm:px-1 lg:px-1"
         >
             <div class="max-w-full mx-auto">
                 <!-- Header Section -->
                 <div class="mb-8">
                     <div class="flex items-center gap-3 mb-2">
-                        <div class="relative">
-                            <div
-                                class="absolute inset-0 bg-blue-500 blur-xl opacity-20 rounded-full"
-                            ></div>
-                            <div
-                                class="relative bg-white p-3 rounded-2xl shadow-sm border border-slate-200/60"
-                            >
-                                <Droplet
-                                    class="w-6 h-6 text-blue-600"
-                                    :stroke-width="2"
-                                />
-                            </div>
-                        </div>
+
                         <div>
                             <h1
-                                class="text-3xl font-bold text-slate-900 tracking-tight"
+                                class="text-2xl font-bold text-gray-900"
                             >
                                 Meter Readings
                             </h1>

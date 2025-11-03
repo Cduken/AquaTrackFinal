@@ -4,7 +4,7 @@ defineProps(
     {
         email:{
             type: String,
-            default: 'info@aquatrack.com'
+            default: 'clarinwaterdistrict@aquatrack.com'
         },
 
         phone:{
@@ -14,12 +14,12 @@ defineProps(
 
         text:{
             type: String,
-            default: 'Smart water monitoring for a sustainable future'
+            default: 'Water Monitoring and Reporting System'
         },
 
         allRightReserved:{
             type: String,
-            default: '© 2023 AquaTrack. All rights reserved.'
+            default: '© 2025 AquaTrack. All rights reserved.'
         }
     }
 );
@@ -41,7 +41,7 @@ defineProps(
             </div>
             <!-- Contacts -->
             <div class="w-full md:w-auto text-center md:text-right">
-                <h3 class="text-lg font-semibold mb-2">Contact</h3>
+                <h3 class="text-lg font-semibold mb-2">Get In Touch</h3>
                 <ul class="space-y-1 text-gray-400 text-sm">
                     <li>Email: <a href="mailto:info@aquatrack.com" class="hover:text-white">{{ email }}</a></li>
                     <li>Phone: <a href="tel:+1234567890" class="hover:text-white">{{ phone }}</a></li>

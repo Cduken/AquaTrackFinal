@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
@@ -27,16 +28,55 @@ class NotificationController extends Controller
             return redirect()->route('login');
         }
 
-        // Always get fresh notifications
+        // Get fresh notifications
         $notifications = $this->getAdminNotifications();
 
-        $notifications = $notifications->sortByDesc(function ($item) {
-            return $item['created_at'] ?? $item['updated_at'] ?? now();
+        // Apply search filter
+        if ($request->has('search') && !empty($request->search)) {
+            $search = strtolower($request->search);
+            $notifications = $notifications->filter(function ($notification) use ($search) {
+                return str_contains(strtolower($notification['title'] ?? ''), $search) ||
+                    str_contains(strtolower($notification['message'] ?? ''), $search);
+            });
+        }
+
+        // Apply type filter
+        if ($request->has('type') && !empty($request->type)) {
+            $notifications = $notifications->where('type', $request->type);
+        }
+
+        // Apply sorting
+        $sort = $request->get('sort', 'created_at');
+        $notifications = $notifications->sortBy(function ($item) use ($sort) {
+            return $item[$sort] ?? $item['created_at'];
         })->values();
 
+        if ($sort === 'created_at') {
+            $notifications = $notifications->reverse()->values();
+        }
+
+        // Use Laravel's built-in pagination with 10 items per page
+        $perPage = 10;
+        $currentPage = LengthAwarePaginator::resolveCurrentPage();
+        $currentItems = $notifications->slice(($currentPage - 1) * $perPage, $perPage)->values();
+
+        $paginatedNotifications = new LengthAwarePaginator(
+            $currentItems,
+            $notifications->count(),
+            $perPage,
+            $currentPage,
+            [
+                'path' => LengthAwarePaginator::resolveCurrentPath(),
+                'pageName' => 'page',
+            ]
+        );
+
+        // Add query parameters to pagination links
+        $paginatedNotifications->appends($request->except('page'));
+
         return Inertia::render('Admin/Notifications', [
-            'notifications' => $notifications,
-            'filters' => $request->only(['search', 'sort', 'order']),
+            'notifications' => $paginatedNotifications,
+            'filters' => $request->only(['search', 'type', 'sort']),
         ]);
     }
 
@@ -158,6 +198,208 @@ class NotificationController extends Controller
     }
 
     /**
+     * Get notifications for admin users - ONLY REPORTS AND RECORDS FROM CUSTOMERS
+     */
+    private function getAdminNotifications()
+    {
+        $notifications = collect();
+        $user = Auth::user();
+
+        // Get all dismissed notification IDs for this admin user
+        $dismissedNotifications = DismissedNotification::where('user_id', $user->id)
+            ->pluck('notification_id')
+            ->toArray();
+
+        // 1. New reports from customers/guests - REPORTS TYPE
+        $newReports = Report::with('user')
+            ->where('created_at', '>=', now()->subDays(7))
+            ->where('status', 'pending')
+            ->latest()
+            ->get();
+
+        foreach ($newReports as $report) {
+            $notificationId = 'new_report_' . $report->id;
+
+            // Skip if notification is dismissed
+            if (in_array($notificationId, $dismissedNotifications)) {
+                continue;
+            }
+
+            $notifications->push([
+                'id' => $notificationId,
+                'type' => 'reports',
+                'title' => 'New Report Submitted',
+                'message' => "New water quality report from " . ($report->user ? $report->user->name : ($report->reporter_name ?? 'Guest User')),
+                'action_url' => '/admin/reports',
+                'unread' => !($report->viewed_by_admin ?? false),
+                'created_at' => $report->created_at ? $report->created_at->toISOString() : now()->toISOString(),
+                'important' => true
+            ]);
+        }
+
+        // 2. Updated reports from customers - REPORTS TYPE
+        $updatedReports = Report::with('user')
+            ->where('updated_at', '>=', now()->subDays(7))
+            ->where('updated_at', '>', DB::raw('created_at'))
+            ->latest('updated_at')
+            ->get();
+
+        foreach ($updatedReports as $report) {
+            $notificationId = 'updated_report_' . $report->id . '_' . $report->updated_at->timestamp;
+
+            // Skip if notification is dismissed
+            if (in_array($notificationId, $dismissedNotifications)) {
+                continue;
+            }
+
+            $notifications->push([
+                'id' => $notificationId,
+                'type' => 'reports',
+                'title' => 'Report Updated',
+                'message' => "Report #{$report->tracking_code} has been updated by " . ($report->user ? $report->user->name : ($report->reporter_name ?? 'Guest User')),
+                'action_url' => '/admin/reports',
+                'unread' => !($report->update_viewed_by_admin ?? false),
+                'created_at' => $report->updated_at ? $report->updated_at->toISOString() : now()->toISOString(),
+                'important' => false
+            ]);
+        }
+
+        // 3. Overdue records/bills from customers - RECORDS TYPE
+        $overdueRecords = MeterReading::with('user')
+            ->where('status', 'Overdue')
+            ->where('updated_at', '>=', now()->subDays(7))
+            ->latest('updated_at')
+            ->get();
+
+        foreach ($overdueRecords as $record) {
+            $notificationId = 'overdue_record_' . $record->id;
+
+            // Skip if notification is dismissed
+            if (in_array($notificationId, $dismissedNotifications)) {
+                continue;
+            }
+
+            $notifications->push([
+                'id' => $notificationId,
+                'type' => 'records',
+                'title' => 'Overdue Bill Record',
+                'message' => "Overdue bill for {$record->user->name} - {$record->billing_month}. Amount: ₱" . number_format($record->amount, 2),
+                'action_url' => '/admin/records',
+                'unread' => true,
+                'created_at' => $record->updated_at ? $record->updated_at->toISOString() : now()->toISOString(),
+                'important' => true
+            ]);
+        }
+
+        // 4. High water consumption alerts - RECORDS TYPE
+        $highConsumption = MeterReading::with('user')
+            ->where('consumption', '>', 50) // Threshold for high consumption
+            ->where('created_at', '>=', now()->subDays(7))
+            ->latest()
+            ->get();
+
+        foreach ($highConsumption as $reading) {
+            $notificationId = 'high_consumption_' . $reading->id;
+
+            // Skip if notification is dismissed
+            if (in_array($notificationId, $dismissedNotifications)) {
+                continue;
+            }
+
+            $notifications->push([
+                'id' => $notificationId,
+                'type' => 'records',
+                'title' => 'High Water Consumption',
+                'message' => "High water consumption detected for {$reading->user->name} - {$reading->billing_month}. Consumption: {$reading->consumption} cubic meters",
+                'action_url' => '/admin/records',
+                'unread' => true,
+                'created_at' => $reading->created_at ? $reading->created_at->toISOString() : now()->toISOString(),
+                'important' => false
+            ]);
+        }
+
+        Log::info('Admin notifications filtered', [
+            'total_found' => $notifications->count(),
+            'dismissed_count' => count($dismissedNotifications),
+            'user_id' => $user->id
+        ]);
+
+        return $notifications;
+    }
+
+    /**
+     * Get notifications for staff users
+     */
+    private function getStaffNotifications()
+    {
+        $notifications = collect();
+        $user = Auth::user();
+
+        // Get all dismissed notification IDs for this staff user
+        $dismissedNotifications = DismissedNotification::where('user_id', $user->id)
+            ->pluck('notification_id')
+            ->toArray();
+
+        // Assigned reports
+        $assignedReports = Report::with('user')
+            ->where('assigned_to', $user->id)
+            ->where('updated_at', '>=', now()->subDays(7))
+            ->latest('updated_at')
+            ->get();
+
+        foreach ($assignedReports as $report) {
+            $notificationId = 'assigned_report_' . $report->id;
+
+            // Skip if notification is dismissed
+            if (in_array($notificationId, $dismissedNotifications)) {
+                continue;
+            }
+
+            $notifications->push([
+                'id' => $notificationId,
+                'type' => 'reports',
+                'title' => 'Report Assigned',
+                'message' => "Report assigned to you from " . ($report->user ? $report->user->name : ($report->reporter_name ?? 'System')),
+                'action_url' => '/staff/dashboard',
+                'unread' => !($report->viewed_by_staff ?? false),
+                'created_at' => $report->updated_at ? $report->updated_at->toISOString() : now()->toISOString(),
+                'important' => true
+            ]);
+        }
+
+        // Staff announcements
+        $announcements = Announcements::where('active', true)
+            ->where(function ($query) {
+                $query->where('target_audience', 'staff')
+                    ->orWhere('target_audience', 'all');
+            })
+            ->latest()
+            ->get();
+
+        foreach ($announcements as $announcement) {
+            $notificationId = 'announcement_' . $announcement->id;
+
+            // Skip if notification is dismissed
+            if (in_array($notificationId, $dismissedNotifications)) {
+                continue;
+            }
+
+            $notifications->push([
+                'id' => $notificationId,
+                'type' => 'announcements',
+                'title' => $announcement->title ?? 'Announcement',
+                'message' => $announcement->message ?? 'No message',
+                'action_url' => '/staff/dashboard',
+                'unread' => !$this->isAnnouncementRead($announcement->id),
+                'created_at' => $announcement->created_at ? $announcement->created_at->toISOString() : now()->toISOString(),
+                'important' => false
+            ]);
+        }
+
+        return $notifications;
+    }
+
+    /**
      * Improved getCustomerNotifications method with better debugging
      */
     private function getCustomerNotifications()
@@ -190,7 +432,7 @@ class NotificationController extends Controller
 
             $notifications->push([
                 'id' => $notificationId,
-                'type' => 'info',
+                'type' => 'reports',
                 'title' => 'Report Status Updated',
                 'message' => "Your report #{$report->tracking_code} status has been updated to: " . ucfirst($report->status),
                 'action_url' => '/customer/reports',
@@ -216,7 +458,7 @@ class NotificationController extends Controller
 
             $notifications->push([
                 'id' => $notificationId,
-                'type' => 'alert',
+                'type' => 'records',
                 'title' => 'Bill Amount Updated',
                 'message' => "Your bill for {$bill->billing_month} has been updated. New amount: ₱" . number_format($bill->amount, 2),
                 'action_url' => '/customer/usage',
@@ -242,7 +484,7 @@ class NotificationController extends Controller
 
             $notifications->push([
                 'id' => $notificationId,
-                'type' => 'info',
+                'type' => 'records',
                 'title' => 'Water Consumption Reviewed',
                 'message' => "Your water consumption for {$reading->billing_month} has been reviewed by our staff",
                 'action_url' => '/customer/usage',
@@ -280,7 +522,7 @@ class NotificationController extends Controller
 
             $notifications->push([
                 'id' => $notificationId,
-                'type' => 'info',
+                'type' => 'announcements',
                 'title' => $announcement->title ?? 'Announcement',
                 'message' => $message,
                 'action_url' => '/customer/announcements',
@@ -298,7 +540,6 @@ class NotificationController extends Controller
 
         return $notifications;
     }
-
 
     /**
      * Get bill-related notifications for customers
@@ -328,7 +569,7 @@ class NotificationController extends Controller
             $dueDate = Carbon::parse($reading->due_date);
             $daysUntilDue = $today->diffInDays($dueDate, false);
 
-            // Overdue notification
+            // Overdue notification - USE ALERT
             if ($daysUntilDue < 0) {
                 $overdueDays = abs($daysUntilDue);
                 $notificationId = 'overdue_bill_' . $reading->id;
@@ -347,7 +588,7 @@ class NotificationController extends Controller
                     ]);
                 }
             }
-            // Due in 5 days notification
+            // Due in 5 days notification - USE REMINDER
             elseif ($daysUntilDue <= 5 && $daysUntilDue > 2) {
                 $notificationId = 'due_soon_' . $reading->id;
 
@@ -365,7 +606,7 @@ class NotificationController extends Controller
                     ]);
                 }
             }
-            // Final reminder
+            // Final reminder - USE REMINDER
             elseif ($daysUntilDue <= 2 && $daysUntilDue > 0) {
                 $notificationId = 'final_reminder_' . $reading->id;
 
@@ -383,7 +624,7 @@ class NotificationController extends Controller
                     ]);
                 }
             }
-            // Due today notification
+            // Due today notification - USE ALERT
             elseif ($daysUntilDue === 0) {
                 $notificationId = 'due_today_' . $reading->id;
 
@@ -406,272 +647,6 @@ class NotificationController extends Controller
         return $notifications;
     }
 
-    /**
-     * Get notifications for admin users
-     */
-    private function getAdminNotifications()
-    {
-        $notifications = collect();
-        $user = Auth::user();
-
-        // Get all dismissed notification IDs for this admin user
-        $dismissedNotifications = DismissedNotification::where('user_id', $user->id)
-            ->pluck('notification_id')
-            ->toArray();
-
-        // New reports from customers/guests
-        $newReports = Report::with('user')
-            ->where('created_at', '>=', now()->subDays(7))
-            ->where('status', 'pending')
-            ->latest()
-            ->get();
-
-        foreach ($newReports as $report) {
-            $notificationId = 'new_report_' . $report->id;
-
-            // Skip if notification is dismissed
-            if (in_array($notificationId, $dismissedNotifications)) {
-                continue;
-            }
-
-            $notifications->push([
-                'id' => $notificationId,
-                'type' => 'info',
-                'title' => 'New Report Submitted',
-                'message' => "New water quality report from " . ($report->user ? $report->user->name : ($report->reporter_name ?? 'Guest User')),
-                'action_url' => '/admin/reports',
-                'unread' => !($report->viewed_by_admin ?? false),
-                'created_at' => $report->created_at ? $report->created_at->toISOString() : now()->toISOString(),
-                'important' => true
-            ]);
-        }
-
-        // System announcements
-        $announcements = Announcements::where('active', true)
-            ->where(function ($query) {
-                $query->where('target_audience', 'admin')
-                    ->orWhere('target_audience', 'all');
-            })
-            ->where('start_date', '<=', now())
-            ->where(function ($query) {
-                $query->whereNull('end_date')
-                    ->orWhere('end_date', '>=', now());
-            })
-            ->latest()
-            ->get();
-
-        foreach ($announcements as $announcement) {
-            $notificationId = 'announcement_' . $announcement->id;
-
-            // Skip if notification is dismissed
-            if (in_array($notificationId, $dismissedNotifications)) {
-                continue;
-            }
-
-            $notifications->push([
-                'id' => $notificationId,
-                'type' => 'info',
-                'title' => $announcement->title ?? 'Announcement',
-                'message' => $announcement->content ?? 'No content',
-                'action_url' => '/admin/announcements',
-                'unread' => !$this->isAnnouncementRead($announcement->id),
-                'created_at' => $announcement->created_at ? $announcement->created_at->toISOString() : now()->toISOString(),
-                'important' => false
-            ]);
-        }
-
-        Log::info('Admin notifications filtered', [
-            'total_found' => $notifications->count(),
-            'dismissed_count' => count($dismissedNotifications),
-            'user_id' => $user->id
-        ]);
-
-        return $notifications;
-    }
-
-    /**
-     * Get notifications for staff users
-     */
-    /**
-     * Get notifications for staff users
-     */
-    private function getStaffNotifications()
-    {
-        $notifications = collect();
-        $user = Auth::user();
-
-        // Get all dismissed notification IDs for this staff user
-        $dismissedNotifications = DismissedNotification::where('user_id', $user->id)
-            ->pluck('notification_id')
-            ->toArray();
-
-        // Assigned reports
-        $assignedReports = Report::with('user')
-            ->where('assigned_to', $user->id)
-            ->where('updated_at', '>=', now()->subDays(7))
-            ->latest('updated_at')
-            ->get();
-
-        foreach ($assignedReports as $report) {
-            $notificationId = 'assigned_report_' . $report->id;
-
-            // Skip if notification is dismissed
-            if (in_array($notificationId, $dismissedNotifications)) {
-                continue;
-            }
-
-            $notifications->push([
-                'id' => $notificationId,
-                'type' => 'info',
-                'title' => 'Report Assigned',
-                'message' => "Report assigned to you from " . ($report->user ? $report->user->name : ($report->reporter_name ?? 'System')),
-                'action_url' => '/staff/dashboard',
-                'unread' => !($report->viewed_by_staff ?? false),
-                'created_at' => $report->updated_at ? $report->updated_at->toISOString() : now()->toISOString(),
-                'important' => true
-            ]);
-        }
-
-        // Staff announcements
-        $announcements = Announcements::where('active', true)
-            ->where(function ($query) {
-                $query->where('target_audience', 'staff')
-                    ->orWhere('target_audience', 'all');
-            })
-            ->latest()
-            ->get();
-
-        foreach ($announcements as $announcement) {
-            $notificationId = 'announcement_' . $announcement->id;
-
-            // Skip if notification is dismissed
-            if (in_array($notificationId, $dismissedNotifications)) {
-                continue;
-            }
-
-            $notifications->push([
-                'id' => $notificationId,
-                'type' => 'info',
-                'title' => $announcement->title ?? 'Announcement',
-                'message' => $announcement->message ?? 'No message',
-                'action_url' => '/staff/dashboard',
-                'unread' => !$this->isAnnouncementRead($announcement->id),
-                'created_at' => $announcement->created_at ? $announcement->created_at->toISOString() : now()->toISOString(),
-                'important' => false
-            ]);
-        }
-
-        return $notifications;
-    }
-
-    /**
-     * Get notifications for customer users
-     */
-    // In your getCustomerNotifications method, add:
-    // private function getCustomerNotifications()
-    // {
-    //     $notifications = collect();
-    //     $user = Auth::user();
-
-    //     Log::info('Getting customer notifications for user: ' . $user->id);
-
-    //     // 1. Report status updates - REMOVE THE viewed_by_user FILTER
-    //     $userReports = Report::where('user_id', $user->id)
-    //         ->where('updated_at', '>=', now()->subDays(7))
-    //         ->latest('updated_at')
-    //         ->get();
-
-    //     foreach ($userReports as $report) {
-    //         $notifications->push([
-    //             'id' => 'report_status_' . $report->id . '_' . $report->updated_at->timestamp,
-    //             'type' => 'info',
-    //             'title' => 'Report Status Updated',
-    //             'message' => "Your report #{$report->tracking_code} status has been updated to: " . ucfirst($report->status),
-    //             'action_url' => '/customer/reports',
-    //             'unread' => !$report->viewed_by_user, // Use this to control read/unread display
-    //             'created_at' => $report->updated_at->toISOString(),
-    //             'important' => true
-    //         ]);
-    //     }
-
-    //     // 2. Bill amount updates - REMOVE THE amount_updated FILTER
-    //     $updatedBills = MeterReading::where('user_id', $user->id)
-    //         ->where('updated_at', '>=', now()->subDays(7))
-    //         ->latest('updated_at')
-    //         ->get();
-
-    //     foreach ($updatedBills as $bill) {
-    //         $notifications->push([
-    //             'id' => 'bill_updated_' . $bill->id . '_' . $bill->updated_at->timestamp,
-    //             'type' => 'alert',
-    //             'title' => 'Bill Amount Updated',
-    //             'message' => "Your bill for {$bill->billing_month} has been updated. New amount: ₱" . number_format($bill->amount, 2),
-    //             'action_url' => '/customer/usage',
-    //             'unread' => $bill->amount_updated, // Use this to control read/unread display
-    //             'created_at' => $bill->updated_at->toISOString(),
-    //             'important' => true
-    //         ]);
-    //     }
-
-    //     // 3. Staff viewed water consumption - REMOVE THE viewed_by_staff FILTER
-    //     $staffViewedReadings = MeterReading::where('user_id', $user->id)
-    //         ->where('staff_viewed_at', '>=', now()->subDays(7))
-    //         ->latest('staff_viewed_at')
-    //         ->get();
-
-    //     foreach ($staffViewedReadings as $reading) {
-    //         $notifications->push([
-    //             'id' => 'staff_viewed_' . $reading->id . '_' . $reading->staff_viewed_at->timestamp,
-    //             'type' => 'info',
-    //             'title' => 'Water Consumption Reviewed',
-    //             'message' => "Your water consumption for {$reading->billing_month} has been reviewed by our staff",
-    //             'action_url' => '/customer/usage',
-    //             'unread' => $reading->viewed_by_staff, // Use this to control read/unread display
-    //             'created_at' => $reading->staff_viewed_at->toISOString(),
-    //             'important' => false
-    //         ]);
-    //     }
-
-    //     // 4. Regular bill notifications (overdue, due soon, etc.)
-    //     $billNotifications = $this->getBillNotifications();
-    //     $notifications = $notifications->merge($billNotifications);
-
-    //     // 5. Customer announcements
-    //     $announcements = Announcements::where('active', true)
-    //         ->where(function ($query) {
-    //             $query->where('target_audience', 'customer')
-    //                 ->orWhere('target_audience', 'all');
-    //         })
-    //         ->latest()
-    //         ->get();
-
-    //     foreach ($announcements as $announcement) {
-    //         $message = $announcement->content ?? $announcement->message ?? $announcement->description ?? 'No content available';
-
-    //         $notifications->push([
-    //             'id' => 'announcement_' . $announcement->id,
-    //             'type' => 'info',
-    //             'title' => $announcement->title ?? 'Announcement',
-    //             'message' => $message,
-    //             'action_url' => '/customer/announcements',
-    //             'unread' => !$this->isAnnouncementRead($announcement->id),
-    //             'created_at' => $announcement->created_at ? $announcement->created_at->toISOString() : now()->toISOString(),
-    //             'important' => false
-    //         ]);
-    //     }
-
-    //     Log::info('Customer notifications fetched', [
-    //         'total' => $notifications->count(),
-    //         'unread' => $notifications->where('unread', true)->count()
-    //     ]);
-
-    //     return $notifications;
-    // }
-
-
-    /**
-     * Mark a notification as read
-     */
     /**
      * Mark a notification as read
      */
@@ -731,14 +706,10 @@ class NotificationController extends Controller
             // Also mark in dismissed notifications for consistency
             $this->dismissNotification($id);
 
-            return response()->json(['success' => true, 'message' => 'Notification marked as read']);
+            return response()->json(['success' => true]);
         } catch (\Exception $e) {
-            Log::error('Error marking notification as read: ' . $e->getMessage(), [
-                'notification_id' => $id,
-                'user_id' => $user->id,
-                'error' => $e->getMessage()
-            ]);
-            return response()->json(['success' => false, 'message' => 'Failed to mark notification as read'], 500);
+            Log::error('Error marking notification as read: ' . $e->getMessage());
+            return response()->json(['success' => false], 500);
         }
     }
 
@@ -898,6 +869,127 @@ class NotificationController extends Controller
     }
 
     /**
+     * Merge multiple reports
+     */
+    public function mergeReports(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            $reportIds = $request->input('report_ids', []);
+
+            if (!$user || !$user->hasRole('admin')) {
+                return redirect()->back()->with('error', 'Unauthorized');
+            }
+
+            if (count($reportIds) < 2) {
+                return redirect()->back()->with('error', 'Please select at least 2 reports to merge');
+            }
+
+            // Get the reports to merge
+            $reports = Report::whereIn('id', $reportIds)->get();
+
+            if ($reports->count() < 2) {
+                return redirect()->back()->with('error', 'Selected reports not found');
+            }
+
+            // Create merged report
+            $mergedReport = new Report();
+            $mergedReport->user_id = $reports->first()->user_id; // Use first report's user
+            $mergedReport->tracking_code = 'MERGED_' . time();
+            $mergedReport->type = 'merged';
+            $mergedReport->priority = 'high';
+            $mergedReport->status = 'pending';
+            $mergedReport->subject = 'Merged Report - Multiple Issues';
+
+            // Combine descriptions
+            $descriptions = $reports->pluck('description')->filter()->toArray();
+            $mergedReport->description = "MERGED REPORT CONTAINING THE FOLLOWING ISSUES:\n\n" .
+                implode("\n\n---\n\n", $descriptions);
+
+            // Combine locations if available
+            $locations = $reports->pluck('location')->filter()->unique()->toArray();
+            if (!empty($locations)) {
+                $mergedReport->location = implode(', ', $locations);
+            }
+
+            $mergedReport->reporter_name = $user->name;
+            $mergedReport->reporter_email = $user->email;
+            $mergedReport->reporter_phone = $reports->first()->reporter_phone;
+            $mergedReport->save();
+
+            // Update original reports to mark them as merged
+            Report::whereIn('id', $reportIds)->update([
+                'status' => 'merged',
+                'merged_into_id' => $mergedReport->id,
+                'updated_at' => now()
+            ]);
+
+            // Create notification for the merged report
+            $notificationId = 'merged_report_' . $mergedReport->id;
+
+            DismissedNotification::create([
+                'user_id' => $user->id,
+                'notification_id' => $notificationId,
+                'type' => 'reports',
+                'dismissed_at' => now()
+            ]);
+
+            Log::info('Reports merged successfully', [
+                'merged_report_id' => $mergedReport->id,
+                'original_report_ids' => $reportIds,
+                'admin_id' => $user->id
+            ]);
+
+            return redirect()->back()->with('success', 'Reports merged successfully! New tracking code: ' . $mergedReport->tracking_code);
+
+        } catch (\Exception $e) {
+            Log::error('Report merging failed: ' . $e->getMessage(), [
+                'report_ids' => $reportIds,
+                'admin_id' => Auth::id()
+            ]);
+
+            return redirect()->back()->with('error', 'Failed to merge reports: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get mergeable reports for admin
+     */
+    public function getMergeableReports(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            if (!$user || !$user->hasRole('admin')) {
+                return response()->json(['reports' => []]);
+            }
+
+            $reports = Report::where('status', 'pending')
+                ->orWhere('status', 'in_progress')
+                ->with('user')
+                ->latest()
+                ->get()
+                ->map(function ($report) {
+                    return [
+                        'id' => $report->id,
+                        'tracking_code' => $report->tracking_code,
+                        'subject' => $report->subject,
+                        'status' => $report->status,
+                        'created_at' => $report->created_at,
+                        'user_name' => $report->user ? $report->user->name : ($report->reporter_name ?? 'Guest'),
+                        'description' => $report->description,
+                        'location' => $report->location
+                    ];
+                });
+
+            return response()->json(['reports' => $reports]);
+
+        } catch (\Exception $e) {
+            Log::error('Error fetching mergeable reports: ' . $e->getMessage());
+            return response()->json(['reports' => []]);
+        }
+    }
+
+    /**
      * Helper methods
      */
     private function dismissNotification($notificationId)
@@ -967,6 +1059,11 @@ class NotificationController extends Controller
     private function getDefaultActionUrl($type)
     {
         $urls = [
+            'records' => '/customer/usage',
+            'reports' => '/customer/reports',
+            'announcements' => '/customer/announcements',
+            'alert' => '/customer/usage',
+            'reminder' => '/customer/usage',
             'bill_overdue' => '/customer/usage',
             'bill_due_soon' => '/customer/usage',
             'bill_final_reminder' => '/customer/usage',
@@ -974,8 +1071,6 @@ class NotificationController extends Controller
             'new_report' => '/customer/reports',
             'report_update' => '/customer/reports',
             'announcement' => '/customer/announcements',
-            'alert' => '/customer/notifications',
-            'reminder' => '/customer/notifications',
             'info' => '/customer/notifications',
         ];
 
@@ -988,6 +1083,11 @@ class NotificationController extends Controller
     private function getDefaultTitle($type)
     {
         $titles = [
+            'records' => 'Records Update',
+            'reports' => 'Report Update',
+            'announcements' => 'Announcement',
+            'alert' => 'Alert',
+            'reminder' => 'Reminder',
             'bill_overdue' => 'Overdue Bill',
             'bill_due_soon' => 'Bill Reminder',
             'bill_final_reminder' => 'Final Reminder',
@@ -995,8 +1095,6 @@ class NotificationController extends Controller
             'new_report' => 'New Report',
             'report_update' => 'Report Update',
             'announcement' => 'Announcement',
-            'alert' => 'Alert',
-            'reminder' => 'Reminder',
             'info' => 'Information',
             'system' => 'System Notification',
             'order' => 'Order Update',

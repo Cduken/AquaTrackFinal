@@ -21,7 +21,7 @@
                     >
                         <!-- Header -->
                         <div
-                            class="flex items-center justify-between px-6 py-5 bg-gradient-to-r from-[#062F64] to-[#1E4272]"
+                            class="flex items-center justify-between px-6 py-5 bg-[#062F64]"
                         >
                             <div class="flex items-center space-x-2">
                                 <v-icon
@@ -90,19 +90,23 @@
                                                         user.lastname
                                                     "
                                                     class="w-full h-full object-cover"
+                                                    @error="handleImageError"
                                                 />
                                                 <div
                                                     v-else
-                                                    class="w-full h-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center"
+                                                    class="w-full h-full flex items-center justify-center text-white font-semibold"
+                                                    :class="{
+                                                        'text-lg': isMaximized,
+                                                        'text-base':
+                                                            !isMaximized,
+                                                    }"
                                                 >
-                                                    <v-icon
-                                                        name="bi-person-fill"
-                                                        class="text-white text-xl"
-                                                        :class="{
-                                                            'text-2xl':
-                                                                isMaximized,
-                                                        }"
-                                                    />
+                                                    {{
+                                                        getInitials(
+                                                            user.name,
+                                                            user.lastname
+                                                        )
+                                                    }}
                                                 </div>
                                             </div>
                                         </div>
@@ -684,10 +688,7 @@
 
                                 <div v-else>
                                     <div
-                                        v-if="
-                                            filteredPreviousReadings.length ===
-                                            0
-                                        "
+                                        v-if="paginatedReadings.length === 0"
                                         class="text-center py-8 text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-600 rounded-lg"
                                         :class="{ 'py-10': isMaximized }"
                                     >
@@ -714,16 +715,15 @@
 
                                     <div
                                         v-else
-                                        class="space-y-3 max-h-[300px] overflow-y-auto"
+                                        class="space-y-3"
                                         :class="{
-                                            'space-y-4 max-h-[400px]':
-                                                isMaximized,
+                                            'space-y-4': isMaximized,
                                         }"
                                     >
                                         <div
                                             v-for="(
                                                 reading, index
-                                            ) in filteredPreviousReadings"
+                                            ) in paginatedReadings"
                                             :key="reading.id"
                                             class="bg-gray-50 dark:bg-gray-600 p-3 rounded-lg border border-gray-200 dark:border-gray-500 hover:border-blue-200 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors group relative"
                                             :class="{ 'p-4': isMaximized }"
@@ -753,17 +753,6 @@
                                                 <div
                                                     class="flex items-center gap-3"
                                                 >
-                                                    <div
-                                                        class="p-2 bg-white dark:bg-gray-700 rounded-md border border-gray-200 dark:border-gray-600"
-                                                        :class="{
-                                                            'p-3': isMaximized,
-                                                        }"
-                                                    >
-                                                        <v-icon
-                                                            name="bi-droplet"
-                                                            class="text-blue-500"
-                                                        />
-                                                    </div>
                                                     <div>
                                                         <div
                                                             class="font-medium text-gray-800 dark:text-white"
@@ -867,6 +856,19 @@
                                             </div>
                                         </div>
                                     </div>
+
+                                    <!-- Pagination Component -->
+                                    <div
+                                        v-if="totalPages > 1"
+                                        class="mt-6 border-t border-gray-200 dark:border-gray-600 pt-4"
+                                    >
+                                        <Pagination
+                                            :data="paginationData"
+                                            @pagination-change-page="
+                                                onPageChange
+                                            "
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -946,6 +948,7 @@
 import { ref, computed, onMounted, watch, nextTick } from "vue";
 import Swal from "sweetalert2";
 import EditMeterRecordModal from "./EditMeterRecordModal.vue";
+import Pagination from "@/Components/Pagination.vue";
 
 const props = defineProps({
     show: {
@@ -962,6 +965,10 @@ const emit = defineEmits(["close", "reading-submitted"]);
 
 // State for maximize
 const isMaximized = ref(false);
+
+// Pagination state
+const currentPage = ref(1);
+const itemsPerPage = 3;
 
 const months = [
     "January",
@@ -1010,6 +1017,64 @@ const sortedPreviousReadings = computed(() => {
     });
 });
 
+// Pagination computed properties
+const totalPages = computed(() => {
+    return Math.ceil(filteredPreviousReadings.value.length / itemsPerPage);
+});
+
+const paginatedReadings = computed(() => {
+    const start = (currentPage.value - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    return filteredPreviousReadings.value.slice(start, end);
+});
+
+const paginationData = computed(() => ({
+    data: filteredPreviousReadings.value,
+    current_page: currentPage.value,
+    per_page: itemsPerPage,
+    total: filteredPreviousReadings.value.length,
+    last_page: totalPages.value,
+    from: (currentPage.value - 1) * itemsPerPage + 1,
+    to: Math.min(
+        currentPage.value * itemsPerPage,
+        filteredPreviousReadings.value.length
+    ),
+}));
+
+// Pagination methods
+const onPageChange = (page) => {
+    currentPage.value = page;
+};
+
+const startItem = computed(() => {
+    return (currentPage.value - 1) * itemsPerPage + 1;
+});
+
+const endItem = computed(() => {
+    const end = currentPage.value * itemsPerPage;
+    return end > filteredPreviousReadings.value.length
+        ? filteredPreviousReadings.value.length
+        : end;
+});
+
+const visiblePages = computed(() => {
+    const pages = [];
+    const total = totalPages.value;
+    let start = Math.max(1, currentPage.value - 1);
+    let end = Math.min(total, currentPage.value + 1);
+
+    if (currentPage.value === 1) {
+        end = Math.min(total, 3);
+    } else if (currentPage.value === total) {
+        start = Math.max(1, total - 2);
+    }
+
+    for (let i = start; i <= end; i++) {
+        pages.push(i);
+    }
+    return pages;
+});
+
 const isLoadingPreviousReadings = ref(false);
 const isSubmitting = ref(false);
 const showYearTransitionWarning = ref(false);
@@ -1030,6 +1095,11 @@ watch(
         }
     }
 );
+
+// Reset pagination when year filter changes
+watch(selectedYear, () => {
+    currentPage.value = 1;
+});
 
 const toggleMaximize = () => {
     isMaximized.value = !isMaximized.value;
@@ -1072,6 +1142,23 @@ watch(
     },
     { deep: true }
 );
+
+// Pagination methods
+const previousPage = () => {
+    if (currentPage.value > 1) {
+        currentPage.value--;
+    }
+};
+
+const nextPage = () => {
+    if (currentPage.value < totalPages.value) {
+        currentPage.value++;
+    }
+};
+
+const goToPage = (page) => {
+    currentPage.value = page;
+};
 
 const updatePreviousReading = () => {
     // If there are previous readings, use the latest one
@@ -1138,6 +1225,12 @@ const updatePreviousReading = () => {
 
     // Recalculate consumption and amount
     calculateConsumptionAndAmount();
+};
+
+// Handle image loading errors
+const handleImageError = (event) => {
+    // If image fails to load, replace with fallback by removing the src
+    event.target.style.display = "none";
 };
 
 const formatDate = (dateString) => {
@@ -1212,7 +1305,6 @@ const calculateConsumptionAndAmount = () => {
 const fetchPreviousReadings = async () => {
     isLoadingPreviousReadings.value = true;
     try {
-        console.log("Fetching previous readings for user:", props.user.id);
         const response = await axios.get(
             route("staff.reading.previous", { userId: props.user.id })
         );
@@ -1233,12 +1325,9 @@ const fetchPreviousReadings = async () => {
             }
             previousReadings.value = [];
         } else {
-            console.log("Previous readings received:", response.data);
-            // Force a reactive update by replacing the entire array
             previousReadings.value = response.data || [];
         }
     } catch (error) {
-        console.error("Error fetching previous readings:", error);
         Swal.fire({
             icon: "error",
             title: "Failed to load readings",
@@ -1329,7 +1418,6 @@ const submitReading = async () => {
         });
 
         if (result.isConfirmed) {
-            console.log("Submitting reading for user:", props.user.id);
             const response = await axios.post(route("staff.reading.store"), {
                 user_id: props.user.id,
                 billing_month: newReading.value.billing_month,
@@ -1342,20 +1430,11 @@ const submitReading = async () => {
                 throw new Error(response.data.error);
             }
 
-            console.log(
-                "Reading submitted successfully, refreshing readings..."
-            );
-
             // Force a refresh of previous readings - wait for it to complete
             await fetchPreviousReadings();
 
             // Wait for Vue to update the DOM
             await nextTick();
-
-            console.log(
-                "Readings refreshed, current count:",
-                previousReadings.value.length
-            );
 
             // Reset the form fields
             newReading.value.reading = "";
@@ -1379,7 +1458,6 @@ const submitReading = async () => {
             emit("reading-submitted");
         }
     } catch (error) {
-        console.error("Error submitting reading:", error);
         Swal.fire({
             icon: "error",
             title: "Submission Failed",
@@ -1391,6 +1469,13 @@ const submitReading = async () => {
     } finally {
         isSubmitting.value = false;
     }
+};
+
+// Helper function to get user initials
+const getInitials = (firstName, lastName) => {
+    const first = firstName ? firstName.charAt(0).toUpperCase() : "";
+    const last = lastName ? lastName.charAt(0).toUpperCase() : "";
+    return first + last;
 };
 
 // Edit modal functions
@@ -1435,6 +1520,9 @@ const initializeForm = async () => {
 
     // Set default year filter to current year
     selectedYear.value = today.getFullYear().toString();
+
+    // Reset to first page
+    currentPage.value = 1;
 };
 
 onMounted(() => {

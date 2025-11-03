@@ -13,35 +13,26 @@
                 <div
                     class="relative w-full max-w-4xl transform transition-all duration-300 ease-out"
                     :class="{
-                        'max-w-6xl': isMaximized,
-                        'scale-100': !isMaximized && show,
-                        'scale-100': isMaximized,
+                        'max-w-full w-full h-full': isMaximized,
+                        'max-w-4xl': !isMaximized,
+                        'scale-100': show,
                     }"
                 >
                     <div
-                        class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden "
+                        :class="[
+                            'bg-white dark:bg-gray-800 shadow-2xl overflow-hidden flex flex-col',
+                            isMaximized
+                                ? 'h-screen rounded-2xl'
+                                : 'rounded-2xl max-h-[90vh]',
+                        ]"
                     >
                         <!-- Header -->
                         <div
                             class="flex items-center justify-between px-8 py-6 bg-[#062F64] relative overflow-hidden"
                         >
-
                             <div
                                 class="flex items-center space-x-3 relative z-10"
                             >
-                                <div
-                                    class="p-2 bg-white/10 rounded-xl backdrop-blur-sm"
-                                >
-                                    <v-icon
-                                        :name="
-                                            isEditing
-                                                ? 'ri-edit-box-fill'
-                                                : 'bi-megaphone-fill'
-                                        "
-                                        class="text-amber-300"
-                                        scale="1.5"
-                                    />
-                                </div>
                                 <div>
                                     <h2
                                         class="text-white font-semibold text-2xl"
@@ -72,13 +63,13 @@
                                         isMaximized ? 'Minimize' : 'Maximize'
                                     "
                                 >
-                                    <v-icon
-                                        :name="
+                                    <component
+                                        :is="
                                             isMaximized
-                                                ? 'bi-fullscreen-exit'
-                                                : 'bi-fullscreen'
+                                                ? Minimize2Icon
+                                                : Maximize2Icon
                                         "
-                                        class="h-5 w-5"
+                                        class="w-5 h-5"
                                     />
                                 </button>
                                 <!-- Close Button -->
@@ -86,15 +77,15 @@
                                     @click="closeModal"
                                     class="text-white hover:text-red-200 transition-all duration-200 p-2 rounded-xl hover:bg-white/10 backdrop-blur-sm"
                                 >
-                                    <v-icon name="bi-x-lg" class="h-6 w-6" />
+                                    <component :is="XIcon" class="w-5 h-5" />
                                 </button>
                             </div>
                         </div>
 
                         <!-- Content -->
                         <div
-                            class="max-h-[70vh] overflow-y-auto p-8"
-                            :class="{ 'max-h-[80vh]': isMaximized }"
+                            class="flex-1 overflow-y-auto p-8"
+                            :class="isMaximized ? 'p-10' : ''"
                         >
                             <div class="space-y-6">
                                 <!-- Title Field -->
@@ -319,7 +310,7 @@
                                     type="button"
                                     @click="submitForm"
                                     :disabled="isSubmitting"
-                                    class="px-8 py-3 text-base font-medium text-white bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl flex items-center justify-center min-w-[140px] relative overflow-hidden"
+                                    class="px-8 py-3 text-base font-medium text-white bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl flex items-center justify-center min-w-[140px] relative overflow-hidden"
                                 >
                                     <!-- Button shine effect -->
                                     <div
@@ -394,6 +385,7 @@
 
 <script setup>
 import { ref, computed, watch } from "vue";
+import { XIcon, Maximize2Icon, Minimize2Icon } from "lucide-vue-next";
 
 const props = defineProps({
     show: Boolean,

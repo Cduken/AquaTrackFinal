@@ -11,23 +11,26 @@
                     >
                         About <span class="text-blue-600">AquaTrack</span>
                     </h2>
+
                     <div class="space-y-4 sm:space-y-6">
                         <p
-                            class="text-base sm:text-md lg:text-lg text-gray-600 text-left"
+                            class="text-base sm:text-md lg:text-lg text-gray-600 text-justify leading-relaxed"
                         >
                             AquaTrack is a comprehensive water management
                             platform designed specifically for residential
                             customers. Our mission is to make water consumption
                             tracking simple, transparent, and efficient.
                         </p>
+
                         <p
-                            class="text-base sm:text-md lg:text-lg text-gray-600 text-left"
+                            class="text-base sm:text-md lg:text-lg text-gray-600 text-justify leading-relaxed"
                         >
-                            With features like real-time usage monitoring, can
-                            view monthly bill, and instant issue reporting,
+                            With features like monthly water usage monitoring,
+                            monthly bill viewing, and instant issue reporting,
                             we're revolutionizing how communities interact with
                             their water services.
                         </p>
+
                         <div class="space-y-3 sm:space-y-4">
                             <div class="flex items-start">
                                 <div
@@ -38,11 +41,12 @@
                                     ></div>
                                 </div>
                                 <p
-                                    class="text-base sm:text-md lg:text-lg text-gray-600"
+                                    class="text-base sm:text-md lg:text-lg text-gray-600 text-justify leading-relaxed"
                                 >
                                     Water Usage Monitoring
                                 </p>
                             </div>
+
                             <div class="flex items-start">
                                 <div
                                     class="flex-shrink-0 h-5 w-5 sm:h-6 sm:w-6 rounded-full border-2 border-blue-500 flex items-center justify-center mr-3 mt-0.5"
@@ -52,11 +56,12 @@
                                     ></div>
                                 </div>
                                 <p
-                                    class="text-base sm:text-md lg:text-lg text-gray-600"
+                                    class="text-base sm:text-md lg:text-lg text-gray-600 text-justify leading-relaxed"
                                 >
                                     Instant Issue Reporting & Tracking
                                 </p>
                             </div>
+
                             <div class="flex items-start">
                                 <div
                                     class="flex-shrink-0 h-5 w-5 sm:h-6 sm:w-6 rounded-full border-2 border-blue-500 flex items-center justify-center mr-3 mt-0.5"
@@ -66,7 +71,7 @@
                                     ></div>
                                 </div>
                                 <p
-                                    class="text-base sm:text-md lg:text-lg text-gray-600"
+                                    class="text-base sm:text-md lg:text-lg text-gray-600 text-justify leading-relaxed"
                                 >
                                     Community Announcements
                                 </p>

@@ -1,11 +1,9 @@
 <template>
     <CustomerLayout>
-        <div class="mx-auto w-full">
-            <div
-                class="bg-white border border-gray-200 rounded-lg overflow-hidden"
-            >
+        <div class="bg-gray-50 px-2 py-0">
+            <div class="overflow-hidden">
                 <!-- Header Section -->
-                <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                <div class="py-2 border-b border-gray-200 bg-gray-50">
                     <div
                         class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
                     >
@@ -30,7 +28,7 @@
                 </div>
 
                 <!-- Search and Filter Bar -->
-                <div class="px-6 py-4 border-b border-gray-200 bg-white">
+                <div class="px-2 py-4 border-b border-gray-200 bg-white">
                     <div
                         class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4"
                     >
@@ -55,6 +53,7 @@
                         <!-- Filter Controls -->
                         <div class="flex flex-wrap items-center gap-3">
                             <!-- Type Filter -->
+                            <!-- In your Vue template, update the Type Filter options -->
                             <div class="relative">
                                 <select
                                     v-model="filters.type"
@@ -62,25 +61,13 @@
                                     class="px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 >
                                     <option value="">All Types</option>
-                                    <option value="bill_overdue">
-                                        Bill Overdue
+                                    <option value="records">Records</option>
+                                    <option value="reports">Reports</option>
+                                    <option value="announcements">
+                                        Announcements
                                     </option>
-                                    <option value="bill_due_soon">
-                                        Bill Due Soon
-                                    </option>
-                                    <option value="new_report">
-                                        New Report
-                                    </option>
-                                    <option value="report_update">
-                                        Report Update
-                                    </option>
-                                    <option value="announcement">
-                                        Announcement
-                                    </option>
-                                    <option value="system">System</option>
                                 </select>
                             </div>
-
                             <!-- Status Filter -->
                             <div class="relative">
                                 <select
@@ -134,7 +121,7 @@
                             <thead class="bg-gray-50 sticky top-0 z-10">
                                 <tr>
                                     <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                        class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                                     >
                                         <div
                                             class="flex items-center space-x-2"
@@ -149,17 +136,17 @@
                                         </div>
                                     </th>
                                     <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                        class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                                     >
                                         Type
                                     </th>
                                     <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                        class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                                     >
                                         Date
                                     </th>
                                     <th
-                                        class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                        class="px-2 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
                                     >
                                         Actions
                                     </th>
@@ -171,7 +158,7 @@
                                     :key="notification.id"
                                     class="hover:bg-gray-50 transition-colors"
                                 >
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                    <td class="px-2 py-4 whitespace-nowrap">
                                         <div class="flex items-start space-x-3">
                                             <input
                                                 type="checkbox"
@@ -212,12 +199,18 @@
                                                 </div>
                                             </div>
                                             <div class="min-w-0 flex-1">
+                                                <!-- Clickable Notification Content -->
                                                 <div
-                                                    class="flex items-start justify-between"
+                                                    class="flex items-start justify-between cursor-pointer"
+                                                    @click="
+                                                        handleNotificationClick(
+                                                            notification
+                                                        )
+                                                    "
                                                 >
                                                     <div>
                                                         <p
-                                                            class="text-sm font-medium text-gray-900 line-clamp-1"
+                                                            class="text-sm font-medium text-gray-900 line-clamp-1 hover:text-blue-600 transition-colors"
                                                         >
                                                             {{
                                                                 getNotificationTitle(
@@ -257,7 +250,7 @@
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                    <td class="px-2 py-4 whitespace-nowrap">
                                         <span
                                             class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize"
                                             :class="
@@ -272,7 +265,7 @@
                                         </span>
                                     </td>
                                     <td
-                                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-600"
+                                        class="px-2 py-4 whitespace-nowrap text-sm text-gray-600"
                                     >
                                         <div
                                             class="flex items-center space-x-1"
@@ -293,7 +286,7 @@
                                         </div>
                                     </td>
                                     <td
-                                        class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"
+                                        class="px-2 py-4 whitespace-nowrap text-right text-sm font-medium"
                                     >
                                         <div
                                             class="flex items-center justify-end space-x-2"
@@ -346,7 +339,7 @@
                                 <tr v-if="filteredNotifications.length === 0">
                                     <td
                                         colspan="4"
-                                        class="px-6 py-24 text-center"
+                                        class="px-2 py-24 text-center"
                                     >
                                         <div
                                             class="flex flex-col items-center justify-center space-y-4"
@@ -398,7 +391,7 @@
                         class="flex-shrink-0 border-t border-gray-200 bg-white"
                     >
                         <div
-                            class="flex items-center justify-between px-6 py-4"
+                            class="flex items-center justify-between px-2 py-4"
                         >
                             <div class="text-sm text-gray-600">
                                 Showing {{ startIndex + 1 }} to
@@ -443,20 +436,17 @@
                 <!-- Bulk Actions Bar -->
                 <div
                     v-if="selectedNotifications.length > 0"
-                    class="px-6 py-4 border-t border-gray-200 bg-blue-50"
+                    class="px-2 py-4 border-t border-gray-200 bg-blue-50"
                 >
                     <div class="flex items-center justify-between">
                         <div class="flex items-center space-x-2">
                             <CheckSquare class="w-4 h-4 text-blue-600" />
                             <span class="text-sm font-medium text-blue-800">
-                                {{
-                                    selectedNotifications.length
-                                }}
+                                {{ selectedNotifications.length }}
                                 notification(s) selected
                             </span>
                         </div>
                         <div class="flex items-center space-x-3">
-
                             <button
                                 @click="bulkDelete"
                                 class="px-3 py-1.5 text-sm text-white bg-red-600 border border-red-700 rounded-md hover:bg-red-700 transition-colors"
@@ -493,7 +483,7 @@
                     class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg"
                 >
                     <!-- Modal Header -->
-                    <div class="bg-white px-6 py-4 border-b border-gray-200">
+                    <div class="bg-white px-2 py-4 border-b border-gray-200">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center space-x-3">
                                 <div
@@ -558,7 +548,7 @@
                     </div>
 
                     <!-- Modal Content -->
-                    <div class="bg-white px-6 py-4">
+                    <div class="bg-white px-2 py-4">
                         <div class="space-y-4">
                             <!-- Notification Message -->
                             <div>
@@ -638,7 +628,7 @@
                     </div>
 
                     <!-- Modal Footer -->
-                    <div class="bg-gray-50 px-6 py-3 border-t border-gray-200">
+                    <div class="bg-gray-50 px-2 py-3 border-t border-gray-200">
                         <div class="flex items-center justify-between">
                             <span class="text-xs text-gray-500">
                                 Notification ID:
@@ -649,12 +639,18 @@
                                 }}
                             </span>
                             <div class="flex items-center space-x-2">
+                                <!-- Go to Action Button -->
                                 <button
-                                    @click="closeModal"
-                                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                                    v-if="
+                                        selectedNotification &&
+                                        getActionUrl(selectedNotification)
+                                    "
+                                    @click="goToAction(selectedNotification)"
+                                    class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-blue-700 rounded-md hover:bg-blue-700 transition-colors"
                                 >
-                                    Close
+                                    {{ getActionLabel(selectedNotification) }}
                                 </button>
+
                                 <button
                                     v-if="
                                         selectedNotification &&
@@ -824,6 +820,91 @@ const prevPage = () => {
     }
 };
 
+// Click handler for notifications
+const handleNotificationClick = (notification) => {
+    // First mark as read if needed
+    if (notification.unread) {
+        markAsRead(notification.id);
+    }
+
+    // Then navigate to the action URL
+    const actionUrl = getActionUrl(notification);
+    if (actionUrl) {
+        router.visit(actionUrl);
+    } else {
+        // Fallback: open the modal
+        viewNotification(notification);
+    }
+};
+
+// Get action URL based on notification type
+const getActionUrl = (notification) => {
+    // Check if notification has direct action_url
+    if (notification.action_url) {
+        return notification.action_url;
+    }
+
+    // Fallback based on notification type
+    switch (notification.type) {
+        case "bill_overdue":
+        case "bill_due_soon":
+        case "bill_final_reminder":
+        case "bill_due_today":
+            return "/customer/usage";
+        case "new_report":
+        case "report_update":
+            return "/customer/reports";
+        case "announcement":
+            return "/customer/announcements";
+        default:
+            return null;
+    }
+};
+
+// Get action label for button
+const getActionLabel = (notification) => {
+    const url = getActionUrl(notification);
+    if (!url) return "Page";
+
+    if (url.includes("/reports")) return "Reports";
+    if (url.includes("/announcements")) return "Announcements";
+    if (url.includes("/usage")) return "Usage";
+    if (url.includes("/bills")) return "Bills";
+    if (url.includes("/dashboard")) return "Dashboard";
+
+    return "Page";
+};
+
+// Go to action from modal
+const goToAction = (notification) => {
+    const actionUrl = getActionUrl(notification);
+    if (actionUrl) {
+        closeModal();
+        router.visit(actionUrl);
+    }
+};
+
+// Mark notification as read
+const markAsRead = async (notificationId) => {
+    markingAsRead.value = notificationId;
+    try {
+        await fetch(`/customer/notifications/${notificationId}/read`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": document.querySelector(
+                    'meta[name="csrf-token"]'
+                ).content,
+            },
+        });
+        router.reload();
+    } catch (error) {
+        console.error("Failed to mark notification as read:", error);
+    } finally {
+        markingAsRead.value = null;
+    }
+};
+
 // Modal handlers
 const viewNotification = async (notification) => {
     selectedNotification.value = notification;
@@ -879,26 +960,6 @@ const clearFilters = () => {
 };
 
 // Notification actions
-const markAsRead = async (notificationId) => {
-    markingAsRead.value = notificationId;
-    try {
-        await fetch(`/customer/notifications/${notificationId}/read`, {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRF-TOKEN": document.querySelector(
-                    'meta[name="csrf-token"]'
-                ).content,
-            },
-        });
-        router.reload();
-    } catch (error) {
-        console.error("Failed to mark notification as read:", error);
-    } finally {
-        markingAsRead.value = null;
-    }
-};
-
 const deleteNotification = async (notificationId) => {
     const result = await Swal.fire({
         title: "Are you sure?",
@@ -934,33 +995,6 @@ const deleteNotification = async (notificationId) => {
             icon: "error",
             confirmButtonColor: "#3085d6",
         });
-    }
-};
-
-const bulkMarkAsRead = async () => {
-    if (selectedNotifications.value.length === 0) return;
-
-    bulkActionLoading.value = true;
-    try {
-        await Promise.all(
-            selectedNotifications.value.map((id) =>
-                fetch(`/customer/notifications/${id}/read`, {
-                    method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRF-TOKEN": document.querySelector(
-                            'meta[name="csrf-token"]'
-                        ).content,
-                    },
-                })
-            )
-        );
-        selectedNotifications.value = [];
-        router.reload();
-    } catch (error) {
-        console.error("Failed to mark notifications as read:", error);
-    } finally {
-        bulkActionLoading.value = false;
     }
 };
 
@@ -1011,17 +1045,14 @@ const bulkDelete = async () => {
 };
 
 // Helper functions
+// Update getNotificationIcon function
 const getNotificationIcon = (notification) => {
     switch (notification.type) {
-        case "announcement":
+        case "announcements":
             return Megaphone;
-        case "bill_overdue":
-        case "bill_due_soon":
-        case "bill_final_reminder":
-        case "bill_due_today":
+        case "records":
             return AlertTriangle;
-        case "new_report":
-        case "report_update":
+        case "reports":
             return Bell;
         case "system":
             return Bell;
@@ -1030,17 +1061,14 @@ const getNotificationIcon = (notification) => {
     }
 };
 
+// Update getNotificationIconClass function
 const getNotificationIconClass = (notification) => {
     switch (notification.type) {
-        case "announcement":
+        case "announcements":
             return "bg-blue-100";
-        case "bill_overdue":
-        case "bill_due_soon":
-        case "bill_final_reminder":
-        case "bill_due_today":
+        case "records":
             return "bg-orange-100";
-        case "new_report":
-        case "report_update":
+        case "reports":
             return "bg-green-100";
         case "system":
             return "bg-purple-100";
@@ -1049,17 +1077,14 @@ const getNotificationIconClass = (notification) => {
     }
 };
 
+// Update getNotificationIconColor function
 const getNotificationIconColor = (notification) => {
     switch (notification.type) {
-        case "announcement":
+        case "announcements":
             return "text-blue-600";
-        case "bill_overdue":
-        case "bill_due_soon":
-        case "bill_final_reminder":
-        case "bill_due_today":
+        case "records":
             return "text-orange-600";
-        case "new_report":
-        case "report_update":
+        case "reports":
             return "text-green-600";
         case "system":
             return "text-purple-600";
@@ -1068,21 +1093,14 @@ const getNotificationIconColor = (notification) => {
     }
 };
 
-const getNotificationTitle = (notification) => {
-    return notification.title || "Notification";
-};
-
+// Update getTypeBadgeClass function
 const getTypeBadgeClass = (notification) => {
     switch (notification.type) {
-        case "announcement":
+        case "announcements":
             return "bg-blue-100 text-blue-800";
-        case "bill_overdue":
-        case "bill_due_soon":
-        case "bill_final_reminder":
-        case "bill_due_today":
+        case "records":
             return "bg-orange-100 text-orange-800";
-        case "new_report":
-        case "report_update":
+        case "reports":
             return "bg-green-100 text-green-800";
         case "system":
             return "bg-purple-100 text-purple-800";
@@ -1091,8 +1109,20 @@ const getTypeBadgeClass = (notification) => {
     }
 };
 
+// Update formatNotificationType function to properly format the new types
 const formatNotificationType = (type) => {
-    return type.replace(/_/g, " ");
+    const typeMap = {
+        records: "Records",
+        reports: "Reports",
+        announcements: "Announcements",
+        system: "System",
+    };
+
+    return typeMap[type] || type.replace(/_/g, " ");
+};
+
+const getNotificationTitle = (notification) => {
+    return notification.title || "Notification";
 };
 
 const getRelativeTime = (dateString) => {
@@ -1154,5 +1184,10 @@ onUnmounted(() => {
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
+}
+
+/* Make notification content clearly clickable */
+.cursor-pointer {
+    cursor: pointer;
 }
 </style>

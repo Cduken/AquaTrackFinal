@@ -1,6 +1,6 @@
 <template>
     <StaffLayout>
-        <div class="min-h-screen p-4">
+        <div class="min-h-screen p-2 py-1">
             <!-- Compact Header -->
             <div class="mb-2">
                 <div class="flex items-center justify-between">
@@ -31,7 +31,7 @@
             </div>
 
             <!-- Compact Metrics Grid -->
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6 ">
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6 mt-5 ">
                 <!-- Today's Readings -->
                 <div
                     class="bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:shadow-md transition-shadow"

@@ -322,9 +322,9 @@ const getLocation = async () => {
 
             return new Promise((resolve) => {
                 const offlineGpsOptions = {
-                    enableHighAccuracy: true,
-                    timeout: 15000,
-                    maximumAge: 0,
+                    enableHighAccuracy: false, // ← CHANGED TO FALSE
+                    maximumAge: 30000, // ← Increased to 30 seconds
+                    timeout: 10000,
                 };
 
                 navigator.geolocation.getCurrentPosition(
@@ -370,9 +370,9 @@ const getLocation = async () => {
 
     return new Promise((resolve) => {
         const onlineGpsOptions = {
-            enableHighAccuracy: true,
-            timeout: 25000,
-            maximumAge: 0,
+            enableHighAccuracy: false, // ← CHANGED TO FALSE
+            maximumAge: 30000, // ← Increased to 30 seconds
+            timeout: 10000,
         };
 
         navigator.geolocation.getCurrentPosition(

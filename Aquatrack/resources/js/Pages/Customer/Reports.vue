@@ -1,7 +1,7 @@
 <template>
     <CustomerLayout>
         <!-- Content Section -->
-        <div class="p-2">
+        <div class="bg-gray-50 px-2 py-1">
             <!-- Header Section -->
             <div class="mb-4">
                 <h1 class="text-xl font-semibold text-gray-900">

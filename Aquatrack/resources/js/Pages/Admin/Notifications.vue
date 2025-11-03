@@ -4,47 +4,32 @@
             <div
                 class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden"
             >
-                <!-- Header Section -->
+                <!-- Header Section with Search and Filters on Right -->
                 <div
-                    class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50"
+                    class="px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50"
                 >
                     <div
-                        class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+                        class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4"
                     >
-                        <div>
-                            <h1
-                                class="text-xl font-semibold text-gray-900 dark:text-white"
+                        <!-- Left: Title and Count -->
+                        <div class="flex items-center">
+                            <h5
+                                class="text-sm font-semibold text-gray-500 dark:text-gray-400"
                             >
-                                Notifications
-                            </h1>
-                            <p
-                                class="text-sm text-gray-600 dark:text-gray-400 mt-1"
-                            >
-                                Manage and monitor all system notifications
-                            </p>
+                                <span
+                                    class="font-bold text-black dark:text-white"
+                                    >{{ notificationCount }}</span
+                                >
+                                Total Notifications
+                            </h5>
                         </div>
 
+                        <!-- Right: Search and Filters -->
                         <div
-                            class="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400"
+                            class="flex flex-col xl:flex-row gap-3 w-full xl:w-auto"
                         >
-                            <div class="flex items-center space-x-1">
-                                <Bell class="w-4 h-4" />
-                                <span>{{ notifications.length }} total</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Search and Filter Bar -->
-                <div
-                    class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
-                >
-                    <div
-                        class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4"
-                    >
-                        <!-- Search -->
-                        <div class="flex-1 max-w-md">
-                            <div class="relative">
+                            <!-- Search -->
+                            <div class="relative w-full xl:w-64">
                                 <div
                                     class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
                                 >
@@ -53,60 +38,67 @@
                                 <input
                                     v-model="filters.search"
                                     type="text"
-                                    class="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                    class="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                                     placeholder="Search notifications..."
-                                    @keyup.enter="applyFilters"
+                                    @keyup.enter="getNotifications"
                                 />
                             </div>
-                        </div>
 
-                        <!-- Filter Controls -->
-                        <div class="flex flex-wrap items-center gap-3">
-                            <!-- Type Filter - UPDATED -->
-                            <div class="relative">
-                                <select
-                                    v-model="filters.type"
-                                    @change="applyFilters"
-                                    class="px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                >
-                                    <option value="">All Types</option>
-                                    <option value="info">Information</option>
-                                    <option value="alert">Alerts</option>
-                                    <option value="reminder">Reminders</option>
-                                    <option value="announcement">
-                                        Announcements
-                                    </option>
-                                    <option value="new_report">
-                                        New Reports
-                                    </option>
-                                </select>
-                            </div>
-
-                            <!-- Sort -->
-                            <div class="relative">
-                                <select
-                                    v-model="filters.sort"
-                                    @change="applyFilters"
-                                    class="px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                >
-                                    <option value="created_at">
-                                        Newest First
-                                    </option>
-                                    <option value="created_at_asc">
-                                        Oldest First
-                                    </option>
-                                    <option value="type">Type</option>
-                                </select>
-                            </div>
-
-                            <!-- Reset Filters -->
-                            <button
-                                @click="clearFilters"
-                                class="flex items-center px-3 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 dark:text-gray-400 dark:border-gray-600 dark:hover:bg-gray-700"
+                            <!-- All three filters in one row -->
+                            <div
+                                class="flex flex-row items-center gap-2 w-full xl:w-auto"
                             >
-                                <RefreshCw class="w-4 h-4 mr-2" />
-                                Reset
-                            </button>
+                                <!-- Type Filter -->
+                                <div class="flex-1 min-w-[120px]">
+                                    <select
+                                        v-model="filters.type"
+                                        @change="getNotifications"
+                                        class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
+                                    >
+                                        <option
+                                            value=""
+                                            class="text-gray-500 dark:text-gray-400"
+                                        >
+                                            All Types
+                                        </option>
+                                        <option value="reports">Reports</option>
+                                        <option value="records">Records</option>
+                                    </select>
+                                </div>
+
+                                <!-- Sort Filter -->
+                                <div class="flex-1 min-w-[140px]">
+                                    <select
+                                        v-model="filters.sort"
+                                        @change="getNotifications"
+                                        class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
+                                    >
+                                        <option
+                                            value=""
+                                            disabled
+                                            selected
+                                            class="text-gray-500 dark:text-gray-400"
+                                        >
+                                            Sort by
+                                        </option>
+                                        <option value="created_at">
+                                            Newest First
+                                        </option>
+                                        <option value="created_at_asc">
+                                            Oldest First
+                                        </option>
+                                    </select>
+                                </div>
+
+                                <!-- Reset Filters -->
+                                <button
+                                    @click="resetFilters"
+                                    class="flex items-center px-3 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 dark:text-gray-400 dark:border-gray-600 dark:hover:bg-gray-700 whitespace-nowrap"
+                                >
+                                    <RefreshCw class="w-4 h-4 mr-2" />
+                                    Reset
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -116,8 +108,11 @@
                     class="flex flex-col"
                     style="height: 613px; min-height: 600px"
                 >
-                    <!-- Table with Scrollable Body -->
-                    <div class="flex-1 overflow-x-auto overflow-y-auto">
+                    <!-- Table with Scrollable Body - Fixed Height -->
+                    <div
+                        class="flex-1 overflow-x-auto overflow-y-auto"
+                        style="max-height: 560px"
+                    >
                         <table class="w-full">
                             <thead
                                 class="bg-gray-50 dark:bg-gray-700/50 sticky top-0 z-10"
@@ -159,7 +154,7 @@
                                 class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"
                             >
                                 <tr
-                                    v-for="notification in filteredNotifications"
+                                    v-for="notification in notifications.data"
                                     :key="notification.id"
                                     class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                                 >
@@ -204,12 +199,18 @@
                                                 </div>
                                             </div>
                                             <div class="min-w-0 flex-1">
+                                                <!-- Clickable Notification Content -->
                                                 <div
-                                                    class="flex items-start justify-between"
+                                                    class="flex items-start justify-between cursor-pointer"
+                                                    @click="
+                                                        handleNotificationClick(
+                                                            notification
+                                                        )
+                                                    "
                                                 >
                                                     <div>
                                                         <p
-                                                            class="text-sm font-medium text-gray-900 dark:text-white line-clamp-1"
+                                                            class="text-sm font-medium text-gray-900 dark:text-white line-clamp-1 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                                                         >
                                                             {{
                                                                 getNotificationTitle(
@@ -299,7 +300,7 @@
                                 </tr>
 
                                 <!-- Empty State -->
-                                <tr v-if="filteredNotifications.length === 0">
+                                <tr v-if="notifications.data.length === 0">
                                     <td
                                         colspan="4"
                                         class="px-6 py-24 text-center"
@@ -334,7 +335,7 @@
                                                     filters.search ||
                                                     filters.type
                                                 "
-                                                @click="clearFilters"
+                                                @click="resetFilters"
                                                 class="mt-2 px-4 py-2 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
                                             >
                                                 Clear all filters
@@ -346,7 +347,7 @@
                         </table>
                     </div>
 
-                    <!-- Pagination - Fixed at Bottom -->
+                    <!-- Pagination - Fixed at Bottom with 10 items info -->
                     <div
                         class="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
                     >
@@ -379,25 +380,6 @@
                                 Delete Selected
                             </button>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Pagination -->
-                <div
-                    v-if="hasMoreNotifications"
-                    class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
-                >
-                    <div class="flex items-center justify-between">
-                        <div class="text-sm text-gray-600 dark:text-gray-400">
-                            Showing {{ filteredNotifications.length }} of
-                            {{ notifications.length }} notifications
-                        </div>
-                        <button
-                            @click="loadMore"
-                            class="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-900/30 transition-colors"
-                        >
-                            Load More
-                        </button>
                     </div>
                 </div>
             </div>
@@ -654,11 +636,16 @@
                                 }}
                             </span>
                             <div class="flex items-center space-x-2">
+                                <!-- Go to Action Button -->
                                 <button
-                                    @click="closeModal"
-                                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:bg-gray-600 dark:text-gray-300 dark:border-gray-500 dark:hover:bg-gray-500 transition-colors"
+                                    v-if="
+                                        selectedNotification &&
+                                        selectedNotification.action_url
+                                    "
+                                    @click="goToAction(selectedNotification)"
+                                    class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-blue-700 rounded-md hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 transition-colors"
                                 >
-                                    Close
+                                    {{ getActionLabel(selectedNotification) }}
                                 </button>
                                 <button
                                     v-if="selectedNotification"
@@ -687,6 +674,7 @@ import { router } from "@inertiajs/vue3";
 import { pickBy, debounce } from "lodash";
 import { usePage } from "@inertiajs/vue3";
 import Swal from "sweetalert2";
+import Pagination from "@/Components/Pagination.vue";
 import {
     Search,
     RefreshCw,
@@ -703,17 +691,15 @@ import {
 const page = usePage();
 
 const props = defineProps({
-    notifications: Array,
+    notifications: Object,
     errors: Object,
     filters: Object,
 });
 
-// Reactive state - use a ref for notifications so we can update them
-const notifications = ref([...props.notifications]);
 const filters = ref({
     search: props.filters?.search || "",
     type: props.filters?.type || "",
-    sort: props.filters?.sort || "created_at",
+    sort: props.filters?.sort || "created_at", // Default to "Newest First"
 });
 
 const selectedNotifications = ref([]);
@@ -721,72 +707,97 @@ const showNotificationModal = ref(false);
 const modalVisible = ref(false);
 const selectedNotification = ref(null);
 
-// Computed properties - UPDATED FILTER LOGIC
-const filteredNotifications = computed(() => {
-    let filtered = [...notifications.value];
-
-    // Apply search filter
-    if (filters.value.search) {
-        const searchTerm = filters.value.search.toLowerCase();
-        filtered = filtered.filter(
-            (notification) =>
-                notification.type?.toLowerCase().includes(searchTerm) ||
-                notification.message?.toLowerCase().includes(searchTerm) ||
-                (notification.title &&
-                    notification.title.toLowerCase().includes(searchTerm))
-        );
-    }
-
-    // Apply type filter - UPDATED
-    if (filters.value.type) {
-        if (filters.value.type === "announcement") {
-            // Filter for announcements (check if ID starts with 'announcement_')
-            filtered = filtered.filter((n) =>
-                n.id?.startsWith("announcement_")
-            );
-        } else if (filters.value.type === "new_report") {
-            // Filter for new reports (check if ID starts with 'new_report_')
-            filtered = filtered.filter((n) => n.id?.startsWith("new_report_"));
-        } else {
-            // Filter by actual type field for other types
-            filtered = filtered.filter((n) => n.type === filters.value.type);
-        }
-    }
-
-    // Apply sorting
-    filtered.sort((a, b) => {
-        let aValue, bValue;
-
-        switch (filters.value.sort) {
-            case "created_at_asc":
-                aValue = new Date(a.created_at).getTime();
-                bValue = new Date(b.created_at).getTime();
-                return aValue - bValue;
-            case "type":
-                aValue = a.type?.toLowerCase() || "";
-                bValue = b.type?.toLowerCase() || "";
-                return aValue.localeCompare(bValue);
-            default: // 'created_at' - newest first
-                aValue = new Date(a.created_at).getTime();
-                bValue = new Date(b.created_at).getTime();
-                return bValue - aValue;
-        }
-    });
-
-    return filtered;
-});
-
+// Computed properties
 const allSelected = computed(() => {
+    const data = props.notifications.data || [];
     return (
-        filteredNotifications.value.length > 0 &&
-        selectedNotifications.value.length ===
-            filteredNotifications.value.length
+        data.length > 0 && selectedNotifications.value.length === data.length
     );
 });
 
-const hasMoreNotifications = computed(() => {
-    return false;
+const notificationCount = computed(() => {
+    return props.notifications.total || 0;
 });
+
+// Filter methods - following the same pattern as your records
+const getNotifications = () => {
+    router.get(route("admin.notifications.index"), pickBy(filters.value), {
+        preserveState: true,
+        replace: true,
+    });
+};
+
+const resetFilters = () => {
+    filters.value = {
+        search: "",
+        type: "",
+        sort: "",
+    };
+    selectedNotifications.value = [];
+    getNotifications();
+};
+
+// Watch for filter changes with debounce - same as your records
+watch(
+    () => ({
+        search: filters.value.search,
+        type: filters.value.type,
+        sort: filters.value.sort,
+    }),
+    debounce((newFilters) => {
+        getNotifications();
+    }, 300),
+    { deep: true, immediate: true }
+);
+
+// Click handler for notifications
+const handleNotificationClick = (notification) => {
+    // First mark as read if needed
+    if (notification.unread) {
+        markAsRead(notification.id);
+    }
+
+    // Then navigate to the action URL
+    if (notification.action_url) {
+        router.visit(notification.action_url);
+    } else {
+        // Fallback: open the modal
+        viewNotification(notification);
+    }
+};
+
+// Mark notification as read
+const markAsRead = async (notificationId) => {
+    try {
+        await router.post(
+            route("admin.notifications.mark-read", notificationId)
+        );
+    } catch (error) {
+        console.error("Failed to mark notification as read:", error);
+    }
+};
+
+// Go to action from modal
+const goToAction = (notification) => {
+    if (notification.action_url) {
+        closeModal();
+        router.visit(notification.action_url);
+    }
+};
+
+// Get action label for button
+const getActionLabel = (notification) => {
+    if (!notification.action_url) return "Page";
+
+    const url = notification.action_url;
+    if (url.includes("/reports")) return "Reports";
+    if (url.includes("/announcements")) return "Announcements";
+    if (url.includes("/usage")) return "Usage";
+    if (url.includes("/records")) return "Records";
+    if (url.includes("/dashboard")) return "Dashboard";
+
+    return "Page";
+};
 
 // Modal handlers
 const viewNotification = async (notification) => {
@@ -812,9 +823,7 @@ const toggleSelectAll = () => {
     if (allSelected.value) {
         selectedNotifications.value = [];
     } else {
-        selectedNotifications.value = filteredNotifications.value.map(
-            (n) => n.id
-        );
+        selectedNotifications.value = props.notifications.data.map((n) => n.id);
     }
 };
 
@@ -826,66 +835,6 @@ const toggleNotificationSelection = (notificationId) => {
         selectedNotifications.value.push(notificationId);
     }
 };
-
-// Filter methods
-const applyFilters = () => {
-    latestRequestId++;
-    debouncedFetchNotifications(filters.value, latestRequestId);
-};
-
-const clearFilters = () => {
-    filters.value = {
-        search: "",
-        type: "",
-        sort: "created_at",
-    };
-    selectedNotifications.value = [];
-    applyFilters();
-};
-
-// Data fetching
-let latestRequestId = 0;
-
-const debouncedFetchNotifications = debounce((filters, requestId) => {
-    router.get("/admin/notifications", pickBy(filters), {
-        preserveState: true,
-        replace: true,
-        onSuccess: (page) => {
-            if (requestId === latestRequestId) {
-                // Update the notifications with fresh data
-                notifications.value = [...page.props.notifications];
-            }
-        },
-        onError: (errors) => {
-            if (requestId === latestRequestId) {
-                console.error("Fetch error:", errors);
-                Swal.fire({
-                    icon: "error",
-                    title: "Error",
-                    text: "Failed to fetch notifications. Please try again.",
-                    toast: true,
-                    position: "top-end",
-                    showConfirmButton: false,
-                    timer: 3000,
-                });
-            }
-        },
-    });
-}, 300);
-
-// Watch filter changes
-watch(
-    () => ({
-        search: filters.value.search,
-        type: filters.value.type,
-        sort: filters.value.sort,
-    }),
-    (newFilters) => {
-        latestRequestId++;
-        debouncedFetchNotifications(newFilters, latestRequestId);
-    },
-    { deep: true }
-);
 
 // Notification actions
 const deleteNotification = async (notificationId) => {
@@ -901,64 +850,39 @@ const deleteNotification = async (notificationId) => {
     });
 
     if (result.isConfirmed) {
-        try {
-            await router.delete(
-                route("admin.notifications.destroy", notificationId),
-                {
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        // Remove the notification from the local state immediately
-                        const index = notifications.value.findIndex(
-                            (n) => n.id === notificationId
-                        );
-                        if (index > -1) {
-                            notifications.value.splice(index, 1);
-                        }
-
-                        // Remove from selected notifications if it's there
-                        const selectedIndex =
-                            selectedNotifications.value.indexOf(notificationId);
-                        if (selectedIndex > -1) {
-                            selectedNotifications.value.splice(
-                                selectedIndex,
-                                1
-                            );
-                        }
-
-                        // Close modal if the deleted notification is currently open
-                        if (
-                            selectedNotification.value &&
-                            selectedNotification.value.id === notificationId
-                        ) {
-                            closeModal();
-                        }
-
-                        Swal.fire({
-                            toast: true,
-                            position: "top-end",
-                            icon: "success",
-                            title: "Notification deleted",
-                            showConfirmButton: false,
-                            timer: 2000,
-                            timerProgressBar: true,
-                        });
-                    },
-                    onError: (errors) => {
-                        Swal.fire({
-                            icon: "error",
-                            title: "Error",
-                            text: "Failed to delete notification.",
-                        });
-                    },
+        router.delete(route("admin.notifications.destroy", notificationId), {
+            preserveScroll: true,
+            onSuccess: () => {
+                const selectedIndex =
+                    selectedNotifications.value.indexOf(notificationId);
+                if (selectedIndex > -1) {
+                    selectedNotifications.value.splice(selectedIndex, 1);
                 }
-            );
-        } catch (error) {
-            Swal.fire({
-                icon: "error",
-                title: "Error",
-                text: "Failed to delete notification.",
-            });
-        }
+
+                if (
+                    selectedNotification.value &&
+                    selectedNotification.value.id === notificationId
+                ) {
+                    closeModal();
+                }
+
+                Swal.fire({
+                    toast: true,
+                    position: "top-end",
+                    icon: "success",
+                    title: "Notification deleted",
+                    showConfirmButton: false,
+                    timer: 2000,
+                });
+            },
+            onError: (errors) => {
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: "Failed to delete notification.",
+                });
+            },
+        });
     }
 };
 
@@ -977,64 +901,36 @@ const bulkDelete = async () => {
     });
 
     if (result.isConfirmed) {
-        try {
-            await router.post(
-                route("admin.notifications.bulk-delete"),
-                { notification_ids: selectedNotifications.value },
-                {
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        // Remove all selected notifications from local state
-                        selectedNotifications.value.forEach(
-                            (notificationId) => {
-                                const index = notifications.value.findIndex(
-                                    (n) => n.id === notificationId
-                                );
-                                if (index > -1) {
-                                    notifications.value.splice(index, 1);
-                                }
-                            }
-                        );
-
-                        // Clear selected notifications
-                        selectedNotifications.value = [];
-
-                        Swal.fire({
-                            toast: true,
-                            position: "top-end",
-                            icon: "success",
-                            title: `${selectedNotifications.value.length} notifications deleted`,
-                            showConfirmButton: false,
-                            timer: 2000,
-                            timerProgressBar: true,
-                        });
-                    },
-                    onError: (errors) => {
-                        Swal.fire({
-                            icon: "error",
-                            title: "Error",
-                            text: "Failed to delete notifications.",
-                        });
-                    },
-                }
-            );
-        } catch (error) {
-            Swal.fire({
-                icon: "error",
-                title: "Error",
-                text: "Failed to delete notifications.",
-            });
-        }
+        router.post(
+            route("admin.notifications.bulk-delete"),
+            { notification_ids: selectedNotifications.value },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    selectedNotifications.value = [];
+                    Swal.fire({
+                        toast: true,
+                        position: "top-end",
+                        icon: "success",
+                        title: `Notifications deleted successfully`,
+                        showConfirmButton: false,
+                        timer: 2000,
+                    });
+                },
+                onError: (errors) => {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text: "Failed to delete notifications.",
+                    });
+                },
+            }
+        );
     }
 };
 
-const loadMore = () => {
-    console.log("Load more notifications");
-};
-
-// Helper functions - UPDATED
+// Helper functions
 const getNotificationIcon = (notification) => {
-    // Check notification ID first for specific types
     if (notification.id?.startsWith("announcement_")) {
         return Megaphone;
     }
@@ -1042,20 +938,17 @@ const getNotificationIcon = (notification) => {
         return UserCheck;
     }
 
-    // Then check type field
     switch (notification.type) {
-        case "alert":
+        case "records":
             return AlertTriangle;
-        case "reminder":
+        case "reports":
             return Bell;
-        case "info":
         default:
             return Bell;
     }
 };
 
 const getNotificationIconClass = (notification) => {
-    // Check notification ID first for specific types
     if (notification.id?.startsWith("announcement_")) {
         return "bg-blue-100 dark:bg-blue-900/30";
     }
@@ -1063,20 +956,17 @@ const getNotificationIconClass = (notification) => {
         return "bg-green-100 dark:bg-green-900/30";
     }
 
-    // Then check type field
     switch (notification.type) {
-        case "alert":
+        case "records":
             return "bg-orange-100 dark:bg-orange-900/30";
-        case "reminder":
-            return "bg-yellow-100 dark:bg-yellow-900/30";
-        case "info":
+        case "reports":
+            return "bg-green-100 dark:bg-green-900/30";
         default:
             return "bg-gray-100 dark:bg-gray-700";
     }
 };
 
 const getNotificationIconColor = (notification) => {
-    // Check notification ID first for specific types
     if (notification.id?.startsWith("announcement_")) {
         return "text-blue-600 dark:text-blue-400";
     }
@@ -1084,13 +974,11 @@ const getNotificationIconColor = (notification) => {
         return "text-green-600 dark:text-green-400";
     }
 
-    // Then check type field
     switch (notification.type) {
-        case "alert":
+        case "records":
             return "text-orange-600 dark:text-orange-400";
-        case "reminder":
-            return "text-yellow-600 dark:text-yellow-400";
-        case "info":
+        case "reports":
+            return "text-green-600 dark:text-green-400";
         default:
             return "text-gray-600 dark:text-gray-400";
     }
@@ -1101,7 +989,6 @@ const getNotificationTitle = (notification) => {
 };
 
 const getTypeBadgeClass = (notification) => {
-    // Check notification ID first for specific types
     if (notification.id?.startsWith("announcement_")) {
         return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
     }
@@ -1109,13 +996,11 @@ const getTypeBadgeClass = (notification) => {
         return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
     }
 
-    // Then check type field
     switch (notification.type) {
-        case "alert":
+        case "records":
             return "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200";
-        case "reminder":
-            return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
-        case "info":
+        case "reports":
+            return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
         default:
             return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300";
     }
@@ -1124,16 +1009,14 @@ const getTypeBadgeClass = (notification) => {
 const formatNotificationType = (type) => {
     if (!type) return "Unknown";
 
-    // Handle specific types with custom formatting
     const typeMap = {
-        info: "Information",
+        records: "Records",
+        reports: "Reports",
+        announcements: "Announcements",
         alert: "Alert",
         reminder: "Reminder",
-        announcement: "Announcement",
-        new_report: "New Report",
     };
 
-    // Return formatted type if found in map, otherwise format the string
     return (
         typeMap[type] ||
         type.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())
@@ -1212,5 +1095,20 @@ onUnmounted(() => {
 
 .transform {
     transition: all 0.3s ease-in-out;
+}
+
+/* Ensure table rows have consistent height */
+tbody tr {
+    height: 80px;
+}
+
+/* Make notification content clearly clickable */
+.cursor-pointer {
+    cursor: pointer;
+}
+@media (max-width: 640px) {
+    .filters-row {
+        flex-wrap: wrap;
+    }
 }
 </style>

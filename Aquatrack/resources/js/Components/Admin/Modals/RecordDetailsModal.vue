@@ -1,178 +1,340 @@
 <template>
-    <transition
-        enter-active-class="ease-out duration-300"
-        enter-from-class="opacity-0"
-        enter-to-class="opacity-100"
-        leave-active-class="ease-in duration-200"
-        leave-from-class="opacity-100"
-        leave-to-class="opacity-0"
-    >
+    <transition name="modal">
         <div v-if="show" class="fixed inset-0 z-50 overflow-y-auto">
             <!-- Overlay -->
             <div
-                class="fixed inset-0 bg-black/50 transition-opacity duration-300"
+                class="fixed inset-0 bg-black/60 transition-opacity duration-300"
                 @click="emit('close')"
             />
 
             <!-- Modal Container -->
-            <div class="flex min-h-full items-stretch p-0">
+            <div class="flex min-h-full items-center justify-center p-4">
                 <div
                     class="relative w-full transform transition-all duration-300"
+                    :class="isMaximized ? 'max-w-full h-full' : 'max-w-4xl'"
                 >
                     <div
-                        class="bg-white flex flex-col"
-                        :class="
-                            isMaximized
-                                ? 'h-screen'
-                                : 'h-[90vh] max-w-6xl mx-auto mt-8 rounded-xl shadow-2xl'
-                        "
+                        class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+                        :class="isMaximized ? 'h-screen' : 'max-h-[90vh]'"
                     >
-                        <!-- Fixed Header -->
-                        <div
-                            class="flex items-center justify-between py-4 border-b border-gray-200 flex-shrink-0 bg-white px-6"
-                        >
-                            <h2 class="text-xl font-semibold text-gray-900">
-                                Concessioner's Record Details
-                            </h2>
-                            <div class="flex items-center space-x-2">
-                                <!-- Maximize/Minimize Button -->
-                                <button
-                                    @click="toggleMaximize"
-                                    class="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-                                    :title="
-                                        isMaximized ? 'Minimize' : 'Maximize'
-                                    "
-                                >
-                                    <v-icon
-                                        :name="
+                        <!-- Header -->
+                        <div class="bg-[#062F64] px-6 py-4 flex-shrink-0">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <div>
+                                        <h2
+                                            class="text-xl font-bold text-white"
+                                        >
+                                            Concessioner's Record Details
+                                        </h2>
+                                        <p
+                                            class="text-blue-100 text-sm mt-1"
+                                            v-if="record"
+                                        >
+                                            Record ID: {{ record.id }} •
+                                            {{
+                                                formatDate(record.reading_date)
+                                            }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <!-- Maximize Button -->
+                                    <button
+                                        @click="toggleMaximize"
+                                        class="p-2 text-white hover:text-blue-200 hover:bg-white/10 rounded-lg transition-all duration-200"
+                                        :title="
                                             isMaximized
-                                                ? 'bi-fullscreen-exit'
-                                                : 'bi-fullscreen'
+                                                ? 'Minimize'
+                                                : 'Maximize'
                                         "
-                                        class="w-5 h-5"
-                                    />
-                                </button>
-                                <!-- Close Button -->
-                                <button
-                                    @click="emit('close')"
-                                    class="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-                                >
-                                    <v-icon name="bi-x-lg" class="w-5 h-5" />
-                                </button>
+                                    >
+                                        <component
+                                            :is="
+                                                isMaximized
+                                                    ? Minimize2Icon
+                                                    : Maximize2Icon
+                                            "
+                                            class="w-5 h-5"
+                                        />
+                                    </button>
+                                    <!-- Close Button -->
+                                    <button
+                                        @click="emit('close')"
+                                        class="p-2 text-white hover:text-blue-200 hover:bg-white/10 rounded-lg transition-all duration-200"
+                                    >
+                                        <component
+                                            :is="XIcon"
+                                            class="w-5 h-5"
+                                        />
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
                         <!-- Loading State -->
                         <div
                             v-if="loading"
-                            class="flex-1 flex items-center justify-center"
+                            class="flex-1 flex items-center justify-center py-16"
                         >
                             <div class="text-center">
                                 <div
-                                    class="w-10 h-10 border-3 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"
+                                    class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"
                                 ></div>
-                                <p class="text-gray-500">
+                                <p
+                                    class="text-gray-600 dark:text-gray-400 font-medium"
+                                >
                                     Loading record details...
                                 </p>
                             </div>
                         </div>
 
-                        <!-- Scrollable Content -->
+                        <!-- Content -->
                         <div
                             v-else-if="record"
                             class="flex-1 overflow-y-auto p-6"
+                            :class="isMaximized ? 'p-8' : ''"
                         >
-                            <div class="space-y-6 max-w-7xl mx-auto">
-                                <!-- Status and Info Badges -->
-                                <div class="flex flex-wrap gap-4">
+                            <div
+                                class="space-y-6"
+                                :class="isMaximized ? 'w-full' : ''"
+                            >
+                                <!-- Status Banner -->
+                                <div
+                                    class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-6 border border-blue-100 dark:border-blue-800"
+                                >
                                     <div
-                                        class="flex items-center bg-gray-50 px-4 py-3 rounded-lg border border-gray-200"
+                                        class="flex items-center justify-between"
                                     >
-                                        <v-icon
-                                            name="bi-circle-fill"
-                                            class="w-5 h-5 text-blue-500 mr-2"
-                                        />
-                                        <span
-                                            class="text-base font-medium text-gray-700"
-                                            >Record ID: {{ record.id }}</span
+                                        <div
+                                            class="flex items-center space-x-4"
                                         >
-                                    </div>
-                                    <span
-                                        class="px-4 py-3 text-base font-semibold rounded-lg border"
-                                        :class="statusClass"
-                                    >
-                                        {{ statusLabel }}
-                                    </span>
-                                    <div
-                                        class="flex items-center bg-gray-50 px-4 py-3 rounded-lg border border-gray-200"
-                                    >
-                                        <v-icon
-                                            name="bi-calendar"
-                                            class="w-5 h-5 text-gray-500 mr-2"
-                                        />
-                                        <span class="text-base text-gray-700">
-                                            {{
-                                                formatDate(record.reading_date)
-                                            }}
-                                        </span>
+                                            <div
+                                                class="flex items-center space-x-3"
+                                            >
+                                                <!-- User Avatar -->
+                                                <div
+                                                    class="w-12 h-12 rounded-full border-2 border-white dark:border-gray-800 shadow-lg overflow-hidden bg-white"
+                                                >
+                                                    <img
+                                                        v-if="
+                                                            record.user
+                                                                .avatar_url
+                                                        "
+                                                        :src="
+                                                            record.user
+                                                                .avatar_url
+                                                        "
+                                                        :alt="record.user.name"
+                                                        class="w-full h-full object-cover"
+                                                    />
+                                                    <div
+                                                        v-else
+                                                        class="w-full h-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg"
+                                                    >
+                                                        {{
+                                                            getUserInitials(
+                                                                record.user
+                                                            )
+                                                        }}
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <p
+                                                        class="text-sm text-gray-500 dark:text-gray-400"
+                                                    >
+                                                        Customer
+                                                    </p>
+                                                    <p
+                                                        class="text-lg font-semibold text-gray-900 dark:text-white"
+                                                    >
+                                                        {{ record.user.name }}
+                                                        {{
+                                                            record.user.lastname
+                                                        }}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div
+                                                class="h-8 w-px bg-gray-300 dark:bg-gray-600"
+                                            ></div>
+                                            <div
+                                                class="flex items-center space-x-3"
+                                            >
+                                                <div
+                                                    class="p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm"
+                                                >
+                                                    <v-icon
+                                                        name="bi-cash-coin"
+                                                        class="text-green-600 dark:text-green-400 w-6 h-6"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <p
+                                                        class="text-sm text-gray-500 dark:text-gray-400"
+                                                    >
+                                                        Total Amount
+                                                    </p>
+                                                    <p
+                                                        class="text-lg font-semibold text-gray-900 dark:text-white"
+                                                    >
+                                                        ₱{{ totalAmount }}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            <span
+                                                class="px-4 py-2.5 text-sm font-semibold rounded-full border shadow-sm"
+                                                :class="statusClass"
+                                            >
+                                                {{ statusLabel }}
+                                            </span>
+                                            <p
+                                                class="text-sm text-gray-500 dark:text-gray-400 mt-4"
+                                            >
+                                                {{ getDaysStatus }}
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <!-- Main Grid Layout -->
+                                <!-- Main Grid -->
                                 <div
-                                    class="grid grid-cols-1 xl:grid-cols-2 gap-8"
+                                    class="grid grid-cols-1 xl:grid-cols-2 gap-6"
+                                    :class="isMaximized ? 'gap-8' : ''"
                                 >
                                     <!-- Left Column -->
-                                    <div class="space-y-8">
+                                    <div
+                                        class="space-y-6"
+                                        :class="isMaximized ? 'space-y-8' : ''"
+                                    >
                                         <!-- Customer Information -->
                                         <div
-                                            class="bg-white border border-gray-200 rounded-xl shadow-sm"
+                                            class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm"
                                         >
                                             <div
-                                                class="bg-gray-50 px-6 py-4 border-b border-gray-200"
+                                                class="bg-gray-50 dark:bg-gray-700/50 px-6 py-4 border-b border-gray-200 dark:border-gray-600"
                                             >
                                                 <h3
-                                                    class="text-lg font-semibold text-gray-900 flex items-center"
+                                                    class="text-lg font-semibold text-gray-900 dark:text-white flex items-center"
                                                 >
                                                     <v-icon
-                                                        name="bi-person"
-                                                        class="w-5 h-5 text-blue-600 mr-2"
+                                                        name="bi-person-circle"
+                                                        class="w-5 h-5 text-blue-600 dark:text-blue-400 mr-2"
                                                     />
                                                     Customer Information
                                                 </h3>
                                             </div>
-                                            <div class="p-6 space-y-4">
+                                            <div
+                                                class="p-6 space-y-4"
+                                                :class="
+                                                    isMaximized
+                                                        ? 'p-8 space-y-6'
+                                                        : ''
+                                                "
+                                            >
                                                 <div
-                                                    class="grid grid-cols-1 gap-4"
+                                                    class="flex justify-center items-center p-6"
                                                 >
-                                                    <div>
-                                                        <label
-                                                            class="text-sm text-gray-500 font-medium"
-                                                            >Full Name</label
-                                                        >
-                                                        <p
-                                                            class="text-base font-medium text-gray-900 mt-2"
-                                                        >
-                                                            {{
-                                                                record.user.name
-                                                            }}
-                                                            {{
+                                                    <div
+                                                        class="w-24 h-24 rounded-full border-2 border-white dark:border-gray-800 shadow-md overflow-hidden bg-white flex items-center justify-center"
+                                                    >
+                                                        <img
+                                                            v-if="
                                                                 record.user
-                                                                    .lastname
+                                                                    .avatar_url
+                                                            "
+                                                            :src="
+                                                                record.user
+                                                                    .avatar_url
+                                                            "
+                                                            :alt="
+                                                                record.user.name
+                                                            "
+                                                            class="w-full h-full object-cover rounded-full"
+                                                        />
+                                                        <div
+                                                            v-else
+                                                            class="w-full h-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xl rounded-full"
+                                                        >
+                                                            {{
+                                                                getUserInitials(
+                                                                    record.user
+                                                                )
                                                             }}
-                                                        </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div
+                                                    class="grid grid-cols-1 md:grid-cols-2 gap-4"
+                                                    :class="
+                                                        isMaximized
+                                                            ? 'gap-6'
+                                                            : ''
+                                                    "
+                                                >
+                                                    <div
+                                                        class="flex items-start space-x-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg"
+                                                    >
+                                                        <div
+                                                            class="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg"
+                                                        >
+                                                            <v-icon
+                                                                name="bi-person-badge"
+                                                                class="text-blue-600 dark:text-blue-400 w-4 h-4"
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <p
+                                                                class="text-sm text-gray-500 dark:text-gray-400"
+                                                            >
+                                                                Full Name
+                                                            </p>
+                                                            <p
+                                                                class="font-medium text-gray-900 dark:text-white"
+                                                                :class="
+                                                                    isMaximized
+                                                                        ? 'text-base'
+                                                                        : ''
+                                                                "
+                                                            >
+                                                                {{
+                                                                    record.user
+                                                                        .name
+                                                                }}
+                                                                {{
+                                                                    record.user
+                                                                        .lastname
+                                                                }}
+                                                            </p>
+                                                        </div>
                                                     </div>
                                                     <div
-                                                        class="grid grid-cols-2 gap-4"
+                                                        class="flex items-start space-x-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg"
                                                     >
+                                                        <div
+                                                            class="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg"
+                                                        >
+                                                            <v-icon
+                                                                name="bi-credit-card"
+                                                                class="text-blue-600 dark:text-blue-400 w-4 h-4"
+                                                            />
+                                                        </div>
                                                         <div>
-                                                            <label
-                                                                class="text-sm text-gray-500 font-medium"
-                                                                >Account
-                                                                Number</label
-                                                            >
                                                             <p
-                                                                class="text-base font-medium text-gray-900 mt-2"
+                                                                class="text-sm text-gray-500 dark:text-gray-400"
+                                                            >
+                                                                Account Number
+                                                            </p>
+                                                            <p
+                                                                class="font-medium text-gray-900 dark:text-white"
+                                                                :class="
+                                                                    isMaximized
+                                                                        ? 'text-base'
+                                                                        : ''
+                                                                "
                                                             >
                                                                 {{
                                                                     record.user
@@ -180,14 +342,31 @@
                                                                 }}
                                                             </p>
                                                         </div>
+                                                    </div>
+                                                    <div
+                                                        class="flex items-start space-x-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg"
+                                                    >
+                                                        <div
+                                                            class="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg"
+                                                        >
+                                                            <v-icon
+                                                                name="bi-upc-scan"
+                                                                class="text-blue-600 dark:text-blue-400 w-4 h-4"
+                                                            />
+                                                        </div>
                                                         <div>
-                                                            <label
-                                                                class="text-sm text-gray-500 font-medium"
-                                                                >Serial
-                                                                Number</label
-                                                            >
                                                             <p
-                                                                class="text-base font-medium text-gray-900 mt-2"
+                                                                class="text-sm text-gray-500 dark:text-gray-400"
+                                                            >
+                                                                Serial Number
+                                                            </p>
+                                                            <p
+                                                                class="font-medium text-gray-900 dark:text-white"
+                                                                :class="
+                                                                    isMaximized
+                                                                        ? 'text-base'
+                                                                        : ''
+                                                                "
                                                             >
                                                                 {{
                                                                     record.user
@@ -196,13 +375,64 @@
                                                             </p>
                                                         </div>
                                                     </div>
-                                                    <div>
-                                                        <label
-                                                            class="text-sm text-gray-500 font-medium"
-                                                            >Address</label
+                                                    <div
+                                                        class="flex items-start space-x-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg"
+                                                    >
+                                                        <div
+                                                            class="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg"
                                                         >
+                                                            <v-icon
+                                                                name="bi-telephone"
+                                                                class="text-blue-600 dark:text-blue-400 w-4 h-4"
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <p
+                                                                class="text-sm text-gray-500 dark:text-gray-400"
+                                                            >
+                                                                Contact Number
+                                                            </p>
+                                                            <p
+                                                                class="font-medium text-gray-900 dark:text-white"
+                                                                :class="
+                                                                    isMaximized
+                                                                        ? 'text-base'
+                                                                        : ''
+                                                                "
+                                                            >
+                                                                {{
+                                                                    record.user
+                                                                        .phone ||
+                                                                    "N/A"
+                                                                }}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div
+                                                    class="flex items-start space-x-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg"
+                                                >
+                                                    <div
+                                                        class="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg"
+                                                    >
+                                                        <v-icon
+                                                            name="bi-geo-alt"
+                                                            class="text-blue-600 dark:text-blue-400 w-4 h-4"
+                                                        />
+                                                    </div>
+                                                    <div class="flex-1">
                                                         <p
-                                                            class="text-base font-medium text-gray-900 mt-2"
+                                                            class="text-sm text-gray-500 dark:text-gray-400"
+                                                        >
+                                                            Address
+                                                        </p>
+                                                        <p
+                                                            class="font-medium text-gray-900 dark:text-white"
+                                                            :class="
+                                                                isMaximized
+                                                                    ? 'text-base'
+                                                                    : ''
+                                                            "
                                                         >
                                                             {{
                                                                 record.user
@@ -222,133 +452,179 @@
                                                             }}
                                                         </p>
                                                     </div>
-                                                    <div
-                                                        class="grid grid-cols-2 gap-4"
-                                                    >
-                                                        <div>
-                                                            <label
-                                                                class="text-sm text-gray-500 font-medium"
-                                                                >Contact
-                                                                Number</label
-                                                            >
-                                                            <p
-                                                                class="text-base font-medium text-gray-900 mt-2"
-                                                            >
-                                                                {{
-                                                                    record.user
-                                                                        .phone ||
-                                                                    "N/A"
-                                                                }}
-                                                            </p>
-                                                        </div>
-                                                        <div>
-                                                            <label
-                                                                class="text-sm text-gray-500 font-medium"
-                                                                >Email</label
-                                                            >
-                                                            <p
-                                                                class="text-base font-medium text-gray-900 mt-2"
-                                                            >
-                                                                {{
-                                                                    record.user
-                                                                        .email ||
-                                                                    "N/A"
-                                                                }}
-                                                            </p>
-                                                        </div>
-                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
 
                                     <!-- Right Column -->
-                                    <div class="space-y-8">
+                                    <div
+                                        class="space-y-6"
+                                        :class="isMaximized ? 'space-y-8' : ''"
+                                    >
                                         <!-- Reading Information -->
                                         <div
-                                            class="bg-white border border-gray-200 rounded-xl shadow-sm"
+                                            class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm"
                                         >
                                             <div
-                                                class="bg-gray-50 px-6 py-4 border-b border-gray-200"
+                                                class="bg-gray-50 dark:bg-gray-700/50 px-6 py-4 border-b border-gray-200 dark:border-gray-600"
                                             >
                                                 <h3
-                                                    class="text-lg font-semibold text-gray-900 flex items-center"
+                                                    class="text-lg font-semibold text-gray-900 dark:text-white flex items-center"
                                                 >
                                                     <v-icon
                                                         name="bi-speedometer2"
-                                                        class="w-5 h-5 text-blue-600 mr-2"
+                                                        class="w-5 h-5 text-green-600 dark:text-green-400 mr-2"
                                                     />
                                                     Reading Information
                                                 </h3>
                                             </div>
-                                            <div class="p-6 space-y-4">
+                                            <div
+                                                class="p-6"
+                                                :class="
+                                                    isMaximized ? 'p-8' : ''
+                                                "
+                                            >
                                                 <div
                                                     class="grid grid-cols-2 gap-4"
+                                                    :class="
+                                                        isMaximized
+                                                            ? 'gap-6'
+                                                            : ''
+                                                    "
                                                 >
-                                                    <div>
-                                                        <label
-                                                            class="text-sm text-gray-500 font-medium"
-                                                            >Reading Date</label
+                                                    <div
+                                                        class="flex items-start space-x-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg"
+                                                    >
+                                                        <div
+                                                            class="p-2 bg-green-100 dark:bg-green-900 rounded-lg"
                                                         >
-                                                        <p
-                                                            class="text-base font-medium text-gray-900 mt-2"
-                                                        >
-                                                            {{
-                                                                formatDate(
-                                                                    record.reading_date
-                                                                )
-                                                            }}
-                                                        </p>
+                                                            <v-icon
+                                                                name="bi-calendar-check"
+                                                                class="text-green-600 dark:text-green-400 w-4 h-4"
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <p
+                                                                class="text-sm text-gray-500 dark:text-gray-400"
+                                                            >
+                                                                Reading Date
+                                                            </p>
+                                                            <p
+                                                                class="font-medium text-gray-900 dark:text-white"
+                                                                :class="
+                                                                    isMaximized
+                                                                        ? 'text-base'
+                                                                        : ''
+                                                                "
+                                                            >
+                                                                {{
+                                                                    formatDate(
+                                                                        record.reading_date
+                                                                    )
+                                                                }}
+                                                            </p>
+                                                        </div>
                                                     </div>
-                                                    <div>
-                                                        <label
-                                                            class="text-sm text-gray-500 font-medium"
-                                                            >Due Date</label
+                                                    <div
+                                                        class="flex items-start space-x-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg"
+                                                    >
+                                                        <div
+                                                            class="p-2 bg-green-100 dark:bg-green-900 rounded-lg"
                                                         >
-                                                        <p
-                                                            class="text-base font-medium text-gray-900 mt-2"
-                                                            :class="{
-                                                                'text-red-600':
-                                                                    record.status ===
-                                                                        'Overdue' &&
-                                                                    surcharge,
-                                                            }"
-                                                        >
-                                                            {{
-                                                                formatDate(
-                                                                    record.due_date
-                                                                )
-                                                            }}
-                                                        </p>
+                                                            <v-icon
+                                                                name="bi-calendar-x"
+                                                                class="text-green-600 dark:text-green-400 w-4 h-4"
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <p
+                                                                class="text-sm text-gray-500 dark:text-gray-400"
+                                                            >
+                                                                Due Date
+                                                            </p>
+                                                            <p
+                                                                class="font-medium text-gray-900 dark:text-white"
+                                                                :class="{
+                                                                    'text-red-600':
+                                                                        record.status ===
+                                                                            'Overdue' &&
+                                                                        surcharge,
+                                                                    'text-base':
+                                                                        isMaximized,
+                                                                }"
+                                                            >
+                                                                {{
+                                                                    formatDate(
+                                                                        record.due_date
+                                                                    )
+                                                                }}
+                                                            </p>
+                                                        </div>
                                                     </div>
-                                                    <div>
-                                                        <label
-                                                            class="text-sm text-gray-500 font-medium"
-                                                            >Current
-                                                            Reading</label
+                                                    <div
+                                                        class="flex items-start space-x-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg"
+                                                    >
+                                                        <div
+                                                            class="p-2 bg-green-100 dark:bg-green-900 rounded-lg"
                                                         >
-                                                        <p
-                                                            class="text-base font-medium text-gray-900 mt-2"
-                                                        >
-                                                            {{
-                                                                record.reading
-                                                            }}
-                                                            m³
-                                                        </p>
+                                                            <v-icon
+                                                                name="bi-water"
+                                                                class="text-green-600 dark:text-green-400 w-4 h-4"
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <p
+                                                                class="text-sm text-gray-500 dark:text-gray-400"
+                                                            >
+                                                                Current Reading
+                                                            </p>
+                                                            <p
+                                                                class="font-medium text-gray-900 dark:text-white"
+                                                                :class="
+                                                                    isMaximized
+                                                                        ? 'text-base'
+                                                                        : ''
+                                                                "
+                                                            >
+                                                                {{
+                                                                    record.reading
+                                                                }}
+                                                                m³
+                                                            </p>
+                                                        </div>
                                                     </div>
-                                                    <div>
-                                                        <label
-                                                            class="text-sm text-gray-500 font-medium"
-                                                            >Consumption</label
+                                                    <div
+                                                        class="flex items-start space-x-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg"
+                                                    >
+                                                        <div
+                                                            class="p-2 bg-green-100 dark:bg-green-900 rounded-lg"
                                                         >
-                                                        <p
-                                                            class="text-base font-medium text-gray-900 mt-2"
-                                                        >
-                                                            {{
-                                                                record.consumption
-                                                            }}
-                                                            m³
-                                                        </p>
+                                                            <v-icon
+                                                                name="bi-graph-up"
+                                                                class="text-green-600 dark:text-green-400 w-4 h-4"
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <p
+                                                                class="text-sm text-gray-500 dark:text-gray-400"
+                                                            >
+                                                                Consumption
+                                                            </p>
+                                                            <p
+                                                                class="font-medium text-gray-900 dark:text-white"
+                                                                :class="
+                                                                    isMaximized
+                                                                        ? 'text-base'
+                                                                        : ''
+                                                                "
+                                                            >
+                                                                {{
+                                                                    record.consumption
+                                                                }}
+                                                                m³
+                                                            </p>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -356,123 +632,100 @@
 
                                         <!-- Payment Information -->
                                         <div
-                                            class="bg-white border border-gray-200 rounded-xl shadow-sm"
+                                            class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm"
                                         >
                                             <div
-                                                class="bg-gray-50 px-6 py-4 border-b border-gray-200"
+                                                class="bg-gray-50 dark:bg-gray-700/50 px-6 py-4 border-b border-gray-200 dark:border-gray-600"
                                             >
                                                 <h3
-                                                    class="text-lg font-semibold text-gray-900 flex items-center"
+                                                    class="text-lg font-semibold text-gray-900 dark:text-white flex items-center"
                                                 >
                                                     <v-icon
-                                                        name="bi-cash-coin"
-                                                        class="w-5 h-5 text-blue-600 mr-2"
+                                                        name="bi-cash-stack"
+                                                        class="w-5 h-5 text-purple-600 dark:text-purple-400 mr-2"
                                                     />
                                                     Payment Information
                                                 </h3>
                                             </div>
-                                            <div class="p-6 space-y-4">
+                                            <div
+                                                class="p-6"
+                                                :class="
+                                                    isMaximized ? 'p-8' : ''
+                                                "
+                                            >
                                                 <div
-                                                    class="grid grid-cols-2 gap-4"
+                                                    class="space-y-4"
+                                                    :class="
+                                                        isMaximized
+                                                            ? 'space-y-6'
+                                                            : ''
+                                                    "
                                                 >
-                                                    <div>
-                                                        <label
-                                                            class="text-sm text-gray-500 font-medium"
-                                                            >Base Amount</label
-                                                        >
-                                                        <p
-                                                            class="text-base font-medium text-gray-900 mt-2"
-                                                        >
-                                                            ₱{{ record.amount }}
-                                                        </p>
-                                                    </div>
                                                     <div
                                                         v-if="
                                                             surcharge &&
                                                             record.status !==
                                                                 'Paid'
                                                         "
+                                                        class="flex items-center justify-between p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800"
                                                     >
-                                                        <label
-                                                            class="text-sm text-gray-500 font-medium"
-                                                            >Surcharge</label
+                                                        <div
+                                                            class="flex items-center space-x-3"
                                                         >
-                                                        <p
-                                                            class="text-base font-medium text-red-600 mt-2"
-                                                        >
-                                                            ₱{{ surcharge }}
-                                                        </p>
-                                                    </div>
-                                                    <div class="col-span-2">
-                                                        <label
-                                                            class="text-sm text-gray-500 font-medium"
-                                                            >Total Amount</label
-                                                        >
-                                                        <p
-                                                            class="text-2xl font-bold text-gray-900 mt-2"
-                                                        >
-                                                            ₱{{ totalAmount }}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Status Information -->
-                                        <div
-                                            class="bg-white border border-gray-200 rounded-xl shadow-sm"
-                                        >
-                                            <div
-                                                class="bg-gray-50 px-6 py-4 border-b border-gray-200"
-                                            >
-                                                <h3
-                                                    class="text-lg font-semibold text-gray-900 flex items-center"
-                                                >
-                                                    <v-icon
-                                                        name="bi-info-circle"
-                                                        class="w-5 h-5 text-blue-600 mr-2"
-                                                    />
-                                                    Status Information
-                                                </h3>
-                                            </div>
-                                            <div class="p-6 space-y-4">
-                                                <div
-                                                    class="grid grid-cols-2 gap-4"
-                                                >
-                                                    <div>
-                                                        <label
-                                                            class="text-sm text-gray-500 font-medium"
-                                                            >Payment
-                                                            Status</label
-                                                        >
-                                                        <div class="mt-2">
-                                                            <span
-                                                                class="px-3 py-1.5 text-sm font-semibold rounded-full"
-                                                                :class="
-                                                                    statusClass
-                                                                "
+                                                            <div
+                                                                class="p-2 bg-white dark:bg-gray-800 rounded-lg"
                                                             >
-                                                                {{
-                                                                    statusLabel
-                                                                }}
-                                                            </span>
+                                                                <v-icon
+                                                                    name="bi-exclamation-triangle"
+                                                                    class="text-red-600 dark:text-red-400 w-5 h-5"
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <p
+                                                                    class="text-sm text-gray-500 dark:text-gray-400"
+                                                                >
+                                                                    Surcharge
+                                                                </p>
+                                                                <p
+                                                                    class="text-lg font-semibold text-red-600 dark:text-red-400"
+                                                                >
+                                                                    ₱{{
+                                                                        surcharge
+                                                                    }}
+                                                                </p>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                    <div>
-                                                        <label
-                                                            class="text-sm text-gray-500 font-medium"
-                                                            >Days Status</label
+
+                                                    <div
+                                                        class="flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg border border-green-200 dark:border-green-800"
+                                                    >
+                                                        <div
+                                                            class="flex items-center space-x-3"
                                                         >
-                                                        <p
-                                                            class="text-base font-medium text-gray-900 mt-2"
-                                                            :class="{
-                                                                'text-red-600':
-                                                                    record.status ===
-                                                                    'Overdue',
-                                                            }"
-                                                        >
-                                                            {{ getDaysStatus }}
-                                                        </p>
+                                                            <div
+                                                                class="p-2 bg-white dark:bg-gray-800 rounded-lg"
+                                                            >
+                                                                <v-icon
+                                                                    name="bi-receipt"
+                                                                    class="text-green-600 dark:text-green-400 w-5 h-5"
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <p
+                                                                    class="text-sm text-gray-500 dark:text-gray-400"
+                                                                >
+                                                                    Total Amount
+                                                                </p>
+                                                                <p
+                                                                    class="text-2xl font-bold text-gray-900 dark:text-white"
+                                                                >
+                                                                    ₱{{
+                                                                        totalAmount
+                                                                    }}
+                                                                </p>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -480,20 +733,6 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- Fixed Footer -->
-                        <div
-                            class="border-t border-gray-200 px-6 py-4 bg-gray-50 flex justify-end flex-shrink-0"
-                        >
-                            <button
-                                @click="emit('close')"
-                                type="button"
-                                class="inline-flex items-center px-5 py-2 border border-gray-300 shadow-sm text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-                            >
-                                <v-icon name="bi-x-lg" class="mr-2" />
-                                Close
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -504,6 +743,7 @@
 
 <script setup>
 import { ref, computed } from "vue";
+import { XIcon, Maximize2Icon, Minimize2Icon } from "lucide-vue-next";
 
 const props = defineProps({
     show: {
@@ -528,17 +768,19 @@ const isMaximized = ref(false);
 // Computed Properties
 const statusClass = computed(() => {
     if (!props.record?.status)
-        return "bg-gray-100 text-gray-800 border-gray-200";
+        return "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600";
 
     const classes = {
-        paid: "bg-green-100 text-green-800 border-green-200",
-        pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
-        overdue: "bg-red-100 text-red-800 border-red-200",
+        paid: "bg-green-100 text-green-800 border-green-200 dark:bg-green-900 dark:text-green-200 dark:border-green-700",
+        pending:
+            "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900 dark:text-yellow-200 dark:border-yellow-700",
+        overdue:
+            "bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:text-red-200 dark:border-red-700",
     };
 
     return (
         classes[props.record.status.toLowerCase()] ||
-        "bg-gray-100 text-gray-800 border-gray-200"
+        "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600"
     );
 });
 
@@ -564,6 +806,9 @@ const totalAmount = computed(() => {
 });
 
 const getDaysStatus = computed(() => {
+    // Don't show due date status if record is paid
+    if (props.record?.status === "Paid") return "Payment Completed";
+
     if (!props.record?.due_date) return "N/A";
 
     const dueDate = new Date(props.record.due_date);
@@ -592,4 +837,202 @@ const formatDate = (dateString) => {
     const options = { year: "numeric", month: "long", day: "numeric" };
     return new Date(dateString).toLocaleDateString(undefined, options);
 };
+
+const getUserInitials = (user) => {
+    if (!user?.name) return "?";
+    return user.name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .substring(0, 2);
+};
 </script>
+
+<style scoped>
+/* Smooth modal transitions */
+.modal-enter-active,
+.modal-leave-active {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modal-enter-from {
+    opacity: 0;
+}
+
+.modal-leave-to {
+    opacity: 0;
+}
+
+.modal-enter-active .modal-container,
+.modal-leave-active .modal-container {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modal-enter-from .modal-container {
+    opacity: 0;
+    transform: scale(0.95) translateY(-20px);
+}
+
+.modal-leave-to .modal-container {
+    opacity: 0;
+    transform: scale(0.95) translateY(20px);
+}
+
+/* Backdrop transition */
+.modal-enter-active .backdrop,
+.modal-leave-active .backdrop {
+    transition: opacity 0.3s ease;
+}
+
+.modal-enter-from .backdrop,
+.modal-leave-to .backdrop {
+    opacity: 0;
+}
+
+/* Content slide-in animation */
+.content-enter-active {
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.1s;
+}
+
+.content-enter-from {
+    opacity: 0;
+    transform: translateY(30px);
+}
+
+/* Form elements stagger animation */
+.form-item {
+    transition: all 0.3s ease;
+}
+
+.modal-enter-active .form-item:nth-child(1) {
+    transition-delay: 0.1s;
+}
+.modal-enter-active .form-item:nth-child(2) {
+    transition-delay: 0.15s;
+}
+.modal-enter-active .form-item:nth-child(3) {
+    transition-delay: 0.2s;
+}
+.modal-enter-active .form-item:nth-child(4) {
+    transition-delay: 0.25s;
+}
+.modal-enter-active .form-item:nth-child(5) {
+    transition-delay: 0.3s;
+}
+
+/* Maximize transition */
+.maximize-enter-active,
+.maximize-leave-active {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.maximize-enter-from,
+.maximize-leave-to {
+    opacity: 0;
+    transform: scale(0.9);
+}
+
+/* Password preview fade transition */
+.fade-enter-active,
+.fade-leave-active {
+    transition: all 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
+    transform: translateY(-10px);
+}
+
+/* Custom scrollbar */
+.overflow-y-auto {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+.overflow-y-auto::-webkit-scrollbar {
+    width: 6px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 10px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Dark mode scrollbar */
+.dark .overflow-y-auto {
+    scrollbar-color: #475569 #1e293b;
+}
+
+.dark .overflow-y-auto::-webkit-scrollbar-track {
+    background: #1e293b;
+}
+
+.dark .overflow-y-auto::-webkit-scrollbar-thumb {
+    background: #475569;
+}
+
+.dark .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
+
+/* Remove default select arrow in some browsers */
+select {
+    background-image: none;
+}
+
+/* Smooth button hover effects */
+button {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Input focus animations */
+input:focus,
+select:focus {
+    transition: all 0.2s ease;
+}
+
+/* Radio button selection animation */
+input[type="radio"]:checked + div {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Loading spinner animation */
+@keyframes spin-slow {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.animate-spin-slow {
+    animation: spin-slow 1.5s linear infinite;
+}
+
+/* Pulse animation for loading states */
+@keyframes pulse-subtle {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.animate-pulse-subtle {
+    animation: pulse-subtle 2s ease-in-out infinite;
+}
+</style>

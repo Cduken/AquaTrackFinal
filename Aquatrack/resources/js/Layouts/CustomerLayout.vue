@@ -44,6 +44,8 @@
             <slot />
         </main>
     </div>
+
+
 </template>
 
 <script setup>
@@ -67,6 +69,11 @@ const customerLinks = [
         name: "Announcements",
         url: "/customer/announcements",
         icon: "bi-megaphone-fill",
+    },
+    {
+        name: "Notifications",
+        url: "/customer/notifications",
+        icon: "hi-bell",
     },
 ];
 

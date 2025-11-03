@@ -112,15 +112,20 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/activity-logs', [AdminActivityLogController::class, 'index'])->name('admin.activity-logs');
     Route::get('/activity-logs/export', [AdminActivityLogController::class, 'export'])->name('admin.activity-logs.export');
 
-    Route::get('/admin/notifications', [NotificationController::class, 'adminIndex'])->name('admin.notifications');
+    Route::get('/admin/notifications', [NotificationController::class, 'adminIndex'])->name('admin.notifications.index');
     // ADD THESE NOTIFICATION DELETE ROUTES:
     Route::delete('/admin/notifications/{id}', [NotificationController::class, 'destroy'])->name('admin.notifications.destroy');
     Route::post('/admin/notifications/bulk-delete', [NotificationController::class, 'bulkDelete'])->name('admin.notifications.bulk-delete');
+
+    // Admin report merging routes
+    Route::get('/admin/reports/mergeable', [NotificationController::class, 'getMergeableReports'])->name('admin.reports.mergeable');
+    Route::post('/admin/reports/merge', [NotificationController::class, 'mergeReports'])->name('admin.reports.merge');
 
 
     Route::delete('/customer/notifications/{id}', [NotificationController::class, 'destroy'])->name('customer.notifications.destroy');
 
 
+    Route::post('/admin/notifications/{id}/mark-read', [NotificationController::class, 'markAsRead'])->name('admin.notifications.mark-read');
     Route::post('/notifications/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
     Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
     Route::get('/notifications', [NotificationController::class, 'index']);

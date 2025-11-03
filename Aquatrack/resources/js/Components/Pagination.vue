@@ -1,7 +1,7 @@
 <!-- Components/Pagination.vue -->
 <template>
     <div
-        class="border-t border-gray-200 dark:border-gray-700 px-6 py-2"
+        class="border-t border-gray-200 dark:border-gray-700 px-6 py-3"
         v-if="data && data.data && data.data.length > 0"
     >
         <div class="flex items-center justify-between">

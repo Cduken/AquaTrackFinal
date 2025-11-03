@@ -1,232 +1,277 @@
 <template>
-    <!-- Single transition wrapper for both overlay and panel -->
     <transition name="modal">
-        <div v-if="show" class="fixed inset-0 z-[1000] overflow-hidden">
-            <!-- Overlay -->
+        <div v-if="show" class="fixed inset-0 z-[1000] overflow-y-auto">
+            <!-- Backdrop -->
             <div
-                class="absolute inset-0 bg-black/50 transition-opacity duration-300"
+                class="absolute inset-0 bg-black/60 transition-opacity duration-300"
                 @click="emit('close')"
             ></div>
-
-            <!-- Sliding panel container -->
-            <div
-                class="fixed inset-y-0 right-0 w-full max-w-2xl flex"
-                :class="{ 'max-w-full': isMaximized }"
-            >
-                <!-- Panel with transform class for animation -->
+            <!-- Modal Container -->
+            <div class="flex min-h-full items-center justify-center p-4">
+                <!-- Modal Panel -->
                 <div
-                    class="relative w-full h-full transform transition-transform duration-300 ease-in-out"
+                    class="relative w-full transform transition-all duration-300"
+                    :class="isMaximized ? 'max-w-full h-full' : 'max-w-4xl'"
                 >
-                    <div class="h-full flex flex-col bg-white shadow-xl">
+                    <div
+                        class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+                        :class="
+                            isMaximized
+                                ? 'h-screen w-full'
+                                : 'max-h-[90vh] w-full'
+                        "
+                    >
                         <!-- Header -->
-                        <div
-                            class="flex items-center justify-between px-4 py-4 border-b "
-                        >
-                            <div class="flex items-center space-x-2">
-                                <v-icon
-                                    name="bi-person"
-                                    class="text-amber-300"
-                                    scale="1.5"
-                                />
-                                <span class="text-black font-md text-xl"
-                                    >User Details</span
-                                >
-                            </div>
-                            <div class="flex items-center space-x-2">
-                                <!-- Maximize/Minimize Button -->
-                                <button
-                                    @click="toggleMaximize"
-                                    class="text-white hover:text-gray-200 transition-colors duration-200 p-1 rounded-full hover:bg-white/10"
-                                    :title="
-                                        isMaximized ? 'Minimize' : 'Maximize'
-                                    "
-                                >
-                                    <v-icon
-                                        :name="
+                        <div class="relative px-4 py-4 border-b">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="p-2.5 bg-blue-100 rounded-xl">
+                                        <v-icon
+                                            name="bi-person"
+                                            class="text-blue-600"
+                                            scale="1.2"
+                                        />
+                                    </div>
+                                    <div>
+                                        <h2
+                                            class="text-xl font-semibold text-gray-900 dark:text-white ml-3"
+                                        >
+                                            User Details
+                                        </h2>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <!-- Maximize Button -->
+                                    <button
+                                        @click="toggleMaximize"
+                                        class="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all duration-200"
+                                        :title="
                                             isMaximized
-                                                ? 'bi-fullscreen-exit'
-                                                : 'bi-fullscreen'
+                                                ? 'Minimize'
+                                                : 'Maximize'
                                         "
-                                        class="h-5 w-5"
-                                    />
-                                </button>
-                                <!-- Close Button -->
-                                <button
-                                    @click="emit('close')"
-                                    class="text-black hover:text-gray-700 transition-colors duration-200 p-1 rounded-full hover:bg-white/10"
-                                >
-                                    <v-icon name="bi-x-lg" class="h-6 w-6" />
-                                </button>
+                                    >
+                                        <component
+                                            :is="
+                                                isMaximized
+                                                    ? Minimize2Icon
+                                                    : Maximize2Icon
+                                            "
+                                            class="w-5 h-5"
+                                        />
+                                    </button>
+                                    <!-- Close Button -->
+                                    <button
+                                        @click="emit('close')"
+                                        class="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all duration-200"
+                                    >
+                                        <component
+                                            :is="XIcon"
+                                            class="w-5 h-5"
+                                        />
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
                         <!-- Content -->
                         <div
-                            class="flex-1 overflow-y-auto p-4"
-                            :class="{ 'p-8': isMaximized }"
+                            class="flex-1 overflow-y-auto p-6"
+                            :class="isMaximized ? 'p-8' : ''"
                         >
                             <div
                                 v-if="user"
-                                class="space-y-4 text-sm"
-                                :class="{ 'space-y-6 text-base': isMaximized }"
+                                class="space-y-6 mx-auto"
+                                :class="
+                                    isMaximized
+                                        ? 'max-w-full w-full px-4'
+                                        : 'max-w-4xl'
+                                "
                             >
-                                <!-- Profile Information -->
+                                <!-- Profile Header -->
                                 <div
-                                    class="bg-gray-50 border border-gray-200 p-4 rounded-lg shadow-sm"
-                                    :class="{ 'p-6': isMaximized }"
+                                    class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-6 border border-blue-100 dark:border-blue-800"
                                 >
-                                    <h3
-                                        class="text-md font-semibold text-gray-900 mb-3 flex items-center"
-                                        :class="{ 'text-lg mb-4': isMaximized }"
+                                    <div
+                                        class="flex items-center justify-between"
                                     >
-                                        <v-icon
-                                            name="bi-person-badge"
-                                            class="mr-2 text-blue-600"
-                                            :scale="isMaximized ? '1.1' : '1'"
-                                        />
-                                        Profile Information
-                                    </h3>
-                                    <div class="flex items-center mb-4">
-                                        <div
-                                            class="flex-shrink-0 h-16 w-16"
-                                            :class="{
-                                                'h-20 w-20': isMaximized,
-                                            }"
-                                        >
-                                            <img
-                                                v-if="user.avatar_url"
-                                                :src="user.avatar_url"
-                                                :alt="user.name"
-                                                class="h-16 w-16 rounded-full object-cover border-2 border-white shadow"
-                                                :class="{
-                                                    'h-20 w-20': isMaximized,
-                                                }"
-                                            />
-                                            <div
-                                                v-else
-                                                class="h-16 w-16 rounded-full bg-blue-100 flex items-center justify-center border-2 border-white shadow"
-                                                :class="{
-                                                    'h-20 w-20': isMaximized,
-                                                }"
-                                            >
-                                                <span
-                                                    class="text-blue-600 text-xl font-semibold"
-                                                    :class="{
-                                                        'text-2xl': isMaximized,
-                                                    }"
-                                                    >{{
-                                                        userInitials(user.name)
-                                                    }}</span
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0">
+                                                <div
+                                                    class="h-20 w-20 rounded-full border-4 border-white dark:border-gray-800 shadow-lg overflow-hidden bg-white"
                                                 >
+                                                    <img
+                                                        v-if="user.avatar_url"
+                                                        :src="user.avatar_url"
+                                                        :alt="user.name"
+                                                        class="h-full w-full object-cover"
+                                                    />
+                                                    <div
+                                                        v-else
+                                                        class="h-full w-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xl"
+                                                    >
+                                                        {{
+                                                            userInitials(
+                                                                user.name
+                                                            )
+                                                        }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="ml-6">
+                                                <h2
+                                                    class="text-2xl font-bold text-gray-900 dark:text-white"
+                                                >
+                                                    {{ user.name }}
+                                                    {{ user.lastname }}
+                                                </h2>
+                                                <p
+                                                    class="text-gray-600 dark:text-gray-400 mt-1"
+                                                >
+                                                    {{ user.email }}
+                                                </p>
+                                                <div
+                                                    class="flex items-center mt-3 space-x-3"
+                                                >
+                                                    <span
+                                                        :class="[
+                                                            roleClasses(
+                                                                user.role
+                                                            ),
+                                                            'inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold',
+                                                        ]"
+                                                    >
+                                                        <v-icon
+                                                            :name="
+                                                                roleIcon(
+                                                                    user.role
+                                                                )
+                                                            "
+                                                            class="w-4 h-4 mr-1"
+                                                        />
+                                                        {{
+                                                            capitalizeRole(
+                                                                user.role
+                                                            )
+                                                        }}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="ml-4">
-                                            <h2
-                                                class="text-lg font-bold text-gray-900"
-                                                :class="{
-                                                    'text-xl': isMaximized,
-                                                }"
+                                        <div class="text-right">
+                                            <span
+                                                :class="[
+                                                    statusClasses(user.enabled),
+                                                    'inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold',
+                                                ]"
                                             >
-                                                {{ user.name }}
-                                                {{ user.lastname }}
-                                            </h2>
-                                            <p
-                                                class="text-sm text-gray-500"
-                                                :class="{
-                                                    'text-base': isMaximized,
-                                                }"
-                                            >
-                                                {{ user.email }}
-                                            </p>
+                                                <v-icon
+                                                    :name="
+                                                        user.enabled
+                                                            ? 'bi-check-circle'
+                                                            : 'bi-x-circle'
+                                                    "
+                                                    class="w-4 h-4 mr-1"
+                                                />
+                                                {{
+                                                    user.enabled
+                                                        ? "Active"
+                                                        : "Inactive"
+                                                }}
+                                            </span>
                                         </div>
                                     </div>
+                                </div>
+
+                                <!-- Profile Information -->
+                                <div class="space-y-4">
+                                    <div class="flex items-center space-x-2">
+                                        <v-icon
+                                            name="bi-person-badge"
+                                            class="text-blue-600"
+                                        />
+                                        <h3
+                                            class="text-lg font-semibold text-gray-900 dark:text-white"
+                                        >
+                                            Personal Information
+                                        </h3>
+                                    </div>
                                     <div
-                                        class="grid grid-cols-1 md:grid-cols-2 gap-3"
-                                        :class="{
-                                            'gap-4': isMaximized,
-                                            'md:grid-cols-3': isMaximized,
-                                        }"
+                                        class="grid gap-4"
+                                        :class="
+                                            isMaximized
+                                                ? 'grid-cols-1 xl:grid-cols-4 lg:grid-cols-2'
+                                                : 'grid-cols-1 md:grid-cols-2'
+                                        "
                                     >
-                                        <div class="flex items-start">
-                                            <v-icon
-                                                name="bi-person"
-                                                class="mr-2 mt-0.5 text-blue-500"
-                                                :scale="
-                                                    isMaximized ? '1.1' : '1'
-                                                "
-                                            />
+                                        <div
+                                            class="flex items-start space-x-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                                        >
+                                            <div
+                                                class="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg"
+                                            >
+                                                <v-icon
+                                                    name="bi-person"
+                                                    class="text-blue-600 dark:text-blue-400"
+                                                />
+                                            </div>
                                             <div>
                                                 <p
-                                                    class="text-xs text-gray-500"
-                                                    :class="{
-                                                        'text-sm': isMaximized,
-                                                    }"
+                                                    class="text-sm text-gray-500 dark:text-gray-400"
                                                 >
                                                     Full Name
                                                 </p>
                                                 <p
-                                                    class="font-medium"
-                                                    :class="{
-                                                        'text-base':
-                                                            isMaximized,
-                                                    }"
+                                                    class="font-medium text-gray-900 dark:text-white"
                                                 >
                                                     {{ user.name }}
                                                     {{ user.lastname || "" }}
                                                 </p>
                                             </div>
                                         </div>
-                                        <div class="flex items-start">
-                                            <v-icon
-                                                name="bi-telephone"
-                                                class="mr-2 mt-0.5 text-blue-500"
-                                                :scale="
-                                                    isMaximized ? '1.1' : '1'
-                                                "
-                                            />
+                                        <div
+                                            class="flex items-start space-x-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                                        >
+                                            <div
+                                                class="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg"
+                                            >
+                                                <v-icon
+                                                    name="bi-telephone"
+                                                    class="text-blue-600 dark:text-blue-400"
+                                                />
+                                            </div>
                                             <div>
                                                 <p
-                                                    class="text-xs text-gray-500"
-                                                    :class="{
-                                                        'text-sm': isMaximized,
-                                                    }"
+                                                    class="text-sm text-gray-500 dark:text-gray-400"
                                                 >
                                                     Phone Number
                                                 </p>
                                                 <p
-                                                    class="font-medium"
-                                                    :class="{
-                                                        'text-base':
-                                                            isMaximized,
-                                                    }"
+                                                    class="font-medium text-gray-900 dark:text-white"
                                                 >
                                                     {{ user.phone || "N/A" }}
                                                 </p>
                                             </div>
                                         </div>
-                                        <div class="flex items-start">
-                                            <v-icon
-                                                name="bi-tag"
-                                                class="mr-2 mt-0.5 text-blue-500"
-                                                :scale="
-                                                    isMaximized ? '1.1' : '1'
-                                                "
-                                            />
+                                        <div
+                                            class="flex items-start space-x-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                                        >
+                                            <div
+                                                class="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg"
+                                            >
+                                                <v-icon
+                                                    name="bi-tag"
+                                                    class="text-blue-600 dark:text-blue-400"
+                                                />
+                                            </div>
                                             <div>
                                                 <p
-                                                    class="text-xs text-gray-500"
-                                                    :class="{
-                                                        'text-sm': isMaximized,
-                                                    }"
+                                                    class="text-sm text-gray-500 dark:text-gray-400"
                                                 >
                                                     Account Number
                                                 </p>
                                                 <p
-                                                    class="font-medium"
-                                                    :class="{
-                                                        'text-base':
-                                                            isMaximized,
-                                                    }"
+                                                    class="font-medium text-gray-900 dark:text-white"
                                                 >
                                                     {{
                                                         user.account_number ||
@@ -235,207 +280,68 @@
                                                 </p>
                                             </div>
                                         </div>
-                                    </div>
-                                </div>
-
-                                <!-- Account Information -->
-                                <div
-                                    class="bg-gray-50 border border-gray-200 p-4 rounded-lg shadow-sm"
-                                    :class="{ 'p-6': isMaximized }"
-                                >
-                                    <h3
-                                        class="text-md font-semibold text-gray-900 mb-3 flex items-center"
-                                        :class="{ 'text-lg mb-4': isMaximized }"
-                                    >
-                                        <v-icon
-                                            name="bi-info-circle"
-                                            class="mr-2 text-blue-600"
-                                            :scale="isMaximized ? '1.1' : '1'"
-                                        />
-                                        Account Information
-                                    </h3>
-                                    <div
-                                        class="grid grid-cols-1 md:grid-cols-2 gap-3"
-                                        :class="{
-                                            'gap-4': isMaximized,
-                                            'md:grid-cols-3': isMaximized,
-                                        }"
-                                    >
-                                        <div class="flex items-start">
-                                            <v-icon
-                                                name="bi-person-check"
-                                                class="mr-2 mt-0.5 text-blue-500"
-                                                :scale="
-                                                    isMaximized ? '1.1' : '1'
-                                                "
-                                            />
+                                        <div
+                                            class="flex items-start space-x-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                                        >
+                                            <div
+                                                class="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg"
+                                            >
+                                                <v-icon
+                                                    name="bi-person-check"
+                                                    class="text-blue-600 dark:text-blue-400"
+                                                />
+                                            </div>
                                             <div>
                                                 <p
-                                                    class="text-xs text-gray-500"
-                                                    :class="{
-                                                        'text-sm': isMaximized,
-                                                    }"
+                                                    class="text-sm text-gray-500 dark:text-gray-400"
                                                 >
                                                     User ID
                                                 </p>
                                                 <p
-                                                    class="font-medium"
-                                                    :class="{
-                                                        'text-base':
-                                                            isMaximized,
-                                                    }"
+                                                    class="font-medium text-gray-900 dark:text-white"
                                                 >
                                                     {{ user.id }}
                                                 </p>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-start">
-                                            <v-icon
-                                                name="bi-shield-check"
-                                                class="mr-2 mt-0.5 text-blue-500"
-                                                :scale="
-                                                    isMaximized ? '1.1' : '1'
-                                                "
-                                            />
-                                            <div>
-                                                <p
-                                                    class="text-xs text-gray-500"
-                                                    :class="{
-                                                        'text-sm': isMaximized,
-                                                    }"
-                                                >
-                                                    Role
-                                                </p>
-                                                <span
-                                                    :class="[
-                                                        roleClasses(user.role),
-                                                        'inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold',
-                                                        {
-                                                            'px-3 py-1.5 text-sm':
-                                                                isMaximized,
-                                                        },
-                                                    ]"
-                                                >
-                                                    <v-icon
-                                                        :name="
-                                                            roleIcon(user.role)
-                                                        "
-                                                        :class="[
-                                                            'w-3 h-3 mr-1',
-                                                            {
-                                                                'w-4 h-4':
-                                                                    isMaximized,
-                                                            },
-                                                        ]"
-                                                    />
-                                                    {{
-                                                        capitalizeRole(
-                                                            user.role
-                                                        )
-                                                    }}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-start">
-                                            <v-icon
-                                                name="bi-check-circle"
-                                                class="mr-2 mt-0.5 text-blue-500"
-                                                :scale="
-                                                    isMaximized ? '1.1' : '1'
-                                                "
-                                            />
-                                            <div>
-                                                <p
-                                                    class="text-xs text-gray-500"
-                                                    :class="{
-                                                        'text-sm': isMaximized,
-                                                    }"
-                                                >
-                                                    Status
-                                                </p>
-                                                <span
-                                                    :class="[
-                                                        statusClasses(
-                                                            user.enabled
-                                                        ),
-                                                        'inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold',
-                                                        {
-                                                            'px-3 py-1.5 text-sm':
-                                                                isMaximized,
-                                                        },
-                                                    ]"
-                                                >
-                                                    <v-icon
-                                                        :name="
-                                                            user.enabled
-                                                                ? 'bi-check-circle'
-                                                                : 'bi-x-circle'
-                                                        "
-                                                        :class="[
-                                                            'w-3 h-3 mr-1',
-                                                            {
-                                                                'w-4 h-4':
-                                                                    isMaximized,
-                                                            },
-                                                        ]"
-                                                    />
-                                                    {{
-                                                        user.enabled
-                                                            ? "Active"
-                                                            : "Inactive"
-                                                    }}
-                                                </span>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
                                 <!-- Water Meter Information -->
-                                <div
-                                    class="bg-gray-50 border border-gray-200 p-4 rounded-lg shadow-sm"
-                                    :class="{ 'p-6': isMaximized }"
-                                >
-                                    <h3
-                                        class="text-md font-semibold text-gray-900 mb-3 flex items-center"
-                                        :class="{ 'text-lg mb-4': isMaximized }"
-                                    >
+                                <div class="space-y-4">
+                                    <div class="flex items-center space-x-2">
                                         <v-icon
                                             name="bi-droplet"
-                                            class="mr-2 text-blue-600"
-                                            :scale="isMaximized ? '1.1' : '1'"
+                                            class="text-blue-600"
                                         />
-                                        Water Meter Information
-                                    </h3>
+                                        <h3
+                                            class="text-lg font-semibold text-gray-900 dark:text-white"
+                                        >
+                                            Water Meter Information
+                                        </h3>
+                                    </div>
                                     <div
-                                        class="grid grid-cols-1 md:grid-cols-2 gap-3"
-                                        :class="{
-                                            'gap-4': isMaximized,
-                                            'md:grid-cols-3': isMaximized,
-                                        }"
+                                        class="grid grid-cols-1 md:grid-cols-2 gap-4"
                                     >
-                                        <div class="flex items-start">
-                                            <v-icon
-                                                name="bi-upc-scan"
-                                                class="mr-2 mt-0.5 text-blue-500"
-                                                :scale="
-                                                    isMaximized ? '1.1' : '1'
-                                                "
-                                            />
+                                        <div
+                                            class="flex items-start space-x-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                                        >
+                                            <div
+                                                class="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg"
+                                            >
+                                                <v-icon
+                                                    name="bi-upc-scan"
+                                                    class="text-blue-600 dark:text-blue-400"
+                                                />
+                                            </div>
                                             <div>
                                                 <p
-                                                    class="text-xs text-gray-500"
-                                                    :class="{
-                                                        'text-sm': isMaximized,
-                                                    }"
+                                                    class="text-sm text-gray-500 dark:text-gray-400"
                                                 >
                                                     Serial Number
                                                 </p>
                                                 <p
-                                                    class="font-medium"
-                                                    :class="{
-                                                        'text-base':
-                                                            isMaximized,
-                                                    }"
+                                                    class="font-medium text-gray-900 dark:text-white"
                                                 >
                                                     {{
                                                         user.serial_number ||
@@ -444,85 +350,73 @@
                                                 </p>
                                             </div>
                                         </div>
-                                        <div class="flex items-start">
-                                            <v-icon
-                                                name="bi-rulers"
-                                                class="mr-2 mt-0.5 text-blue-500"
-                                                :scale="
-                                                    isMaximized ? '1.1' : '1'
-                                                "
-                                            />
+                                        <div
+                                            class="flex items-start space-x-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                                        >
+                                            <div
+                                                class="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg"
+                                            >
+                                                <v-icon
+                                                    name="bi-rulers"
+                                                    class="text-blue-600 dark:text-blue-400"
+                                                />
+                                            </div>
                                             <div>
                                                 <p
-                                                    class="text-xs text-gray-500"
-                                                    :class="{
-                                                        'text-sm': isMaximized,
-                                                    }"
+                                                    class="text-sm text-gray-500 dark:text-gray-400"
                                                 >
                                                     Meter Size
                                                 </p>
                                                 <p
-                                                    class="font-medium"
-                                                    :class="{
-                                                        'text-base':
-                                                            isMaximized,
-                                                    }"
+                                                    class="font-medium text-gray-900 dark:text-white"
                                                 >
                                                     {{ user.size || "N/A" }}
                                                 </p>
                                             </div>
                                         </div>
-                                        <div class="flex items-start">
-                                            <v-icon
-                                                name="bi-building"
-                                                class="mr-2 mt-0.5 text-blue-500"
-                                                :scale="
-                                                    isMaximized ? '1.1' : '1'
-                                                "
-                                            />
+                                        <div
+                                            class="flex items-start space-x-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                                        >
+                                            <div
+                                                class="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg"
+                                            >
+                                                <v-icon
+                                                    name="bi-building"
+                                                    class="text-blue-600 dark:text-blue-400"
+                                                />
+                                            </div>
                                             <div>
                                                 <p
-                                                    class="text-xs text-gray-500"
-                                                    :class="{
-                                                        'text-sm': isMaximized,
-                                                    }"
+                                                    class="text-sm text-gray-500 dark:text-gray-400"
                                                 >
                                                     Brand
                                                 </p>
                                                 <p
-                                                    class="font-medium"
-                                                    :class="{
-                                                        'text-base':
-                                                            isMaximized,
-                                                    }"
+                                                    class="font-medium text-gray-900 dark:text-white"
                                                 >
                                                     {{ user.brand || "N/A" }}
                                                 </p>
                                             </div>
                                         </div>
-                                        <div class="flex items-start">
-                                            <v-icon
-                                                name="bi-calendar-check"
-                                                class="mr-2 mt-0.5 text-blue-500"
-                                                :scale="
-                                                    isMaximized ? '1.1' : '1'
-                                                "
-                                            />
+                                        <div
+                                            class="flex items-start space-x-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                                        >
+                                            <div
+                                                class="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg"
+                                            >
+                                                <v-icon
+                                                    name="bi-calendar-check"
+                                                    class="text-blue-600 dark:text-blue-400"
+                                                />
+                                            </div>
                                             <div>
                                                 <p
-                                                    class="text-xs text-gray-500"
-                                                    :class="{
-                                                        'text-sm': isMaximized,
-                                                    }"
+                                                    class="text-sm text-gray-500 dark:text-gray-400"
                                                 >
                                                     Date Installed
                                                 </p>
                                                 <p
-                                                    class="font-medium"
-                                                    :class="{
-                                                        'text-base':
-                                                            isMaximized,
-                                                    }"
+                                                    class="font-medium text-gray-900 dark:text-white"
                                                 >
                                                     {{
                                                         user.date_installed
@@ -538,76 +432,64 @@
                                 </div>
 
                                 <!-- Location Information -->
-                                <div
-                                    class="bg-gray-50 border border-gray-200 p-4 rounded-lg shadow-sm"
-                                    :class="{ 'p-6': isMaximized }"
-                                >
-                                    <h3
-                                        class="text-md font-semibold text-gray-900 mb-3 flex items-center"
-                                        :class="{ 'text-lg mb-4': isMaximized }"
-                                    >
+                                <div class="space-y-4">
+                                    <div class="flex items-center space-x-2">
                                         <v-icon
                                             name="bi-geo-alt"
-                                            class="mr-2 text-blue-600"
-                                            :scale="isMaximized ? '1.1' : '1'"
+                                            class="text-blue-600"
                                         />
-                                        Location Information
-                                    </h3>
+                                        <h3
+                                            class="text-lg font-semibold text-gray-900 dark:text-white"
+                                        >
+                                            Location Information
+                                        </h3>
+                                    </div>
                                     <div
-                                        class="grid grid-cols-1 md:grid-cols-2 gap-3"
-                                        :class="{ 'gap-4': isMaximized }"
+                                        class="grid grid-cols-1 md:grid-cols-2 gap-4"
                                     >
-                                        <div class="flex items-start">
-                                            <v-icon
-                                                name="bi-geo"
-                                                class="mr-2 mt-0.5 text-blue-500"
-                                                :scale="
-                                                    isMaximized ? '1.1' : '1'
-                                                "
-                                            />
+                                        <div
+                                            class="flex items-start space-x-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                                        >
+                                            <div
+                                                class="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg"
+                                            >
+                                                <v-icon
+                                                    name="bi-geo"
+                                                    class="text-blue-600 dark:text-blue-400"
+                                                />
+                                            </div>
                                             <div>
                                                 <p
-                                                    class="text-xs text-gray-500"
-                                                    :class="{
-                                                        'text-sm': isMaximized,
-                                                    }"
+                                                    class="text-sm text-gray-500 dark:text-gray-400"
                                                 >
                                                     Zone
                                                 </p>
                                                 <p
-                                                    class="font-medium"
-                                                    :class="{
-                                                        'text-base':
-                                                            isMaximized,
-                                                    }"
+                                                    class="font-medium text-gray-900 dark:text-white"
                                                 >
                                                     {{ user.zone || "N/A" }}
                                                 </p>
                                             </div>
                                         </div>
-                                        <div class="flex items-start">
-                                            <v-icon
-                                                name="bi-signpost"
-                                                class="mr-2 mt-0.5 text-blue-500"
-                                                :scale="
-                                                    isMaximized ? '1.1' : '1'
-                                                "
-                                            />
+                                        <div
+                                            class="flex items-start space-x-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                                        >
+                                            <div
+                                                class="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg"
+                                            >
+                                                <v-icon
+                                                    name="bi-signpost"
+                                                    class="text-blue-600 dark:text-blue-400"
+                                                />
+                                            </div>
                                             <div>
                                                 <p
-                                                    class="text-xs text-gray-500"
-                                                    :class="{
-                                                        'text-sm': isMaximized,
-                                                    }"
+                                                    class="text-sm text-gray-500 dark:text-gray-400"
                                                 >
                                                     Barangay
                                                 </p>
                                                 <p
-                                                    class="font-medium"
-                                                    :class="{
-                                                        'text-base':
-                                                            isMaximized,
-                                                    }"
+                                                    class="font-medium text-gray-900 dark:text-white"
                                                 >
                                                     {{ user.barangay || "N/A" }}
                                                 </p>
@@ -617,21 +499,6 @@
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Footer -->
-                        <div
-                            class="border-t border-gray-200 px-4 py-3 bg-gray-50"
-                        >
-                            <button
-                                @click="emit('close')"
-                                type="button"
-                                class="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
-                                :class="{ 'px-6 py-3 text-base': isMaximized }"
-                            >
-                                <v-icon name="bi-x-lg" class="mr-2" />
-                                Close
-                            </button>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -640,7 +507,8 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from "vue";
+import { ref, watch } from "vue";
+import { XIcon, Maximize2Icon, Minimize2Icon } from "lucide-vue-next";
 
 const props = defineProps({
     show: {
@@ -655,10 +523,8 @@ const props = defineProps({
 
 const emit = defineEmits(["close"]);
 
-// State for maximize
 const isMaximized = ref(false);
 
-// Reset maximize state when modal is closed
 watch(
     () => props.show,
     (newVal) => {
@@ -724,50 +590,189 @@ const formatDate = (dateString) => {
 </script>
 
 <style scoped>
-/* Custom scrollbar for the content */
-.overflow-y-auto {
-    scrollbar-width: thin;
-    scrollbar-color: #e2e8f0 #f8fafc;
-}
-
-.overflow-y-auto::-webkit-scrollbar {
-    width: 8px;
-}
-
-.overflow-y-auto::-webkit-scrollbar-track {
-    background: #f8fafc;
-}
-
-.overflow-y-auto::-webkit-scrollbar-thumb {
-    background-color: #e2e8f0;
-    border-radius: 4px;
-}
-
-.overflow-y-auto::-webkit-scrollbar-thumb:hover {
-    background-color: #cbd5e1;
-}
-
-/* Modal transition styles */
+/* Smooth modal transitions */
 .modal-enter-active,
 .modal-leave-active {
-    transition: opacity 0.3s ease;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.modal-enter-from,
+.modal-enter-from {
+    opacity: 0;
+}
+
 .modal-leave-to {
     opacity: 0;
 }
 
-.modal-enter-active .transform,
-.modal-leave-active .transform {
-    transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.5, 1);
+.modal-enter-active .modal-container,
+.modal-leave-active .modal-container {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.modal-enter-from .transform {
-    transform: translateX(100%);
+.modal-enter-from .modal-container {
+    opacity: 0;
+    transform: scale(0.95) translateY(-20px);
 }
 
-.modal-leave-to .transform {
-    transform: translateX(100%);
+.modal-leave-to .modal-container {
+    opacity: 0;
+    transform: scale(0.95) translateY(20px);
+}
+
+/* Backdrop transition */
+.modal-enter-active .backdrop,
+.modal-leave-active .backdrop {
+    transition: opacity 0.3s ease;
+}
+
+.modal-enter-from .backdrop,
+.modal-leave-to .backdrop {
+    opacity: 0;
+}
+
+/* Content slide-in animation */
+.content-enter-active {
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.1s;
+}
+
+.content-enter-from {
+    opacity: 0;
+    transform: translateY(30px);
+}
+
+/* Form elements stagger animation */
+.form-item {
+    transition: all 0.3s ease;
+}
+
+.modal-enter-active .form-item:nth-child(1) {
+    transition-delay: 0.1s;
+}
+.modal-enter-active .form-item:nth-child(2) {
+    transition-delay: 0.15s;
+}
+.modal-enter-active .form-item:nth-child(3) {
+    transition-delay: 0.2s;
+}
+.modal-enter-active .form-item:nth-child(4) {
+    transition-delay: 0.25s;
+}
+.modal-enter-active .form-item:nth-child(5) {
+    transition-delay: 0.3s;
+}
+
+/* Maximize transition */
+.maximize-enter-active,
+.maximize-leave-active {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.maximize-enter-from,
+.maximize-leave-to {
+    opacity: 0;
+    transform: scale(0.9);
+}
+
+/* Password preview fade transition */
+.fade-enter-active,
+.fade-leave-active {
+    transition: all 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
+    transform: translateY(-10px);
+}
+
+/* Custom scrollbar */
+.overflow-y-auto {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+.overflow-y-auto::-webkit-scrollbar {
+    width: 6px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 10px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Dark mode scrollbar */
+.dark .overflow-y-auto {
+    scrollbar-color: #475569 #1e293b;
+}
+
+.dark .overflow-y-auto::-webkit-scrollbar-track {
+    background: #1e293b;
+}
+
+.dark .overflow-y-auto::-webkit-scrollbar-thumb {
+    background: #475569;
+}
+
+.dark .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
+
+/* Remove default select arrow in some browsers */
+select {
+    background-image: none;
+}
+
+/* Smooth button hover effects */
+button {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Input focus animations */
+input:focus,
+select:focus {
+    transition: all 0.2s ease;
+}
+
+/* Radio button selection animation */
+input[type="radio"]:checked + div {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Loading spinner animation */
+@keyframes spin-slow {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.animate-spin-slow {
+    animation: spin-slow 1.5s linear infinite;
+}
+
+/* Pulse animation for loading states */
+@keyframes pulse-subtle {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.animate-pulse-subtle {
+    animation: pulse-subtle 2s ease-in-out infinite;
 }
 </style>

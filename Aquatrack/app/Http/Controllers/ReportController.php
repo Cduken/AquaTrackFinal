@@ -21,7 +21,7 @@ class ReportController extends Controller
     protected $zones = [
         'Zone 1' => ['Poblacion Sur'],
         'Zone 2' => ['Poblacion Centro'],
-        'Zone 3' => ['Poblacion Centro'],
+        'Zone 3' => ['Poblacion Centro (Zone 3)'],
         'Zone 4' => ['Poblacion Norte'],
         'Zone 5' => ['Candajec', 'Buangan'],
         'Zone 6' => ['Bonbon'],
@@ -193,12 +193,19 @@ class ReportController extends Controller
             ]);
 
             // Use the same logic as the store method
-            $latitude = $validated['latitude'];
-            $longitude = $validated['longitude'];
+            $latitude = (float)$validated['latitude'];
+            $longitude = (float)$validated['longitude'];
             $issueType = $validated['water_issue_type'];
             $zone = $validated['zone'];
             $barangay = $validated['barangay'];
             $purok = $validated['purok'];
+
+            if (!$this->isValidClarinCoordinates($latitude, $longitude)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'GPS coordinates are outside the expected range for Clarin, Bohol. Please ensure your location services are accurate.',
+                ], 422);
+            }
 
             // Find existing report to merge with
             $existingReport = $this->findExistingReportForMerging($zone, $barangay, $issueType, $latitude, $longitude, $purok);
@@ -225,22 +232,53 @@ class ReportController extends Controller
 
                 $existingReport->reporter_name = implode(', ', $existingReporters);
 
-                // UPDATE USER TYPES
+                // FIXED: PROPER USER TYPES HANDLING FOR OFFLINE SYNC
                 $existingUserTypes = $existingReport->user_types ? json_decode($existingReport->user_types, true) : [];
                 if (!is_array($existingUserTypes)) $existingUserTypes = [];
 
                 $currentUserType = Auth::check() ? 'Registered' : 'Guest';
-                if (!in_array($currentUserType, $existingUserTypes)) {
+
+                // Get current reporters array BEFORE adding new reporter
+                $currentReporters = array_filter(array_map('trim', explode(',', $existingReport->reporter_name)));
+                $newReporter = trim($validated['reporter_name']);
+
+                // Check if this is a new reporter
+                $isNewReporter = !in_array($newReporter, $currentReporters);
+
+                if ($isNewReporter) {
+                    // New reporter - add their type to the end
                     $existingUserTypes[] = $currentUserType;
+                } else {
+                    // Existing reporter - find their index and update type if needed
+                    $reporterIndex = array_search($newReporter, $currentReporters);
+                    if ($reporterIndex !== false) {
+                        // If reporter exists but no type assigned at that index, add current type
+                        if (!isset($existingUserTypes[$reporterIndex])) {
+                            $existingUserTypes[$reporterIndex] = $currentUserType;
+                        } else {
+                            // Only upgrade from Guest to Registered, never downgrade
+                            if ($existingUserTypes[$reporterIndex] === 'Guest' && $currentUserType === 'Registered') {
+                                $existingUserTypes[$reporterIndex] = 'Registered';
+                            }
+                        }
+                    }
                 }
 
-                usort($existingUserTypes, function ($a, $b) {
-                    $order = ['Registered' => 1, 'Guest' => 2];
-                    return ($order[$a] ?? 3) - ($order[$b] ?? 4);
-                });
+                // If we still don't have enough user types, fill the gaps
+                while (count($existingUserTypes) < count($currentReporters)) {
+                    // For existing reporters without types, check if they are registered users
+                    $missingIndex = count($existingUserTypes);
+                    if ($missingIndex < count($currentReporters)) {
+                        $reporterName = $currentReporters[$missingIndex];
+                        $isRegistered = $this->isRegisteredUser($reporterName);
+                        $existingUserTypes[] = $isRegistered ? 'Registered' : 'Guest';
+                    } else {
+                        $existingUserTypes[] = 'Guest';
+                    }
+                }
 
-                $existingReport->user_types = json_encode($existingUserTypes);
-
+                // Store explicitly - never NULL
+                $existingReport->user_types = json_encode(array_values($existingUserTypes));
                 // Update reporter phones
                 if ($validated['reporter_phone']) {
                     $existingPhones = $existingReport->reporter_phone ? array_filter(array_map('trim', explode(',', $existingReport->reporter_phone))) : [];
@@ -435,14 +473,39 @@ class ReportController extends Controller
     }
 
     /**
-     * Detect if a reporter name belongs to a registered user
+     * Detect if a reporter name belongs to a registered user - ENHANCED
      */
     protected function isRegisteredUser($reporterName)
     {
         try {
-            // Try to find a user with this exact name
-            $user = User::where('name', trim($reporterName))->first();
-            return $user ? true : false;
+            $cleanName = trim($reporterName);
+
+            // First, try exact match
+            $user = User::where('name', $cleanName)->first();
+
+            if ($user) {
+                return true;
+            }
+
+            // If exact match fails, try partial matching for common names
+            // Split the name and check each part
+            $nameParts = array_filter(explode(' ', $cleanName));
+
+            foreach ($nameParts as $part) {
+                if (strlen(trim($part)) > 2) {
+                    $user = User::where('name', 'like', '%' . trim($part) . '%')->first();
+                    if ($user) {
+                        Log::debug('Partial name match found', [
+                            'reporter_name' => $cleanName,
+                            'matched_part' => $part,
+                            'user_name' => $user->name
+                        ]);
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         } catch (\Exception $e) {
             Log::error('Error checking registered user', [
                 'reporterName' => $reporterName,
@@ -453,7 +516,7 @@ class ReportController extends Controller
     }
 
     /**
-     * Enhanced formatUserTypes method
+     * Enhanced formatUserTypes method - FIXED
      */
     protected function formatUserTypes($userTypesJson, $userId = null, $reporterName = null)
     {
@@ -462,7 +525,7 @@ class ReportController extends Controller
             $userTypes = json_decode($userTypesJson, true);
 
             if (is_array($userTypes) && !empty($userTypes)) {
-                // Count unique types
+                // Count unique types - FIXED: Check for mixed types
                 $uniqueTypes = array_unique($userTypes);
                 $typeCount = count($uniqueTypes);
 
@@ -479,7 +542,7 @@ class ReportController extends Controller
             }
         }
 
-        // Enhanced fallback logic
+        // Enhanced fallback logic for merged reports - FIXED
         if ($reporterName && str_contains($reporterName, ',')) {
             $reporters = array_filter(array_map('trim', explode(',', $reporterName)));
             $hasRegistered = false;
@@ -491,32 +554,50 @@ class ReportController extends Controller
                 } else {
                     $hasGuest = true;
                 }
-
-                // If we found both types, it's Hybrid
-                if ($hasRegistered && $hasGuest) {
-                    return 'Hybrid';
-                }
             }
 
-            // If we only found one type
-            if ($hasRegistered) return 'Registered';
-            if ($hasGuest) return 'Guest';
+            // FIXED: If we have ANY registered user AND any guest, it's Hybrid
+            if ($hasRegistered && $hasGuest) {
+                return 'Hybrid';
+            }
+            // If we only found registered users
+            elseif ($hasRegistered) {
+                return 'Registered';
+            }
+            // If we only found guests
+            else {
+                return 'Guest';
+            }
         }
 
         // Single reporter fallback
         return $userId ? 'Registered' : 'Guest';
     }
+
     /**
      * Find existing report for merging
+     */
+    /**
+     * Find existing report for merging with improved GPS accuracy
      */
     protected function findExistingReportForMerging($zone, $barangay, $issueType, $latitude, $longitude, $purok)
     {
         try {
-            $radius = 0.1; // Reduced to 100 meters for more precise matching
-            $earthRadius = 6371000;
+            // Enhanced radius calculation - more precise for urban areas
+            $radius = 0.05; // Reduced to 50 meters for better accuracy
+            $earthRadius = 6371000; // meters
 
             if (!is_numeric($latitude) || !is_numeric($longitude)) {
                 throw new \Exception('Invalid latitude or longitude values');
+            }
+
+            // Validate coordinates are reasonable
+            if (!$this->isValidClarinCoordinates($latitude, $longitude)) {
+                Log::warning('Invalid coordinates provided for merging', [
+                    'latitude' => $latitude,
+                    'longitude' => $longitude
+                ]);
+                return null;
             }
 
             Log::debug('Finding existing report for merging', [
@@ -525,7 +606,8 @@ class ReportController extends Controller
                 'issueType' => $issueType,
                 'purok' => $purok,
                 'latitude' => $latitude,
-                'longitude' => $longitude
+                'longitude' => $longitude,
+                'search_radius_meters' => $radius * 1000
             ]);
 
             // First, try exact matches with same location and issue type
@@ -546,23 +628,22 @@ class ReportController extends Controller
                 return $exactMatches->first();
             }
 
-            // If no exact matches, try proximity-based matching
+            // Enhanced proximity-based matching with better distance calculation
             $potentialReports = Report::where('zone', $zone)
                 ->where('barangay', $barangay)
                 ->where('water_issue_type', $issueType)
                 ->whereNull('deleted_at')
                 ->where('is_merged_reference', false)
                 ->where('status', '!=', 'resolved')
+                ->whereNotNull('latitude')
+                ->whereNotNull('longitude')
                 ->get();
 
             Log::debug('Potential reports for proximity check', ['count' => $potentialReports->count()]);
 
             $matchingReports = $potentialReports->filter(function ($report) use ($latitude, $longitude, $radius, $earthRadius) {
-                if (is_null($report->latitude) || is_null($report->longitude)) {
-                    return false;
-                }
-
                 try {
+                    // Use Haversine formula for accurate distance calculation
                     $latFrom = deg2rad((float)$latitude);
                     $lonFrom = deg2rad((float)$longitude);
                     $latTo = deg2rad((float)$report->latitude);
@@ -576,12 +657,13 @@ class ReportController extends Controller
 
                     $distance = $angle * $earthRadius;
 
-                    $isWithinRadius = $distance <= $radius;
+                    $isWithinRadius = $distance <= ($radius * 1000); // Convert km to meters
 
                     Log::debug('Proximity check', [
                         'report_id' => $report->id,
-                        'distance' => $distance,
-                        'within_radius' => $isWithinRadius
+                        'distance_meters' => $distance,
+                        'within_radius' => $isWithinRadius,
+                        'threshold_meters' => $radius * 1000
                     ]);
 
                     return $isWithinRadius;
@@ -595,7 +677,12 @@ class ReportController extends Controller
             });
 
             $result = $matchingReports->first();
-            Log::debug('Proximity match result', ['found' => !is_null($result), 'report_id' => $result ? $result->id : null]);
+            Log::debug('Proximity match result', [
+                'found' => !is_null($result),
+                'report_id' => $result ? $result->id : null,
+                'total_checked' => $potentialReports->count(),
+                'within_radius' => $matchingReports->count()
+            ]);
 
             return $result;
         } catch (\Exception $e) {
@@ -672,8 +759,26 @@ class ReportController extends Controller
                 ],
                 'reporter_name' => 'required|string|max:255',
                 'reporter_phone' => 'nullable|string|max:11',
-                'latitude' => 'required|numeric|between:-90,90',
-                'longitude' => 'required|numeric|between:-180,180',
+                'latitude' => [
+                    'required',
+                    'numeric',
+                    'between:9.0,10.0', // Clarin, Bohol approximate latitude range
+                    function ($attribute, $value, $fail) {
+                        if (abs($value) < 1) {
+                            $fail('GPS coordinates appear invalid. Please ensure location services are enabled.');
+                        }
+                    },
+                ],
+                'longitude' => [
+                    'required',
+                    'numeric',
+                    'between:123.0,125.0', // Clarin, Bohol approximate longitude range
+                    function ($attribute, $value, $fail) {
+                        if (abs($value) < 1) {
+                            $fail('GPS coordinates appear invalid. Please ensure location services are enabled.');
+                        }
+                    },
+                ],
             ]);
 
             $latitude = $validated['latitude'];
@@ -719,7 +824,7 @@ class ReportController extends Controller
                     $existingReport->reporter_name = implode(', ', $existingReporters);
                 }
 
-                // UPDATE USER TYPES - RELIABLE HYBRID DETECTION
+                // FIXED: PROPER USER TYPES HANDLING - STORE EXPLICIT TYPES
                 $existingUserTypes = $existingReport->user_types ? json_decode($existingReport->user_types, true) : [];
                 if (!is_array($existingUserTypes)) {
                     $existingUserTypes = [];
@@ -727,33 +832,46 @@ class ReportController extends Controller
 
                 $currentUserType = Auth::check() ? 'Registered' : 'Guest';
 
-                // IMPORTANT: Make sure we maintain the correct order of user types
-                // The user_types array eould match the order of reporters in reporter_name
-
-                // Get current reporters array
+                // Get current reporters array BEFORE adding new reporter
                 $currentReporters = array_filter(array_map('trim', explode(',', $existingReport->reporter_name)));
-                $newReporterIndex = array_search(trim($validated['reporter_name']), $currentReporters);
+                $newReporter = trim($validated['reporter_name']);
 
-                if ($newReporterIndex === false) {
-                    // New reporter - add to the end
+                // Check if this is a new reporter
+                $isNewReporter = !in_array($newReporter, $currentReporters);
+
+                if ($isNewReporter) {
+                    // New reporter - add their type to the end
                     $existingUserTypes[] = $currentUserType;
                 } else {
-                    // Existing reporter - update their type if needed
-                    if (!isset($existingUserTypes[$newReporterIndex])) {
-                        $existingUserTypes[$newReporterIndex] = $currentUserType;
-                    } else {
-                        // If the reporter already has a type, only upgrade from Guest to Registered
-                        if ($existingUserTypes[$newReporterIndex] === 'Guest' && $currentUserType === 'Registered') {
-                            $existingUserTypes[$newReporterIndex] = 'Registered';
+                    // Existing reporter - find their index and update type if needed
+                    $reporterIndex = array_search($newReporter, $currentReporters);
+                    if ($reporterIndex !== false) {
+                        // If reporter exists but no type assigned at that index, add current type
+                        if (!isset($existingUserTypes[$reporterIndex])) {
+                            $existingUserTypes[$reporterIndex] = $currentUserType;
+                        } else {
+                            // Only upgrade from Guest to Registered, never downgrade
+                            if ($existingUserTypes[$reporterIndex] === 'Guest' && $currentUserType === 'Registered') {
+                                $existingUserTypes[$reporterIndex] = 'Registered';
+                            }
                         }
                     }
                 }
 
-                // Ensure the user_types array has the same length as reporters array
+                // If we still don't have enough user types, fill the gaps
                 while (count($existingUserTypes) < count($currentReporters)) {
-                    $existingUserTypes[] = 'Guest'; // Fill missing types with Guest
+                    // For existing reporters without types, check if they are registered users
+                    $missingIndex = count($existingUserTypes);
+                    if ($missingIndex < count($currentReporters)) {
+                        $reporterName = $currentReporters[$missingIndex];
+                        $isRegistered = $this->isRegisteredUser($reporterName);
+                        $existingUserTypes[] = $isRegistered ? 'Registered' : 'Guest';
+                    } else {
+                        $existingUserTypes[] = 'Guest';
+                    }
                 }
 
+                // Store the updated user_types
                 $existingReport->user_types = json_encode($existingUserTypes);
 
                 // Update reporter phones
@@ -942,6 +1060,40 @@ class ReportController extends Controller
                 'message' => 'Failed to submit report. Please try again.',
             ], 500);
         }
+    }
+
+
+    /**
+     * Validate if coordinates are within reasonable range for Clarin, Bohol
+     */
+    protected function isValidClarinCoordinates($latitude, $longitude)
+    {
+        // Clarin, Bohol approximate coordinates: 9.9620° N, 124.0250° E
+        $clarinLatitude = 9.9620;
+        $clarinLongitude = 124.0250;
+
+        // Allowable radius from Clarin center (in degrees)
+        // Approximately 10km radius for municipality coverage
+        $allowedRadius = 0.1; // ~11km in degrees
+
+        $latDiff = abs($latitude - $clarinLatitude);
+        $lonDiff = abs($longitude - $clarinLongitude);
+
+        $isValid = ($latDiff <= $allowedRadius) && ($lonDiff <= $allowedRadius);
+
+        if (!$isValid) {
+            Log::warning('GPS coordinates outside Clarin range', [
+                'latitude' => $latitude,
+                'longitude' => $longitude,
+                'expected_lat' => $clarinLatitude,
+                'expected_lon' => $clarinLongitude,
+                'lat_diff' => $latDiff,
+                'lon_diff' => $lonDiff,
+                'allowed_radius' => $allowedRadius
+            ]);
+        }
+
+        return $isValid;
     }
 
 
@@ -1142,7 +1294,7 @@ class ReportController extends Controller
                 });
             }
 
-            $reports = $query->paginate(5)
+            $reports = $query->paginate(10)
                 ->appends($request->query())
                 ->through(function ($report) {
                     // Format user_types for display - PASS ALL REQUIRED PARAMETERS

@@ -9,15 +9,12 @@ class MeterReading extends Model
 {
     use HasFactory;
 
-    // In your MeterReading.php model, add this:
     protected static function boot()
     {
         parent::boot();
 
         static::updating(function ($reading) {
-            // Check if amount is being changed by admin
             if ($reading->isDirty('amount')) {
-                // Reset some flag to trigger notification (we'll handle this differently)
             }
         });
     }

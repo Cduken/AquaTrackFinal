@@ -44,6 +44,82 @@
                                 </div>
                             </div>
                             <div class="flex items-center space-x-2">
+                                <!-- GPS Status Indicator -->
+                                <div class="flex items-center mr-2">
+                                    <div
+                                        class="flex items-center px-3 py-1 rounded-full text-xs font-medium"
+                                        :class="{
+                                            'bg-green-500/20 text-green-300':
+                                                locationStatus === 'success',
+                                            'bg-yellow-500/20 text-yellow-300':
+                                                locationStatus === 'loading',
+                                            'bg-red-500/20 text-red-300':
+                                                locationStatus === 'error',
+                                            'bg-gray-500/20 text-gray-300':
+                                                locationStatus === 'idle',
+                                            'bg-blue-500/20 text-blue-300':
+                                                locationStatus ===
+                                                'offline_cached_location',
+                                            'bg-orange-500/20 text-orange-300':
+                                                locationStatus ===
+                                                'offline_default_location',
+                                        }"
+                                    >
+                                        <div
+                                            class="w-2 h-2 rounded-full mr-2 animate-pulse"
+                                            :class="{
+                                                'bg-green-400':
+                                                    locationStatus ===
+                                                    'success',
+                                                'bg-yellow-400':
+                                                    locationStatus ===
+                                                    'loading',
+                                                'bg-red-400':
+                                                    locationStatus === 'error',
+                                                'bg-gray-400':
+                                                    locationStatus === 'idle',
+                                                'bg-blue-400':
+                                                    locationStatus ===
+                                                    'offline_cached_location',
+                                                'bg-orange-400':
+                                                    locationStatus ===
+                                                    'offline_default_location',
+                                            }"
+                                        ></div>
+                                        <span
+                                            v-if="locationStatus === 'success'"
+                                            >GPS Ready</span
+                                        >
+                                        <span
+                                            v-else-if="
+                                                locationStatus === 'loading'
+                                            "
+                                            >Getting GPS...</span
+                                        >
+                                        <span
+                                            v-else-if="
+                                                locationStatus === 'error'
+                                            "
+                                            >GPS Required</span
+                                        >
+                                        <span
+                                            v-else-if="
+                                                locationStatus ===
+                                                'offline_cached_location'
+                                            "
+                                            >Cached GPS</span
+                                        >
+                                        <span
+                                            v-else-if="
+                                                locationStatus ===
+                                                'offline_default_location'
+                                            "
+                                            >Default Location</span
+                                        >
+                                        <span v-else>GPS Offline</span>
+                                    </div>
+                                </div>
+
                                 <!-- Maximize/Minimize Button -->
                                 <button
                                     @click="toggleMaximize"
@@ -116,11 +192,102 @@
                                 </div>
                             </div>
 
+                            <!-- Location Status Warnings -->
+                            <div
+                                v-if="
+                                    locationStatus === 'offline_cached_location'
+                                "
+                                class="mb-6 p-4 bg-blue-50 border border-blue-200 text-blue-700 rounded-xl text-sm shadow-sm"
+                            >
+                                <div class="flex items-start">
+                                    <v-icon
+                                        name="bi-info-circle"
+                                        class="mr-2 mt-0.5 flex-shrink-0"
+                                    />
+                                    <div>
+                                        <p class="font-medium">
+                                            Using Cached GPS Location
+                                        </p>
+                                        <p class="mt-1">
+                                            Using previously saved GPS
+                                            coordinates for better accuracy.
+                                            <button
+                                                type="button"
+                                                @click="getLocation"
+                                                class="underline font-medium hover:text-blue-800"
+                                            >
+                                                Refresh location
+                                            </button>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div
+                                v-if="
+                                    locationStatus ===
+                                    'offline_default_location'
+                                "
+                                class="mb-6 p-4 bg-amber-50 border border-amber-200 text-amber-700 rounded-xl text-sm shadow-sm"
+                            >
+                                <div class="flex items-start">
+                                    <v-icon
+                                        name="bi-geo-alt"
+                                        class="mr-2 mt-0.5 flex-shrink-0"
+                                    />
+                                    <div>
+                                        <p class="font-medium">
+                                            Using Default Location
+                                        </p>
+                                        <p class="mt-1">
+                                            GPS signal unavailable. Using center
+                                            of Clarin, Bohol.
+                                            <button
+                                                type="button"
+                                                @click="getLocation"
+                                                class="underline font-medium hover:text-amber-800"
+                                            >
+                                                Retry GPS detection
+                                            </button>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div
+                                v-if="locationStatus === 'error'"
+                                class="mb-6 p-4 bg-red-50 border border-red-200 text-red-600 rounded-xl text-sm shadow-sm"
+                            >
+                                <div class="flex items-start">
+                                    <v-icon
+                                        name="bi-exclamation-triangle"
+                                        class="mr-2 mt-0.5 flex-shrink-0"
+                                    />
+                                    <div>
+                                        <p class="font-medium">
+                                            Location Access Required
+                                        </p>
+                                        <p class="mt-1">
+                                            Please enable GPS/location services
+                                            to submit your report.
+                                            <button
+                                                type="button"
+                                                @click="getLocation"
+                                                class="underline font-medium hover:text-red-800"
+                                            >
+                                                Retry location detection
+                                            </button>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
                             <form
                                 @submit.prevent="submitReport"
                                 class="space-y-6"
                                 :class="{ 'space-y-8': isMaximized }"
                             >
+                                <!-- Rest of your form content remains the same -->
                                 <!-- Location Information Section -->
                                 <div
                                     class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden"
@@ -357,6 +524,65 @@
                                                 {{ form.errors.purok }}
                                             </p>
                                         </div>
+
+                                        <!-- GPS Coordinates Display -->
+                                        <div
+                                            v-if="
+                                                form.latitude && form.longitude
+                                            "
+                                            class="p-3 rounded-lg border text-sm"
+                                            :class="{
+                                                'bg-green-50 border-green-200 text-green-700':
+                                                    locationStatus ===
+                                                    'success',
+                                                'bg-blue-50 border-blue-200 text-blue-700':
+                                                    locationStatus ===
+                                                    'offline_cached_location',
+                                                'bg-amber-50 border-amber-200 text-amber-700':
+                                                    locationStatus ===
+                                                    'offline_default_location',
+                                                'bg-gray-50 border-gray-200 text-gray-700':
+                                                    locationStatus === 'idle' ||
+                                                    locationStatus ===
+                                                        'loading',
+                                            }"
+                                        >
+                                            <div class="flex items-center">
+                                                <v-icon
+                                                    :name="
+                                                        getLocationStatusIcon()
+                                                    "
+                                                    class="mr-2"
+                                                />
+                                                <div>
+                                                    <span class="font-medium">{{
+                                                        getLocationStatusText()
+                                                    }}</span>
+                                                    <div
+                                                        class="text-xs mt-1 font-mono"
+                                                    >
+                                                        Lat:
+                                                        {{
+                                                            form.latitude.toFixed(
+                                                                6
+                                                            )
+                                                        }}, Lon:
+                                                        {{
+                                                            form.longitude.toFixed(
+                                                                6
+                                                            )
+                                                        }}
+                                                    </div>
+                                                    <div
+                                                        v-if="locationAccuracy"
+                                                        class="text-xs mt-1"
+                                                    >
+                                                        Accuracy:
+                                                        {{ locationAccuracy }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -427,21 +653,9 @@
                                                     'text-base': isMaximized,
                                                 }"
                                             >
-                                                Phone Number
+                                                Phone Number (Optional)
                                             </label>
                                             <div class="relative">
-                                                <div
-                                                    class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
-                                                >
-                                                    <span
-                                                        class="text-gray-500 text-sm"
-                                                        :class="{
-                                                            'text-base':
-                                                                isMaximized,
-                                                        }"
-                                                        >+63</span
-                                                    >
-                                                </div>
                                                 <input
                                                     type="tel"
                                                     id="reporter_phone"
@@ -449,14 +663,14 @@
                                                         form.reporter_phone
                                                     "
                                                     @input="restrictPhoneInput"
-                                                    class="w-full p-3 pl-12 rounded-lg text-gray-900 bg-white border border-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition-all"
+                                                    class="w-full p-3 rounded-lg text-gray-900 bg-white border border-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition-all"
                                                     :class="{
                                                         'p-4 pl-14 text-base':
                                                             isMaximized,
                                                     }"
                                                     pattern="[0-9]{1,11}"
                                                     maxlength="11"
-                                                    placeholder="912 345 6789 (optional)"
+                                                    placeholder="Enter phone number"
                                                 />
                                             </div>
                                             <p
@@ -465,9 +679,8 @@
                                                     'text-sm mt-2': isMaximized,
                                                 }"
                                             >
-                                                Enter your 10-digit mobile
-                                                number without the leading 0
-                                                (optional)
+                                                Enter your 11-digit mobile
+                                                number start of '09' (optional)
                                             </p>
                                             <p
                                                 v-if="
@@ -677,7 +890,7 @@
                                                     required
                                                     class="w-full p-3 rounded-lg text-gray-900 bg-white border-none placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 text-sm resize-none"
                                                     :class="{
-                                                        'p-4 text-base':
+                                                        'p-6 text-base':
                                                             isMaximized,
                                                     }"
                                                     placeholder="Please provide a detailed description of the water quality issue, including when it started, how it's affecting you, and any other relevant details..."
@@ -706,13 +919,7 @@
                                                             characters</span
                                                         >
                                                     </div>
-                                                    <!-- <div v-else>
-                                                        <span
-                                                            >Please provide a
-                                                            detailed
-                                                            description</span
-                                                        >
-                                                    </div> -->
+
                                                     <button
                                                         type="button"
                                                         @click="
@@ -1257,7 +1464,8 @@
                                         :disabled="
                                             form.processing ||
                                             isSubmitting ||
-                                            isRecording
+                                            isRecording ||
+                                            !isFormValid
                                         "
                                         class="w-full inline-flex justify-center items-center rounded-xl border border-transparent shadow-sm px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
                                         :class="{
@@ -1360,14 +1568,6 @@ const waterIssueTypes = [
     "Running toilet",
 ];
 
-// Progress steps
-const progressSteps = computed(() => [
-    { name: "Location", active: !!form.barangay },
-    { name: "Contact", active: !!form.reporter_name },
-    { name: "Details", active: !!form.description || !!form.water_issue_type },
-    { name: "Evidence", active: form.photos.length > 0 },
-]);
-
 // Form setup with authenticated user's name and fields from ReportForm.vue
 const form = useForm({
     municipality: "Clarin",
@@ -1387,7 +1587,13 @@ const form = useForm({
 });
 
 const isSubmitting = ref(false);
-const locationStatus = ref("idle");
+const locationStatus = ref("idle"); // 'idle', 'loading', 'success', 'error', 'offline_cached_location', 'offline_default_location'
+const locationAccuracy = ref(null);
+const lastKnownLocation = ref(null);
+const locationWatchId = ref(null);
+const locationCacheTimeout = 24 * 60 * 60 * 1000; // 24 hours
+
+// Camera state
 const isCameraActive = ref(false);
 const isCameraReady = ref(false);
 const isCameraLoading = ref(false);
@@ -1405,9 +1611,9 @@ let recordedChunks = [];
 const MAX_PHOTOS = 3;
 const MAX_VIDEOS = 2;
 const MAX_TOTAL = MAX_PHOTOS + MAX_VIDEOS;
-const MAX_PHOTO_SIZE = 5 * 1024 * 1024; // 5MB
-const MAX_VIDEO_SIZE = 25 * 1024 * 1024; // 25MB
-const MAX_VIDEO_DURATION = 30; // 30 seconds
+const MAX_PHOTO_SIZE = 5 * 1024 * 1024; // 5 MB
+const MAX_VIDEO_SIZE = 10 * 1024 * 1024; // 10 MB
+const MAX_VIDEO_DURATION = 5; // 5 seconds
 
 const allBarangays = computed(() => Object.values(props.zones).flat());
 const barangayToZone = computed(() => {
@@ -1420,6 +1626,23 @@ const barangayToZone = computed(() => {
     return mapping;
 });
 const hasErrors = computed(() => Object.keys(form.errors).length > 0);
+
+// Enhanced form validation
+const isFormValid = computed(() => {
+    const basicValidation =
+        form.reporter_name &&
+        form.barangay &&
+        form.purok &&
+        form.description &&
+        form.water_issue_type &&
+        (form.water_issue_type !== "others" || form.custom_water_issue) &&
+        form.photos.length > 0;
+
+    const hasValidLocation =
+        form.latitude && form.longitude && locationStatus.value !== "error";
+
+    return basicValidation && hasValidLocation;
+});
 
 // Reset maximize state when modal is closed
 watch(
@@ -1440,6 +1663,490 @@ const formatTime = (seconds) => {
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, "0")}`;
 };
+
+// ==================== ENHANCED GPS LOCATION SYSTEM ====================
+
+const loadCachedLocation = () => {
+    try {
+        const cached = localStorage.getItem("lastKnownLocation");
+        if (cached) {
+            const location = JSON.parse(cached);
+            const cacheAge = Date.now() - location.timestamp;
+
+            if (cacheAge < locationCacheTimeout) {
+                lastKnownLocation.value = location;
+                return location;
+            } else {
+                localStorage.removeItem("lastKnownLocation");
+            }
+        }
+    } catch (e) {
+        console.warn("Failed to load cached location:", e);
+    }
+    return null;
+};
+
+const saveLocationToCache = (coords) => {
+    try {
+        const locationData = {
+            latitude: coords.latitude,
+            longitude: coords.longitude,
+            accuracy: coords.accuracy,
+            timestamp: Date.now(),
+        };
+        localStorage.setItem("lastKnownLocation", JSON.stringify(locationData));
+        lastKnownLocation.value = locationData;
+    } catch (e) {
+        console.warn("Failed to save location to cache:", e);
+    }
+};
+
+const useDefaultLocation = () => {
+    form.latitude = 9.9616;
+    form.longitude = 124.025;
+    locationStatus.value = "offline_default_location";
+    locationAccuracy.value = null;
+
+    Swal.fire({
+        icon: "warning",
+        title: "Using Default Location",
+        text: "GPS signal unavailable. Using center of Clarin, Bohol.",
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 4000,
+    });
+};
+
+// Enhanced getLocation function with caching system - MATCHING ReportForm.vue
+const getLocation = async () => {
+    // Clear any existing tracking first
+    stopLocationTracking();
+
+    // Try to use cached location first
+    const cachedLocation = loadCachedLocation();
+    if (cachedLocation) {
+        form.latitude = cachedLocation.latitude;
+        form.longitude = cachedLocation.longitude;
+        locationAccuracy.value = cachedLocation.accuracy
+            ? `${cachedLocation.accuracy.toFixed(1)}m`
+            : null;
+        locationStatus.value = "offline_cached_location";
+
+        // Start tracking for better accuracy
+        startLocationTracking();
+
+        return cachedLocation;
+    }
+
+    if (!navigator.geolocation) {
+        locationStatus.value = "error";
+        useDefaultLocation();
+        return null;
+    }
+
+    locationStatus.value = "loading";
+
+    return new Promise((resolve) => {
+        // CHANGED: Use the SAME settings as ReportForm.vue
+        const locationOptions = {
+            enableHighAccuracy: false, // ← CHANGED from true to false
+            timeout: 10000, // ← CHANGED from 30000 to 10000
+            maximumAge: 30000, // ← CHANGED from 0 to 30000
+        };
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const coords = {
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude,
+                    accuracy: position.coords.accuracy,
+                    timestamp: Date.now(),
+                };
+
+                console.log("GPS Acquired:", {
+                    lat: coords.latitude,
+                    lon: coords.longitude,
+                    accuracy: coords.accuracy,
+                });
+
+                saveLocationToCache(coords);
+                form.latitude = coords.latitude;
+                form.longitude = coords.longitude;
+                locationAccuracy.value = coords.accuracy
+                    ? `${coords.accuracy.toFixed(1)}m`
+                    : null;
+                locationStatus.value = "success";
+
+                // Start continuous tracking
+                startLocationTracking();
+
+                Swal.fire({
+                    icon: "success",
+                    title: "Location Acquired!",
+                    text: `Accuracy: ${
+                        coords.accuracy
+                            ? coords.accuracy.toFixed(1) + "m"
+                            : "Good"
+                    }`,
+                    toast: true,
+                    position: "bottom-end",
+                    showConfirmButton: false,
+                    timer: 4000,
+                });
+
+                resolve(coords);
+            },
+            (error) => {
+                console.error("Location error:", error);
+
+                // Try to use any cached location as fallback
+                const freshCache = loadCachedLocation();
+                if (freshCache) {
+                    form.latitude = freshCache.latitude;
+                    form.longitude = freshCache.longitude;
+                    locationAccuracy.value = freshCache.accuracy
+                        ? `${freshCache.accuracy.toFixed(1)}m`
+                        : null;
+                    locationStatus.value = "offline_cached_location";
+
+                    // Still start tracking for better accuracy
+                    startLocationTracking();
+
+                    resolve(freshCache);
+                } else {
+                    useDefaultLocation();
+                    resolve(null);
+                }
+            },
+            locationOptions
+        );
+    });
+};
+const startLocationTracking = () => {
+    if (!navigator.geolocation) return;
+
+    try {
+        if (locationWatchId.value) {
+            navigator.geolocation.clearWatch(locationWatchId.value);
+        }
+
+        locationWatchId.value = navigator.geolocation.watchPosition(
+            (position) => {
+                const coords = {
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude,
+                    accuracy: position.coords.accuracy,
+                    timestamp: Date.now(),
+                };
+
+                saveLocationToCache(coords);
+
+                // Always update with better accuracy data
+                form.latitude = coords.latitude;
+                form.longitude = coords.longitude;
+                locationAccuracy.value = coords.accuracy
+                    ? `${coords.accuracy.toFixed(1)}m`
+                    : null;
+                locationStatus.value = "success";
+
+                console.log("GPS Updated:", {
+                    lat: coords.latitude,
+                    lon: coords.longitude,
+                    accuracy: coords.accuracy,
+                });
+            },
+            (error) => {
+                console.warn("Location tracking error:", error.message);
+            },
+            {
+                // CHANGED: Use the EXACT SAME settings as ReportForm.vue
+                enableHighAccuracy: false, // ← CHANGED from true to false
+                maximumAge: 30000, // ← CHANGED from 15000 to 30000
+                timeout: 10000, // ← CHANGED from 15000 to 10000
+            }
+        );
+    } catch (error) {
+        console.error("Failed to start location tracking:", error);
+    }
+};
+
+const stopLocationTracking = () => {
+    if (locationWatchId.value) {
+        navigator.geolocation.clearWatch(locationWatchId.value);
+        locationWatchId.value = null;
+    }
+};
+
+const getLocationStatusIcon = () => {
+    switch (locationStatus.value) {
+        case "success":
+            return "bi-check-circle";
+        case "offline_cached_location":
+            return "bi-clock-history";
+        case "offline_default_location":
+            return "bi-geo-alt";
+        case "loading":
+            return "bi-arrow-repeat";
+        case "error":
+            return "bi-exclamation-triangle";
+        default:
+            return "bi-geo";
+    }
+};
+
+const getLocationStatusText = () => {
+    switch (locationStatus.value) {
+        case "success":
+            return "Live GPS Location";
+        case "offline_cached_location":
+            return "Cached GPS Location";
+        case "offline_default_location":
+            return "Default Area Location";
+        case "loading":
+            return "Acquiring GPS...";
+        case "error":
+            return "GPS Error";
+        default:
+            return "Location Unknown";
+    }
+};
+
+// ==================== SUBMIT REPORT FUNCTION ====================
+
+const submitReport = async () => {
+    // Check for required media
+    if (form.photos.length === 0) {
+        Swal.fire({
+            icon: "error",
+            title: "Media Required",
+            text: "At least one photo or video is required.",
+            timer: 3000,
+        });
+        return;
+    }
+
+    // Enhanced location validation
+    if (!form.latitude || !form.longitude) {
+        Swal.fire({
+            icon: "error",
+            title: "Location Required",
+            text: "Please wait for GPS location to be acquired.",
+            timer: 4000,
+        });
+        getLocation();
+        return;
+    }
+
+    // Check if recording is in progress
+    if (isRecording.value) {
+        Swal.fire({
+            icon: "warning",
+            title: "Recording in Progress",
+            text: "Please stop recording before submitting.",
+            timer: 3000,
+        });
+        return;
+    }
+
+    // Validate required fields
+    if (!form.water_issue_type) {
+        Swal.fire({
+            icon: "error",
+            title: "Issue Type Required",
+            text: "Please select a water issue type.",
+            timer: 3000,
+        });
+        return;
+    }
+
+    if (form.water_issue_type === "others" && !form.custom_water_issue.trim()) {
+        Swal.fire({
+            icon: "error",
+            title: "Custom Issue Required",
+            text: "Please provide a description for the custom water issue.",
+            timer: 3000,
+        });
+        return;
+    }
+
+    // Validate other required fields
+    if (!form.barangay || !form.purok || !form.description) {
+        Swal.fire({
+            icon: "error",
+            title: "Missing Information",
+            text: "Please fill in all required fields.",
+            timer: 3000,
+        });
+        return;
+    }
+
+    // If using default location, show confirmation
+    if (locationStatus.value === "offline_default_location") {
+        const result = await Swal.fire({
+            icon: "warning",
+            title: "Using Area Center Location",
+            text: "GPS signal is weak/unavailable. Your report will use the Clarin, Bohol center location. For more precise location, try moving to an area with better GPS signal.",
+            showCancelButton: true,
+            confirmButtonText: "Continue with Area Center",
+            cancelButtonText: "Try GPS Again",
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#6b7280",
+        });
+
+        if (!result.isConfirmed) {
+            getLocation();
+            return;
+        }
+    }
+
+    isSubmitting.value = true;
+
+    console.log("Form data before submission:", {
+        ...form.data(),
+        photos_count: form.photos.length,
+        location_status: locationStatus.value,
+        location_accuracy: locationAccuracy.value,
+    });
+
+    try {
+        await form.post(route("reports.store"), {
+            preserveScroll: true,
+            onSuccess: (response) => {
+                isSubmitting.value = false;
+                const trackingCode =
+                    response.props.trackingCode ||
+                    response.props.swal?.trackingCode;
+
+                Swal.fire({
+                    toast: true,
+                    position: "center",
+                    showConfirmButton: false,
+                    timer: 5000,
+                    timerProgressBar: true,
+                    html: `
+        <div class="text-center w-full">
+            <!-- Animated Checkmark -->
+            <div class="relative inline-block mb-4">
+                <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center animate-bounce">
+                    <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div class="absolute inset-0 bg-green-200 rounded-full animate-ping opacity-75"></div>
+            </div>
+
+            <!-- Content -->
+            <h3 class="text-green-800 font-bold text-2xl mb-3">Successfully Submitted! 🎉</h3>
+            <p class="text-green-700 text-sm mb-4">Your water report has been received and is now under review</p>
+
+            <!-- Tracking Code Box -->
+            <div class="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-5 mb-4 shadow-lg mx-auto w-full max-w-md">
+                <p class="text-white text-sm font-semibold mb-2 tracking-wide">YOUR TRACKING CODE</p>
+                <div class="flex items-center justify-between bg-white/10 rounded-lg px-4 py-3">
+                    <code class="text-white font-bold text-xl tracking-wider">${trackingCode}</code>
+                    <button onclick="navigator.clipboard.writeText('${trackingCode}')"
+                            class="text-white hover:text-green-200 transition-colors p-2 rounded-lg bg-white/20 hover:bg-white/30"
+                            title="Copy to clipboard">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Additional Info -->
+            <div class="grid grid-cols-2 gap-3 text-green-600 text-sm bg-green-50 rounded-lg p-4 mx-auto w-full max-w-md">
+                <div class="text-left">
+                    <p class="font-semibold">📍Location</p>
+                    <p class="text-xs">${form.barangay}, ${form.municipality}</p>
+                </div>
+                <div class="text-left">
+                    <p class="font-semibold">📍Purok</p>
+                    <p class="text-xs">${form.purok}</p>
+                </div>
+            </div>
+        </div>
+    `,
+                    didOpen: (toast) => {
+                        toast.addEventListener("mouseenter", Swal.stopTimer);
+                        toast.addEventListener("mouseleave", Swal.resumeTimer);
+
+                        // Add entrance animation
+                        toast.style.transform = "scale(0.8)";
+                        toast.style.opacity = "0";
+                        setTimeout(() => {
+                            toast.style.transition = "all 0.3s ease-out";
+                            toast.style.transform = "scale(1)";
+                            toast.style.opacity = "1";
+                        }, 100);
+                    },
+                    willClose: (toast) => {
+                        toast.style.transition = "all 0.3s ease-in";
+                        toast.style.transform = "scale(0.4)";
+                        toast.style.opacity = "0";
+                    },
+                    customClass: {
+                        popup: "!bg-white !border !border-green-200 !shadow-2xl !rounded-2xl !p-8 !max-w-2xl !w-auto !min-w-[550px] !backdrop-blur-sm",
+                        timerProgressBar:
+                            "!bg-gradient-to-r !from-green-400 !to-emerald-500 !h-1 !rounded-full",
+                    },
+                    background: "transparent",
+                    backdrop: false,
+                    width: "550px",
+                });
+
+                emit("update:successData", {
+                    trackingCode: trackingCode,
+                    dateSubmitted: new Date().toISOString(),
+                });
+                emit("update:showSuccessModal", true);
+                closeModal();
+            },
+            onError: (errors) => {
+                isSubmitting.value = false;
+                console.error("Form submission errors:", errors);
+
+                let errorMessage = "Please correct the errors and try again.";
+                if (errors.message) {
+                    errorMessage = errors.message;
+                } else if (errors.photos) {
+                    errorMessage = errors.photos;
+                } else if (errors.description) {
+                    errorMessage = errors.description;
+                }
+
+                Swal.fire({
+                    icon: "error",
+                    title: "Submission Failed",
+                    text: errorMessage,
+                    timer: 4000,
+                });
+            },
+        });
+    } catch (error) {
+        isSubmitting.value = false;
+        console.error("Submission error:", error);
+        Swal.fire({
+            icon: "error",
+            title: "Submission Error",
+            text: "An unexpected error occurred. Please try again.",
+            timer: 3000,
+        });
+    }
+};
+
+const closeModal = () => {
+    stopCamera();
+    stopLocationTracking();
+    form.reset();
+    form.clearErrors();
+    locationStatus.value = "idle";
+    locationAccuracy.value = null;
+    emit("update:isOpen", false);
+};
+
+// ==================== CAMERA FUNCTIONS ====================
 
 const initializeCamera = async () => {
     cameraError.value = "";
@@ -1661,139 +2368,9 @@ const restrictPhoneInput = (event) => {
     form.reporter_phone = value;
 };
 
-const submitReport = () => {
-    if (form.photos.length === 0) {
-        Swal.fire({
-            icon: "error",
-            title: "Media Required",
-            text: "At least one photo or video is required.",
-            timer: 3000,
-        });
-        return;
-    }
-    if (locationStatus.value !== "success") {
-        Swal.fire({
-            icon: "error",
-            title: "Location Required",
-            text: "Please enable GPS/location services.",
-            timer: 3000,
-        });
-        getLocation();
-        return;
-    }
-    if (isRecording.value) {
-        Swal.fire({
-            icon: "warning",
-            title: "Recording in Progress",
-            text: "Please stop recording.",
-            timer: 3000,
-        });
-        return;
-    }
-    if (!form.water_issue_type) {
-        Swal.fire({
-            icon: "error",
-            title: "Issue Type Required",
-            text: "Please select a water issue type.",
-            timer: 3000,
-        });
-        return;
-    }
-    if (form.water_issue_type === "others" && !form.custom_water_issue.trim()) {
-        Swal.fire({
-            icon: "error",
-            title: "Custom Issue Required",
-            text: "Please provide a description for the custom water issue.",
-            timer: 3000,
-        });
-        return;
-    }
+// ==================== WATCHERS AND LIFECYCLE ====================
 
-    isSubmitting.value = true;
-
-    console.log("Form data before submission:", form.data());
-
-    form.post(route("reports.store"), {
-        preserveScroll: true,
-        onSuccess: (response) => {
-            isSubmitting.value = false;
-            const trackingCode =
-                response.props.trackingCode ||
-                response.props.swal?.trackingCode;
-            Swal.fire({
-                toast: true,
-                position: "top-end",
-                showConfirmButton: false,
-                timer: 5000,
-                timerProgressBar: true,
-                icon: "success",
-                title: "Report Submitted Successfully!",
-                text: `Your tracking code is ${trackingCode}. Save it for reference.`,
-                didOpen: (toast) => {
-                    toast.addEventListener("mouseenter", Swal.stopTimer);
-                    toast.addEventListener("mouseleave", Swal.resumeTimer);
-                },
-            });
-            emit("update:successData", {
-                trackingCode: trackingCode,
-                dateSubmitted: response.props.dateSubmitted,
-            });
-            emit("update:showSuccessModal", true);
-            closeModal();
-        },
-        onError: (errors) => {
-            isSubmitting.value = false;
-            console.error("Form submission errors:", errors);
-            Swal.fire({
-                icon: "error",
-                title: "Submission Failed",
-                text:
-                    errors.message ||
-                    "Please correct the errors and try again.",
-                timer: 3000,
-            });
-        },
-    });
-};
-
-const getLocation = () => {
-    if (!navigator.geolocation) {
-        locationStatus.value = "error";
-        Swal.fire({
-            icon: "error",
-            title: "Geolocation Not Supported",
-            text: "Your browser does not support location services.",
-            timer: 3000,
-        });
-        return;
-    }
-    locationStatus.value = "loading";
-    navigator.geolocation.getCurrentPosition(
-        (position) => {
-            form.latitude = position.coords.latitude;
-            form.longitude = position.coords.longitude;
-            locationStatus.value = "success";
-        },
-        () => {
-            locationStatus.value = "error";
-            Swal.fire({
-                icon: "error",
-                title: "Location Access Denied",
-                text: "Please enable GPS/location services.",
-                timer: 3000,
-            });
-        },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 300000 }
-    );
-};
-
-const closeModal = () => {
-    stopCamera();
-    form.reset();
-    form.clearErrors();
-    emit("update:isOpen", false);
-};
-
+// Watch for barangay changes to auto-fill zone
 watch(
     () => form.barangay,
     (newBarangay) => {
@@ -1801,6 +2378,7 @@ watch(
     }
 );
 
+// Watch for water issue type changes
 watch(
     () => form.water_issue_type,
     (newIssueType) => {
@@ -1810,13 +2388,32 @@ watch(
     }
 );
 
+// Initialize location when modal opens with enhanced system
+watch(
+    () => props.isOpen,
+    (newVal) => {
+        if (newVal) {
+            // Start location tracking immediately
+            startLocationTracking();
+
+            // Small delay to ensure modal is fully rendered, then get location
+            setTimeout(() => {
+                getLocation();
+            }, 500);
+        } else {
+            isMaximized.value = false;
+            stopLocationTracking();
+        }
+    }
+);
+
 onMounted(() => {
-    getLocation();
     form.reporter_name = user?.name || "Authenticated User";
 });
 
 onUnmounted(() => {
     stopCamera();
+    stopLocationTracking();
     form.photo_previews.forEach((url) => URL.revokeObjectURL(url));
 });
 </script>

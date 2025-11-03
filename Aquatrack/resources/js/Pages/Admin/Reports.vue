@@ -135,18 +135,6 @@
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Footer -->
-                        <div
-                            class="flex justify-end p-4 border-t border-gray-200 dark:border-gray-700"
-                        >
-                            <button
-                                @click="closeReporterModal"
-                                class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600 transition-colors"
-                            >
-                                Close
-                            </button>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -1621,7 +1609,7 @@ const formatTime = (dateString) => {
 // Enhanced styling helpers for Hybrid type
 const userTypeClasses = (userType) => {
     if (userType === "Hybrid") {
-        return "bg-gradient-to-r from-purple-100 to-gray-100 text-purple-800 dark:from-purple-900 dark:to-gray-900 dark:text-purple-200 border border-purple-200 dark:border-purple-700";
+        return "bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-800 dark:from-blue-900 dark:to-cyan-900 dark:text-blue-200 border border-blue-200 dark:border-blue-700";
     } else if (userType === "Registered") {
         return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200";
     } else {
@@ -1631,7 +1619,7 @@ const userTypeClasses = (userType) => {
 
 const getUserTypeDotClass = (userType) => {
     if (userType === "Hybrid") {
-        return "bg-gradient-to-r from-purple-400 to-gray-400";
+        return "bg-gradient-to-r from-blue-400 to-cyan-400";
     } else if (userType === "Registered") {
         return "bg-purple-400";
     } else {
@@ -1660,9 +1648,18 @@ const getDisplayUserType = (report) => {
         else if (uniqueTypes.length === 1) {
             return uniqueTypes[0];
         }
-        // Fallback: check if we have mixed types based on user_id and multiple reporters
-        else if (report.user_id && report.reporter_name.includes(",")) {
-            return "Hybrid";
+        // If no user_types data is available, check if we have mixed reporters
+        else {
+            // Check if initial reporter is registered but there are guest contributors
+            const hasRegistered = report.user_id; // initial reporter is registered
+            const hasGuests =
+                report.reporter_name &&
+                report.reporter_name.split(",").length > 1; // multiple reporters
+
+            if (hasRegistered && hasGuests) {
+                return "Hybrid";
+            }
+            return report.user_id ? "Registered" : "Guest";
         }
     }
 
@@ -1738,7 +1735,7 @@ const getReporterTypeClasses = (type) => {
         case "Guest":
             return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
         case "Hybrid":
-            return "bg-gradient-to-r from-purple-100 to-gray-100 text-purple-800 dark:from-purple-900 dark:to-gray-900 dark:text-purple-200";
+            return "bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-800 dark:from-blue-900 dark:to-cyan-900 dark:text-blue-200";
         default:
             return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
     }

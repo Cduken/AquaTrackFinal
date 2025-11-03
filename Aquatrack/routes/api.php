@@ -2,7 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\NotificationsController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ReportController;
 
 /*
@@ -23,8 +23,9 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 // Reports notifications endpoint
 Route::middleware('auth:sanctum')->group(function () {
     // Reports notifications endpoint
-    Route::get('/reports/notifications', [NotificationsController::class, 'getReports'])
+    Route::get('/reports/notifications', [NotificationController::class, 'getReports'])
         ->name('api.reports.notifications');
+
 
 
     // Existing report API routes

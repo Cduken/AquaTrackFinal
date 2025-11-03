@@ -7,199 +7,349 @@
         leave-from-class="opacity-100"
         leave-to-class="opacity-0"
     >
-        <div v-if="show" class="fixed inset-0 z-50 overflow-y-auto ">
+        <div v-if="show" class="fixed inset-0 z-50 overflow-y-auto">
             <!-- Overlay -->
             <div
-                class="fixed inset-0 bg-black/50 transition-opacity duration-300"
+                class="fixed inset-0 bg-black/60 transition-opacity duration-300"
                 @click="emit('close')"
             />
 
             <!-- Modal Container -->
-            <div class="flex min-h-full items-stretch p-0">
+            <div class="flex min-h-full items-center justify-center p-4">
                 <div
                     class="relative w-full transform transition-all duration-300"
+                    :class="isMaximized ? 'max-w-full h-full' : 'max-w-4xl'"
                 >
                     <div
-                        class="bg-white flex flex-col"
-                        :class="
-                            isMaximized
-                                ? 'h-screen'
-                                : 'h-[90vh] max-w-4xl mx-auto mt-8 rounded-1xl shadow-2xl'
-                        "
+                        class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+                        :class="isMaximized ? 'h-screen' : 'max-h-[90vh]'"
                     >
-                        <!-- Fixed Header -->
-                        <div
-                            class="flex items-center justify-between py-4 border-b border-gray-200 flex-shrink-0 bg-white px-6"
-                        >
-                            <h2 class="text-xl font-semibold text-gray-900">
-                                Report Details
-                            </h2>
-                            <div class="flex items-center space-x-2">
-                                <button
-                                    @click="toggleMaximize"
-                                    class="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-                                    :title="
-                                        isMaximized ? 'Minimize' : 'Maximize'
-                                    "
-                                >
-                                    <v-icon
-                                        :name="
+                        <!-- Header -->
+                        <div class="bg-[#062F64] px-6 py-4 flex-shrink-0">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <div>
+                                        <h2
+                                            class="text-xl font-bold text-white"
+                                        >
+                                            Report Details
+                                        </h2>
+                                        <p
+                                            class="text-blue-100 text-sm mt-1"
+                                            v-if="report"
+                                        >
+                                            Report ID: {{ report.id }} •
+                                            {{ formatDate(report.created_at) }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <!-- Maximize Button -->
+                                    <button
+                                        @click="toggleMaximize"
+                                        class="p-2 text-white hover:text-blue-200 hover:bg-white/10 rounded-lg transition-all duration-200"
+                                        :title="
                                             isMaximized
-                                                ? 'bi-fullscreen-exit'
-                                                : 'bi-fullscreen'
+                                                ? 'Minimize'
+                                                : 'Maximize'
                                         "
-                                        class="w-5 h-5"
-                                    />
-                                </button>
-                                <button
-                                    @click="emit('close')"
-                                    class="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-                                >
-                                    <v-icon name="bi-x-lg" class="w-5 h-5" />
-                                </button>
+                                    >
+                                        <component
+                                            :is="
+                                                isMaximized
+                                                    ? Minimize2Icon
+                                                    : Maximize2Icon
+                                            "
+                                            class="w-5 h-5"
+                                        />
+                                    </button>
+                                    <!-- Close Button -->
+                                    <button
+                                        @click="emit('close')"
+                                        class="p-2 text-white hover:text-blue-200 hover:bg-white/10 rounded-lg transition-all duration-200"
+                                    >
+                                        <component
+                                            :is="XIcon"
+                                            class="w-5 h-5"
+                                        />
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Scrollable Content -->
-                        <div class="flex-1 overflow-y-auto p-4">
+                        <!-- Loading State -->
+                        <div
+                            v-if="!report"
+                            class="flex-1 flex items-center justify-center py-16"
+                        >
+                            <div class="text-center">
+                                <div
+                                    class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"
+                                ></div>
+                                <p
+                                    class="text-gray-600 dark:text-gray-400 font-medium"
+                                >
+                                    Loading report details...
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Content -->
+                        <div
+                            v-else
+                            class="flex-1 overflow-y-auto p-6"
+                            :class="isMaximized ? 'p-8' : ''"
+                        >
                             <div
-                                v-if="report"
-                                class="space-y-6 max-w-7xl mx-auto"
+                                class="space-y-6"
+                                :class="isMaximized ? 'max-w-full mx-auto' : ''"
                             >
-                                <!-- Status and Priority Badges -->
-                                <div class="flex flex-wrap gap-4">
+                                <!-- Status Banner -->
+                                <div
+                                    class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-6 border border-blue-100 dark:border-blue-800"
+                                >
                                     <div
-                                        class="flex items-center bg-gray-50 px-4 py-3 rounded-lg border border-gray-200"
+                                        class="flex items-center justify-between"
                                     >
-                                        <v-icon
-                                            name="bi-circle-fill"
-                                            class="w-5 h-5 text-blue-500 mr-2"
-                                        />
-                                        <span
-                                            class="text-base font-medium text-gray-700"
-                                            >ID: {{ report.id }}</span
+                                        <div
+                                            class="flex items-center space-x-4"
                                         >
-                                    </div>
-                                    <span
-                                        class="px-4 py-3 text-base font-semibold rounded-lg border"
-                                        :class="statusClass"
-                                    >
-                                        {{ statusLabel }}
-                                    </span>
-                                    <span
-                                        class="px-4 py-3 text-base font-semibold rounded-lg border"
-                                        :class="priorityClass"
-                                    >
-                                        {{ formatPriority(report.priority) }}
-                                    </span>
-                                    <div
-                                        class="flex items-center bg-gray-50 px-4 py-3 rounded-lg border border-gray-200"
-                                    >
-                                        <v-icon
-                                            name="bi-calendar"
-                                            class="w-5 h-5 text-gray-500 mr-2"
-                                        />
-                                        <span class="text-base text-gray-700">
-                                            {{ formatDate(report.created_at) }}
-                                        </span>
+                                            <div
+                                                class="flex items-center space-x-3"
+                                            >
+                                                <!-- <div
+                                                    class="w-12 h-12 rounded-full border-2 border-white dark:border-gray-800 shadow-lg overflow-hidden bg-white flex items-center justify-center"
+                                                >
+                                                    <v-icon
+                                                        name="bi-file-earmark-text"
+                                                        class="text-blue-600 dark:text-blue-400 w-6 h-6"
+                                                    />
+                                                </div> -->
+                                                <div>
+                                                    <p
+                                                        class="text-sm text-gray-500 dark:text-gray-400"
+                                                    >
+                                                        Report
+                                                    </p>
+                                                    <p
+                                                        class="text-lg font-semibold text-gray-900 dark:text-white"
+                                                    >
+                                                        ID: {{ report.id }}
+                                                    </p>
+                                                    <p
+                                                        class="text-sm text-gray-600 dark:text-gray-400"
+                                                    >
+                                                        {{
+                                                            formatDateTime(
+                                                                report.created_at
+                                                            )
+                                                        }}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div
+                                                class="h-8 w-px bg-gray-300 dark:bg-gray-600"
+                                            ></div>
+                                            <div
+                                                class="flex items-center space-x-3"
+                                            >
+                                                <!-- <div
+                                                    class="p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm"
+                                                >
+                                                    <v-icon
+                                                        name="bi-flag"
+                                                        class="text-purple-600 dark:text-purple-400 w-6 h-6"
+                                                    />
+                                                </div> -->
+                                                <div>
+                                                    <p
+                                                        class="text-sm text-gray-500 dark:text-gray-400"
+                                                    >
+                                                        Priority
+                                                    </p>
+                                                    <p
+                                                        class="text-lg font-semibold text-gray-900 dark:text-white"
+                                                    >
+                                                        {{
+                                                            formatPriority(
+                                                                report.priority
+                                                            )
+                                                        }}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            <span
+                                                class="px-4 py-2.5 text-sm font-semibold rounded-full border shadow-sm"
+                                                :class="statusClass"
+                                            >
+                                                {{ statusLabel }}
+                                            </span>
+                                            <p
+                                                class="text-sm text-gray-500 dark:text-gray-400 mt-4"
+                                            >
+                                                Tracking:
+                                                {{
+                                                    report.tracking_code ||
+                                                    "N/A"
+                                                }}
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
 
                                 <!-- Main Grid Layout -->
                                 <div
-                                    class="grid grid-cols-1 xl:grid-cols-2 gap-8"
+                                    class="grid grid-cols-1 xl:grid-cols-2 gap-6"
+                                    :class="isMaximized ? 'gap-8' : ''"
                                 >
                                     <!-- Left Column -->
-                                    <div class="space-y-8">
+                                    <div
+                                        class="space-y-6"
+                                        :class="isMaximized ? 'space-y-8' : ''"
+                                    >
                                         <!-- Location Information -->
                                         <div
-                                            class="bg-white border border-gray-200 rounded-xl shadow-sm"
+                                            class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm"
                                         >
                                             <div
-                                                class="bg-gray-50 px-6 py-4 border-b border-gray-200"
+                                                class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 px-6 py-4 border-b border-gray-200 dark:border-gray-600"
                                             >
                                                 <h3
-                                                    class="text-lg font-semibold text-gray-900 flex items-center"
+                                                    class="text-lg font-semibold text-gray-900 dark:text-white flex items-center"
                                                 >
                                                     <v-icon
                                                         name="bi-geo-alt"
-                                                        class="w-5 h-5 text-blue-600 mr-2"
+                                                        class="w-5 h-5 text-blue-600 dark:text-blue-400 mr-2"
                                                     />
                                                     Location Information
                                                 </h3>
                                             </div>
                                             <div class="p-6 space-y-4">
                                                 <div
-                                                    class="grid grid-cols-2 gap-6"
+                                                    class="grid grid-cols-1 md:grid-cols-2 gap-4"
                                                 >
-                                                    <div>
-                                                        <label
-                                                            class="text-sm text-gray-500 font-medium"
-                                                            >Municipality</label
+                                                    <div
+                                                        class="flex items-start space-x-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg"
+                                                    >
+                                                        <div
+                                                            class="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg"
                                                         >
-                                                        <p
-                                                            class="text-base font-medium text-gray-900 mt-2"
-                                                        >
-                                                            {{
-                                                                report.municipality ||
-                                                                "N/A"
-                                                            }}
-                                                        </p>
+                                                            <v-icon
+                                                                name="bi-building"
+                                                                class="text-blue-600 dark:text-blue-400 w-4 h-4"
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <p
+                                                                class="text-sm text-gray-500 dark:text-gray-400"
+                                                            >
+                                                                Municipality
+                                                            </p>
+                                                            <p
+                                                                class="font-medium text-gray-900 dark:text-white"
+                                                            >
+                                                                {{
+                                                                    report.municipality ||
+                                                                    "N/A"
+                                                                }}
+                                                            </p>
+                                                        </div>
                                                     </div>
-                                                    <div>
-                                                        <label
-                                                            class="text-sm text-gray-500 font-medium"
-                                                            >Province</label
+                                                    <div
+                                                        class="flex items-start space-x-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg"
+                                                    >
+                                                        <div
+                                                            class="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg"
                                                         >
-                                                        <p
-                                                            class="text-base font-medium text-gray-900 mt-2"
-                                                        >
-                                                            {{
-                                                                report.province ||
-                                                                "N/A"
-                                                            }}
-                                                        </p>
+                                                            <v-icon
+                                                                name="bi-map"
+                                                                class="text-blue-600 dark:text-blue-400 w-4 h-4"
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <p
+                                                                class="text-sm text-gray-500 dark:text-gray-400"
+                                                            >
+                                                                Province
+                                                            </p>
+                                                            <p
+                                                                class="font-medium text-gray-900 dark:text-white"
+                                                            >
+                                                                {{
+                                                                    report.province ||
+                                                                    "N/A"
+                                                                }}
+                                                            </p>
+                                                        </div>
                                                     </div>
-                                                    <div>
-                                                        <label
-                                                            class="text-sm text-gray-500 font-medium"
-                                                            >Barangay</label
+                                                    <div
+                                                        class="flex items-start space-x-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg"
+                                                    >
+                                                        <div
+                                                            class="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg"
                                                         >
-                                                        <p
-                                                            class="text-base font-medium text-gray-900 mt-2"
-                                                        >
-                                                            {{
-                                                                report.barangay ||
-                                                                "N/A"
-                                                            }}
-                                                        </p>
+                                                            <v-icon
+                                                                name="bi-geo"
+                                                                class="text-blue-600 dark:text-blue-400 w-4 h-4"
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <p
+                                                                class="text-sm text-gray-500 dark:text-gray-400"
+                                                            >
+                                                                Barangay
+                                                            </p>
+                                                            <p
+                                                                class="font-medium text-gray-900 dark:text-white"
+                                                            >
+                                                                {{
+                                                                    report.barangay ||
+                                                                    "N/A"
+                                                                }}
+                                                            </p>
+                                                        </div>
                                                     </div>
-                                                    <div>
-                                                        <label
-                                                            class="text-sm text-gray-500 font-medium"
-                                                            >Purok/Street</label
+                                                    <div
+                                                        class="flex items-start space-x-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg"
+                                                    >
+                                                        <div
+                                                            class="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg"
                                                         >
-                                                        <p
-                                                            class="text-base font-medium text-gray-900 mt-2"
-                                                        >
-                                                            {{
-                                                                report.purok ||
-                                                                "N/A"
-                                                            }}
-                                                        </p>
+                                                            <v-icon
+                                                                name="bi-signpost"
+                                                                class="text-blue-600 dark:text-blue-400 w-4 h-4"
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <p
+                                                                class="text-sm text-gray-500 dark:text-gray-400"
+                                                            >
+                                                                Purok/Street
+                                                            </p>
+                                                            <p
+                                                                class="font-medium text-gray-900 dark:text-white"
+                                                            >
+                                                                {{
+                                                                    report.purok ||
+                                                                    "N/A"
+                                                                }}
+                                                            </p>
+                                                        </div>
                                                     </div>
                                                 </div>
 
                                                 <!-- GPS Coordinates -->
                                                 <div
-                                                    class="bg-blue-50 p-4 rounded-lg border border-blue-200 mt-4"
+                                                    class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800"
                                                 >
                                                     <div
                                                         class="flex items-center justify-between"
                                                     >
                                                         <div>
                                                             <label
-                                                                class="text-sm text-blue-700 font-medium"
+                                                                class="text-sm text-blue-700 dark:text-blue-300 font-medium"
                                                                 >GPS
                                                                 Coordinates</label
                                                             >
@@ -207,7 +357,7 @@
                                                                 class="flex gap-4 mt-2"
                                                             >
                                                                 <span
-                                                                    class="text-base font-medium text-blue-900"
+                                                                    class="text-base font-medium text-blue-900 dark:text-blue-100"
                                                                 >
                                                                     Lat:
                                                                     {{
@@ -215,7 +365,7 @@
                                                                     }}
                                                                 </span>
                                                                 <span
-                                                                    class="text-base font-medium text-blue-900"
+                                                                    class="text-base font-medium text-blue-900 dark:text-blue-100"
                                                                 >
                                                                     Lon:
                                                                     {{
@@ -226,34 +376,34 @@
                                                         </div>
                                                         <v-icon
                                                             name="bi-geo-alt-fill"
-                                                            class="text-blue-600 text-xl"
+                                                            class="text-blue-600 dark:text-blue-400 text-xl"
                                                         />
                                                     </div>
                                                 </div>
 
                                                 <!-- Map Section -->
-                                                <div class="mt-5">
+                                                <div class="mt-4">
                                                     <div
                                                         v-if="
                                                             report.latitude &&
                                                             report.longitude
                                                         "
                                                         ref="mapContainer"
-                                                        class="w-full rounded-xl border border-gray-300 shadow-sm relative h-80"
+                                                        class="w-full rounded-xl border border-gray-300 dark:border-gray-600 shadow-sm relative h-80"
                                                     >
                                                         <div
                                                             v-if="!mapLoaded"
-                                                            class="absolute inset-0 flex items-center justify-center bg-gray-100 bg-opacity-80 z-10"
+                                                            class="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800 bg-opacity-80 z-10"
                                                         >
                                                             <div
                                                                 class="text-center"
                                                             >
                                                                 <v-icon
                                                                     name="bi-compass"
-                                                                    class="text-blue-500 text-3xl mb-2 animate-spin"
+                                                                    class="text-blue-500 dark:text-blue-400 text-3xl mb-2 animate-spin"
                                                                 />
                                                                 <p
-                                                                    class="text-base text-gray-600"
+                                                                    class="text-base text-gray-600 dark:text-gray-400"
                                                                 >
                                                                     Loading
                                                                     map...
@@ -263,10 +413,10 @@
                                                     </div>
                                                     <div
                                                         v-else
-                                                        class="w-full rounded-xl border border-gray-300 bg-gray-50 flex items-center justify-center h-80"
+                                                        class="w-full rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 flex items-center justify-center h-80"
                                                     >
                                                         <div
-                                                            class="text-center text-gray-500"
+                                                            class="text-center text-gray-500 dark:text-gray-400"
                                                         >
                                                             <v-icon
                                                                 name="bi-geo-alt"
@@ -287,17 +437,17 @@
 
                                         <!-- Reporter Information -->
                                         <div
-                                            class="bg-white border border-gray-200 rounded-xl shadow-sm"
+                                            class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm"
                                         >
                                             <div
-                                                class="bg-gray-50 px-6 py-4 border-b border-gray-200"
+                                                class="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 px-6 py-4 border-b border-gray-200 dark:border-gray-600"
                                             >
                                                 <h3
-                                                    class="text-lg font-semibold text-gray-900 flex items-center"
+                                                    class="text-lg font-semibold text-gray-900 dark:text-white flex items-center"
                                                 >
                                                     <v-icon
                                                         name="bi-person"
-                                                        class="w-5 h-5 text-blue-600 mr-2"
+                                                        class="w-5 h-5 text-purple-600 dark:text-purple-400 mr-2"
                                                     />
                                                     Reporter Information
                                                 </h3>
@@ -306,53 +456,90 @@
                                                 <div
                                                     class="grid grid-cols-1 gap-4"
                                                 >
-                                                    <div>
-                                                        <label
-                                                            class="text-sm text-gray-500 font-medium"
-                                                            >Reporter
-                                                            Name</label
+                                                    <div
+                                                        class="flex items-start space-x-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg"
+                                                    >
+                                                        <div
+                                                            class="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg"
                                                         >
-                                                        <p
-                                                            class="text-base font-medium text-gray-900 mt-2"
-                                                        >
-                                                            {{
-                                                                report.reporter_name ||
-                                                                "N/A"
-                                                            }}
-                                                        </p>
+                                                            <v-icon
+                                                                name="bi-person-badge"
+                                                                class="text-purple-600 dark:text-purple-400 w-4 h-4"
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <p
+                                                                class="text-sm text-gray-500 dark:text-gray-400"
+                                                            >
+                                                                Reporter Name
+                                                            </p>
+                                                            <p
+                                                                class="font-medium text-gray-900 dark:text-white"
+                                                            >
+                                                                {{
+                                                                    report.reporter_name ||
+                                                                    "N/A"
+                                                                }}
+                                                            </p>
+                                                        </div>
                                                     </div>
                                                     <div
                                                         v-if="
                                                             report.reporter_phone
                                                         "
+                                                        class="flex items-start space-x-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg"
                                                     >
-                                                        <label
-                                                            class="text-sm text-gray-500 font-medium"
-                                                            >Phone Number</label
+                                                        <div
+                                                            class="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg"
                                                         >
-                                                        <p
-                                                            class="text-base font-medium text-gray-900 mt-2"
-                                                        >
-                                                            {{
-                                                                report.reporter_phone
-                                                            }}
-                                                        </p>
+                                                            <v-icon
+                                                                name="bi-telephone"
+                                                                class="text-purple-600 dark:text-purple-400 w-4 h-4"
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <p
+                                                                class="text-sm text-gray-500 dark:text-gray-400"
+                                                            >
+                                                                Phone Number
+                                                            </p>
+                                                            <p
+                                                                class="font-medium text-gray-900 dark:text-white"
+                                                            >
+                                                                {{
+                                                                    report.reporter_phone
+                                                                }}
+                                                            </p>
+                                                        </div>
                                                     </div>
-                                                    <div v-if="report.user">
-                                                        <label
-                                                            class="text-sm text-gray-500 font-medium"
-                                                            >Registered
-                                                            User</label
+                                                    <div
+                                                        v-if="report.user"
+                                                        class="flex items-start space-x-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg"
+                                                    >
+                                                        <div
+                                                            class="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg"
                                                         >
-                                                        <p
-                                                            class="text-base font-medium text-gray-900 mt-2"
-                                                        >
-                                                            {{
-                                                                report.user
-                                                                    ?.name ||
-                                                                "N/A"
-                                                            }}
-                                                        </p>
+                                                            <v-icon
+                                                                name="bi-person-check"
+                                                                class="text-purple-600 dark:text-purple-400 w-4 h-4"
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <p
+                                                                class="text-sm text-gray-500 dark:text-gray-400"
+                                                            >
+                                                                Registered User
+                                                            </p>
+                                                            <p
+                                                                class="font-medium text-gray-900 dark:text-white"
+                                                            >
+                                                                {{
+                                                                    report.user
+                                                                        ?.name ||
+                                                                    "N/A"
+                                                                }}
+                                                            </p>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -360,53 +547,69 @@
                                     </div>
 
                                     <!-- Right Column -->
-                                    <div class="space-y-8">
+                                    <div
+                                        class="space-y-6"
+                                        :class="isMaximized ? 'space-y-8' : ''"
+                                    >
                                         <!-- Issue Information -->
                                         <div
-                                            class="bg-white border border-gray-200 rounded-xl shadow-sm"
+                                            class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm"
                                         >
                                             <div
-                                                class="bg-gray-50 px-6 py-4 border-b border-gray-200"
+                                                class="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 px-6 py-4 border-b border-gray-200 dark:border-gray-600"
                                             >
                                                 <h3
-                                                    class="text-lg font-semibold text-gray-900 flex items-center"
+                                                    class="text-lg font-semibold text-gray-900 dark:text-white flex items-center"
                                                 >
                                                     <v-icon
                                                         name="bi-droplet"
-                                                        class="w-5 h-5 text-blue-600 mr-2"
+                                                        class="w-5 h-5 text-green-600 dark:text-green-400 mr-2"
                                                     />
                                                     Issue Details
                                                 </h3>
                                             </div>
                                             <div class="p-6 space-y-4">
-                                                <div>
-                                                    <label
-                                                        class="text-sm text-gray-500 font-medium"
-                                                        >Issue Type</label
+                                                <div
+                                                    class="flex items-start space-x-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg"
+                                                >
+                                                    <div
+                                                        class="p-2 bg-green-100 dark:bg-green-900 rounded-lg"
                                                     >
-                                                    <p
-                                                        class="text-base font-medium text-gray-900 mt-2"
-                                                    >
-                                                        {{
-                                                            report.water_issue_type ===
-                                                            "others"
-                                                                ? report.custom_water_issue ||
-                                                                  "Custom Issue"
-                                                                : report.water_issue_type ||
-                                                                  "N/A"
-                                                        }}
-                                                    </p>
+                                                        <v-icon
+                                                            name="bi-tag"
+                                                            class="text-green-600 dark:text-green-400 w-4 h-4"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <p
+                                                            class="text-sm text-gray-500 dark:text-gray-400"
+                                                        >
+                                                            Issue Type
+                                                        </p>
+                                                        <p
+                                                            class="font-medium text-gray-900 dark:text-white"
+                                                        >
+                                                            {{
+                                                                report.water_issue_type ===
+                                                                "others"
+                                                                    ? report.custom_water_issue ||
+                                                                      "Custom Issue"
+                                                                    : report.water_issue_type ||
+                                                                      "N/A"
+                                                            }}
+                                                        </p>
+                                                    </div>
                                                 </div>
                                                 <div>
                                                     <label
-                                                        class="text-sm text-gray-500 font-medium"
+                                                        class="text-sm text-gray-500 dark:text-gray-400 font-medium"
                                                         >Description</label
                                                     >
                                                     <div
-                                                        class="bg-gray-50 p-4 rounded-lg border border-gray-200 mt-2"
+                                                        class="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-lg border border-gray-200 dark:border-gray-600 mt-2"
                                                     >
                                                         <p
-                                                            class="text-base text-gray-700 whitespace-pre-line"
+                                                            class="text-base text-gray-700 dark:text-gray-300 whitespace-pre-line"
                                                         >
                                                             {{
                                                                 report.description ||
@@ -424,17 +627,17 @@
                                                 report.photos &&
                                                 report.photos.length
                                             "
-                                            class="bg-white border border-gray-200 rounded-xl shadow-sm"
+                                            class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm"
                                         >
                                             <div
-                                                class="bg-gray-50 px-6 py-4 border-b border-gray-200"
+                                                class="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 px-6 py-4 border-b border-gray-200 dark:border-gray-600"
                                             >
                                                 <h3
-                                                    class="text-lg font-semibold text-gray-900 flex items-center"
+                                                    class="text-lg font-semibold text-gray-900 dark:text-white flex items-center"
                                                 >
                                                     <v-icon
                                                         name="bi-images"
-                                                        class="w-5 h-5 text-blue-600 mr-2"
+                                                        class="w-5 h-5 text-orange-600 dark:text-orange-400 mr-2"
                                                     />
                                                     Media ({{
                                                         report.photos.length
@@ -450,7 +653,7 @@
                                                             media, index
                                                         ) in report.photos"
                                                         :key="index"
-                                                        class="relative group overflow-hidden rounded-xl border border-gray-200 shadow-sm transition-all duration-300 hover:shadow-md hover:border-blue-300 cursor-pointer h-40"
+                                                        class="relative group overflow-hidden rounded-xl border border-gray-200 dark:border-gray-600 shadow-sm transition-all duration-300 hover:shadow-md hover:border-blue-300 dark:hover:border-blue-500 cursor-pointer h-40"
                                                         @click="
                                                             openMediaModal(
                                                                 media,
@@ -543,69 +746,76 @@
 
                                         <!-- Additional Information -->
                                         <div
-                                            class="bg-white border border-gray-200 rounded-xl shadow-sm"
+                                            class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm"
                                         >
                                             <div
-                                                class="bg-gray-50 px-6 py-4 border-b border-gray-200"
+                                                class="bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-900/20 dark:to-blue-900/20 px-6 py-4 border-b border-gray-200 dark:border-gray-600"
                                             >
                                                 <h3
-                                                    class="text-lg font-semibold text-gray-900 flex items-center"
+                                                    class="text-lg font-semibold text-gray-900 dark:text-white flex items-center"
                                                 >
                                                     <v-icon
                                                         name="bi-info-circle"
-                                                        class="w-5 h-5 text-blue-600 mr-2"
+                                                        class="w-5 h-5 text-gray-600 dark:text-gray-400 mr-2"
                                                     />
                                                     Additional Information
                                                 </h3>
                                             </div>
                                             <div class="p-6 space-y-4">
                                                 <div
-                                                    class="grid grid-cols-2 gap-6"
+                                                    class="grid grid-cols-1 md:grid-cols-2 gap-4"
                                                 >
-                                                    <div>
-                                                        <label
-                                                            class="text-sm text-gray-500 font-medium"
-                                                            >Submitted
-                                                            Date</label
+                                                    <div
+                                                        class="flex items-start space-x-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg"
+                                                    >
+                                                        <div
+                                                            class="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg"
                                                         >
-                                                        <p
-                                                            class="text-base font-medium text-gray-900 mt-2"
-                                                        >
-                                                            {{
-                                                                formatDateTime(
-                                                                    report.created_at
-                                                                )
-                                                            }}
-                                                        </p>
+                                                            <v-icon
+                                                                name="bi-calendar"
+                                                                class="text-gray-600 dark:text-gray-400 w-4 h-4"
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <p
+                                                                class="text-sm text-gray-500 dark:text-gray-400"
+                                                            >
+                                                                Submitted Date
+                                                            </p>
+                                                            <p
+                                                                class="font-medium text-gray-900 dark:text-white"
+                                                            >
+                                                                {{
+                                                                    formatDateTime(
+                                                                        report.created_at
+                                                                    )
+                                                                }}
+                                                            </p>
+                                                        </div>
                                                     </div>
-                                                    <div>
-                                                        <label
-                                                            class="text-sm text-gray-500 font-medium"
-                                                            >User Type</label
+                                                    <div
+                                                        class="flex items-start space-x-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg"
+                                                    >
+                                                        <div
+                                                            class="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg"
                                                         >
-                                                        <p
-                                                            class="text-base font-medium text-gray-900 mt-2"
-                                                        >
-                                                            {{
-                                                                report.formatted_user_types ||
-                                                                "Guest"
-                                                            }}
-                                                        </p>
-                                                    </div>
-                                                    <div>
-                                                        <label
-                                                            class="text-sm text-gray-500 font-medium"
-                                                            >Tracking
-                                                            Code</label
-                                                        >
-                                                        <p
-                                                            class="text-base font-bold text-blue-900 mt-2"
-                                                        >
-                                                            {{
-                                                                report.tracking_code ||
-                                                                "N/A"
-                                                            }}
-                                                        </p>
+                                                           <v-icon name="bi-person" class="text-gray-600 dark:text-gray-400 w-4 h-4" />
+                                                        </div>
+                                                        <div>
+                                                            <p
+                                                                class="text-sm text-gray-500 dark:text-gray-400"
+                                                            >
+                                                                User Type
+                                                            </p>
+                                                            <p
+                                                                class="font-medium text-gray-900 dark:text-white"
+                                                            >
+                                                                {{
+                                                                    report.formatted_user_types ||
+                                                                    "Guest"
+                                                                }}
+                                                            </p>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -613,30 +823,9 @@
                                     </div>
                                 </div>
                             </div>
-                            <div v-else class="text-center text-gray-500 py-8">
-                                <v-icon
-                                    name="bi-exclamation-circle"
-                                    class="text-5xl mb-2"
-                                />
-                                <p class="text-base">
-                                    No report data available.
-                                </p>
-                            </div>
                         </div>
 
-                        <!-- Fixed Footer -->
-                        <div
-                            class="border-t border-gray-200 px-6 py-4 bg-gray-50 flex justify-end flex-shrink-0"
-                        >
-                            <button
-                                @click="emit('close')"
-                                type="button"
-                                class="inline-flex items-center px-5 py-2 border border-gray-300 shadow-sm text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-                            >
-                                <v-icon name="bi-x-lg" class="mr-2" />
-                                Close
-                            </button>
-                        </div>
+
                     </div>
                 </div>
             </div>
@@ -662,6 +851,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from "vue";
+import { XIcon, Maximize2Icon, Minimize2Icon } from "lucide-vue-next";
 
 const props = defineProps({
     show: {
@@ -685,38 +875,41 @@ const mapLoaded = ref(false);
 const showImageModal = ref(false);
 const currentImageIndex = ref(0);
 const allImages = ref([]);
-const isMaximized = ref(false); // Start minimized
+const isMaximized = ref(false);
 
 // Computed
 const statusClass = computed(() => {
     if (!props.report?.status)
-        return "bg-gray-100 text-gray-800 border-gray-200";
+        return "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600";
 
     const classes = {
-        pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
-        in_progress: "bg-blue-100 text-blue-800 border-blue-200",
-        resolved: "bg-green-100 text-green-800 border-green-200",
+        pending:
+            "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900 dark:text-yellow-200 dark:border-yellow-700",
+        in_progress:
+            "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900 dark:text-blue-200 dark:border-blue-700",
+        resolved:
+            "bg-green-100 text-green-800 border-green-200 dark:bg-green-900 dark:text-green-200 dark:border-green-700",
     };
 
     return (
         classes[props.report.status.toLowerCase()] ||
-        "bg-gray-100 text-gray-800 border-gray-200"
+        "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600"
     );
 });
 
 const priorityClass = computed(() => {
     if (!props.report?.priority)
-        return "bg-gray-100 text-gray-800 border-gray-200";
+        return "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600";
 
     const classes = {
-        high: "bg-red-100 text-red-800 border-red-200",
-        medium: "bg-yellow-100 text-yellow-800 border-yellow-200",
-        low: "bg-green-100 text-green-800 border-green-200",
+        high: "bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:text-red-200 dark:border-red-700",
+        medium: "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900 dark:text-yellow-200 dark:border-yellow-700",
+        low: "bg-green-100 text-green-800 border-green-200 dark:bg-green-900 dark:text-green-200 dark:border-green-700",
     };
 
     return (
         classes[props.report.priority.toLowerCase()] ||
-        "bg-gray-100 text-gray-800 border-gray-200"
+        "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600"
     );
 });
 
@@ -932,3 +1125,46 @@ onUnmounted(() => {
     destroyMap();
 });
 </script>
+
+<style scoped>
+/* Custom scrollbar */
+.overflow-y-auto {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+.overflow-y-auto::-webkit-scrollbar {
+    width: 6px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 10px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Dark mode scrollbar */
+.dark .overflow-y-auto {
+    scrollbar-color: #475569 #1e293b;
+}
+
+.dark .overflow-y-auto::-webkit-scrollbar-track {
+    background: #1e293b;
+}
+
+.dark .overflow-y-auto::-webkit-scrollbar-thumb {
+    background: #475569;
+}
+
+.dark .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
+</style>

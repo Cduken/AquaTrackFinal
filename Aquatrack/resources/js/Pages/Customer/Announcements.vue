@@ -1,7 +1,7 @@
 <template>
     <CustomerLayout>
         <!-- Main Content -->
-        <div class="flex flex-col xl:flex-row p-2 gap-4">
+        <div class="flex flex-col xl:flex-row p-2 py-1 gap-4">
             <!-- Announcements Section -->
             <div class="xl:w-2/3">
                 <!-- Header -->

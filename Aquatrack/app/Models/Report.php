@@ -12,7 +12,6 @@ class Report extends Model
 {
     use HasFactory, SoftDeletes;
 
-    // In your Report.php model, add this:
     protected static function boot()
     {
         parent::boot();
@@ -62,7 +61,7 @@ class Report extends Model
         'status' => 'string',
     ];
 
-    protected $dates = ['deleted_at']; // Ensure deleted_at is treated as a date
+    protected $dates = ['deleted_at'];
 
     /**
      * Get all photos for this report

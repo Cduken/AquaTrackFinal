@@ -118,7 +118,6 @@ class StaffReadingController extends Controller
 
             $readings = MeterReading::where('user_id', $userId)
                 ->orderBy('reading_date', 'desc')
-                ->limit(12)
                 ->get()
                 ->map(function ($reading) {
                     return [

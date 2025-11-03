@@ -373,6 +373,7 @@ const openReadingForm = (user) => {
         brand: user.brand || null,
         serial_number: user.serial_number || null,
         size: user.size || null,
+
     };
     showReadingForm.value = true;
 };

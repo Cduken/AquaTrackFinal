@@ -74,6 +74,7 @@ const handleOfflineReportsSynced = (data) => {
 
 let refreshInterval;
 
+const showImageTooltip = ref(false);
 const showSuccessModal = ref(false);
 const showTrackModal = ref(false);
 const showReportModal = ref(false);
@@ -282,12 +283,10 @@ const handleReportSuccess = (data) => {
 
 <template>
     <main id="home" class="relative w-full min-h-screen overflow-hidden">
-
         <Navigation />
 
         <div
-            class="relative px-4 sm:px-8 lg:px-[120px] flex flex-col lg:flex-row gap-12 lg:gap-20 items-center justify-center min-h-[85vh] py-6
-            lg:py-0"
+            class="relative px-4 sm:px-8 lg:px-[120px] flex flex-col lg:flex-row gap-12 lg:gap-20 items-center justify-center min-h-[85vh] py-6 lg:py-0"
         >
             <!-- Left Content -->
             <div
@@ -369,7 +368,11 @@ const handleReportSuccess = (data) => {
             <div
                 class="hero-image-container w-full lg:w-2/5 flex items-center justify-center order-1 lg:order-2 relative z-10"
             >
-                <div class="relative group">
+                <div
+                    class="relative group"
+                    @mouseenter="showImageTooltip = true"
+                    @mouseleave="showImageTooltip = false"
+                >
                     <div
                         class="relative bg-white rounded-2xl shadow-2xl overflow-hidden transform group-hover:scale-105 transition-transform duration-500"
                     >
@@ -379,6 +382,18 @@ const handleReportSuccess = (data) => {
                                 src="/images/AquatrackIMG.jpg"
                                 alt="Water District Office"
                             />
+
+                            <!-- Tooltip Text Only -->
+                            <div
+                                v-if="showImageTooltip"
+                                class="absolute inset-0 flex items-center justify-center transition-all duration-300"
+                            >
+                                <h3
+                                    class="text-2xl font-bold text-white drop-shadow-lg"
+                                >
+                                    Clarin Water District Office
+                                </h3>
+                            </div>
                         </div>
                     </div>
                 </div>

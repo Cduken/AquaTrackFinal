@@ -1,4 +1,3 @@
-//Pages/Admin/Announcements.vue
 <template>
     <AdminLayout>
         <div class="mx-auto w-full">

@@ -461,7 +461,9 @@ watch(
                         class="bg-white rounded-lg border border-gray-300 shadow-sm overflow-hidden flex flex-col"
                         style="height: 260px; min-height: 200px"
                     >
-                        <div class="px-6 py-5 border-b border-gray-200">
+                        <div
+                            class="px-6 py-5 border-b border-gray-200 flex-shrink-0"
+                        >
                             <div class="flex items-center justify-between">
                                 <h2 class="text-lg font-semibold text-gray-900">
                                     Recent Customers
@@ -474,21 +476,23 @@ watch(
                                 </span>
                             </div>
                         </div>
-                        <div class="p-6">
-                            <div class="space-y-4">
-                                <CustomerItem
-                                    v-for="customer in dashboardData.recentCustomers"
-                                    :key="customer.email"
-                                    :customer="customer"
-                                />
-                                <EmptyState
-                                    v-if="
-                                        dashboardData.recentCustomers.length ===
-                                        0
-                                    "
-                                    title="No recent customers"
-                                    size="sm"
-                                />
+                        <div class="flex-1 overflow-hidden p-6">
+                            <div class="h-full overflow-y-auto scrollbar-hide">
+                                <div class="space-y-4">
+                                    <CustomerItem
+                                        v-for="customer in dashboardData.recentCustomers"
+                                        :key="customer.email"
+                                        :customer="customer"
+                                    />
+                                    <EmptyState
+                                        v-if="
+                                            dashboardData.recentCustomers
+                                                .length === 0
+                                        "
+                                        title="No recent customers"
+                                        size="sm"
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -497,3 +501,14 @@ watch(
         </div>
     </AdminLayout>
 </template>
+
+<style scope>
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+</style>

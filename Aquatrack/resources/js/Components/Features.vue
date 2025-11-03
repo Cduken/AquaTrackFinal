@@ -33,39 +33,13 @@
                     <h3
                         class="text-lg sm:text-xl md:text-2xl font-semibold text-blue-800 mb-2 text-center"
                     >
-                        Real-time Monitoring
+                        Usage Monitoring
                     </h3>
                     <p
                         class="text-sm sm:text-base text-gray-600 mt-2 sm:mt-4 text-center"
                     >
                         Track your water usage with detailed consumption
                         analytics and trends.
-                    </p>
-                </div>
-
-                <!-- Secure & Reliable -->
-                <div
-                    class="feature-item flex flex-col items-center rounded-xl border border-blue-300 bg-white p-4 sm:p-6 md:p-8 shadow-md transition-all hover:shadow-lg hover:-translate-y-1"
-                >
-                    <div
-                        class="flex h-12 w-12 sm:h-14 sm:w-14 md:h-16 md:w-16 items-center justify-center rounded-full bg-blue-100 mb-3 sm:mb-4"
-                    >
-                        <v-icon
-                            name="bi-shield-lock"
-                            scale="1.25"
-                            class="text-blue-600"
-                        />
-                    </div>
-                    <h3
-                        class="text-lg sm:text-xl md:text-2xl font-semibold text-blue-800 mb-2 text-center"
-                    >
-                        Secure & Reliable
-                    </h3>
-                    <p
-                        class="text-sm sm:text-base text-gray-600 mt-2 sm:mt-4 text-center"
-                    >
-                        Your data is protected with enterprise-grade security
-                        and reliable service uptime.
                     </p>
                 </div>
 
@@ -111,13 +85,39 @@
                     <h3
                         class="text-lg sm:text-xl md:text-2xl font-semibold text-blue-800 mb-2 text-center"
                     >
-                        Smart Analytics
+                        Community Updates
                     </h3>
                     <p
                         class="text-sm sm:text-base text-gray-600 mt-2 sm:mt-4 text-center"
                     >
-                        Get insights into your consumption patterns and receive
-                        tips for conservation.
+                        Stay informed on water schedules, maintenance, meetings,
+                        and important community news.
+                    </p>
+                </div>
+
+                <!-- Secure & Reliable -->
+                <div
+                    class="feature-item flex flex-col items-center rounded-xl border border-blue-300 bg-white p-4 sm:p-6 md:p-8 shadow-md transition-all hover:shadow-lg hover:-translate-y-1"
+                >
+                    <div
+                        class="flex h-12 w-12 sm:h-14 sm:w-14 md:h-16 md:w-16 items-center justify-center rounded-full bg-blue-100 mb-3 sm:mb-4"
+                    >
+                        <v-icon
+                            name="bi-shield-lock"
+                            scale="1.25"
+                            class="text-blue-600"
+                        />
+                    </div>
+                    <h3
+                        class="text-lg sm:text-xl md:text-2xl font-semibold text-blue-800 mb-2 text-center"
+                    >
+                        Secure & Reliable
+                    </h3>
+                    <p
+                        class="text-sm sm:text-base text-gray-600 mt-2 sm:mt-4 text-center"
+                    >
+                        Your data is protected with industry-standard security
+                        measures.
                     </p>
                 </div>
             </div>

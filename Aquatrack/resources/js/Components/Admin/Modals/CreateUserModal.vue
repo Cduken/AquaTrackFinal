@@ -1,7 +1,6 @@
-//CreateUserModal.vue
 <template>
     <transition name="modal">
-        <div v-if="show" class="fixed inset-0 z-[1000] overflow-hidden">
+        <div v-if="show" class="fixed inset-0 z-[1000] overflow-y-auto">
             <!-- Backdrop -->
             <div
                 class="absolute inset-0 bg-black/60 transition-opacity duration-300"
@@ -9,14 +8,20 @@
             ></div>
 
             <!-- Modal Container -->
-            <div class="fixed inset-0 flex items-center justify-center p-4">
+            <!-- Modal Container -->
+            <div class="flex min-h-full items-center justify-center p-4">
                 <!-- Modal Panel with transform for animation -->
                 <div
-                    class="relative w-full max-w-4xl transform transition-all duration-500 ease-out"
-                    :class="{ 'max-w-6xl': isMaximized }"
+                    class="relative w-full transform transition-all duration-300"
+                    :class="isMaximized ? 'max-w-full h-full' : 'max-w-4xl'"
                 >
                     <div
-                        class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden"
+                        class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+                        :class="
+                            isMaximized
+                                ? 'h-screen w-full'
+                                : 'max-h-[90vh] w-full'
+                        "
                     >
                         <!-- Header -->
                         <div class="relative px-8 py-4 bg-[#172554]">
@@ -63,14 +68,17 @@
 
                         <!-- Content -->
                         <div
-                            class="overflow-y-auto p-8"
-                            :class="{ 'p-10': isMaximized }"
-                            style="max-height: calc(100vh - 200px)"
+                            class="flex-1 overflow-y-auto p-6"
+                            :class="isMaximized ? 'p-8' : ''"
                         >
                             <form @submit.prevent="handleSubmit">
                                 <div
-                                    class="space-y-8"
-                                    :class="{ 'space-y-10': isMaximized }"
+                                    class="space-y-6 mx-auto"
+                                    :class="
+                                        isMaximized
+                                            ? 'max-w-full w-full px-4 space-y-8'
+                                            : 'max-w-4xl space-y-6'
+                                    "
                                 >
                                     <!-- Role Selection -->
                                     <div class="space-y-4">
@@ -985,43 +993,99 @@ const handleSubmit = async () => {
 </script>
 
 <style scoped>
+/* Smooth modal transitions */
+.modal-enter-active,
+.modal-leave-active {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modal-enter-from {
+    opacity: 0;
+}
+
+.modal-leave-to {
+    opacity: 0;
+}
+
+.modal-enter-active .modal-container,
+.modal-leave-active .modal-container {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modal-enter-from .modal-container {
+    opacity: 0;
+    transform: scale(0.95) translateY(-20px);
+}
+
+.modal-leave-to .modal-container {
+    opacity: 0;
+    transform: scale(0.95) translateY(20px);
+}
+
+/* Backdrop transition */
+.modal-enter-active .backdrop,
+.modal-leave-active .backdrop {
+    transition: opacity 0.3s ease;
+}
+
+.modal-enter-from .backdrop,
+.modal-leave-to .backdrop {
+    opacity: 0;
+}
+
+/* Content slide-in animation */
+.content-enter-active {
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.1s;
+}
+
+.content-enter-from {
+    opacity: 0;
+    transform: translateY(30px);
+}
+
+/* Form elements stagger animation */
+.form-item {
+    transition: all 0.3s ease;
+}
+
+.modal-enter-active .form-item:nth-child(1) {
+    transition-delay: 0.1s;
+}
+.modal-enter-active .form-item:nth-child(2) {
+    transition-delay: 0.15s;
+}
+.modal-enter-active .form-item:nth-child(3) {
+    transition-delay: 0.2s;
+}
+.modal-enter-active .form-item:nth-child(4) {
+    transition-delay: 0.25s;
+}
+.modal-enter-active .form-item:nth-child(5) {
+    transition-delay: 0.3s;
+}
+
+/* Maximize transition */
+.maximize-enter-active,
+.maximize-leave-active {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.maximize-enter-from,
+.maximize-leave-to {
+    opacity: 0;
+    transform: scale(0.9);
+}
+
+/* Password preview fade transition */
 .fade-enter-active,
 .fade-leave-active {
-    transition: opacity 0.3s ease;
+    transition: all 0.3s ease;
 }
 
 .fade-enter-from,
 .fade-leave-to {
     opacity: 0;
-}
-
-/* Modal transition - slide from top to center */
-.modal-enter-active {
-    transition: opacity 0.3s ease;
-}
-
-.modal-leave-active {
-    transition: opacity 0.2s ease;
-}
-
-.modal-enter-from,
-.modal-leave-to {
-    opacity: 0;
-}
-
-.modal-enter-active > div > div {
-    transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
-        opacity 0.5s ease;
-}
-
-.modal-enter-from > div > div {
-    transform: translateY(-100%) scale(0.9);
-    opacity: 0;
-}
-
-.modal-leave-to > div > div {
-    transform: scale(0.95);
-    opacity: 0;
+    transform: translateY(-10px);
 }
 
 /* Custom scrollbar */
@@ -1068,5 +1132,50 @@ const handleSubmit = async () => {
 /* Remove default select arrow in some browsers */
 select {
     background-image: none;
+}
+
+/* Smooth button hover effects */
+button {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Input focus animations */
+input:focus,
+select:focus {
+    transition: all 0.2s ease;
+}
+
+/* Radio button selection animation */
+input[type="radio"]:checked + div {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Loading spinner animation */
+@keyframes spin-slow {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.animate-spin-slow {
+    animation: spin-slow 1.5s linear infinite;
+}
+
+/* Pulse animation for loading states */
+@keyframes pulse-subtle {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.animate-pulse-subtle {
+    animation: pulse-subtle 2s ease-in-out infinite;
 }
 </style>

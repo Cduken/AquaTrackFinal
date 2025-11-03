@@ -713,77 +713,87 @@
                                         </p>
                                     </div>
 
+                                    <!-- Reading History Table -->
                                     <div
                                         v-else
-                                        class="space-y-3"
-                                        :class="{
-                                            'space-y-4': isMaximized,
-                                        }"
+                                        class="overflow-hidden border border-gray-200 dark:border-gray-600 rounded-lg"
+                                        :class="{ 'border-2': isMaximized }"
                                     >
+                                        <!-- Table Header -->
                                         <div
-                                            v-for="(
-                                                reading, index
-                                            ) in paginatedReadings"
-                                            :key="reading.id"
-                                            class="bg-gray-50 dark:bg-gray-600 p-3 rounded-lg border border-gray-200 dark:border-gray-500 hover:border-blue-200 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors group relative"
-                                            :class="{ 'p-4': isMaximized }"
+                                            class="grid grid-cols-12 gap-4 px-4 py-3 bg-gray-50 dark:bg-gray-600 border-b border-gray-200 dark:border-gray-500 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+                                            :class="{
+                                                'px-6 py-4 text-sm':
+                                                    isMaximized,
+                                            }"
                                         >
-                                            <!-- Edit Button -->
-                                            <button
-                                                @click="openEditModal(reading)"
-                                                class="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:border-blue-300 dark:hover:border-blue-500"
-                                                :class="{
-                                                    'top-4 right-4 p-2':
-                                                        isMaximized,
-                                                }"
-                                                title="Edit Reading"
-                                            >
-                                                <v-icon
-                                                    name="bi-pencil"
-                                                    class="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 h-3.5 w-3.5"
-                                                    :class="{
-                                                        'h-4 w-4': isMaximized,
-                                                    }"
-                                                />
-                                            </button>
+                                            <div class="col-span-3">Period</div>
+                                            <div class="col-span-2 text-right">
+                                                Reading
+                                            </div>
+                                            <div class="col-span-2 text-right">
+                                                Consumption
+                                            </div>
+                                            <div class="col-span-2 text-right">
+                                                Amount
+                                            </div>
+                                            <div class="col-span-2 text-right">
+                                                Status
+                                            </div>
+                                            <div class="col-span-1 text-center">
+                                                Actions
+                                            </div>
+                                        </div>
 
+                                        <!-- Table Body -->
+                                        <div
+                                            class="divide-y divide-gray-200 dark:divide-gray-600"
+                                        >
                                             <div
-                                                class="flex items-center justify-between"
+                                                v-for="(
+                                                    reading, index
+                                                ) in paginatedReadings"
+                                                :key="reading.id"
+                                                class="grid grid-cols-12 gap-4 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-600/50 transition-colors duration-150 group"
+                                                :class="{
+                                                    'px-6 py-4': isMaximized,
+                                                }"
                                             >
-                                                <div
-                                                    class="flex items-center gap-3"
-                                                >
-                                                    <div>
-                                                        <div
-                                                            class="font-medium text-gray-800 dark:text-white"
-                                                            :class="{
-                                                                'text-lg':
-                                                                    isMaximized,
-                                                            }"
-                                                        >
-                                                            {{
-                                                                reading.billing_month
-                                                            }}
-                                                            {{ reading.year }}
-                                                        </div>
-                                                        <div
-                                                            class="text-sm text-gray-600 dark:text-gray-300"
-                                                            :class="{
-                                                                'text-base':
-                                                                    isMaximized,
-                                                            }"
-                                                        >
-                                                            {{
-                                                                formatDate(
-                                                                    reading.reading_date
-                                                                )
-                                                            }}
-                                                        </div>
+                                                <!-- Period -->
+                                                <div class="col-span-3">
+                                                    <div
+                                                        class="font-medium text-gray-800 dark:text-white"
+                                                        :class="{
+                                                            'text-lg':
+                                                                isMaximized,
+                                                        }"
+                                                    >
+                                                        {{
+                                                            reading.billing_month
+                                                        }}
+                                                        {{ reading.year }}
+                                                    </div>
+                                                    <div
+                                                        class="text-sm text-gray-600 dark:text-gray-300"
+                                                        :class="{
+                                                            'text-base':
+                                                                isMaximized,
+                                                        }"
+                                                    >
+                                                        {{
+                                                            formatDate(
+                                                                reading.reading_date
+                                                            )
+                                                        }}
                                                     </div>
                                                 </div>
-                                                <div class="text-right">
+
+                                                <!-- Reading -->
+                                                <div
+                                                    class="col-span-2 text-right"
+                                                >
                                                     <div
-                                                        class="font-semibold text-blue-600 dark:text-blue-400"
+                                                        class="font-semibold text-blue-600 dark:text-blue-400 mt-2"
                                                         :class="{
                                                             'text-lg':
                                                                 isMaximized,
@@ -791,49 +801,61 @@
                                                     >
                                                         {{ reading.reading }} m³
                                                     </div>
+                                                </div>
+
+                                                <!-- Consumption -->
+                                                <div
+                                                    class="col-span-2 text-right"
+                                                >
                                                     <div
-                                                        class="text-sm text-gray-600 dark:text-gray-400"
+                                                        class="text-gray-700 dark:text-gray-300 mt-2"
                                                         :class="{
-                                                            'text-base':
+                                                            'text-lg':
                                                                 isMaximized,
                                                         }"
                                                     >
                                                         {{
                                                             reading.consumption
                                                         }}
-                                                        m³ consumed
+                                                        m³
                                                     </div>
                                                 </div>
-                                            </div>
-                                            <div
-                                                class="flex justify-between items-center mt-2 pt-2 border-t border-gray-200 dark:border-gray-500"
-                                                :class="{
-                                                    'mt-3 pt-3': isMaximized,
-                                                }"
-                                            >
+
+                                                <!-- Amount -->
                                                 <div
-                                                    class="flex items-center gap-2"
+                                                    class="col-span-2 text-right"
                                                 >
-                                                    <span
-                                                        class="text-sm text-gray-600 dark:text-gray-400"
+                                                    <div
+                                                        class="font-medium text-green-600 dark:text-green-400 mt-2"
                                                         :class="{
-                                                            'text-base':
+                                                            'text-lg':
                                                                 isMaximized,
                                                         }"
-                                                        >Amount billed</span
                                                     >
+                                                        ₱{{
+                                                            reading.amount.toFixed(
+                                                                2
+                                                            )
+                                                        }}
+                                                    </div>
+                                                </div>
+
+                                                <!-- Status -->
+                                                <div
+                                                    class="col-span-2 text-right mt-2"
+                                                >
                                                     <span
                                                         :class="[
-                                                            'px-2 py-1 rounded-full text-xs font-medium',
+                                                            'px-3 py-1 rounded-full text-xs font-medium transition-all duration-200 ',
                                                             reading.status ===
                                                             'Paid'
-                                                                ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
+                                                                ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-800'
                                                                 : reading.status ===
                                                                   'Pending'
-                                                                ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200'
-                                                                : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200',
+                                                                ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-800'
+                                                                : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-800',
                                                             {
-                                                                'px-3 py-1.5 text-sm':
+                                                                'px-4 py-1.5 text-sm':
                                                                     isMaximized,
                                                             },
                                                         ]"
@@ -841,17 +863,60 @@
                                                         {{ reading.status }}
                                                     </span>
                                                 </div>
+
+                                                <!-- Actions -->
                                                 <div
-                                                    class="font-medium text-green-600 dark:text-green-400"
-                                                    :class="{
-                                                        'text-lg': isMaximized,
-                                                    }"
+                                                    class="col-span-1 flex justify-center"
                                                 >
-                                                    ₱{{
-                                                        reading.amount.toFixed(
-                                                            2
-                                                        )
-                                                    }}
+                                                    <button
+                                                        @click="
+                                                            openEditModal(
+                                                                reading
+                                                            )
+                                                        "
+                                                        class="flex items-center justify-center p-2 rounded-lg transition-all duration-200 group/btn"
+                                                        :class="[
+                                                            '',
+                                                            {
+                                                                'p-2.5':
+                                                                    isMaximized,
+                                                            },
+                                                        ]"
+                                                        title="Edit Reading"
+                                                    >
+                                                        <button
+                                                            @click="
+                                                                editAnnouncement(
+                                                                    announcement
+                                                                )
+                                                            "
+                                                            class="p-1.5 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors duration-200"
+                                                            title="Edit"
+                                                        >
+                                                            <Edit
+                                                                :class="{
+                                                                    'h-4 w-4':
+                                                                        !isMaximized,
+                                                                    'h-5 w-5':
+                                                                        isMaximized,
+                                                                }"
+                                                            />
+                                                        </button>
+
+                                                        <span
+                                                            class="sr-only"
+                                                            :class="{
+                                                                'text-sm':
+                                                                    isMaximized,
+                                                            }"
+                                                        >
+                                                            Edit reading for
+                                                            {{
+                                                                reading.billing_month
+                                                            }}
+                                                            {{ reading.year }}
+                                                        </span>
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
@@ -948,6 +1013,7 @@
 import { ref, computed, onMounted, watch, nextTick } from "vue";
 import Swal from "sweetalert2";
 import EditMeterRecordModal from "./EditMeterRecordModal.vue";
+import { Edit } from 'lucide-vue-next'
 import Pagination from "@/Components/Pagination.vue";
 
 const props = defineProps({

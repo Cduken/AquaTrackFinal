@@ -7,7 +7,7 @@
                 <h1 class="text-xl font-semibold text-gray-900">
                     Water Reports
                 </h1>
-               <p class="text-gray-600 text-sm">
+                <p class="text-gray-600 text-sm">
                     Track and manage your water reports
                 </p>
             </div>
@@ -25,9 +25,11 @@
                             />
                         </div>
                         <input
+                            v-model="filters.search"
                             type="text"
                             placeholder="Search reports..."
                             class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                            @keyup.enter="getReports"
                         />
                     </div>
                 </div>
@@ -41,132 +43,150 @@
 
                 <div class="flex items-center gap-2">
                     <select
+                        v-model="filters.status"
                         class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        @change="getReports"
                     >
-                        <option>All Status</option>
-                        <option>Pending</option>
-                        <option>In Progress</option>
-                        <option>Resolved</option>
+                        <option value="">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="resolved">Resolved</option>
                     </select>
                     <button
+                        @click="resetFilters"
                         class="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                        title="Reset Filters"
                     >
                         <v-icon
-                            name="bi-filter"
+                            name="bi-arrow-clockwise"
                             class="text-gray-600 w-4 h-4"
                         />
                     </button>
                 </div>
             </div>
 
-            <!-- Reports Table -->
+            <!-- Reports Table Container -->
             <div
-                class="bg-white rounded-lg border border-gray-200 overflow-hidden"
+                class="bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col"
+                style="height: 600px; min-height: 600px"
             >
-                <div class="overflow-x-auto">
+                <!-- Table with Scrollable Body -->
+                <div class="flex-1 overflow-x-auto overflow-y-auto">
                     <table class="w-full">
-                        <thead class="bg-gray-50">
+                        <thead
+                            class="bg-gray-50 border-b border-gray-200 sticky top-0 z-10"
+                        >
                             <tr>
                                 <th
-                                    class="w-12 px-3 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                >
-                                    ID
-                                </th>
-                                <th
-                                    class="w-28 px-3 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                                 >
                                     Tracking Code
                                 </th>
                                 <th
-                                    class="w-36 px-3 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                                 >
                                     Location
                                 </th>
                                 <th
-                                    class="px-3 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                >
+                                    Issue Type
+                                </th>
+                                <th
+                                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                                 >
                                     Description
                                 </th>
                                 <th
-                                    class="w-24 px-3 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                                 >
                                     Status
                                 </th>
                                 <th
-                                    class="w-24 px-3 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                                 >
                                     Date
                                 </th>
                                 <th
-                                    class="w-16 px-3 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                                 >
                                     Actions
                                 </th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200">
+                        <tbody class="bg-white divide-y divide-gray-200">
                             <tr
-                                v-for="report in paginatedReports"
+                                v-for="report in reports.data"
                                 :key="report.id"
                                 class="hover:bg-gray-50 transition-colors"
                             >
-                                <td
-                                    class="px-3 py-3 whitespace-nowrap text-sm font-medium text-gray-900"
-                                >
-                                    {{ report.id }}
-                                </td>
-                                <td class="px-3 py-3 whitespace-nowrap">
+                                <td class="px-4 py-4 whitespace-nowrap">
                                     <span
-                                        class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100"
+                                        class="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium bg-blue-50 text-blue-700 border border-blue-200"
                                     >
                                         {{ report.tracking_code }}
                                     </span>
                                 </td>
-                                <td
-                                    class="px-3 py-3 whitespace-nowrap text-sm text-gray-700"
-                                >
-                                    <div class="flex items-center">
-                                        <v-icon
-                                            name="bi-geo-alt"
-                                            class="text-gray-400 mr-1.5 w-3.5 h-3.5"
-                                        />
-                                        {{ report.barangay }},
-                                        {{ report.municipality }}
+                                <td class="px-4 py-4 whitespace-nowrap">
+                                    <div class="flex flex-col">
+                                        <div
+                                            class="flex items-center text-sm font-medium text-gray-900"
+                                        >
+                                            <v-icon
+                                                name="bi-geo-alt"
+                                                class="text-gray-400 mr-1.5 w-3.5 h-3.5"
+                                            />
+                                            {{ report.zone }}
+                                        </div>
+                                        <div class="text-sm text-gray-500 mt-1">
+                                            {{ report.barangay }},
+                                            {{ report.purok }}
+                                        </div>
                                     </div>
                                 </td>
-                                <td class="px-3 py-3 text-sm text-gray-700">
-                                    <div class="line-clamp-2">
+                                <td
+                                    class="px-4 py-4 whitespace-nowrap text-sm text-gray-900"
+                                >
+                                    <div class="font-medium">
+                                        {{
+                                            report.water_issue_type === "others"
+                                                ? report.custom_water_issue ||
+                                                  "Custom Issue"
+                                                : report.water_issue_type
+                                        }}
+                                    </div>
+                                </td>
+                                <td class="px-4 py-4 text-sm text-gray-700">
+                                    <div class="line-clamp-2 max-w-xs">
                                         {{ report.description }}
                                     </div>
                                 </td>
-                                <td class="px-3 py-3 whitespace-nowrap">
+                                <td class="px-4 py-4 whitespace-nowrap">
                                     <span
                                         :class="statusClasses(report.status)"
-                                        class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                                        class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium"
                                     >
                                         <span
-                                            class="w-1.5 h-1.5 rounded-full mr-1.5"
-                                            :class="{
-                                                'bg-gray-500':
-                                                    report.status === 'pending',
-                                                'bg-blue-500':
-                                                    report.status ===
-                                                    'in_progress',
-                                                'bg-green-500':
-                                                    report.status ===
-                                                    'resolved',
-                                            }"
+                                            class="w-2 h-2 rounded-full mr-2"
+                                            :class="
+                                                statusDotClasses(report.status)
+                                            "
                                         ></span>
                                         {{ formatStatus(report.status) }}
                                     </span>
                                 </td>
                                 <td
-                                    class="px-3 py-3 whitespace-nowrap text-sm text-gray-600"
+                                    class="px-4 py-4 whitespace-nowrap text-sm text-gray-600"
                                 >
-                                    {{ formatDate(report.created_at) }}
+                                    <div>
+                                        {{ formatDate(report.created_at) }}
+                                    </div>
+                                    <div class="text-gray-400 text-xs">
+                                        {{ formatTime(report.created_at) }}
+                                    </div>
                                 </td>
                                 <td
-                                    class="px-3 py-3 whitespace-nowrap text-sm font-medium"
+                                    class="px-4 py-4 whitespace-nowrap text-sm font-medium"
                                 >
                                     <button
                                         class="text-blue-600 hover:text-blue-800 p-1.5 rounded hover:bg-blue-50 transition-colors"
@@ -181,7 +201,7 @@
                                 </td>
                             </tr>
                             <tr v-if="reports.data.length === 0">
-                                <td colspan="7" class="px-6 py-8 text-center">
+                                <td colspan="7" class="px-6 py-12 text-center">
                                     <div
                                         class="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4"
                                     >
@@ -198,63 +218,40 @@
                                     <p
                                         class="text-gray-500 text-sm max-w-md mx-auto"
                                     >
-                                        You haven't submitted any water quality
-                                        reports yet. Click "Submit New Report"
-                                        to get started.
+                                        <span v-if="hasActiveFilters">
+                                            No reports match your current
+                                            filters. Try adjusting your search
+                                            criteria.
+                                        </span>
+                                        <span v-else>
+                                            You haven't submitted any water
+                                            quality reports yet. Click "Submit
+                                            New Report" to get started.
+                                        </span>
                                     </p>
+                                    <button
+                                        v-if="hasActiveFilters"
+                                        @click="resetFilters"
+                                        class="mt-3 inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    >
+                                        <v-icon
+                                            name="bi-arrow-clockwise"
+                                            class="mr-2 w-4 h-4"
+                                        />
+                                        Reset Filters
+                                    </button>
                                 </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
 
-                <!-- Pagination -->
+                <!-- Pagination - Fixed at Bottom -->
                 <div
                     v-if="reports.data.length > 0"
-                    class="px-4 py-3 flex items-center justify-between border-t border-gray-200 bg-gray-50"
+                    class="flex-shrink-0 border-t border-gray-200 bg-white"
                 >
-                    <div class="text-xs text-gray-600">
-                        Showing
-                        <span class="font-medium">{{ startIndex + 1 }}</span>
-                        to
-                        <span class="font-medium">{{ endIndex }}</span>
-                        of
-                        <span class="font-medium">{{
-                            reports.data.length
-                        }}</span>
-                        results
-                    </div>
-                    <div class="flex items-center space-x-1">
-                        <button
-                            @click="prevPage"
-                            :disabled="currentPage === 1"
-                            class="px-2.5 py-1.5 text-xs font-medium rounded border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            Previous
-                        </button>
-                        <div class="flex space-x-1">
-                            <button
-                                v-for="page in totalPages"
-                                :key="page"
-                                @click="currentPage = page"
-                                :class="[
-                                    'px-3 py-1.5 text-xs font-medium rounded',
-                                    currentPage === page
-                                        ? 'bg-blue-600 text-white'
-                                        : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50',
-                                ]"
-                            >
-                                {{ page }}
-                            </button>
-                        </div>
-                        <button
-                            @click="nextPage"
-                            :disabled="currentPage === totalPages"
-                            class="px-2.5 py-1.5 text-xs font-medium rounded border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            Next
-                        </button>
-                    </div>
+                    <Pagination :data="reports" />
                 </div>
             </div>
         </div>
@@ -280,13 +277,13 @@
 <script setup>
 import CustomerLayout from "@/Layouts/CustomerLayout.vue";
 import ReportDetailsModal from "@/Components/Modals/ReportDetailsModal.vue";
-import { Link, usePage } from "@inertiajs/vue3";
+import Pagination from "@/Components/Pagination.vue";
+import { router, usePage } from "@inertiajs/vue3";
 import { ref, computed, watch, onMounted } from "vue";
+import { debounce } from "lodash";
 import Swal from "sweetalert2";
-import { useToast } from "vue-toastification";
 import CustomerReportModal from "@/Components/Customer/CustomerReportModal.vue";
 
-const toast = useToast();
 const page = usePage();
 
 const props = defineProps({
@@ -305,41 +302,99 @@ const props = defineProps({
         default: () => ({}),
     },
     swal: Object,
+    filters: Object,
 });
 
-// Pagination variables
-const currentPage = ref(1);
-const itemsPerPage = 10;
-
-// Computed properties for pagination
-const totalPages = computed(() => {
-    return Math.ceil(props.reports.data.length / itemsPerPage);
+// Reactive state
+const filters = ref({
+    status: props.filters?.status || "",
+    search: props.filters?.search || "",
 });
 
-const startIndex = computed(() => {
-    return (currentPage.value - 1) * itemsPerPage;
+const showAddModal = ref(false);
+const showDetailsModal = ref(false);
+const showSuccessModal = ref(false);
+const selectedReport = ref(null);
+
+// Computed properties
+const hasActiveFilters = computed(() => {
+    return filters.value.search || filters.value.status;
 });
 
-const endIndex = computed(() => {
-    return Math.min(startIndex.value + itemsPerPage, props.reports.data.length);
-});
-
-const paginatedReports = computed(() => {
-    return props.reports.data.slice(startIndex.value, endIndex.value);
-});
-
-// Pagination methods
-const nextPage = () => {
-    if (currentPage.value < totalPages.value) {
-        currentPage.value++;
-    }
+// Methods
+const getReports = () => {
+    router.get(route("customer.reports"), filters.value, {
+        preserveState: true,
+        replace: true,
+    });
 };
 
-const prevPage = () => {
-    if (currentPage.value > 1) {
-        currentPage.value--;
-    }
+const resetFilters = () => {
+    filters.value = {
+        status: "",
+        search: "",
+    };
 };
+
+const openReportDetails = (report) => {
+    selectedReport.value = report;
+    showDetailsModal.value = true;
+};
+
+const handleReportAdded = (successData) => {
+    showAddModal.value = false;
+    // Refresh the reports list
+    getReports();
+};
+
+// Status formatting methods
+const statusClasses = (status) => {
+    return {
+        "bg-gray-100 text-gray-800": status === "pending",
+        "bg-blue-100 text-blue-800": status === "in_progress",
+        "bg-green-100 text-green-800": status === "resolved",
+    };
+};
+
+const statusDotClasses = (status) => {
+    return {
+        "bg-gray-500": status === "pending",
+        "bg-blue-500": status === "in_progress",
+        "bg-green-500": status === "resolved",
+    };
+};
+
+const formatStatus = (status) => {
+    const statusMap = {
+        pending: "Pending",
+        in_progress: "In Progress",
+        resolved: "Resolved",
+    };
+    return statusMap[status] || status;
+};
+
+const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    const options = { year: "numeric", month: "short", day: "numeric" };
+    return new Date(dateString).toLocaleDateString(undefined, options);
+};
+
+const formatTime = (dateString) => {
+    if (!dateString) return "";
+    return new Date(dateString).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+    });
+};
+
+// Watch for filter changes with debounce
+watch(
+    filters,
+    debounce(() => {
+        getReports();
+    }, 300),
+    { deep: true }
+);
 
 // Watch for SweetAlert notifications
 watch(
@@ -389,46 +444,6 @@ onMounted(() => {
         });
     }
 });
-
-const showAddModal = ref(false);
-const showDetailsModal = ref(false);
-const showSuccessModal = ref(false);
-const selectedReport = ref(null);
-
-const openReportDetails = (report) => {
-    selectedReport.value = report;
-    showDetailsModal.value = true;
-};
-
-const handleReportAdded = (successData) => {
-    showAddModal.value = false;
-    // Optionally, you can use successData (e.g., trackingCode, dateSubmitted) for further handling
-};
-
-const statusClasses = (status) => {
-    return {
-        "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium": true,
-        "bg-blue-50 text-blue-700 border border-blue-100":
-            status === "in_progress",
-        "bg-green-50 text-green-700 border border-green-100":
-            status === "resolved",
-        "bg-gray-50 text-gray-700 border border-gray-100": status === "pending",
-    };
-};
-
-const formatStatus = (status) => {
-    const statusMap = {
-        pending: "Pending",
-        in_progress: "In Progress",
-        resolved: "Resolved",
-    };
-    return statusMap[status] || status;
-};
-
-const formatDate = (dateString) => {
-    const options = { year: "numeric", month: "short", day: "numeric" };
-    return new Date(dateString).toLocaleDateString("en-US", options);
-};
 </script>
 
 <style scoped>
@@ -440,39 +455,27 @@ const formatDate = (dateString) => {
     text-overflow: ellipsis;
 }
 
-/* Improved responsive behavior */
-@media (max-width: 767px) {
-    .overflow-x-auto {
-        -webkit-overflow-scrolling: touch;
-    }
-
-    /* Hide table on mobile and show cards instead */
-    table {
-        display: none;
-    }
-
-    .mobile-cards {
-        display: block;
-    }
+/* Custom scrollbar styling */
+.overflow-y-auto {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e0 transparent;
 }
 
-/* Mobile cards view */
-.mobile-cards {
-    display: none;
+.overflow-y-auto::-webkit-scrollbar {
+    width: 6px;
 }
 
-@media (max-width: 767px) {
-    .mobile-cards {
-        display: block;
-    }
+.overflow-y-auto::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 3px;
+}
 
-    .mobile-card {
-        background: white;
-        border: 1px solid #e2e8f0;
-        border-radius: 8px;
-        padding: 1rem;
-        margin-bottom: 0.75rem;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-    }
+.overflow-y-auto::-webkit-scrollbar-thumb {
+    background-color: #cbd5e0;
+    border-radius: 3px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+    background-color: #a0aec0;
 }
 </style>

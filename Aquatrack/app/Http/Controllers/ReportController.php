@@ -232,13 +232,13 @@ class ReportController extends Controller
 
                 $existingReport->reporter_name = implode(', ', $existingReporters);
 
-                // FIXED: PROPER USER TYPES HANDLING FOR OFFLINE SYNC
+                // FIXED: PROPER USER TYPES HANDLING FOR ALL SCENARIOS
                 $existingUserTypes = $existingReport->user_types ? json_decode($existingReport->user_types, true) : [];
-                if (!is_array($existingUserTypes)) $existingUserTypes = [];
+                if (!is_array($existingUserTypes)) {
+                    $existingUserTypes = [];
+                }
 
                 $currentUserType = Auth::check() ? 'Registered' : 'Guest';
-
-                // Get current reporters array BEFORE adding new reporter
                 $currentReporters = array_filter(array_map('trim', explode(',', $existingReport->reporter_name)));
                 $newReporter = trim($validated['reporter_name']);
 
@@ -246,39 +246,46 @@ class ReportController extends Controller
                 $isNewReporter = !in_array($newReporter, $currentReporters);
 
                 if ($isNewReporter) {
-                    // New reporter - add their type to the end
+                    // Add new reporter and their type
                     $existingUserTypes[] = $currentUserType;
                 } else {
-                    // Existing reporter - find their index and update type if needed
+                    // Update existing reporter type if needed
                     $reporterIndex = array_search($newReporter, $currentReporters);
-                    if ($reporterIndex !== false) {
-                        // If reporter exists but no type assigned at that index, add current type
-                        if (!isset($existingUserTypes[$reporterIndex])) {
-                            $existingUserTypes[$reporterIndex] = $currentUserType;
-                        } else {
-                            // Only upgrade from Guest to Registered, never downgrade
-                            if ($existingUserTypes[$reporterIndex] === 'Guest' && $currentUserType === 'Registered') {
-                                $existingUserTypes[$reporterIndex] = 'Registered';
-                            }
+                    if ($reporterIndex !== false && isset($existingUserTypes[$reporterIndex])) {
+                        // Only upgrade from Guest to Registered, never downgrade
+                        if ($existingUserTypes[$reporterIndex] === 'Guest' && $currentUserType === 'Registered') {
+                            $existingUserTypes[$reporterIndex] = 'Registered';
                         }
                     }
                 }
 
-                // If we still don't have enough user types, fill the gaps
-                while (count($existingUserTypes) < count($currentReporters)) {
-                    // For existing reporters without types, check if they are registered users
-                    $missingIndex = count($existingUserTypes);
-                    if ($missingIndex < count($currentReporters)) {
-                        $reporterName = $currentReporters[$missingIndex];
-                        $isRegistered = $this->isRegisteredUser($reporterName);
-                        $existingUserTypes[] = $isRegistered ? 'Registered' : 'Guest';
-                    } else {
-                        $existingUserTypes[] = 'Guest';
+                // FIXED: Rebuild user_types array from scratch to ensure accuracy
+                $allReporters = array_filter(array_map('trim', explode(',', $existingReport->reporter_name)));
+                $rebuildUserTypes = [];
+
+                foreach ($allReporters as $reporter) {
+                    $reporterType = 'Guest'; // Default to Guest
+
+                    // Check if this reporter is in our existing user types
+                    $reporterIndex = array_search($reporter, $allReporters);
+                    if (isset($existingUserTypes[$reporterIndex]) && $existingUserTypes[$reporterIndex] === 'Registered') {
+                        $reporterType = 'Registered';
                     }
+                    // If not in existing types, check if reporter is registered user
+                    elseif ($this->isRegisteredUser($reporter)) {
+                        $reporterType = 'Registered';
+                    }
+                    // Special case: if this is the current user adding the report
+                    elseif ($reporter === $newReporter && $currentUserType === 'Registered') {
+                        $reporterType = 'Registered';
+                    }
+
+                    $rebuildUserTypes[] = $reporterType;
                 }
 
-                // Store explicitly - never NULL
-                $existingReport->user_types = json_encode(array_values($existingUserTypes));
+                // Store the rebuilt user_types
+                $existingReport->user_types = json_encode($rebuildUserTypes);
+
                 // Update reporter phones
                 if ($validated['reporter_phone']) {
                     $existingPhones = $existingReport->reporter_phone ? array_filter(array_map('trim', explode(',', $existingReport->reporter_phone))) : [];
@@ -475,34 +482,42 @@ class ReportController extends Controller
     /**
      * Detect if a reporter name belongs to a registered user - ENHANCED
      */
+    /**
+     * Detect if a reporter name belongs to a registered user - ENHANCED
+     */
     protected function isRegisteredUser($reporterName)
     {
         try {
             $cleanName = trim($reporterName);
+            if (empty($cleanName)) {
+                return false;
+            }
 
             // First, try exact match
             $user = User::where('name', $cleanName)->first();
-
             if ($user) {
                 return true;
             }
 
-            // If exact match fails, try partial matching for common names
-            // Split the name and check each part
-            $nameParts = array_filter(explode(' ', $cleanName));
+            // Try case-insensitive exact match
+            $user = User::whereRaw('LOWER(name) = LOWER(?)', [$cleanName])->first();
+            if ($user) {
+                return true;
+            }
 
-            foreach ($nameParts as $part) {
-                if (strlen(trim($part)) > 2) {
-                    $user = User::where('name', 'like', '%' . trim($part) . '%')->first();
-                    if ($user) {
-                        Log::debug('Partial name match found', [
-                            'reporter_name' => $cleanName,
-                            'matched_part' => $part,
-                            'user_name' => $user->name
-                        ]);
-                        return true;
-                    }
+            // Try matching by email (if reporter name might be email)
+            if (filter_var($cleanName, FILTER_VALIDATE_EMAIL)) {
+                $user = User::where('email', $cleanName)->first();
+                if ($user) {
+                    return true;
                 }
+            }
+
+            // For merged reports, check if any user has this as part of their name
+            $users = User::where('name', 'like', '%' . $cleanName . '%')->get();
+            if ($users->count() === 1) {
+                // If only one user matches, it's probably them
+                return true;
             }
 
             return false;
@@ -516,7 +531,7 @@ class ReportController extends Controller
     }
 
     /**
-     * Enhanced formatUserTypes method - FIXED
+     * Enhanced formatUserTypes method - FIXED for Hybrid detection
      */
     protected function formatUserTypes($userTypesJson, $userId = null, $reporterName = null)
     {
@@ -554,6 +569,11 @@ class ReportController extends Controller
                 } else {
                     $hasGuest = true;
                 }
+
+                // If we found both types, we can break early
+                if ($hasRegistered && $hasGuest) {
+                    break;
+                }
             }
 
             // FIXED: If we have ANY registered user AND any guest, it's Hybrid
@@ -570,8 +590,17 @@ class ReportController extends Controller
             }
         }
 
-        // Single reporter fallback
-        return $userId ? 'Registered' : 'Guest';
+        // Single reporter fallback - FIXED: Check both userId AND reporter name
+        if ($userId) {
+            return 'Registered';
+        }
+
+        // If no userId but reporter name might be registered
+        if ($reporterName && $this->isRegisteredUser($reporterName)) {
+            return 'Registered';
+        }
+
+        return 'Guest';
     }
 
     /**
@@ -824,15 +853,13 @@ class ReportController extends Controller
                     $existingReport->reporter_name = implode(', ', $existingReporters);
                 }
 
-                // FIXED: PROPER USER TYPES HANDLING - STORE EXPLICIT TYPES
+                // FIXED: PROPER USER TYPES HANDLING FOR ALL SCENARIOS
                 $existingUserTypes = $existingReport->user_types ? json_decode($existingReport->user_types, true) : [];
                 if (!is_array($existingUserTypes)) {
                     $existingUserTypes = [];
                 }
 
                 $currentUserType = Auth::check() ? 'Registered' : 'Guest';
-
-                // Get current reporters array BEFORE adding new reporter
                 $currentReporters = array_filter(array_map('trim', explode(',', $existingReport->reporter_name)));
                 $newReporter = trim($validated['reporter_name']);
 
@@ -840,39 +867,45 @@ class ReportController extends Controller
                 $isNewReporter = !in_array($newReporter, $currentReporters);
 
                 if ($isNewReporter) {
-                    // New reporter - add their type to the end
+                    // Add new reporter and their type
                     $existingUserTypes[] = $currentUserType;
                 } else {
-                    // Existing reporter - find their index and update type if needed
+                    // Update existing reporter type if needed
                     $reporterIndex = array_search($newReporter, $currentReporters);
-                    if ($reporterIndex !== false) {
-                        // If reporter exists but no type assigned at that index, add current type
-                        if (!isset($existingUserTypes[$reporterIndex])) {
-                            $existingUserTypes[$reporterIndex] = $currentUserType;
-                        } else {
-                            // Only upgrade from Guest to Registered, never downgrade
-                            if ($existingUserTypes[$reporterIndex] === 'Guest' && $currentUserType === 'Registered') {
-                                $existingUserTypes[$reporterIndex] = 'Registered';
-                            }
+                    if ($reporterIndex !== false && isset($existingUserTypes[$reporterIndex])) {
+                        // Only upgrade from Guest to Registered, never downgrade
+                        if ($existingUserTypes[$reporterIndex] === 'Guest' && $currentUserType === 'Registered') {
+                            $existingUserTypes[$reporterIndex] = 'Registered';
                         }
                     }
                 }
 
-                // If we still don't have enough user types, fill the gaps
-                while (count($existingUserTypes) < count($currentReporters)) {
-                    // For existing reporters without types, check if they are registered users
-                    $missingIndex = count($existingUserTypes);
-                    if ($missingIndex < count($currentReporters)) {
-                        $reporterName = $currentReporters[$missingIndex];
-                        $isRegistered = $this->isRegisteredUser($reporterName);
-                        $existingUserTypes[] = $isRegistered ? 'Registered' : 'Guest';
-                    } else {
-                        $existingUserTypes[] = 'Guest';
+                // FIXED: Rebuild user_types array from scratch to ensure accuracy
+                $allReporters = array_filter(array_map('trim', explode(',', $existingReport->reporter_name)));
+                $rebuildUserTypes = [];
+
+                foreach ($allReporters as $reporter) {
+                    $reporterType = 'Guest'; // Default to Guest
+
+                    // Check if this reporter is in our existing user types
+                    $reporterIndex = array_search($reporter, $allReporters);
+                    if (isset($existingUserTypes[$reporterIndex]) && $existingUserTypes[$reporterIndex] === 'Registered') {
+                        $reporterType = 'Registered';
                     }
+                    // If not in existing types, check if reporter is registered user
+                    elseif ($this->isRegisteredUser($reporter)) {
+                        $reporterType = 'Registered';
+                    }
+                    // Special case: if this is the current user adding the report
+                    elseif ($reporter === $newReporter && $currentUserType === 'Registered') {
+                        $reporterType = 'Registered';
+                    }
+
+                    $rebuildUserTypes[] = $reporterType;
                 }
 
-                // Store the updated user_types
-                $existingReport->user_types = json_encode($existingUserTypes);
+                // Store the rebuilt user_types
+                $existingReport->user_types = json_encode($rebuildUserTypes);
 
                 // Update reporter phones
                 if ($validated['reporter_phone']) {
@@ -1062,6 +1095,93 @@ class ReportController extends Controller
         }
     }
 
+    /**
+     * Temporary method to fix existing user_types data
+     */
+    public function fixUserTypes()
+    {
+        $reports = Report::whereNull('deleted_at')
+            ->where('is_merged_reference', false)
+            ->get();
+
+        foreach ($reports as $report) {
+            $correctUserType = $this->determineUserTypeFromReporters($report);
+
+            if (str_contains($report->reporter_name, ',')) {
+                // For merged reports, build proper user_types array
+                $reporters = array_filter(array_map('trim', explode(',', $report->reporter_name)));
+                $userTypes = [];
+
+                foreach ($reporters as $reporter) {
+                    $userTypes[] = $this->isRegisteredUser($reporter) ? 'Registered' : 'Guest';
+                }
+
+                $report->user_types = json_encode($userTypes);
+            } else {
+                // For single reporter
+                $userType = $report->user_id ? 'Registered' : 'Guest';
+                $report->user_types = json_encode([$userType]);
+            }
+
+            $report->save();
+
+            Log::info('Fixed user types for report', [
+                'report_id' => $report->id,
+                'reporter_name' => $report->reporter_name,
+                'user_types' => $report->user_types,
+                'formatted_type' => $correctUserType
+            ]);
+        }
+
+        return response()->json(['message' => 'User types fixed for ' . $reports->count() . ' reports']);
+    }
+
+    /**
+     * Comprehensive fix for all user types
+     */
+    public function fixAllUserTypes()
+    {
+        $reports = Report::whereNull('deleted_at')
+            ->where('is_merged_reference', false)
+            ->get();
+
+        $fixedCount = 0;
+        $hybridCount = 0;
+
+        foreach ($reports as $report) {
+            $originalUserTypes = $report->user_types;
+            $correctType = $this->determineUserTypeFromReporters($report);
+
+            // Rebuild user_types array accurately
+            $reporters = $report->reporter_name ?
+                array_filter(array_map('trim', explode(',', $report->reporter_name))) : [];
+            $userTypes = [];
+
+            foreach ($reporters as $reporter) {
+                $userTypes[] = $this->isRegisteredUser($reporter) ? 'Registered' : 'Guest';
+            }
+
+            $report->user_types = json_encode($userTypes);
+            $report->save();
+
+            if ($correctType === 'Hybrid') {
+                $hybridCount++;
+            }
+            $fixedCount++;
+
+            Log::info('Fixed user types', [
+                'report_id' => $report->id,
+                'reporter_name' => $report->reporter_name,
+                'original_types' => $originalUserTypes,
+                'new_types' => $report->user_types,
+                'formatted_type' => $correctType
+            ]);
+        }
+
+        return response()->json([
+            'message' => "Fixed user types for {$fixedCount} reports ({$hybridCount} Hybrid)"
+        ]);
+    }
 
     /**
      * Validate if coordinates are within reasonable range for Clarin, Bohol
@@ -1297,12 +1417,22 @@ class ReportController extends Controller
             $reports = $query->paginate(10)
                 ->appends($request->query())
                 ->through(function ($report) {
-                    // Format user_types for display - PASS ALL REQUIRED PARAMETERS
-                    $report->formatted_user_types = $this->formatUserTypes(
-                        $report->user_types,
-                        $report->user_id,
-                        $report->reporter_name
-                    );
+                    // FIXED: Always recalculate user types to ensure accuracy
+                    $report->formatted_user_types = $this->determineUserTypeFromReporters($report);
+
+                    // But also maintain the user_types JSON for modal display
+                    if (!$report->user_types) {
+                        // Build user_types array from scratch
+                        $reporters = $report->reporter_name ?
+                            array_filter(array_map('trim', explode(',', $report->reporter_name))) : [];
+                        $userTypes = [];
+
+                        foreach ($reporters as $reporter) {
+                            $userTypes[] = $this->isRegisteredUser($reporter) ? 'Registered' : 'Guest';
+                        }
+
+                        $report->user_types = json_encode($userTypes);
+                    }
 
                     // Add avatar_url to user if exists
                     if ($report->user && $report->user->avatar) {
@@ -1356,6 +1486,52 @@ class ReportController extends Controller
                 'reportStats' => $this->getReportStats(),
             ]);
         }
+    }
+
+    /**
+     * Determine user type by analyzing all reporters in a report - FIXED
+     */
+    protected function determineUserTypeFromReporters($report)
+    {
+        // If it's a merged report with multiple reporters
+        if (str_contains($report->reporter_name, ',')) {
+            $reporters = array_filter(array_map('trim', explode(',', $report->reporter_name)));
+            $registeredCount = 0;
+            $guestCount = 0;
+
+            foreach ($reporters as $reporter) {
+                if ($this->isRegisteredUser($reporter)) {
+                    $registeredCount++;
+                } else {
+                    $guestCount++;
+                }
+            }
+
+            // FIXED: If we have BOTH registered AND guest reporters, it's Hybrid
+            if ($registeredCount > 0 && $guestCount > 0) {
+                return 'Hybrid';
+            }
+            // If we only have registered reporters
+            elseif ($registeredCount > 0) {
+                return 'Registered';
+            }
+            // If we only have guest reporters
+            else {
+                return 'Guest';
+            }
+        }
+
+        // Single reporter - check both user_id AND reporter name
+        if ($report->user_id) {
+            return 'Registered';
+        }
+
+        // Check if single reporter name matches a registered user
+        if ($report->reporter_name && $this->isRegisteredUser($report->reporter_name)) {
+            return 'Registered';
+        }
+
+        return 'Guest';
     }
 
     public function track(Request $request)

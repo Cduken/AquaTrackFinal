@@ -206,7 +206,7 @@
                                         >
                                             Notifications
                                         </h3>
-                                        <p
+                                        <!-- <p
                                             v-if="
                                                 modalNotifications.length > 0 &&
                                                 !modalLoading
@@ -214,7 +214,7 @@
                                             class="text-sm text-gray-500 dark:text-gray-400"
                                         >
                                             {{ modalUnreadCount }} unread
-                                        </p>
+                                        </p> -->
                                     </div>
                                 </div>
                                 <button

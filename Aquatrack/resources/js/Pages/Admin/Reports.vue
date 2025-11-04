@@ -1294,52 +1294,57 @@ const showAllReporters = async (report) => {
     if (isMergedReport(report)) {
         const reporters = report.reporter_name
             .split(",")
-            .map((name) => name.trim());
+            .map((name) => name.trim())
+            .filter((name) => name);
 
-        // Parse user types from the report
+        // Parse user types from the report - FIXED for accuracy
         const userTypes = report.user_types
             ? JSON.parse(report.user_types)
             : [];
 
-        // Fetch user data for all reporters to get accurate avatars and types
-        try {
-            const response = await axios.post(
-                route("admin.reports.getReportersData"),
-                {
-                    reporters: reporters,
-                    existingUserTypes: userTypes,
-                }
-            );
-
-            selectedReportReporters.value = response.data.reporters;
-        } catch (error) {
-            console.error("Failed to fetch reporter data:", error);
-            // Fallback to basic logic
-            selectedReportReporters.value = reporters.map(
-                (reporterName, index) => {
-                    let reporterType = userTypes[index] || "Guest";
-
-                    if (!userTypes[index] && index === 0 && report.user_id) {
-                        reporterType = "Registered";
-                    }
-
-                    return {
-                        name: reporterName,
-                        type: reporterType,
-                        avatar:
-                            reporterType === "Registered" &&
-                            index === 0 &&
-                            report.user?.avatar_url
-                                ? report.user.avatar_url
-                                : null,
-                        isRegistered: reporterType === "Registered",
-                        index: index,
-                    };
-                }
-            );
+        // If user_types is missing or incomplete, build it
+        const accurateUserTypes = [];
+        for (let i = 0; i < reporters.length; i++) {
+            if (userTypes[i]) {
+                accurateUserTypes.push(userTypes[i]);
+            } else {
+                // Fallback: check if reporter is registered
+                const isRegistered = await checkReporterRegistration(
+                    reporters[i]
+                );
+                accurateUserTypes.push(isRegistered ? "Registered" : "Guest");
+            }
         }
 
+        selectedReportReporters.value = reporters.map((reporterName, index) => {
+            const reporterType = accurateUserTypes[index] || "Guest";
+
+            return {
+                name: reporterName,
+                type: reporterType,
+                avatar: null, // Will be fetched if needed
+                isRegistered: reporterType === "Registered",
+                index: index,
+            };
+        });
+
         showReporterModal.value = true;
+    }
+};
+
+// Helper function to check reporter registration
+const checkReporterRegistration = async (reporterName) => {
+    try {
+        const response = await axios.post(
+            route("admin.reports.getReportersData"),
+            {
+                reporters: [reporterName],
+            }
+        );
+        return response.data.reporters[0]?.isRegistered || false;
+    } catch (error) {
+        console.error("Failed to check reporter registration:", error);
+        return false;
     }
 };
 
@@ -1628,43 +1633,26 @@ const getUserTypeDotClass = (userType) => {
 };
 
 const getDisplayUserType = (report) => {
-    // Always use backend formatted_user_types if available
-    if (report.formatted_user_types) {
+    // Always use backend formatted_user_types if available and valid
+    if (
+        report.formatted_user_types &&
+        report.formatted_user_types !== "Guest"
+    ) {
         return report.formatted_user_types;
     }
 
-    // Check if this is a merged report with mixed types
+    // Fallback to client-side detection only if needed
     if (isMergedReport(report)) {
-        const userTypes = report.user_types
-            ? JSON.parse(report.user_types)
-            : [];
-        const uniqueTypes = [...new Set(userTypes)];
+        const hasRegistered = report.user_id !== null;
+        const hasMultipleReporters =
+            report.reporter_name && report.reporter_name.split(",").length > 1;
 
-        // If we have multiple unique user types, it's Hybrid
-        if (uniqueTypes.length > 1) {
+        if (hasRegistered && hasMultipleReporters) {
             return "Hybrid";
-        }
-        // If we have only one type but multiple reporters, show that type
-        else if (uniqueTypes.length === 1) {
-            return uniqueTypes[0];
-        }
-        // If no user_types data is available, check if we have mixed reporters
-        else {
-            // Check if initial reporter is registered but there are guest contributors
-            const hasRegistered = report.user_id; // initial reporter is registered
-            const hasGuests =
-                report.reporter_name &&
-                report.reporter_name.split(",").length > 1; // multiple reporters
-
-            if (hasRegistered && hasGuests) {
-                return "Hybrid";
-            }
-            return report.user_id ? "Registered" : "Guest";
         }
     }
 
-    // Single reporter fallback
-    return report.user_id ? "Registered" : "Guest";
+    return report.formatted_user_types || "Guest";
 };
 
 const priorityClasses = (priority) => {

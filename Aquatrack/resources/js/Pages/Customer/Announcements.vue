@@ -14,7 +14,6 @@
                     </p>
                 </div>
 
-
                 <!-- Announcements Table with Fixed Height -->
                 <div
                     class="bg-white border border-gray-200 rounded-lg overflow-hidden"
@@ -404,7 +403,6 @@
                             </div>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
@@ -533,7 +531,7 @@
 
 <script setup>
 import CustomerLayout from "@/Layouts/CustomerLayout.vue";
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, computed, onMounted, onUnmounted, watch} from "vue";
 import {
     Megaphone,
     Filter,
@@ -863,8 +861,39 @@ const formatDateTime = (dateString) => {
     return dateUtils.formatDateTime(dateString);
 };
 
+// In your Vue component's methods, update the formatRelativeTime function:
 const formatRelativeTime = (dateString) => {
-    return dateUtils.formatRelative(dateString);
+    if (!dateString) return "Recently";
+    try {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffTime = now - date;
+        const diffSeconds = Math.floor(diffTime / 1000);
+        const diffMinutes = Math.floor(diffSeconds / 60);
+        const diffHours = Math.floor(diffMinutes / 60);
+        const diffDays = Math.floor(diffHours / 24);
+
+        if (diffSeconds < 60) {
+            return "Just now";
+        } else if (diffMinutes < 60) {
+            return `${diffMinutes} minute${diffMinutes > 1 ? "s" : ""} ago`;
+        } else if (diffHours < 24) {
+            return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+        } else if (diffDays === 1) {
+            return "Yesterday";
+        } else if (diffDays < 7) {
+            return `${diffDays} days ago`;
+        } else if (diffDays < 30) {
+            const weeks = Math.floor(diffDays / 7);
+            return `${weeks} week${weeks > 1 ? "s" : ""} ago`;
+        } else {
+            const months = Math.floor(diffDays / 30);
+            return `${months} month${months > 1 ? "s" : ""} ago`;
+        }
+    } catch (error) {
+        console.error("Error formatting relative time:", error);
+        return "Recently";
+    }
 };
 
 const hasAnnouncementOnDate = (date) => {
@@ -927,6 +956,20 @@ const closeAnnouncementModal = () => {
     selectedAnnouncement.value = null;
     document.body.style.overflow = "auto";
 };
+
+watch(
+    () => props.announcements,
+    (newAnnouncements) => {
+        console.log("Received announcements:", newAnnouncements);
+        if (newAnnouncements.length > 0) {
+            console.log(
+                "First announcement updated_at:",
+                newAnnouncements[0].updated_at
+            );
+        }
+    },
+    { immediate: true }
+);
 
 // Keyboard event handler
 const handleEscapeKey = (event) => {

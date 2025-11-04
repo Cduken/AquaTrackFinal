@@ -414,7 +414,7 @@ const isVideoFile = (media) => {
                                 <div
                                     class="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-sm"
                                 >
-                                    <Droplet :size="20" class="text-white" />
+                                    <Search :size="16" class="text-white" />
                                 </div>
                                 <div>
                                     <h3
@@ -446,11 +446,7 @@ const isVideoFile = (media) => {
                                 class="bg-gradient-to-br from-gray-50 to-blue-50 rounded-2xl p-6 border border-gray-200"
                             >
                                 <div class="flex items-center space-x-3 mb-4">
-                                    <div
-                                        class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center"
-                                    >
-                                        <Search :size="16" class="text-white" />
-                                    </div>
+
                                     <div>
                                         <h4
                                             class="text-lg font-semibold text-gray-900"
@@ -881,7 +877,7 @@ const isVideoFile = (media) => {
 
                     <!-- Footer -->
                     <div class="border-t border-gray-100 px-6 py-4 bg-gray-50">
-                        <div class="flex justify-between items-center">
+                        <div class="flex justify-end items-center">
                             <button
                                 v-if="reportDetails"
                                 @click="resetForm"
@@ -889,23 +885,6 @@ const isVideoFile = (media) => {
                             >
                                 <ArrowLeft :size="16" />
                                 <span class="text-sm">Search Again</span>
-                            </button>
-                            <button
-                                v-else
-                                @click="closeModal"
-                                class="flex items-center space-x-2 px-4 py-2.5 border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 font-medium rounded-xl transition-all shadow-sm"
-                            >
-                                <X :size="16" />
-                                <span class="text-sm">Cancel</span>
-                            </button>
-
-                            <button
-                                v-if="reportDetails"
-                                @click="downloadReportAsImage"
-                                class="flex items-center space-x-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-all shadow-sm download-btn"
-                            >
-                                <Download :size="16" />
-                                <span class="text-sm">Download Report</span>
                             </button>
                         </div>
                     </div>

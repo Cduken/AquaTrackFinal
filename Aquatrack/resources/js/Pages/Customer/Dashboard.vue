@@ -1,6 +1,6 @@
 <template>
     <CustomerLayout>
-        <div class=" bg-gray-50 px-2 py-1">
+        <div class="bg-gray-50 px-2 py-1">
             <!-- Header -->
             <div class="mb-4">
                 <div class="flex items-center justify-between">
@@ -115,8 +115,11 @@
                                         currentBillStatus === 'No Bills',
                                 }"
                             >
-                                <Receipt
-                                    class="w-5 h-5"
+                              <div
+                                class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center"
+                            >
+                                <CreditCard
+                                    class="w-5 h-10 text-green-700"
                                     :class="{
                                         'text-red-600':
                                             currentBillStatus === 'Overdue',
@@ -128,6 +131,7 @@
                                             currentBillStatus === 'No Bills',
                                     }"
                                 />
+                              </div>
                             </div>
                             <span
                                 class="px-2 py-1 rounded text-xs font-medium"
@@ -275,14 +279,10 @@ import { usePage } from "@inertiajs/vue3";
 import Chart from "chart.js/auto";
 import {
     Droplets,
-    Receipt,
     Bell,
     ArrowRight,
-    TrendingUp,
-    TrendingDown,
-    Calendar,
-    Users,
     FileText,
+    CreditCard,
 } from "lucide-vue-next";
 
 const page = usePage();

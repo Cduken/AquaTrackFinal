@@ -104,6 +104,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::put('/admin/records/{record}', [AdminRecordController::class, 'update'])->name('admin.records.update');
     Route::delete('/admin/records/{record}', [AdminRecordController::class, 'destroy'])->name('admin.records.destroy');
 
+    Route::get('/announcements', [AnnouncementsController::class, 'index'])->name('customer.announcements');
     Route::get('/admin/announcements', [AnnouncementsController::class, 'index'])->name('announcements');
     Route::post('/admin/announcements', [AnnouncementsController::class, 'store'])->name('announcements.store');
     Route::put('/admin/announcements/{announcement}', [AnnouncementsController::class, 'update'])->name('announcements.update');

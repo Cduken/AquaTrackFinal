@@ -480,10 +480,7 @@ class ReportController extends Controller
     }
 
     /**
-     * Detect if a reporter name belongs to a registered user - ENHANCED
-     */
-    /**
-     * Detect if a reporter name belongs to a registered user - ENHANCED
+     * Detect if a reporter name belongs to a registered user - FIXED for accuracy
      */
     protected function isRegisteredUser($reporterName)
     {
@@ -493,33 +490,25 @@ class ReportController extends Controller
                 return false;
             }
 
-            // First, try exact match
+            // First, check if this is the current authenticated user
+            if (Auth::check() && Auth::user()->name === $cleanName) {
+                return true;
+            }
+
+            // Check if this reporter name matches any registered user by name
             $user = User::where('name', $cleanName)->first();
             if ($user) {
                 return true;
             }
 
-            // Try case-insensitive exact match
+            // Try case-insensitive match for name
             $user = User::whereRaw('LOWER(name) = LOWER(?)', [$cleanName])->first();
             if ($user) {
                 return true;
             }
 
-            // Try matching by email (if reporter name might be email)
-            if (filter_var($cleanName, FILTER_VALIDATE_EMAIL)) {
-                $user = User::where('email', $cleanName)->first();
-                if ($user) {
-                    return true;
-                }
-            }
-
-            // For merged reports, check if any user has this as part of their name
-            $users = User::where('name', 'like', '%' . $cleanName . '%')->get();
-            if ($users->count() === 1) {
-                // If only one user matches, it's probably them
-                return true;
-            }
-
+            // For merged reports, we need to be more strict
+            // Only return true if we can definitively match a registered user
             return false;
         } catch (\Exception $e) {
             Log::error('Error checking registered user', [
@@ -531,7 +520,7 @@ class ReportController extends Controller
     }
 
     /**
-     * Enhanced formatUserTypes method - FIXED for Hybrid detection
+     * Enhanced formatUserTypes method - FIXED for accurate Hybrid detection
      */
     protected function formatUserTypes($userTypesJson, $userId = null, $reporterName = null)
     {
@@ -540,20 +529,23 @@ class ReportController extends Controller
             $userTypes = json_decode($userTypesJson, true);
 
             if (is_array($userTypes) && !empty($userTypes)) {
-                // Count unique types - FIXED: Check for mixed types
-                $uniqueTypes = array_unique($userTypes);
-                $typeCount = count($uniqueTypes);
+                // Count occurrences of each type
+                $typeCounts = array_count_values($userTypes);
+                $hasRegistered = isset($typeCounts['Registered']);
+                $hasGuest = isset($typeCounts['Guest']);
 
-                // If we have multiple user types, it's Hybrid
-                if ($typeCount > 1) {
+                // Only Hybrid if we have BOTH types
+                if ($hasRegistered && $hasGuest) {
                     return 'Hybrid';
                 }
-
-                // Single type - return what it is
-                if (in_array('Registered', $uniqueTypes)) {
+                // Only Registered if all are Registered
+                elseif ($hasRegistered && !$hasGuest) {
                     return 'Registered';
                 }
-                return 'Guest';
+                // Only Guest if all are Guest
+                else {
+                    return 'Guest';
+                }
             }
         }
 
@@ -576,21 +568,21 @@ class ReportController extends Controller
                 }
             }
 
-            // FIXED: If we have ANY registered user AND any guest, it's Hybrid
+            // FIXED: Only return Hybrid if we have BOTH registered AND guest
             if ($hasRegistered && $hasGuest) {
                 return 'Hybrid';
             }
-            // If we only found registered users
+            // If we only found registered users (all registered)
             elseif ($hasRegistered) {
                 return 'Registered';
             }
-            // If we only found guests
+            // If we only found guests (all guests)
             else {
                 return 'Guest';
             }
         }
 
-        // Single reporter fallback - FIXED: Check both userId AND reporter name
+        // Single reporter fallback
         if ($userId) {
             return 'Registered';
         }
@@ -602,10 +594,6 @@ class ReportController extends Controller
 
         return 'Guest';
     }
-
-    /**
-     * Find existing report for merging
-     */
     /**
      * Find existing report for merging with improved GPS accuracy
      */
@@ -853,6 +841,8 @@ class ReportController extends Controller
                     $existingReport->reporter_name = implode(', ', $existingReporters);
                 }
 
+                // In your store method, replace the user type handling with this:
+
                 // FIXED: PROPER USER TYPES HANDLING FOR ALL SCENARIOS
                 $existingUserTypes = $existingReport->user_types ? json_decode($existingReport->user_types, true) : [];
                 if (!is_array($existingUserTypes)) {
@@ -887,13 +877,8 @@ class ReportController extends Controller
                 foreach ($allReporters as $reporter) {
                     $reporterType = 'Guest'; // Default to Guest
 
-                    // Check if this reporter is in our existing user types
-                    $reporterIndex = array_search($reporter, $allReporters);
-                    if (isset($existingUserTypes[$reporterIndex]) && $existingUserTypes[$reporterIndex] === 'Registered') {
-                        $reporterType = 'Registered';
-                    }
-                    // If not in existing types, check if reporter is registered user
-                    elseif ($this->isRegisteredUser($reporter)) {
+                    // Check if this reporter is a registered user
+                    if ($this->isRegisteredUser($reporter)) {
                         $reporterType = 'Registered';
                     }
                     // Special case: if this is the current user adding the report
@@ -1414,25 +1399,23 @@ class ReportController extends Controller
                 });
             }
 
+
             $reports = $query->paginate(10)
                 ->appends($request->query())
                 ->through(function ($report) {
-                    // FIXED: Always recalculate user types to ensure accuracy
+                    // FIXED: Use the corrected method to determine user types
                     $report->formatted_user_types = $this->determineUserTypeFromReporters($report);
 
-                    // But also maintain the user_types JSON for modal display
-                    if (!$report->user_types) {
-                        // Build user_types array from scratch
-                        $reporters = $report->reporter_name ?
-                            array_filter(array_map('trim', explode(',', $report->reporter_name))) : [];
-                        $userTypes = [];
+                    // Build accurate user_types array for modal display
+                    $reporters = $report->reporter_name ?
+                        array_filter(array_map('trim', explode(',', $report->reporter_name))) : [];
+                    $userTypes = [];
 
-                        foreach ($reporters as $reporter) {
-                            $userTypes[] = $this->isRegisteredUser($reporter) ? 'Registered' : 'Guest';
-                        }
-
-                        $report->user_types = json_encode($userTypes);
+                    foreach ($reporters as $reporter) {
+                        $userTypes[] = $this->isRegisteredUser($reporter) ? 'Registered' : 'Guest';
                     }
+
+                    $report->user_types = json_encode($userTypes);
 
                     // Add avatar_url to user if exists
                     if ($report->user && $report->user->avatar) {
@@ -1489,10 +1472,13 @@ class ReportController extends Controller
     }
 
     /**
-     * Determine user type by analyzing all reporters in a report - FIXED
+     * Determine user type by analyzing all reporters in a report - ENHANCED
      */
     protected function determineUserTypeFromReporters($report)
     {
+        // If we have user_id, it means at least one registered user is involved
+        $hasRegisteredUser = !is_null($report->user_id);
+
         // If it's a merged report with multiple reporters
         if (str_contains($report->reporter_name, ',')) {
             $reporters = array_filter(array_map('trim', explode(',', $report->reporter_name)));
@@ -1507,30 +1493,39 @@ class ReportController extends Controller
                 }
             }
 
-            // FIXED: If we have BOTH registered AND guest reporters, it's Hybrid
+            Log::debug('User type analysis', [
+                'report_id' => $report->id,
+                'reporters' => $reporters,
+                'registered_count' => $registeredCount,
+                'guest_count' => $guestCount,
+                'user_id' => $report->user_id
+            ]);
+
+            // Only return Hybrid if we have BOTH registered AND guest reporters
             if ($registeredCount > 0 && $guestCount > 0) {
                 return 'Hybrid';
             }
-            // If we only have registered reporters
+            // If we only have registered reporters (all registered)
             elseif ($registeredCount > 0) {
                 return 'Registered';
             }
-            // If we only have guest reporters
+            // If we only have guest reporters (all guests)
             else {
                 return 'Guest';
             }
         }
 
-        // Single reporter - check both user_id AND reporter name
+        // Single reporter - use user_id as primary indicator
         if ($report->user_id) {
             return 'Registered';
         }
 
-        // Check if single reporter name matches a registered user
+        // For single reporter without user_id, check if name matches registered user
         if ($report->reporter_name && $this->isRegisteredUser($report->reporter_name)) {
             return 'Registered';
         }
 
+        // Default to Guest
         return 'Guest';
     }
 

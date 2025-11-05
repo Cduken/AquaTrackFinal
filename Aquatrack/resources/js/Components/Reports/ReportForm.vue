@@ -148,7 +148,6 @@ const waterIssueTypes = [
     "Smelly water",
     "Cloudy or dirty water",
     "Hot water issues",
-    "Running toilet",
 ];
 
 // Configure localforage

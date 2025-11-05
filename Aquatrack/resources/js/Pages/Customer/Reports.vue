@@ -2,66 +2,78 @@
     <CustomerLayout>
         <!-- Content Section -->
         <div class="bg-gray-50 px-2 py-1">
-            <!-- Header Section -->
-            <div class="mb-4">
-                <h1 class="text-xl font-semibold text-gray-900">
-                    Water Reports
-                </h1>
-                <p class="text-gray-600 text-sm">
-                    Track and manage your water reports
-                </p>
-            </div>
-
-            <!-- Filters and Search -->
-            <div class="flex flex-col md:flex-row gap-3 mb-6">
+            <!-- Header Section with Search and Filters on right -->
+            <div
+                class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6"
+            >
+                <!-- Left side - Title and description -->
                 <div class="flex-1">
-                    <div class="relative">
-                        <div
-                            class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
-                        >
-                            <v-icon
-                                name="bi-search"
-                                class="text-gray-400 w-4 h-4"
+                    <h1 class="text-xl font-semibold text-gray-900">
+                        Water Reports
+                    </h1>
+                    <p class="text-gray-600 text-sm">
+                        Track and manage your water reports
+                    </p>
+                </div>
+
+                <!-- Right side - Search, Filters, and Submit Button -->
+                <div
+                    class="flex flex-col sm:flex-row items-start sm:items-center gap-3"
+                >
+                    <!-- Search Bar -->
+                    <div class="w-full sm:w-auto">
+                        <div class="relative">
+                            <div
+                                class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                            >
+                                <v-icon
+                                    name="bi-search"
+                                    class="text-gray-400 w-4 h-4"
+                                />
+                            </div>
+                            <input
+                                v-model="filters.search"
+                                type="text"
+                                placeholder="Search reports..."
+                                class="pl-10 pr-4 py-2 w-full sm:w-64 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                @keyup.enter="getReports"
                             />
                         </div>
-                        <input
-                            v-model="filters.search"
-                            type="text"
-                            placeholder="Search reports..."
-                            class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                            @keyup.enter="getReports"
-                        />
                     </div>
-                </div>
-                <button
-                    @click="showAddModal = true"
-                    class="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white border border-transparent rounded-lg font-medium text-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-                >
-                    <v-icon name="bi-plus-lg" class="mr-2 w-4 h-4" />
-                    Submit New Report
-                </button>
 
-                <div class="flex items-center gap-2">
-                    <select
-                        v-model="filters.status"
-                        class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        @change="getReports"
-                    >
-                        <option value="">All Status</option>
-                        <option value="pending">Pending</option>
-                        <option value="in_progress">In Progress</option>
-                        <option value="resolved">Resolved</option>
-                    </select>
+
+                    <!-- Submit New Report Button -->
                     <button
-                        @click="resetFilters"
-                        class="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                        title="Reset Filters"
-                    >
-                        <v-icon
-                            name="bi-arrow-clockwise"
-                            class="text-gray-600 w-4 h-4"
-                        />
+                        @click="showAddModal = true"
+                        class="flex items-center px-4 py-2 text-sm font-medium border bg-blue-100 border-blue-500/20 bg-blue-100/40 text-blue-500 rounded-sm hover:bg-blue-100/80 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 ease-in-out">
+                        <v-icon name="bi-plus-lg" class="mr-2 w-4 h-4" />
+                        Submit New Report
                     </button>
+
+                    <!-- Status Filter and Reset -->
+                    <div class="flex items-center gap-2">
+                        <select
+                            v-model="filters.status"
+                            class="w-[110px] border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            @change="getReports"
+                        >
+                            <option value="">All Status</option>
+                            <option value="pending">Pending</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="resolved">Resolved</option>
+                        </select>
+                        <button
+                            @click="resetFilters"
+                            class="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                            title="Reset Filters"
+                        >
+                            <v-icon
+                                name="bi-arrow-clockwise"
+                                class="text-gray-600 w-4 h-4"
+                            />
+                        </button>
+                    </div>
+
                 </div>
             </div>
 

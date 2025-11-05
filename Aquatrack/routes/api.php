@@ -25,6 +25,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Reports notifications endpoint
     Route::get('/reports/notifications', [NotificationController::class, 'getReports'])
         ->name('api.reports.notifications');
+    // routes/api.php
+    Route::get('/notifications', [NotificationController::class, 'getNotificationsApi']);
 
 
 
@@ -37,5 +39,3 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::middleware('api')->group(function () {
     // Add any public API routes here
 });
-
-

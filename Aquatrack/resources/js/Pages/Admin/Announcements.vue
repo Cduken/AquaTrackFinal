@@ -78,7 +78,7 @@
                                         <!-- Filter Dropdown Content -->
                                         <div
                                             v-if="showFilterDropdown"
-                                            class="absolute z-50 mt-1 w-56 bg-white rounded-lg shadow-lg border border-gray-200 dark:bg-gray-700 dark:border-gray-600"
+                                            class="absolute z-50 mt-1 w-35 bg-white rounded-lg shadow-lg border border-gray-200 dark:bg-gray-700 dark:border-gray-600"
                                             :style="filterDropdownStyle"
                                         >
                                             <div class="p-4">
@@ -163,12 +163,7 @@
                                                     />
                                                     Reset
                                                 </button>
-                                                <button
-                                                    @click="applyFilters"
-                                                    class="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                >
-                                                    Apply
-                                                </button>
+
                                             </div>
                                         </div>
                                     </div>

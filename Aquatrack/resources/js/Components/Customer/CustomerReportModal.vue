@@ -1565,7 +1565,7 @@ const waterIssueTypes = [
     "Smelly water",
     "Cloudy or dirty water",
     "Hot water issues",
-    "Running toilet",
+    // "Running toilet (Nagasige’g agas nga kasilyas)",
 ];
 
 // Form setup with authenticated user's name and fields from ReportForm.vue
@@ -2020,80 +2020,12 @@ const submitReport = async () => {
 
                 Swal.fire({
                     toast: true,
-                    position: "center",
+                    position: "top-end",
+                    icon: "success",
+                    message: "Report submitted successfully!",
+                    title: `Report submitted (${trackingCode})`,
                     showConfirmButton: false,
-                    timer: 5000,
-                    timerProgressBar: true,
-                    html: `
-        <div class="text-center w-full">
-            <!-- Animated Checkmark -->
-            <div class="relative inline-block mb-4">
-                <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center animate-bounce">
-                    <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
-                <div class="absolute inset-0 bg-green-200 rounded-full animate-ping opacity-75"></div>
-            </div>
-
-            <!-- Content -->
-            <h3 class="text-green-800 font-bold text-2xl mb-3">Successfully Submitted! 🎉</h3>
-            <p class="text-green-700 text-sm mb-4">Your water report has been received and is now under review</p>
-
-            <!-- Tracking Code Box -->
-            <div class="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-5 mb-4 shadow-lg mx-auto w-full max-w-md">
-                <p class="text-white text-sm font-semibold mb-2 tracking-wide">YOUR TRACKING CODE</p>
-                <div class="flex items-center justify-between bg-white/10 rounded-lg px-4 py-3">
-                    <code class="text-white font-bold text-xl tracking-wider">${trackingCode}</code>
-                    <button onclick="navigator.clipboard.writeText('${trackingCode}')"
-                            class="text-white hover:text-green-200 transition-colors p-2 rounded-lg bg-white/20 hover:bg-white/30"
-                            title="Copy to clipboard">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Additional Info -->
-            <div class="grid grid-cols-2 gap-3 text-green-600 text-sm bg-green-50 rounded-lg p-4 mx-auto w-full max-w-md">
-                <div class="text-left">
-                    <p class="font-semibold">📍Location</p>
-                    <p class="text-xs">${form.barangay}, ${form.municipality}</p>
-                </div>
-                <div class="text-left">
-                    <p class="font-semibold">📍Purok</p>
-                    <p class="text-xs">${form.purok}</p>
-                </div>
-            </div>
-        </div>
-    `,
-                    didOpen: (toast) => {
-                        toast.addEventListener("mouseenter", Swal.stopTimer);
-                        toast.addEventListener("mouseleave", Swal.resumeTimer);
-
-                        // Add entrance animation
-                        toast.style.transform = "scale(0.8)";
-                        toast.style.opacity = "0";
-                        setTimeout(() => {
-                            toast.style.transition = "all 0.3s ease-out";
-                            toast.style.transform = "scale(1)";
-                            toast.style.opacity = "1";
-                        }, 100);
-                    },
-                    willClose: (toast) => {
-                        toast.style.transition = "all 0.3s ease-in";
-                        toast.style.transform = "scale(0.4)";
-                        toast.style.opacity = "0";
-                    },
-                    customClass: {
-                        popup: "!bg-white !border !border-green-200 !shadow-2xl !rounded-2xl !p-8 !max-w-2xl !w-auto !min-w-[550px] !backdrop-blur-sm",
-                        timerProgressBar:
-                            "!bg-gradient-to-r !from-green-400 !to-emerald-500 !h-1 !rounded-full",
-                    },
-                    background: "transparent",
-                    backdrop: false,
-                    width: "550px",
+                    timer: 3000,
                 });
 
                 emit("update:successData", {

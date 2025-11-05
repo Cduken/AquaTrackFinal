@@ -2,12 +2,13 @@
     <CustomerLayout>
         <div class="bg-gray-50 px-2 py-0">
             <div class="overflow-hidden">
-                <!-- Header Section -->
+                <!-- Header Section with Search and Filters on right -->
                 <div class="py-2 border-b border-gray-200 bg-gray-50">
                     <div
-                        class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+                        class="flex flex-col md:flex-row md:items-center justify-between gap-4"
                     >
-                        <div>
+                        <!-- Left side - Title and description -->
+                        <div class="flex-1">
                             <h1 class="text-xl font-semibold text-gray-900">
                                 Notifications
                             </h1>
@@ -16,96 +17,85 @@
                             </p>
                         </div>
 
+                        <!-- Right side - Search and Filters -->
                         <div
-                            class="flex items-center space-x-2 text-sm text-gray-600"
+                            class="flex flex-col sm:flex-row items-start sm:items-center gap-3"
                         >
-                            <div class="flex items-center space-x-1">
-                                <Bell class="w-4 h-4" />
-                                <span>{{ notifications.length }} total</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Search and Filter Bar -->
-                <div class="px-2 py-4 border-b border-gray-200 bg-white">
-                    <div
-                        class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4"
-                    >
-                        <!-- Search -->
-                        <div class="flex-1 max-w-md">
-                            <div class="relative">
-                                <div
-                                    class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
-                                >
-                                    <Search class="w-4 h-4 text-gray-400" />
+                            <!-- Search -->
+                            <div class="w-full sm:w-auto">
+                                <div class="relative">
+                                    <div
+                                        class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
+                                    >
+                                        <Search class="w-4 h-4 text-gray-400" />
+                                    </div>
+                                    <input
+                                        v-model="filters.search"
+                                        type="text"
+                                        class="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:w-64"
+                                        placeholder="Search notifications..."
+                                        @keyup.enter="applyFilters"
+                                    />
                                 </div>
-                                <input
-                                    v-model="filters.search"
-                                    type="text"
-                                    class="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                    placeholder="Search notifications..."
-                                    @keyup.enter="applyFilters"
-                                />
-                            </div>
-                        </div>
-
-                        <!-- Filter Controls -->
-                        <div class="flex flex-wrap items-center gap-3">
-                            <!-- Type Filter -->
-                            <!-- In your Vue template, update the Type Filter options -->
-                            <div class="relative">
-                                <select
-                                    v-model="filters.type"
-                                    @change="applyFilters"
-                                    class="px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                >
-                                    <option value="">All Types</option>
-                                    <option value="records">Records</option>
-                                    <option value="reports">Reports</option>
-                                    <option value="announcements">
-                                        Announcements
-                                    </option>
-                                </select>
-                            </div>
-                            <!-- Status Filter -->
-                            <div class="relative">
-                                <select
-                                    v-model="filters.status"
-                                    @change="applyFilters"
-                                    class="px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                >
-                                    <option value="">All Status</option>
-                                    <option value="unread">Unread</option>
-                                    <option value="read">Read</option>
-                                </select>
                             </div>
 
-                            <!-- Sort -->
-                            <div class="relative">
-                                <select
-                                    v-model="filters.sort"
-                                    @change="applyFilters"
-                                    class="px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                >
-                                    <option value="created_at">
-                                        Newest First
-                                    </option>
-                                    <option value="created_at_asc">
-                                        Oldest First
-                                    </option>
-                                    <option value="type">Type</option>
-                                </select>
-                            </div>
+                            <!-- Filter Controls -->
+                            <div class="flex flex-wrap items-center gap-2">
+                                <!-- Type Filter -->
+                                <div class="relative">
+                                    <select
+                                        v-model="filters.type"
+                                        @change="applyFilters"
+                                        class="w-[115px] spx-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    >
+                                        <option value="">All Types</option>
+                                        <option value="records">Records</option>
+                                        <option value="reports">Reports</option>
+                                        <option value="announcements">
+                                            Announcements
+                                        </option>
+                                    </select>
+                                </div>
 
-                            <!-- Reset Filters -->
-                            <button
-                                @click="clearFilters"
-                                class="flex items-center px-3 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
-                            >
-                                <RefreshCw class="w-4 h-4 mr-2" />
-                                Reset
-                            </button>
+                                <!-- Status Filter -->
+                                <div class="relative">
+                                    <select
+                                        v-model="filters.status"
+                                        @change="applyFilters"
+                                        class="w-[110px] px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    >
+                                        <option value="">All Status</option>
+                                        <option value="unread">Unread</option>
+                                        <option value="read">Read</option>
+                                    </select>
+                                </div>
+
+                                <!-- Sort -->
+                                <div class="relative">
+                                    <select
+                                        v-model="filters.sort"
+                                        @change="applyFilters"
+                                        class="w-[130px] px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    >
+                                        <option value="created_at">
+                                            Newest First
+                                        </option>
+                                        <option value="created_at_asc">
+                                            Oldest First
+                                        </option>
+
+                                    </select>
+                                </div>
+
+                                <!-- Reset Filters -->
+                                <button
+                                    @click="clearFilters"
+                                    class="flex items-center px-3 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+                                >
+                                    <RefreshCw class="w-4 h-4 mr-2" />
+
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

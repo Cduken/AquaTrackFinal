@@ -43,32 +43,31 @@
 
 <script setup>
 const props = defineProps({
-    form: Object
+    form: Object,
 });
 
-const emit = defineEmits(['update:field']);
+const emit = defineEmits(["update:field"]);
 
 const waterIssueTypes = [
-    "Burst pipe",
-    "Rusty water",
-    "Low water pressure",
-    "No water supply",
-    "Clogged pipes",
-    "Smelly water",
-    "Cloudy or dirty water",
-    "Hot water issues",
-    "Running toilet",
+    "Burst pipe (Nabuak nga tubo)",
+    "Rusty water (Tubig nga adunay kalawang)",
+    "Low water pressure (Huyang nga presyur sa tubig)",
+    "No water supply (Walay suplay sa tubig)",
+    "Clogged pipes (Baradong mga tubo)",
+    "Smelly water (Tubig nga baho)",
+    "Cloudy or dirty water (Lubog o hugaw nga tubig)",
+    "Hot water issues (Problema sa mainit nga tubig)",
 ];
 
 const selectWaterIssue = (event) => {
     const value = event.target.value || "";
-    emit('update:field', { field: 'water_issue_type', value });
+    emit("update:field", { field: "water_issue_type", value });
     if (value !== "others") {
-        emit('update:field', { field: 'custom_water_issue', value: "" });
+        emit("update:field", { field: "custom_water_issue", value: "" });
     }
 };
 
 const updateField = (field, value) => {
-    emit('update:field', { field, value });
+    emit("update:field", { field, value });
 };
 </script>

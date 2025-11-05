@@ -229,7 +229,7 @@ class NotificationController extends Controller
                 'id' => $notificationId,
                 'type' => 'reports',
                 'title' => 'New Report Submitted',
-                'message' => "New water quality report from " . ($report->user ? $report->user->name : ($report->reporter_name ?? 'Guest User')),
+                'message' => "New water concern report from " . ($report->user ? $report->user->name : ($report->reporter_name ?? 'Guest User')),
                 'action_url' => '/admin/reports',
                 'unread' => !($report->viewed_by_admin ?? false),
                 'created_at' => $report->created_at ? $report->created_at->toISOString() : now()->toISOString(),
@@ -237,34 +237,9 @@ class NotificationController extends Controller
             ]);
         }
 
-        // 2. Updated reports from customers - REPORTS TYPE
-        $updatedReports = Report::with('user')
-            ->where('updated_at', '>=', now()->subDays(7))
-            ->where('updated_at', '>', DB::raw('created_at'))
-            ->latest('updated_at')
-            ->get();
 
-        foreach ($updatedReports as $report) {
-            $notificationId = 'updated_report_' . $report->id . '_' . $report->updated_at->timestamp;
 
-            // Skip if notification is dismissed
-            if (in_array($notificationId, $dismissedNotifications)) {
-                continue;
-            }
-
-            $notifications->push([
-                'id' => $notificationId,
-                'type' => 'reports',
-                'title' => 'Report Updated',
-                'message' => "Report #{$report->tracking_code} has been updated by " . ($report->user ? $report->user->name : ($report->reporter_name ?? 'Guest User')),
-                'action_url' => '/admin/reports',
-                'unread' => !($report->update_viewed_by_admin ?? false),
-                'created_at' => $report->updated_at ? $report->updated_at->toISOString() : now()->toISOString(),
-                'important' => false
-            ]);
-        }
-
-        // 3. Overdue records/bills from customers - RECORDS TYPE
+        // 3. Overdue records/bills from customers - RECORDS TYPEf
         $overdueRecords = MeterReading::with('user')
             ->where('status', 'Overdue')
             ->where('updated_at', '>=', now()->subDays(7))
@@ -326,7 +301,6 @@ class NotificationController extends Controller
 
         return $notifications;
     }
-
     /**
      * Get notifications for staff users
      */
@@ -416,17 +390,59 @@ class NotificationController extends Controller
 
         Log::info('Dismissed notifications found: ' . count($dismissedNotifications));
 
-        // 1. Report status updates - Check if notification is dismissed
-        $userReports = Report::where('user_id', $user->id)
+        // 1. NEW REPORTS - Show when report is first submitted (created)
+        $newReports = Report::where('user_id', $user->id)
+            ->where('created_at', '>=', now()->subDays(7))
+            ->latest('created_at')
+            ->get();
+
+        foreach ($newReports as $report) {
+            $notificationId = 'new_report_' . $report->id;
+
+            // Skip if notification is dismissed
+            if (in_array($notificationId, $dismissedNotifications)) {
+                continue;
+            }
+
+            $notifications->push([
+                'id' => $notificationId,
+                'type' => 'reports',
+                'title' => 'Report Submitted',
+                'message' => "Your report #{$report->tracking_code} has been sent successfully and is under review",
+                'action_url' => '/customer/reports',
+                'unread' => !$report->viewed_by_user,
+                'created_at' => $report->created_at->toISOString(),
+                'important' => true
+            ]);
+        }
+
+        // 2. REPORT STATUS UPDATES - Only show when status actually changes (simpler approach)
+        $statusUpdatedReports = Report::where('user_id', $user->id)
             ->where('updated_at', '>=', now()->subDays(7))
+            ->where(function ($query) {
+                // Show if status is not pending OR if it was updated after creation
+                $query->where('status', '!=', 'pending')
+                    ->orWhereColumn('updated_at', '>', 'created_at');
+            })
             ->latest('updated_at')
             ->get();
 
-        foreach ($userReports as $report) {
+        foreach ($statusUpdatedReports as $report) {
+            // Skip if this is the same as new report notification (same report, same time)
+            if ($report->created_at->eq($report->updated_at)) {
+                continue;
+            }
+
             $notificationId = 'report_status_' . $report->id . '_' . $report->updated_at->timestamp;
 
             // Skip if notification is dismissed
             if (in_array($notificationId, $dismissedNotifications)) {
+                continue;
+            }
+
+            // Skip if we already have a new report notification for this
+            $newReportNotificationId = 'new_report_' . $report->id;
+            if (in_array($newReportNotificationId, $dismissedNotifications)) {
                 continue;
             }
 
@@ -442,7 +458,7 @@ class NotificationController extends Controller
             ]);
         }
 
-        // 2. Bill amount updates - Check if notification is dismissed
+        // 3. Bill amount updates - Check if notification is dismissed
         $updatedBills = MeterReading::where('user_id', $user->id)
             ->where('updated_at', '>=', now()->subDays(7))
             ->latest('updated_at')
@@ -460,7 +476,7 @@ class NotificationController extends Controller
                 'id' => $notificationId,
                 'type' => 'records',
                 'title' => 'Bill Amount Updated',
-                'message' => "Your bill for {$bill->billing_month} has been updated. New amount: ₱" . number_format($bill->amount, 2),
+                'message' => "Your bill for {$bill->billing_month} has been updated.",
                 'action_url' => '/customer/usage',
                 'unread' => (bool) $bill->amount_updated,
                 'created_at' => $bill->updated_at->toISOString(),
@@ -468,7 +484,7 @@ class NotificationController extends Controller
             ]);
         }
 
-        // 3. Staff viewed water consumption - Check if notification is dismissed
+        // 4. Staff viewed water consumption - Check if notification is dismissed
         $staffViewedReadings = MeterReading::where('user_id', $user->id)
             ->where('staff_viewed_at', '>=', now()->subDays(7))
             ->latest('staff_viewed_at')
@@ -494,14 +510,14 @@ class NotificationController extends Controller
             ]);
         }
 
-        // 4. Regular bill notifications (overdue, due soon, etc.) - Check if notification is dismissed
+        // 5. Regular bill notifications (overdue, due soon, etc.) - Check if notification is dismissed
         $billNotifications = $this->getBillNotifications();
         $filteredBillNotifications = $billNotifications->filter(function ($notification) use ($dismissedNotifications) {
             return !in_array($notification['id'], $dismissedNotifications);
         });
         $notifications = $notifications->merge($filteredBillNotifications);
 
-        // 5. Customer announcements - Check if notification is dismissed
+        // 6. Customer announcements - Check if notification is dismissed
         $announcements = Announcements::where('active', true)
             ->where(function ($query) {
                 $query->where('target_audience', 'customer')
@@ -532,10 +548,18 @@ class NotificationController extends Controller
             ]);
         }
 
+        // SORT ALL NOTIFICATIONS BY CREATED_AT DESCENDING (NEWEST FIRST)
+        $notifications = $notifications->sortByDesc(function ($notification) {
+            return $notification['created_at'];
+        })->values();
+
         Log::info('Final customer notifications count', [
             'total' => $notifications->count(),
+            'new_reports' => $newReports->count(),
+            'status_updates' => $statusUpdatedReports->count(),
             'unread' => $notifications->where('unread', true)->count(),
-            'dismissed_count' => count($dismissedNotifications)
+            'dismissed_count' => count($dismissedNotifications),
+            'sample_order' => $notifications->take(3)->pluck('created_at')
         ]);
 
         return $notifications;
@@ -941,7 +965,6 @@ class NotificationController extends Controller
             ]);
 
             return redirect()->back()->with('success', 'Reports merged successfully! New tracking code: ' . $mergedReport->tracking_code);
-
         } catch (\Exception $e) {
             Log::error('Report merging failed: ' . $e->getMessage(), [
                 'report_ids' => $reportIds,
@@ -982,7 +1005,6 @@ class NotificationController extends Controller
                 });
 
             return response()->json(['reports' => $reports]);
-
         } catch (\Exception $e) {
             Log::error('Error fetching mergeable reports: ' . $e->getMessage());
             return response()->json(['reports' => []]);

@@ -1,4 +1,3 @@
-// LandingPage.vue
 <script setup>
 import { Head } from "@inertiajs/vue3";
 import Hero from "@/Components/Hero.vue";
@@ -146,17 +145,38 @@ if (typeof window !== "undefined") {
 <template>
     <Head title="Landing" />
 
-    <div class="overflow-hidden">
-        <Hero
-            id="home"
-            :can-login="canLogin"
-            :can-register="canRegister"
-            :tracking-code="trackingCode"
-            :date-submitted="dateSubmitted"
-        />
-        <Features id="features" />
-        <About id="about" />
-        <!-- <CallToAction id="cta" /> -->
-        <Footer />
+    <div class="overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <!-- Main container with subtle shadow -->
+        <div class="shadow-2xl">
+            <Hero
+                id="home"
+                :can-login="canLogin"
+                :can-register="canRegister"
+                :tracking-code="trackingCode"
+                :date-submitted="dateSubmitted"
+            />
+
+            <!-- Subtle shadow divider between sections -->
+            <div
+                class="h-px bg-gradient-to-r from-transparent via-slate-700 to-transparent shadow-lg"
+            ></div>
+
+            <Features id="features" />
+
+            <!-- Subtle shadow divider between sections -->
+            <div
+                class="h-px bg-gradient-to-r from-transparent via-slate-700 to-transparent shadow-lg"
+            ></div>
+
+            <About id="about" />
+
+            <!-- Subtle shadow divider before footer -->
+            <div
+                class="h-px bg-gradient-to-r from-transparent via-slate-700 to-transparent shadow-lg"
+            ></div>
+
+            <!-- <CallToAction id="cta" /> -->
+            <Footer />
+        </div>
     </div>
 </template>

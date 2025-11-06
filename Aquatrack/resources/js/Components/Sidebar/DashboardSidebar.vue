@@ -1,7 +1,7 @@
 <template>
     <aside
         :class="[
-            'fixed top-0 left-0 z-50 h-screen bg-blue-950 border-r shadow-lg dark:bg-gradient-to-b dark:from-blue-800 dark:to-blue-700 dark:border-blue-700 transition-all duration-300 ease-in-out flex flex-col',
+            'fixed top-0 left-0 z-50 h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-r shadow-2xl    dark:bg-gradient-to-b dark:from-blue-800 dark:to-blue-700 dark:border-blue-700 transition-all duration-300 ease-in-out flex flex-col',
             isOpen ? 'w-[257px]' : 'w-[70px]',
             isMobileMenuOpen
                 ? 'translate-x-0'
@@ -157,6 +157,8 @@ import {
     XMarkIcon,
 } from "@heroicons/vue/24/outline";
 import { ArrowLeftFromLine } from "lucide-vue-next";
+import { LayoutDashboard } from "lucide-vue-next";
+import { Megaphone } from "lucide-vue-next";
 import { ref, onMounted, onUnmounted } from "vue";
 
 defineProps({
@@ -191,10 +193,10 @@ onUnmounted(() => {
 });
 
 const iconMap = {
-    "md-dashboard": HomeIcon,
+    "md-dashboard": LayoutDashboard,
     "bi-graph-up": ChartBarIcon,
     "bi-flag-fill": FlagIcon,
-    "bi-megaphone-fill": SpeakerWaveIcon,
+    "bi-megaphone-fill": Megaphone,
     "fa-users": UsersIcon,
     "bi-file-earmark-text-fill": DocumentTextIcon,
     "hi-bell": BellIcon,

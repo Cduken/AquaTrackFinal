@@ -13,8 +13,8 @@
 
             <!-- Fallback text with responsive breakpoints -->
             <span v-else
-                class="ml-1 sm:ml-2 text-md xs:text-sm sm:text-md md:text-lg lg:text-xl font-bold uppercase tracking-[-1px] text-black">
-                AquaTrack
+                class="ml-1 sm:ml-2 text-md xs:text-sm sm:text-md  md:text-lg lg:text-xl font-bold uppercase tracking-[-1px] text-white">
+                Aqua<span class="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">Track</span>
             </span>
         </div>
     </div>

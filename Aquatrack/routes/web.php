@@ -15,6 +15,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\Roles\SelectRolesController;
 use App\Http\Controllers\Staff\StaffDashboardController;
 use App\Http\Controllers\Staff\StaffReadingController;
+use App\Http\Controllers\TrackReportController;
 use App\Models\User;
 use Illuminate\Container\Attributes\Auth;
 use Illuminate\Foundation\Application;
@@ -43,6 +44,12 @@ Route::get('/redirect-to-dashboard', [AuthenticatedSessionController::class, 're
     ->name('redirect-to-dashboard');
 
 Route::post('/verify-code', [AuthenticatedSessionController::class, 'verifyCode'])->name('verify-code');
+
+// web.php
+Route::get('/announcements', [AnnouncementsController::class, 'guestIndex'])->name('announcements.guest');
+Route::get('/track-report', [TrackReportController::class, 'index'])->name('track-report');
+
+Route::get('/report-issue', [ReportController::class, 'createPage'])->name('report-issue.create');
 
 // Add this route for generic dashboard access
 Route::get('/dashboard', function () {
@@ -104,7 +111,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::put('/admin/records/{record}', [AdminRecordController::class, 'update'])->name('admin.records.update');
     Route::delete('/admin/records/{record}', [AdminRecordController::class, 'destroy'])->name('admin.records.destroy');
 
-    Route::get('/announcements', [AnnouncementsController::class, 'index'])->name('customer.announcements');
+    // Route::get('/announcements', [AnnouncementsController::class, 'index'])->name('customer.announcements');
     Route::get('/admin/announcements', [AnnouncementsController::class, 'index'])->name('announcements');
     Route::post('/admin/announcements', [AnnouncementsController::class, 'store'])->name('announcements.store');
     Route::put('/admin/announcements/{announcement}', [AnnouncementsController::class, 'update'])->name('announcements.update');

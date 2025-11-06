@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Log;
 class AnnouncementsController extends Controller
 {
 
-       public function customerIndex()
+    public function customerIndex()
     {
         $announcements = Announcements::where('status', 'active')
             ->orderBy('updated_at', 'desc')
@@ -31,6 +31,32 @@ class AnnouncementsController extends Controller
 
         return Inertia::render('Customer/Announcements', [
             'announcements' => $announcements,
+        ]);
+    }
+
+    public function guestIndex()
+    {
+        $announcements = Announcements::where('status', 'active')
+            ->orderBy('updated_at', 'desc')
+            ->get()
+            ->map(function ($announcement) {
+                return [
+                    'id' => $announcement->id,
+                    'title' => $announcement->title,
+                    'content' => $announcement->content,
+                    'status' => ucfirst($announcement->status),
+                    'start_date' => $announcement->start_date?->format('Y-m-d'),
+                    'end_date' => $announcement->end_date?->format('Y-m-d'),
+                    'created_at' => $announcement->created_at->toISOString(),
+                    'updated_at' => $announcement->updated_at->toISOString(),
+                    'author' => $announcement->author ?? 'ClarinWaterDistrict',
+                ];
+            });
+
+        return Inertia::render('Announcement/Announcements', [
+            'announcements' => $announcements,
+            'title' => 'Announcements - Clarin Water District',
+            'description' => 'Latest updates and important information from Clarin Water District'
         ]);
     }
 

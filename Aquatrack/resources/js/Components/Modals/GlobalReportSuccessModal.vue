@@ -1,6 +1,8 @@
+// GlobalReportSuccessModal.vue
 <script setup>
 import { ref, onMounted, watch, computed, nextTick } from "vue";
 import QRCode from "qrcode";
+import { router } from "@inertiajs/vue3";
 
 const props = defineProps({
     show: Boolean,
@@ -8,7 +10,7 @@ const props = defineProps({
     dateSubmitted: String,
 });
 
-const emit = defineEmits(["close", "track-report"]);
+const emit = defineEmits(["close"]);
 const qrCodeCanvas = ref(null);
 const qrError = ref(null);
 
@@ -24,6 +26,17 @@ const formattedDate = computed(() => {
         minute: "2-digit",
     });
 });
+
+// Redirect to track report page with the tracking code
+const trackThisReport = () => {
+    if (props.trackingCode) {
+        // Close the modal first
+        emit("close");
+
+        // Then redirect to the track report page with the tracking code
+        router.visit(`/track-report?tracking_code=${props.trackingCode}`);
+    }
+};
 
 const downloadQRCode = () => {
     if (!qrCodeCanvas.value) return;
@@ -74,9 +87,6 @@ const downloadQRCode = () => {
     link.download = `aquatrack-report-${props.trackingCode}.png`;
     link.href = canvas.toDataURL("image/png");
     link.click();
-
-    // Close modal after download
-    emit("close");
 };
 
 const generateQRCode = async () => {
@@ -143,7 +153,7 @@ onMounted(() => {
 
             <!-- Modal container -->
             <div
-                class="inline-block w-full max-w-xl  bg-white rounded-xl text-left overflow-hidden shadow-xl transform transition-all relative"
+                class="inline-block w-full max-w-xl bg-white rounded-xl text-left overflow-hidden shadow-xl transform transition-all relative"
             >
                 <!-- Modal content -->
                 <div class="bg-white px-6 py-6">
@@ -153,7 +163,7 @@ onMounted(() => {
                             class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-2"
                         >
                             <svg
-                                class="h-6 w-6 text-green-900   "
+                                class="h-6 w-6 text-green-900"
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 stroke="currentColor"
@@ -176,11 +186,13 @@ onMounted(() => {
                         </p>
 
                         <!-- Tracking info -->
-                        <div class="bg-[#F1F5F9] rounded-lg p-3 mb-4 text-center">
+                        <div
+                            class="bg-[#F1F5F9] rounded-lg p-3 mb-4 text-center"
+                        >
                             <div class="flex items-center justify-center">
                                 <div>
                                     <p
-                                        class="text-xs font-sm text-gray-500 mb-4 "
+                                        class="text-xs font-sm text-gray-500 mb-4"
                                     >
                                         Your Tracking Code
                                     </p>
@@ -195,7 +207,6 @@ onMounted(() => {
 
                         <!-- QR Code -->
                         <div class="mb-4 flex flex-col items-center">
-
                             <div
                                 class="p-2 bg-white rounded-xl border-2 border-[#D7DFEA]"
                             >
@@ -211,9 +222,12 @@ onMounted(() => {
                                 >
                                     QR Code Error: {{ qrError }}
                                 </div>
-                                <p class="text-xs text-center mb-2 text-gray-500">Scan to track your report</p>
+                                <p
+                                    class="text-xs text-center mb-2 text-gray-500"
+                                >
+                                    Scan to track your report
+                                </p>
                             </div>
-
                         </div>
 
                         <!-- Important notice -->
@@ -241,15 +255,10 @@ onMounted(() => {
                                     <p class="text-xs text-amber-700">
                                         Please be reminded that this QR Code is
                                         very important, once you lose it, you
-                                        will not be able to track your report. Save this
-                                        QR code and
+                                        will not be able to track your report.
+                                        Save this QR code and
                                         <button
-                                            @click="
-                                                $emit(
-                                                    'track-report',
-                                                    trackingCode
-                                                )
-                                            "
+                                            @click="trackThisReport"
                                             class="text-blue-600 hover:underline focus:outline-none"
                                         >
                                             click here
@@ -264,7 +273,7 @@ onMounted(() => {
                             <button
                                 @click="downloadQRCode"
                                 type="button"
-                                class="flex-1 inline-flex items-center justify-center px-4 py-2 border border-[#0A7EB8] bg-[#0A7EB8] text-white text-sm font-medium rounded-lg shadow-sm   hover:bg-[#086899] hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
+                                class="flex-1 inline-flex items-center justify-center px-4 py-2 border border-[#0A7EB8] bg-[#0A7EB8] text-white text-sm font-medium rounded-lg shadow-sm hover:bg-[#086899] hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
                             >
                                 <svg
                                     class="-ml-1 mr-2 h-4 w-4"
@@ -280,6 +289,26 @@ onMounted(() => {
                                     />
                                 </svg>
                                 Download QR
+                            </button>
+                            <button
+                                @click="trackThisReport"
+                                type="button"
+                                class="flex-1 inline-flex items-center justify-center px-4 py-2 border border-gray-300 bg-white text-gray-700 text-sm font-medium rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
+                            >
+                                <svg
+                                    class="-ml-1 mr-2 h-4 w-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                    />
+                                </svg>
+                                Track Report
                             </button>
                         </div>
                     </div>

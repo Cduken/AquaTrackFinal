@@ -1,20 +1,55 @@
+//About.vue
 <template>
-    <section id="about" class="py-4 sm:py-16 px-4 sm:px-6 lg:px-8">
-        <div class="max-w-[1500px] mx-auto">
+    <section
+        id="about"
+        class="relative py-16 sm:py-20 px-4 sm:px-6 lg:px-8 overflow-hidden"
+    >
+        <!-- Animated Background Elements -->
+        <div class="absolute inset-0 overflow-hidden">
             <div
-                class="flex flex-col lg:flex-row items-center gap-8 lg:gap-[80px]"
+                class="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/5 rounded-full blur-3xl"
+            ></div>
+            <div
+                class="absolute -bottom-40 -left-40 w-80 h-80 bg-cyan-500/5 rounded-full blur-3xl"
+            ></div>
+        </div>
+
+        <div class="max-w-7xl mx-auto relative z-10">
+            <div
+                class="flex flex-col lg:flex-row items-center gap-12 lg:gap-16"
             >
                 <!-- Left Column - Text Content -->
                 <div class="about-content lg:w-1/2">
-                    <h2
-                        class="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-6 sm:mb-8 text-left"
+                    <!-- Section Badge -->
+                    <div
+                        class="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 backdrop-blur-sm border border-blue-400/30 rounded-full px-4 py-2 mb-6 shadow-xl"
                     >
-                        About <span class="text-blue-600">AquaTrack</span>
+                        <span class="relative flex h-2 w-2">
+                            <span
+                                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"
+                            ></span>
+                            <span
+                                class="relative inline-flex rounded-full h-2 w-2 bg-cyan-400"
+                            ></span>
+                        </span>
+                        <span class="text-sm font-medium text-blue-200"
+                            >About Our Platform</span
+                        >
+                    </div>
+
+                    <h2
+                        class="text-3xl text-white sm:text-4xl md:text-5xl lg:text-5xl font-bold mb-6"
+                    >
+                        About
+                        <span
+                            class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400"
+                            >AquaTrack</span
+                        >
                     </h2>
 
-                    <div class="space-y-4 sm:space-y-6">
+                    <div class="space-y-5">
                         <p
-                            class="text-base sm:text-md lg:text-lg text-gray-600 text-justify leading-relaxed"
+                            class="text-base sm:text-lg text-slate-300 leading-relaxed"
                         >
                             AquaTrack is a comprehensive water management
                             platform designed specifically for residential
@@ -23,7 +58,7 @@
                         </p>
 
                         <p
-                            class="text-base sm:text-md lg:text-lg text-gray-600 text-justify leading-relaxed"
+                            class="text-base sm:text-lg text-slate-300 leading-relaxed"
                         >
                             With features like monthly water usage monitoring,
                             monthly bill viewing, and instant issue reporting,
@@ -31,68 +66,181 @@
                             their water services.
                         </p>
 
-                        <div class="space-y-3 sm:space-y-4">
-                            <div class="flex items-start">
+                        <div class="space-y-3 pt-2">
+                            <div
+                                class="group flex items-start p-3 rounded-xl border border-slate-700/50 bg-slate-800/50 backdrop-blur-sm shadow-lg hover:shadow-blue-500/20 hover:bg-slate-800/70 hover:border-blue-500/30 transition-all duration-300 hover:-translate-y-0.5"
+                            >
                                 <div
-                                    class="flex-shrink-0 h-5 w-5 sm:h-6 sm:w-6 rounded-full border-2 border-blue-500 flex items-center justify-center mr-3 mt-0.5"
+                                    class="flex-shrink-0 h-8 w-8 rounded-full bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-500/30 flex items-center justify-center mr-3 group-hover:scale-105 transition-transform duration-300 shadow-md"
                                 >
                                     <div
-                                        class="h-2 w-2 sm:h-3 sm:w-3 rounded-full bg-blue-500"
+                                        class="h-3 w-3 rounded-full bg-cyan-400 shadow-sm"
                                     ></div>
                                 </div>
-                                <p
-                                    class="text-base sm:text-md lg:text-lg text-gray-600 text-justify leading-relaxed"
-                                >
-                                    Water Usage Monitoring
-                                </p>
+                                <div>
+                                    <h3
+                                        class="text-base font-semibold text-white mb-1"
+                                    >
+                                        Water Usage Monitoring
+                                    </h3>
+                                    <p class="text-slate-400 text-sm">
+                                        Track consumption with detailed
+                                        analytics and real-time insights
+                                    </p>
+                                </div>
                             </div>
 
-                            <div class="flex items-start">
+                            <div
+                                class="group flex items-start p-3 rounded-xl border border-slate-700/50 bg-slate-800/50 backdrop-blur-sm shadow-lg hover:shadow-blue-500/20 hover:bg-slate-800/70 hover:border-blue-500/30 transition-all duration-300 hover:-translate-y-0.5"
+                            >
                                 <div
-                                    class="flex-shrink-0 h-5 w-5 sm:h-6 sm:w-6 rounded-full border-2 border-blue-500 flex items-center justify-center mr-3 mt-0.5"
+                                    class="flex-shrink-0 h-8 w-8 rounded-full bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-500/30 flex items-center justify-center mr-3 group-hover:scale-105 transition-transform duration-300 shadow-md"
                                 >
                                     <div
-                                        class="h-2 w-2 sm:h-3 sm:w-3 rounded-full bg-blue-500"
+                                        class="h-3 w-3 rounded-full bg-cyan-400 shadow-sm"
                                     ></div>
                                 </div>
-                                <p
-                                    class="text-base sm:text-md lg:text-lg text-gray-600 text-justify leading-relaxed"
-                                >
-                                    Instant Issue Reporting & Tracking
-                                </p>
+                                <div>
+                                    <h3
+                                        class="text-base font-semibold text-white mb-1"
+                                    >
+                                        Instant Issue Reporting & Tracking
+                                    </h3>
+                                    <p class="text-slate-400 text-sm">
+                                        Report and monitor water service issues
+                                        in real-time
+                                    </p>
+                                </div>
                             </div>
 
-                            <div class="flex items-start">
+                            <div
+                                class="group flex items-start p-3 rounded-xl border border-slate-700/50 bg-slate-800/50 backdrop-blur-sm shadow-lg hover:shadow-blue-500/20 hover:bg-slate-800/70 hover:border-blue-500/30 transition-all duration-300 hover:-translate-y-0.5"
+                            >
                                 <div
-                                    class="flex-shrink-0 h-5 w-5 sm:h-6 sm:w-6 rounded-full border-2 border-blue-500 flex items-center justify-center mr-3 mt-0.5"
+                                    class="flex-shrink-0 h-8 w-8 rounded-full bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-500/30 flex items-center justify-center mr-3 group-hover:scale-105 transition-transform duration-300 shadow-md"
                                 >
                                     <div
-                                        class="h-2 w-2 sm:h-3 sm:w-3 rounded-full bg-blue-500"
+                                        class="h-3 w-3 rounded-full bg-cyan-400 shadow-sm"
                                     ></div>
                                 </div>
-                                <p
-                                    class="text-base sm:text-md lg:text-lg text-gray-600 text-justify leading-relaxed"
-                                >
-                                    Community Announcements
-                                </p>
+                                <div>
+                                    <h3
+                                        class="text-base font-semibold text-white mb-1"
+                                    >
+                                        Community Announcements
+                                    </h3>
+                                    <p class="text-slate-400 text-sm">
+                                        Stay updated with important community
+                                        news and schedules
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Right Column - Image Placeholder -->
-                <div class="about-image lg:w-[600px] hidden lg:block">
-                    <div
-                        class="rounded-xl h-full flex items-center justify-center"
-                    >
-                        <img
-                            src="/images/MainLogo.png"
-                            alt="AquaTrack Logo"
-                            class="max-w-full max-h-full object-contain hover:scale-105 transition-transform duration-300 cursor-pointer"
-                        />
+                <!-- Right Column - Enhanced Image -->
+                <div class="about-image lg:w-1/2">
+                    <div class="relative group">
+                        <!-- Subtle Glowing Border Effect -->
+                        <div
+                            class="absolute -inset-2 bg-gradient-to-r from-blue-400/15 to-cyan-400/15 rounded-2xl blur-md opacity-50 group-hover:opacity-70 transition-all duration-500"
+                        ></div>
+
+                        <!-- Main Image Container -->
+                        <div
+                            class="relative bg-slate-800/30 backdrop-blur-md rounded-xl shadow-xl overflow-hidden p-6 transform group-hover:scale-[1.02] transition-all duration-500 border border-slate-700/50"
+                        >
+                            <div class="relative z-10">
+                                <img
+                                    src="/images/MainLogo.png"
+                                    alt="AquaTrack Logo"
+                                    class="w-full h-auto object-contain filter drop-shadow-lg"
+                                />
+                            </div>
+
+                            <!-- Subtle Floating Elements -->
+                            <div
+                                class="absolute top-3 right-3 w-4 h-4 bg-blue-400/15 rounded-full blur-sm"
+                            ></div>
+                            <div
+                                class="absolute bottom-3 left-3 w-5 h-5 bg-cyan-400/15 rounded-full blur-sm"
+                            ></div>
+
+                            <!-- Subtle Hover Overlay -->
+                            <div
+                                class="absolute inset-0 bg-gradient-to-br from-blue-500/3 to-cyan-500/3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"
+                            ></div>
+                        </div>
+
+                        <!-- Smaller Decorative Elements -->
+                        <div
+                            class="absolute -bottom-4 -right-4 w-16 h-16 bg-gradient-to-br from-blue-500/8 to-cyan-500/8 rounded-full blur-xl"
+                        ></div>
+                        <div
+                            class="absolute -top-4 -left-4 w-14 h-14 bg-gradient-to-br from-cyan-500/8 to-blue-500/8 rounded-full blur-xl"
+                        ></div>
+                    </div>
+
+                    <!-- Location Badge -->
+                    <div class="mt-6 text-center">
+                        <div
+                            class="inline-flex items-center gap-2 bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-full px-5 py-2 shadow-lg"
+                        >
+                            <svg
+                                class="w-3.5 h-3.5 text-slate-400"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                                />
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                                />
+                            </svg>
+                            <span class="text-xs font-medium text-slate-300"
+                                >POBLACION CENTRO CLARIN, BOHOL</span
+                            >
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 </template>
+
+<script setup>
+// Component logic here if needed
+</script>
+
+<style scoped>
+/* Custom animations */
+@keyframes float {
+    0%,
+    100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-6px);
+    }
+}
+
+.animate-float {
+    animation: float 3s ease-in-out infinite;
+}
+
+/* Smooth transitions */
+* {
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 300ms;
+}
+</style>

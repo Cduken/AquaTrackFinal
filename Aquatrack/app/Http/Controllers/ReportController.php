@@ -1063,6 +1063,7 @@ class ReportController extends Controller
                     ]);
             }
 
+            // For guest users (page submission), return JSON response
             return response()->json([
                 'success' => true,
                 'message' => $isMerged ? 'Report merged successfully. Use the main tracking code to monitor progress.' : 'Report submitted successfully',
@@ -1308,12 +1309,29 @@ class ReportController extends Controller
         }
     }
 
-    public function create()
+    public function createPage()
     {
-        return Inertia::render('Reports/Index', [
-            'zones' => $this->zones,
+        $zones = [
+            "Zone 1" => ["Poblacion Sur"],
+            "Zone 2" => ["Poblacion Centro"],
+            "Zone 3" => ["Poblacion Centro (Zone 3)"],
+            "Zone 4" => ["Poblacion Norte"],
+            "Zone 5" => ["Candajec", "Buangan"],
+            "Zone 6" => ["Bonbon"],
+            "Zone 7" => ["Bonbon"],
+            "Zone 8" => ["Nahawan"],
+            "Zone 9" => ["Caboy", "Villaflor", "Cantuyoc"],
+            "Zone 10" => ["Bacani", "Mataub", "Comaang", "Tangaran"],
+            "Zone 11" => ["Cantuyoc", "Nahawan"],
+            "Zone 12" => ["Lajog", "Buacao"],
+        ];
+
+        return Inertia::render('ReportIssuePage/ReportIssuePage', [
+            'zones' => $zones,
         ]);
     }
+
+
 
     public function success(Request $request)
     {

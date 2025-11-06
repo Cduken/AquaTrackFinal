@@ -1,9 +1,7 @@
+// Hero.vue
 <script setup>
 import { Link } from "@inertiajs/vue3";
-import { ref, onMounted, onUnmounted, watch, nextTick } from "vue";
-import ReportForm from "@/Components/Reports/ReportForm.vue";
-import GlobalReportSuccessModal from "@/Components/Modals/GlobalReportSuccessModal.vue";
-import TrackReportModal from "@/Components/Modals/TrackReportModal.vue";
+import { ref, onMounted, onUnmounted, watch } from "vue";
 import Navigation from "./Header/Navigation.vue";
 import gsap from "gsap";
 import Swal from "sweetalert2";
@@ -19,14 +17,6 @@ const props = defineProps({
         type: Boolean,
         default: true,
     },
-    trackingCode: {
-        type: [String, null],
-        default: null,
-    },
-    dateSubmitted: {
-        type: [String, null],
-        default: null,
-    },
     dashboardStats: {
         type: Object,
         default: () => ({
@@ -41,59 +31,9 @@ const stats = ref({
     resolution_percentage: props.dashboardStats?.resolution_percentage || 0,
 });
 
-const handleOfflineReportsSynced = (data) => {
-    if (showReportModal.value) {
-        showReportModal.value = false;
-        document.body.style.overflow = "auto";
-    }
-
-    trackingInfo.value = {
-        code: data.trackingCode,
-        date: data.dateSubmitted,
-    };
-    showSuccessModal.value = true;
-
-    Swal.fire({
-        icon: "success",
-        title: "Offline Reports Synced!",
-        text: `${data.totalSynced || 1} report(s) submitted successfully`,
-        toast: true,
-        position: "bottom-end",
-        showConfirmButton: false,
-        timer: 4000,
-        timerProgressBar: true,
-        background: "#f0f9ff",
-        iconColor: "#10b981",
-        color: "#065f46",
-    });
-
-    setTimeout(() => {
-        refreshStats();
-    }, 2000);
-};
-
 let refreshInterval;
 
 const showImageTooltip = ref(false);
-const showSuccessModal = ref(false);
-const showTrackModal = ref(false);
-const showReportModal = ref(false);
-const trackingInfo = ref(null);
-
-const zones = {
-    "Zone 1": ["Poblacion Sur"],
-    "Zone 2": ["Poblacion Centro"],
-    "Zone 3": ["Poblacion Centro (Zone 3)"],
-    "Zone 4": ["Poblacion Norte"],
-    "Zone 5": ["Candajec", "Buangan"],
-    "Zone 6": ["Bonbon"],
-    "Zone 7": ["Bonbon"],
-    "Zone 8": ["Nahawan"],
-    "Zone 9": ["Caboy", "Villaflor", "Cantuyoc"],
-    "Zone 10": ["Bacani", "Mataub", "Comaang", "Tangaran"],
-    "Zone 11": ["Cantuyoc", "Nahawan"],
-    "Zone 12": ["Lajog", "Buacao"],
-};
 
 watch(
     () => props.dashboardStats,
@@ -122,14 +62,6 @@ onMounted(() => {
             resolution_percentage:
                 props.dashboardStats.resolution_percentage || 0,
         };
-    }
-
-    if (props.trackingCode && props.dateSubmitted) {
-        trackingInfo.value = {
-            code: props.trackingCode,
-            date: props.dateSubmitted,
-        };
-        showSuccessModal.value = true;
     }
 
     refreshInterval = setInterval(() => {
@@ -189,71 +121,10 @@ onUnmounted(() => {
 });
 
 const handleTrackReport = () => {
-    const trackingCode = trackingInfo.value?.code || props.trackingCode || "";
-    if (trackingCode) {
-        trackingInfo.value = { code: trackingCode, date: props.dateSubmitted };
-    }
-    showSuccessModal.value = false;
-    showTrackModal.value = true;
-};
-
-const openReportModal = () => {
-    showReportModal.value = true;
-    document.body.style.overflow = "hidden";
-
-    // Wait for the modal to be rendered in DOM
-    nextTick(() => {
-        const modalContainer = document.querySelector(".modal-container");
-        if (modalContainer) {
-            // Reset any previous transforms
-            gsap.set(modalContainer, { clearProps: "all" });
-
-            // Drop down animation from top to center
-            gsap.fromTo(
-                modalContainer,
-                {
-                    y: -100,
-                    opacity: 0,
-                    scale: 0.9,
-                },
-                {
-                    y: 0,
-                    opacity: 1,
-                    scale: 1,
-                    duration: 0.6,
-                    ease: "back.out(1.4)",
-                }
-            );
-        }
-    });
-};
-
-const closeReportModal = () => {
-    const modalContainer = document.querySelector(".modal-container");
-    if (modalContainer) {
-        // Slide up animation
-        gsap.to(modalContainer, {
-            y: -100,
-            opacity: 0,
-            scale: 0.9,
-            duration: 0.4,
-            ease: "power2.in",
-            onComplete: () => {
-                showReportModal.value = false;
-                document.body.style.overflow = "auto";
-            },
-        });
-    } else {
-        // Fallback if element not found
-        showReportModal.value = false;
-        document.body.style.overflow = "auto";
-    }
+    console.log("Track report clicked");
 };
 
 const handleReportSuccess = (data) => {
-    showReportModal.value = false;
-    document.body.style.overflow = "auto";
-
     trackingInfo.value = {
         code: data.trackingCode,
         date: data.dateSubmitted,
@@ -268,9 +139,9 @@ const handleReportSuccess = (data) => {
         showConfirmButton: false,
         timer: 5000,
         timerProgressBar: false,
-        background: "#FFFFFF",
-        iconColor: "#000000",
-        color: "#000000",
+        background: "#0f172a",
+        iconColor: "#38bdf8",
+        color: "#e2e8f0",
         width: 380,
         padding: "0.75rem",
     });
@@ -283,6 +154,7 @@ const handleReportSuccess = (data) => {
 
 <template>
     <main id="home" class="relative w-full min-h-screen overflow-hidden">
+        <!-- Navigation -->
         <Navigation />
 
         <div
@@ -294,17 +166,17 @@ const handleReportSuccess = (data) => {
             >
                 <!-- Badge -->
                 <div
-                    class="hero-badge mb-6 inline-flex items-center gap-2 bg-gradient-to-r from-blue-600/10 to-cyan-600/10 backdrop-blur-sm border border-blue-200/50 rounded-full px-4 py-2 w-fit mx-auto lg:mx-0"
+                    class="hero-badge mb-6 inline-flex items-center gap-2 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 backdrop-blur-sm border border-blue-400/30 rounded-full px-4 py-2 w-fit mx-auto lg:mx-0"
                 >
                     <span class="relative flex h-2 w-2">
                         <span
-                            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-500 opacity-75"
+                            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"
                         ></span>
                         <span
-                            class="relative inline-flex rounded-full h-2 w-2 bg-blue-600"
+                            class="relative inline-flex rounded-full h-2 w-2 bg-cyan-400"
                         ></span>
                     </span>
-                    <span class="text-sm font-medium text-blue-700"
+                    <span class="text-sm font-medium text-blue-200"
                         >Clarin, Bohol Water District</span
                     >
                 </div>
@@ -315,19 +187,19 @@ const handleReportSuccess = (data) => {
                 >
                     <span class="block mb-2">
                         <span
-                            class="word inline-block text-transparent bg-clip-text bg-gradient-to-r from-[#062F64] via-[#1E4272] to-[#0D3468]"
+                            class="word inline-block text-transparent bg-clip-text bg-gradient-to-r from-blue-200 via-cyan-200 to-blue-300"
                         >
                             Clarin
                         </span>
                         <span
-                            class="word inline-block text-transparent bg-clip-text bg-gradient-to-r from-[#1E4272] to-[#0D3468] ml-3"
+                            class="word inline-block text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 to-blue-300 ml-3"
                         >
                             Water
                         </span>
                     </span>
                     <span class="block">
                         <span
-                            class="word inline-block text-transparent leading-snug bg-clip-text bg-gradient-to-r from-[#090979] via-[#00A8E8] to-[#00D4FF] break-words"
+                            class="word inline-block text-transparent leading-snug bg-clip-text bg-gradient-to-r from-blue-300 via-cyan-400 to-blue-400 break-words"
                         >
                             Management
                         </span>
@@ -336,7 +208,7 @@ const handleReportSuccess = (data) => {
 
                 <!-- Subheadline -->
                 <p
-                    class="subheadline text-gray-600 max-w-[600px] mb-8 text-lg lg:text-xl leading-relaxed mx-auto lg:mx-0"
+                    class="subheadline text-slate-300 max-w-[600px] mb-8 text-lg lg:text-xl leading-relaxed mx-auto lg:mx-0"
                 >
                     Your complete water service solution. Report issues, track
                     consumption, manage bills, and access detailed analytics
@@ -347,12 +219,15 @@ const handleReportSuccess = (data) => {
                 <div
                     class="cta-buttons flex flex-col sm:flex-row gap-4 justify-center lg:justify-start"
                 >
-                    <button
-                        @click="openReportModal"
-                        class="group relative inline-flex items-center justify-center gap-3 bg-gradient-to-r from-[#062F64] to-[#0D3468] text-white px-8 py-4 rounded-xl font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden"
+                    <Link
+                        :href="route('report-issue.create')"
+                        class="group relative inline-flex items-center justify-center gap-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-8 py-4 rounded-xl font-semibold shadow-2xl hover:shadow-blue-500/30 transition-all duration-300 hover:scale-105 overflow-hidden"
                     >
                         <div
-                            class="absolute inset-0 bg-gradient-to-r from-[#0D3468] to-[#062F64] opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                            class="absolute inset-0 bg-gradient-to-r from-cyan-600 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                        ></div>
+                        <div
+                            class="absolute inset-0 bg-gradient-to-r from-blue-700/20 to-cyan-700/20 backdrop-blur-sm"
                         ></div>
                         <v-icon
                             name="bi-droplet"
@@ -360,7 +235,25 @@ const handleReportSuccess = (data) => {
                             class="relative z-10"
                         />
                         <span class="relative z-10">Report Issue Now</span>
-                    </button>
+                        <div
+                            class="absolute inset-0 rounded-xl bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-sm"
+                        ></div>
+                    </Link>
+
+                    <Link
+                        :href="route('track-report')"
+                        class="group relative inline-flex items-center justify-center gap-3 bg-transparent text-slate-200 border border-slate-600 hover:border-slate-400 px-8 py-4 rounded-xl font-semibold shadow-xl hover:shadow-slate-500/10 transition-all duration-300 hover:scale-105 overflow-hidden"
+                    >
+                        <div
+                            class="absolute inset-0 bg-slate-800/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-sm rounded-xl"
+                        ></div>
+                        <v-icon
+                            name="io-search"
+                            scale="1.2"
+                            class="relative z-10"
+                        />
+                        <span class="relative z-10">Track Report</span>
+                    </Link>
                 </div>
             </div>
 
@@ -373,23 +266,29 @@ const handleReportSuccess = (data) => {
                     @mouseenter="showImageTooltip = true"
                     @mouseleave="showImageTooltip = false"
                 >
+                    <!-- Reduced Glowing Border Effect -->
                     <div
-                        class="relative bg-white rounded-2xl shadow-2xl overflow-hidden transform group-hover:scale-105 transition-transform duration-500"
+                        class="absolute -inset-2 bg-gradient-to-r from-blue-400/20 to-cyan-400/20 rounded-2xl blur-md opacity-50 group-hover:opacity-70 transition-all duration-500"
+                    ></div>
+
+                    <!-- Image Container with Glass Effect -->
+                    <div
+                        class="relative bg-slate-800/40 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden transform group-hover:scale-[1.02] transition-all duration-500 border border-slate-700/50"
                     >
-                        <div class="p-6">
+                        <div class="p-4">
                             <img
                                 class="rounded-xl w-full h-auto object-cover shadow-inner"
                                 src="/images/AquatrackIMG.jpg"
                                 alt="Water District Office"
                             />
 
-                            <!-- Tooltip Text Only -->
+                            <!-- Subtle Tooltip -->
                             <div
                                 v-if="showImageTooltip"
-                                class="absolute inset-0 flex items-center justify-center transition-all duration-300"
+                                class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-slate-900/90 to-transparent p-4 transition-all duration-300"
                             >
                                 <h3
-                                    class="text-2xl font-bold text-white drop-shadow-lg"
+                                    class="text-sm font-semibold text-white text-center drop-shadow-lg"
                                 >
                                     Clarin Water District Office
                                 </h3>
@@ -399,100 +298,6 @@ const handleReportSuccess = (data) => {
                 </div>
             </div>
         </div>
-
-        <!-- Track Report Floating Button -->
-        <div class="fixed bottom-8 right-8 z-20 group">
-            <button
-                @click="handleTrackReport"
-                class="relative flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-[#062F64] to-[#0D3468] text-white shadow-2xl hover:shadow-blue-500/50 transition-all duration-300 hover:scale-110"
-                title="Track Report"
-            >
-                <v-icon name="io-search" scale="1.5" class="animate-pulse" />
-                <div
-                    class="absolute -right-1 -top-1 w-5 h-5 bg-gradient-to-br from-red-500 to-pink-500 rounded-full border-2 border-white animate-bounce"
-                ></div>
-
-                <div
-                    class="absolute inset-0 rounded-full bg-blue-400 opacity-0 group-hover:opacity-20 blur-xl transition-opacity duration-300"
-                ></div>
-
-                <div
-                    class="absolute right-full mr-4 top-1/2 -translate-y-1/2 whitespace-nowrap px-4 py-2 rounded-xl text-sm bg-gray-900/95 text-white opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-sm border border-white/10 shadow-xl"
-                >
-                    Track Your Report
-                    <div
-                        class="absolute left-full top-1/2 -translate-y-1/2 border-4 border-transparent border-l-gray-900/95"
-                    ></div>
-                </div>
-            </button>
-        </div>
-
-        <!-- Report Modal with Animation -->
-        <div v-if="showReportModal" class="fixed inset-0 z-50 overflow-y-auto">
-            <div
-                class="fixed inset-0 bg-black/60 transition-all duration-300"
-                @click="closeReportModal"
-            ></div>
-
-            <div class="flex min-h-full items-center justify-center p-4">
-                <div
-                    class="modal-container relative bg-white rounded-2xl shadow-2xl w-full max-w-[1000px] max-h-[90vh] overflow-hidden transform"
-                >
-                    <div
-                        class="bg-gradient-to-r from-[#062F64] via-[#1E4272] to-[#0D3468] px-6 py-5 sticky top-0 z-10"
-                    >
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <h2
-                                    class="text-2xl font-bold text-white flex items-center gap-3"
-                                >
-                                    <v-icon name="bi-droplet" scale="1.3" />
-                                    Report Water Issue
-                                </h2>
-                                <p class="text-blue-100 text-sm mt-1">
-                                    Report emergencies, leaks, or service issues
-                                    in your area
-                                </p>
-                            </div>
-                            <button
-                                @click="closeReportModal"
-                                class="p-2 hover:bg-white/20 rounded-full transition-all duration-200 group"
-                            >
-                                <v-icon
-                                    name="hi-x"
-                                    class="h-6 w-6 text-white group-hover:rotate-90 transition-transform duration-300"
-                                />
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="overflow-y-auto max-h-[calc(90vh-100px)]">
-                        <ReportForm
-                            :zones="zones"
-                            @submitted="handleReportSuccess"
-                            @offlineReportsSynced="handleOfflineReportsSynced"
-                            @cancel="closeReportModal"
-                        />
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Success and Track Modals -->
-        <GlobalReportSuccessModal
-            v-if="showSuccessModal && trackingInfo"
-            :show="showSuccessModal"
-            :tracking-code="trackingInfo.code"
-            :date-submitted="trackingInfo.date"
-            @close="showSuccessModal = false"
-            @track-report="handleTrackReport"
-        />
-
-        <TrackReportModal
-            :show="showTrackModal"
-            :initial-tracking-code="trackingInfo?.code || ''"
-            @close="showTrackModal = false"
-        />
     </main>
 </template>
 
@@ -545,7 +350,7 @@ const handleReportSuccess = (data) => {
 
 .overflow-y-auto {
     scrollbar-width: thin;
-    scrollbar-color: #cbd5e1 #f1f5f9;
+    scrollbar-color: #475569 #1e293b;
 }
 
 .overflow-y-auto::-webkit-scrollbar {
@@ -553,16 +358,16 @@ const handleReportSuccess = (data) => {
 }
 
 .overflow-y-auto::-webkit-scrollbar-track {
-    background: #f1f5f9;
+    background: #1e293b;
 }
 
 .overflow-y-auto::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
+    background: #475569;
     border-radius: 3px;
 }
 
 .overflow-y-auto::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
+    background: #64748b;
 }
 
 @media (max-width: 1024px) {
@@ -587,11 +392,6 @@ const handleReportSuccess = (data) => {
 
     .hero-badge {
         font-size: 0.75rem;
-    }
-
-    .feature-card {
-        font-size: 0.75rem;
-        padding: 0.5rem 0.75rem;
     }
 
     .cta-buttons button {

@@ -38,7 +38,6 @@
                                             class="text-blue-100 text-sm mt-1"
                                             v-if="report"
                                         >
-                                            Report ID: {{ report.id }} •
                                             {{ formatDate(report.created_at) }}
                                         </p>
                                     </div>
@@ -125,27 +124,37 @@
                                                         class="text-blue-600 dark:text-blue-400 w-6 h-6"
                                                     />
                                                 </div> -->
-                                                <div>
-                                                    <p
-                                                        class="text-sm text-gray-500 dark:text-gray-400"
-                                                    >
-                                                        Report
-                                                    </p>
-                                                    <p
-                                                        class="text-lg font-semibold text-gray-900 dark:text-white"
-                                                    >
-                                                        ID: {{ report.id }}
-                                                    </p>
-                                                    <p
-                                                        class="text-sm text-gray-600 dark:text-gray-400"
-                                                    >
-                                                        {{
-                                                            formatDateTime(
-                                                                report.created_at
-                                                            )
-                                                        }}
-                                                    </p>
-                                                </div>
+
+                                                    <div>
+                                                        <p
+                                                            class="text-sm text-gray-500 dark:text-gray-400"
+                                                        >
+                                                            Report
+                                                        </p>
+                                                        <p
+                                                            v-if="
+                                                                $page.props.auth
+                                                                    .user &&
+                                                                $page.props.auth
+                                                                    .user
+                                                                    .role !==
+                                                                    'customer'
+                                                            "
+                                                            class="text-lg font-semibold text-gray-900 dark:text-white"
+                                                        >
+                                                            ID: {{ report.id }}
+                                                        </p>
+                                                        <p
+                                                            class="text-sm text-gray-600 dark:text-gray-400"
+                                                        >
+                                                            {{
+                                                                formatDateTime(
+                                                                    report.created_at
+                                                                )
+                                                            }}
+                                                        </p>
+                                                    </div>
+
                                             </div>
                                             <div
                                                 class="h-8 w-px bg-gray-300 dark:bg-gray-600"

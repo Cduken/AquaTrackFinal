@@ -49,14 +49,14 @@ const props = defineProps({
 const emit = defineEmits(["update:field"]);
 
 const waterIssueTypes = [
-    "Burst pipe (Nabuak nga tubo)",
-    "Rusty water (Tubig nga adunay kalawang)",
-    "Low water pressure (Huyang nga presyur sa tubig)",
-    "No water supply (Walay suplay sa tubig)",
-    "Clogged pipes (Baradong mga tubo)",
-    "Smelly water (Tubig nga baho)",
-    "Cloudy or dirty water (Lubog o hugaw nga tubig)",
-    "Hot water issues (Problema sa mainit nga tubig)",
+    "Burst pipe",
+    "Rusty water",
+    "Low water pressure",
+    "No water supply",
+    "Clogged pipes",
+    "Smelly water",
+    "Cloudy or dirty water",
+    "Hot water issues",
 ];
 
 const selectWaterIssue = (event) => {

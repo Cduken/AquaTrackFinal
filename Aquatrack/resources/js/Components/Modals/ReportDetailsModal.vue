@@ -153,14 +153,6 @@
                                             <div
                                                 class="flex items-center space-x-3"
                                             >
-                                                <!-- <div
-                                                    class="p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm"
-                                                >
-                                                    <v-icon
-                                                        name="bi-flag"
-                                                        class="text-purple-600 dark:text-purple-400 w-6 h-6"
-                                                    />
-                                                </div> -->
                                                 <div>
                                                     <p
                                                         class="text-sm text-gray-500 dark:text-gray-400"
@@ -620,7 +612,6 @@
                                                 </div>
                                             </div>
                                         </div>
-
                                         <!-- Media Section -->
                                         <div
                                             v-if="
@@ -679,8 +670,9 @@
                                                                 >
                                                                     <source
                                                                         :src="
-                                                                            '/storage/' +
-                                                                            media.path
+                                                                            getMediaPath(
+                                                                                media.path
+                                                                            )
                                                                         "
                                                                         type="video/mp4"
                                                                     />
@@ -700,14 +692,18 @@
                                                         <template v-else>
                                                             <img
                                                                 :src="
-                                                                    '/storage/' +
-                                                                    media.path
+                                                                    getMediaPath(
+                                                                        media.path
+                                                                    )
                                                                 "
                                                                 :alt="`Report photo ${
                                                                     index + 1
                                                                 }`"
                                                                 class="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                                                                 loading="lazy"
+                                                                @error="
+                                                                    handleImageError
+                                                                "
                                                             />
                                                             <div
                                                                 class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100"
@@ -799,7 +795,10 @@
                                                         <div
                                                             class="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg"
                                                         >
-                                                           <v-icon name="bi-person" class="text-gray-600 dark:text-gray-400 w-4 h-4" />
+                                                            <v-icon
+                                                                name="bi-person"
+                                                                class="text-gray-600 dark:text-gray-400 w-4 h-4"
+                                                            />
                                                         </div>
                                                         <div>
                                                             <p
@@ -824,8 +823,6 @@
                                 </div>
                             </div>
                         </div>
-
-
                     </div>
                 </div>
             </div>
@@ -852,6 +849,8 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from "vue";
 import { XIcon, Maximize2Icon, Minimize2Icon } from "lucide-vue-next";
+import ImageModal from "./ImageModal.vue";
+import VideoModal from "./VideoModal.vue";
 
 const props = defineProps({
     show: {
@@ -897,22 +896,6 @@ const statusClass = computed(() => {
     );
 });
 
-const priorityClass = computed(() => {
-    if (!props.report?.priority)
-        return "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600";
-
-    const classes = {
-        high: "bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:text-red-200 dark:border-red-700",
-        medium: "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900 dark:text-yellow-200 dark:border-yellow-700",
-        low: "bg-green-100 text-green-800 border-green-200 dark:bg-green-900 dark:text-green-200 dark:border-green-700",
-    };
-
-    return (
-        classes[props.report.priority.toLowerCase()] ||
-        "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600"
-    );
-});
-
 const statusLabel = computed(() => {
     if (!props.report?.status) return "Unknown";
 
@@ -949,7 +932,21 @@ const toggleMaximize = async () => {
     }
 };
 
+const getMediaPath = (path) => {
+    // Remove any duplicate '/storage/' prefixes
+    const cleanPath = path.replace(/^\/?storage\/?/, "");
+    return `/storage/${cleanPath}`;
+};
+
+const handleImageError = (event) => {
+    console.error("Failed to load image:", event.target.src);
+    // You can set a placeholder image here if needed
+    event.target.src = "/images/placeholder.jpg";
+};
+
 const openMediaModal = (media, index = 0) => {
+    console.log("Opening media modal:", media, index);
+
     if (isVideoFile(media)) {
         openVideoModal(media.path);
     } else {
@@ -958,12 +955,30 @@ const openMediaModal = (media, index = 0) => {
 };
 
 const openImageModal = (imagePath, index = 0) => {
-    allImages.value = props.report.photos
-        .filter((media) => !isVideoFile(media))
-        .map((media) => "/storage/" + media.path);
+    console.log("Opening image modal:", imagePath, index);
 
-    currentImageIndex.value = allImages.value.indexOf("/storage/" + imagePath);
+    // Filter only images (not videos)
+    const imageMedia = props.report.photos.filter(
+        (media) => !isVideoFile(media)
+    );
+    allImages.value = imageMedia.map((media) => getMediaPath(media.path));
+
+    // Find the correct index in the filtered images array
+    const targetImagePath = getMediaPath(imagePath);
+    currentImageIndex.value = allImages.value.indexOf(targetImagePath);
+
+    // If not found, use the provided index
+    if (currentImageIndex.value === -1) {
+        currentImageIndex.value = index;
+    }
+
     showImageModal.value = true;
+    console.log(
+        "Image modal opened with images:",
+        allImages.value,
+        "current index:",
+        currentImageIndex.value
+    );
 };
 
 const closeImageModal = () => {
@@ -988,7 +1003,8 @@ const prevImage = () => {
 };
 
 const openVideoModal = (videoPath) => {
-    currentVideo.value = "/storage/" + videoPath;
+    console.log("Opening video modal:", videoPath);
+    currentVideo.value = getMediaPath(videoPath);
     showVideoModal.value = true;
 };
 
@@ -998,7 +1014,12 @@ const closeVideoModal = () => {
 };
 
 const isVideoFile = (file) => {
-    return file.type === "video" || file.mime_type?.includes("video");
+    return (
+        file.type === "video" ||
+        file.mime_type?.includes("video") ||
+        file.original_name?.match(/\.(mp4|mov|avi|webm)$/i) ||
+        file.path?.match(/\.(mp4|mov|avi|webm)$/i)
+    );
 };
 
 const formatPriority = (priority) => {

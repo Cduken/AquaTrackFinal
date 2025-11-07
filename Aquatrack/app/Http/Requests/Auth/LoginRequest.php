@@ -46,27 +46,22 @@ class LoginRequest extends FormRequest
         $credentials = [];
 
         if ($this->role === 'customer') {
-            // Handle both formatted (123-45-678) and unformatted (12345678) account numbers
             $accountNumber = $this->account_number;
 
-            // If input doesn't contain dashes, format it
             if (strpos($accountNumber, '-') === false) {
                 $cleanNumber = preg_replace('/[^A-Z0-9]/i', '', $accountNumber);
 
-                // Format based on length (8 or 9 alphanumeric characters)
                 if (strlen($cleanNumber) >= 8) {
                     $accountNumber = substr($cleanNumber, 0, 3) . '-' .
                         substr($cleanNumber, 3, 2) . '-' .
-                        substr($cleanNumber, 5, 3); // First 8 characters (10 with dashes)
+                        substr($cleanNumber, 5, 3);
 
-                    // Add optional letter for 9-character format (11 with dashes)
                     if (strlen($cleanNumber) >= 9) {
-                        $accountNumber .= substr($cleanNumber, 8, 1); // 9th character (optional letter)
+                        $accountNumber .= substr($cleanNumber, 8, 1);
                     }
                 }
             }
 
-            // Convert to uppercase for consistency
             $accountNumber = strtoupper($accountNumber);
 
             $credentials = [
@@ -91,7 +86,6 @@ class LoginRequest extends FormRequest
         RateLimiter::clear($this->throttleKey());
     }
 
-
     /**
      * Ensure the login request is not rate limited.
      *
@@ -108,10 +102,11 @@ class LoginRequest extends FormRequest
         $seconds = RateLimiter::availableIn($this->throttleKey());
 
         throw ValidationException::withMessages([
-            'email' => trans('auth.throttle', [
+            'throttle' => trans('auth.throttle', [
                 'seconds' => $seconds,
                 'minutes' => ceil($seconds / 60),
             ]),
+            'remaining_time' => $seconds, // Add this line
         ]);
     }
 
@@ -121,7 +116,7 @@ class LoginRequest extends FormRequest
     public function throttleKey(): string
     {
         $identifier = $this->role === 'customer'
-            ? $this->string('account_number') // Changed from serial_number
+            ? $this->string('account_number')
             : $this->string('email');
 
         return Str::transliterate(Str::lower($identifier) . '|' . $this->ip());

@@ -12,6 +12,7 @@ import {
     ArrowLeft,
     ArrowRight,
     Flag,
+    ArrowLeftToLine,
 } from "lucide-vue-next";
 
 const page = usePage();
@@ -35,7 +36,8 @@ const isAnnouncementsPage = computed(() =>
 );
 const isTrackReportPage = computed(() => page.url.startsWith("/track-report"));
 const isReportIssuePage = computed(() => page.url.startsWith("/report-issue"));
-const isSelectRolesPage = computed(() => page.url.startsWith("/select-roles"));
+const isLoginPage = computed(() => page.url.startsWith("/customer/login"));
+const isStaffLoginPage = computed(() => page.url.startsWith("/system-access"));
 
 // Active link classes - More subtle design
 const getLinkClasses = (path, isMobile = false) => {
@@ -77,10 +79,10 @@ const getLinkClasses = (path, isMobile = false) => {
                 </div>
 
                 <!-- Desktop Navigation Links with Get Started/Go Back Button -->
-                <div class="hidden md:flex items-center">
-                    <!-- Only show navigation links if NOT on select-roles page -->
+                <div class="hidden xl:flex items-center">
+                    <!-- Only show navigation links if NOT on login pages -->
                     <div
-                        v-if="!isSelectRolesPage"
+                        v-if="!isLoginPage && !isStaffLoginPage"
                         class="flex items-center gap-4"
                     >
                         <Link href="/" :class="getLinkClasses('/')">
@@ -97,33 +99,33 @@ const getLinkClasses = (path, isMobile = false) => {
                         </Link>
 
                         <Link
-                            :href="route('track-report')"
-                            :class="getLinkClasses('/track-report')"
-                        >
-                            <ClipboardList class="h-4 w-4 mr-2" />
-                            Track Report
-                        </Link>
-
-                        <Link
                             :href="route('report-issue.create')"
                             :class="getLinkClasses('/report-issue')"
                         >
                             <Flag class="h-4 w-4 mr-2" />
                             Report Issue
                         </Link>
+
+                        <Link
+                            :href="route('track-report')"
+                            :class="getLinkClasses('/track-report')"
+                        >
+                            <ClipboardList class="h-4 w-4 mr-2" />
+                            Track Report
+                        </Link>
                     </div>
 
                     <!-- Get Started / Go Back Button -->
                     <Link
-                        v-if="!isSelectRolesPage"
-                        :href="route('select-roles')"
+                        v-if="!isLoginPage && !isStaffLoginPage"
+                        :href="route('customer.login')"
                         class="flex items-center px-6 py-2.5 text-sm ml-6 text-gray-200 bg-transparent border border-gray-200/20 rounded-lg hover:text-white hover:border-white/40 transition duration-300"
                     >
                         Get Started
                         <ArrowRight class="h-4 w-4 ml-2" />
                     </Link>
 
-                    <!-- Go Back Button (only on select-roles page) -->
+                    <!-- Go Back Button (only on login pages) -->
                     <Link
                         v-else
                         href="/"
@@ -134,10 +136,20 @@ const getLinkClasses = (path, isMobile = false) => {
                     </Link>
                 </div>
 
-                <!-- Mobile Navigation - Only Menu Toggle -->
-                <div class="flex md:hidden items-center">
-                    <!-- Mobile Menu Toggle -->
+                <!-- Mobile Navigation - Menu Toggle or Back Button -->
+                <div class="flex xl:hidden items-center">
+                    <!-- Show back button on login pages, menu toggle on other pages -->
+                    <Link
+                        v-if="isLoginPage || isStaffLoginPage"
+                        href="/"
+                        class="flex items-center justify-center p-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 transition duration-300"
+                    >
+                        <ArrowLeftToLine class="h-5 w-5" />
+                    </Link>
+
+                    <!-- Mobile Menu Toggle (only show on non-login pages) -->
                     <button
+                        v-else
                         @click="toggleMobileMenu"
                         class="flex items-center justify-center p-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 transition duration-300"
                     >
@@ -150,7 +162,7 @@ const getLinkClasses = (path, isMobile = false) => {
         <!-- Mobile Dropdown Menu -->
         <div
             v-if="isMobileMenuOpen"
-            class="fixed inset-0 z-50 md:hidden"
+            class="fixed inset-0 z-50 xl:hidden"
             @click="isMobileMenuOpen = false"
         >
             <!-- Dropdown Content -->
@@ -162,8 +174,8 @@ const getLinkClasses = (path, isMobile = false) => {
                 }"
                 @click.stop
             >
-                <!-- Dropdown Links - Only show if NOT on select-roles page -->
-                <div v-if="!isSelectRolesPage" class="py-2">
+                <!-- Dropdown Links - Only show if NOT on login pages -->
+                <div v-if="!isLoginPage && !isStaffLoginPage" class="py-2">
                     <Link
                         href="/"
                         :class="getLinkClasses('/', true)"
@@ -204,8 +216,8 @@ const getLinkClasses = (path, isMobile = false) => {
                 <!-- Mobile Action Button -->
                 <div class="border-t border-slate-700 p-2">
                     <Link
-                        v-if="!isSelectRolesPage"
-                        :href="route('select-roles')"
+                        v-if="!isLoginPage && !isStaffLoginPage"
+                        :href="route('customer.login')"
                         class="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition duration-200"
                         @click="isMobileMenuOpen = false"
                     >

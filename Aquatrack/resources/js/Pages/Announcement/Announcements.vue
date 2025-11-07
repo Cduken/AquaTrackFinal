@@ -127,7 +127,7 @@ const formatDate = (date) => {
         <Navigation />
 
         <!-- Compact Hero Section -->
-        <section class="pt-20  pb-6 px-4">
+        <section class="pt-8 lg:pt-20  pb-6 px-4">
             <div class="max-w-6xl mx-auto">
                 <!-- Header -->
                 <div class="text-center mb-6">

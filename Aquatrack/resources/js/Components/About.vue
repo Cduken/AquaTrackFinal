@@ -140,16 +140,13 @@
                 </div>
 
                 <!-- Right Column - Enhanced Image -->
-                <div class="about-image lg:w-1/2">
+                <div class="about-image lg:w-1/2 hidden lg:block">
                     <div class="relative group">
-                        <!-- Subtle Glowing Border Effect -->
-                        <div
-                            class="absolute -inset-2 bg-gradient-to-r from-blue-400/15 to-cyan-400/15 rounded-2xl blur-md opacity-50 group-hover:opacity-70 transition-all duration-500"
-                        ></div>
+
 
                         <!-- Main Image Container -->
                         <div
-                            class="relative bg-slate-800/30 backdrop-blur-md rounded-xl shadow-xl overflow-hidden p-6 transform group-hover:scale-[1.02] transition-all duration-500 border border-slate-700/50"
+                            class="relative overflow-hidden p-6 transform group-hover:scale-[1.02] transition-all duration-500"
                         >
                             <div class="relative z-10">
                                 <img
@@ -159,58 +156,15 @@
                                 />
                             </div>
 
-                            <!-- Subtle Floating Elements -->
-                            <div
-                                class="absolute top-3 right-3 w-4 h-4 bg-blue-400/15 rounded-full blur-sm"
-                            ></div>
-                            <div
-                                class="absolute bottom-3 left-3 w-5 h-5 bg-cyan-400/15 rounded-full blur-sm"
-                            ></div>
 
-                            <!-- Subtle Hover Overlay -->
-                            <div
-                                class="absolute inset-0 bg-gradient-to-br from-blue-500/3 to-cyan-500/3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"
-                            ></div>
+
+
                         </div>
 
-                        <!-- Smaller Decorative Elements -->
-                        <div
-                            class="absolute -bottom-4 -right-4 w-16 h-16 bg-gradient-to-br from-blue-500/8 to-cyan-500/8 rounded-full blur-xl"
-                        ></div>
-                        <div
-                            class="absolute -top-4 -left-4 w-14 h-14 bg-gradient-to-br from-cyan-500/8 to-blue-500/8 rounded-full blur-xl"
-                        ></div>
+
                     </div>
 
-                    <!-- Location Badge -->
-                    <div class="mt-6 text-center">
-                        <div
-                            class="inline-flex items-center gap-2 bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-full px-5 py-2 shadow-lg"
-                        >
-                            <svg
-                                class="w-3.5 h-3.5 text-slate-400"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                                />
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                                />
-                            </svg>
-                            <span class="text-xs font-medium text-slate-300"
-                                >POBLACION CENTRO CLARIN, BOHOL</span
-                            >
-                        </div>
-                    </div>
+
                 </div>
             </div>
         </div>

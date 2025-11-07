@@ -221,7 +221,7 @@ const handleReportSuccess = (data) => {
                 >
                     <Link
                         :href="route('report-issue.create')"
-                        class="group relative inline-flex items-center justify-center gap-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-8 py-4 rounded-xl font-semibold shadow-2xl hover:shadow-blue-500/30 transition-all duration-300 hover:scale-105 overflow-hidden"
+                        class="group relative inline-flex items-center justify-center gap-3 bg-gradient-to-r from-blue-600/40 to-cyan-600/40 border border-blue-500/20 text-white px-8 py-4 rounded-xl font-semibold shadow-2xl hover:shadow-blue-500/20 transition-all duration-300 hover:scale-105 overflow-hidden"
                     >
                         <div
                             class="absolute inset-0 bg-gradient-to-r from-cyan-600 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"

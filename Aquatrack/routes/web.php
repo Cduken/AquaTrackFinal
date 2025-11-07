@@ -32,66 +32,117 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
+// ==================== AUTHENTICATION ROUTES ====================
+// Public customer login (main login page)
+Route::get('/customer/login', [AuthenticatedSessionController::class, 'create'])
+    ->name('customer.login')
+    ->middleware('guest');
+
+// Hidden admin/staff login route (keep URL secret)
+Route::get('/system-access', [AuthenticatedSessionController::class, 'staffLogin'])
+    ->name('staff.login')
+    ->middleware('guest');
+
+// Login submission (handles all types)
+Route::post('/login', [AuthenticatedSessionController::class, 'store'])
+    ->name('login.store')
+    ->middleware('guest');
+
+// Logout
+Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
+    ->name('logout')
+    ->middleware('auth');
+
+// Remove the old verify-code route since we're removing verification codes
+// Route::post('/verify-code', [AuthenticatedSessionController::class, 'verifyCode'])->name('verify-code');
+
+// ==================== PUBLIC ROUTES ====================
+Route::get('/announcements', [AnnouncementsController::class, 'guestIndex'])->name('announcements.guest');
+Route::get('/track-report', [TrackReportController::class, 'index'])->name('track-report');
+Route::get('/report-issue', [ReportController::class, 'createPage'])->name('report-issue.create');
+
+// Report Routes (Public and Authenticated)
+Route::post('/reports', [ReportController::class, 'store'])->name('reports.store');
+Route::match(['get', 'post'], '/reports/track', [ReportController::class, 'track'])->name('reports.track');
+Route::get('/reports/{report}', [ReportController::class, 'show'])->name('reports.show');
+Route::get('/api/reports/find', [ReportController::class, 'findByTrackingCode'])->name('reports.find');
+Route::get('/reports/create', [ReportController::class, 'create'])->name('reports.create');
+
+Route::post('/reports/sync-offline', [ReportController::class, 'syncOfflineReports'])->name('reports.sync-offline');
+
+// ==================== AUTHENTICATED ROUTES ====================
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Dashboard redirection
+    Route::get('/redirect-to-dashboard', [AuthenticatedSessionController::class, 'redirectToDashboard'])
+        ->middleware('verified')
+        ->name('redirect-to-dashboard');
+
+    // Generic dashboard access
+    Route::get('/dashboard', function () {
+        $user = auth()->user();
+
+        if ($user->hasRole('admin')) {
+            return redirect()->route('admin.dashboard');
+        } elseif ($user->hasRole('staff')) {
+            return redirect()->route('staff.dashboard');
+        } elseif ($user->hasRole('customer')) {
+            return redirect()->route('customer.dashboard');
+        }
+
+        return redirect()->route('home');
+    })->name('dashboard')->middleware('verified');
+
+    // Notification Routes
+    Route::get('/api/notifications', [NotificationController::class, 'getNotificationsApi'])
+        ->name('api.notifications');
+
+    Route::put('/customer/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])
+        ->name('customer.notifications.read');
+
+    Route::put('/customer/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])
+        ->name('customer.notifications.mark-all-read');
+
+    Route::delete('/customer/notifications/{notification}', [NotificationController::class, 'destroy'])
+        ->name('customer.notifications.destroy');
 });
 
-// Dashboard redirection
-Route::get('/redirect-to-dashboard', [AuthenticatedSessionController::class, 'redirectToDashboard'])
-    ->middleware(['auth', 'verified'])
-    ->name('redirect-to-dashboard');
-
-Route::post('/verify-code', [AuthenticatedSessionController::class, 'verifyCode'])->name('verify-code');
-
-// web.php
-Route::get('/announcements', [AnnouncementsController::class, 'guestIndex'])->name('announcements.guest');
-Route::get('/track-report', [TrackReportController::class, 'index'])->name('track-report');
-
-Route::get('/report-issue', [ReportController::class, 'createPage'])->name('report-issue.create');
-
-// Add this route for generic dashboard access
-Route::get('/dashboard', function () {
-    // Redirect based on user role
-    $user = auth()->user();
-
-    if ($user->hasRole('admin')) {
-        return redirect()->route('admin.dashboard');
-    } elseif ($user->hasRole('staff')) {
-        return redirect()->route('staff.dashboard');
-    } elseif ($user->hasRole('customer')) {
-        return redirect()->route('customer.dashboard');
-    }
-
-    return redirect()->route('home');
-})->name('dashboard')->middleware(['auth', 'verified']);
-
-// Admin Routes
+// ==================== ADMIN ROUTES ====================
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
 
-    Route::post('/admin/reports/get-reporters-data', [ReportController::class, 'getReportersData'])->name('admin.reports.getReportersData');
-
-    // ADMIN REPORTS ROUTES - Keep these inside the admin middleware
+    // Reports
     Route::get('/admin/reports', [ReportController::class, 'adminIndex'])->name('admin.reports');
+    Route::post('/admin/reports/get-reporters-data', [ReportController::class, 'getReportersData'])->name('admin.reports.getReportersData');
     Route::delete('/admin/reports/{report}', [ReportController::class, 'destroy'])->name('admin.reports.destroy');
     Route::post('/admin/reports/{report}/update-status', [ReportController::class, 'updateStatus'])->name('admin.reports.updateStatus');
-
-
     Route::get('/admin/reports/export/pdf', [ReportController::class, 'exportPdf'])->name('admin.reports.export.pdf');
 
+    // Report merging
+    Route::get('/admin/reports/mergeable', [NotificationController::class, 'getMergeableReports'])->name('admin.reports.mergeable');
+    Route::post('/admin/reports/merge', [NotificationController::class, 'mergeReports'])->name('admin.reports.merge');
+
+    // Records
+    Route::get('/admin/records', [AdminRecordController::class, 'index'])->name('admin.records.index');
+    Route::get('/admin/records/{record}', [AdminRecordController::class, 'show'])->name('admin.records.show');
+    Route::get('/admin/records/{record}/edit', [AdminRecordController::class, 'edit'])->name('admin.records.edit');
+    Route::put('/admin/records/{record}', [AdminRecordController::class, 'update'])->name('admin.records.update');
+    Route::delete('/admin/records/{record}', [AdminRecordController::class, 'destroy'])->name('admin.records.destroy');
+    Route::get('/admin/records/{record}/details', [AdminRecordController::class, 'details'])->name('admin.records.details');
+
+    // Record utilities
     Route::get('/admin/records/update-overdue', [AdminRecordController::class, 'manualUpdateOverdue'])
         ->name('admin.records.update-overdue');
     Route::get('/admin/records/force-fix-due-dates', [AdminRecordController::class, 'forceFixDueDates'])
         ->name('admin.records.force-fix-due-dates');
-
     Route::get('/admin/records/export', [AdminRecordController::class, 'export'])->name('admin.records.export');
     Route::get('/admin/records/period-stats', [AdminRecordController::class, 'getPeriodStats'])->name('admin.records.period-stats');
     Route::get('/admin/records/available-periods', [AdminRecordController::class, 'getAvailablePeriodsApi'])->name('admin.records.available-periods');
 
-
-    Route::get('/admin/records/{record}/details', [AdminRecordController::class, 'details'])->name('admin.records.details');
+    // Users Management
     Route::get('/admin/users', [AdminUsersController::class, 'index'])->name('admin.users');
     Route::post('/admin/users', [AdminUsersController::class, 'store'])->name('admin.users.store');
     Route::delete('/admin/users/{user}', [AdminUsersController::class, 'destroy'])->name('admin.users.destroy');
@@ -99,47 +150,32 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::put('/admin/users/{user}', [AdminUsersController::class, 'update'])->name('admin.users.update');
     Route::post('/admin/users/{user}/reset-password', [AdminUsersController::class, 'resetPassword'])->name('admin.users.reset-password');
 
-    // Stats routes
+    // Stats
     Route::get('/admin/stats', [AdminUsersController::class, 'getStats'])->name('admin.stats');
     Route::get('/reports/stats', [ReportController::class, 'getStats'])->name('reports.stats');
-
     Route::post('/admin/export-water-analytics', [AdminDashboardController::class, 'exportWaterAnalytics'])->name('admin.export-water-analytics');
 
-    Route::get('/admin/records', [AdminRecordController::class, 'index'])->name('admin.records.index');
-    Route::get('/admin/records/{record}', [AdminRecordController::class, 'show'])->name('admin.records.show');
-    Route::get('/admin/records/{record}/edit', [AdminRecordController::class, 'edit'])->name('admin.records.edit');
-    Route::put('/admin/records/{record}', [AdminRecordController::class, 'update'])->name('admin.records.update');
-    Route::delete('/admin/records/{record}', [AdminRecordController::class, 'destroy'])->name('admin.records.destroy');
-
-    // Route::get('/announcements', [AnnouncementsController::class, 'index'])->name('customer.announcements');
+    // Announcements
     Route::get('/admin/announcements', [AnnouncementsController::class, 'index'])->name('announcements');
     Route::post('/admin/announcements', [AnnouncementsController::class, 'store'])->name('announcements.store');
     Route::put('/admin/announcements/{announcement}', [AnnouncementsController::class, 'update'])->name('announcements.update');
     Route::delete('/admin/announcements/{announcement}', [AnnouncementsController::class, 'destroy'])->name('announcements.destroy');
 
+    // Activity Logs
     Route::get('/admin/activity-logs', [AdminActivityLogController::class, 'index'])->name('admin.activity-logs');
     Route::get('/activity-logs/export', [AdminActivityLogController::class, 'export'])->name('admin.activity-logs.export');
 
+    // Notifications
     Route::get('/admin/notifications', [NotificationController::class, 'adminIndex'])->name('admin.notifications.index');
-    // ADD THESE NOTIFICATION DELETE ROUTES:
     Route::delete('/admin/notifications/{id}', [NotificationController::class, 'destroy'])->name('admin.notifications.destroy');
     Route::post('/admin/notifications/bulk-delete', [NotificationController::class, 'bulkDelete'])->name('admin.notifications.bulk-delete');
-
-    // Admin report merging routes
-    Route::get('/admin/reports/mergeable', [NotificationController::class, 'getMergeableReports'])->name('admin.reports.mergeable');
-    Route::post('/admin/reports/merge', [NotificationController::class, 'mergeReports'])->name('admin.reports.merge');
-
-
-    Route::delete('/customer/notifications/{id}', [NotificationController::class, 'destroy'])->name('customer.notifications.destroy');
-
-
     Route::post('/admin/notifications/{id}/mark-read', [NotificationController::class, 'markAsRead'])->name('admin.notifications.mark-read');
-    Route::post('/notifications/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
-    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
-    Route::get('/notifications', [NotificationController::class, 'index']);
+
+    // Customer notifications (admin access)
+    Route::delete('/customer/notifications/{id}', [NotificationController::class, 'destroy'])->name('customer.notifications.destroy');
 });
 
-// Staff Routes
+// ==================== STAFF ROUTES ====================
 Route::middleware(['auth', 'role:staff'])->group(function () {
     Route::get('/staff/dashboard', [StaffDashboardController::class, 'index'])->name('staff.dashboard');
     Route::get('/staff/dashboard/data', [StaffDashboardController::class, 'getDashboardData'])->name('staff.dashboard.data');
@@ -155,63 +191,31 @@ Route::middleware(['auth', 'role:staff'])->group(function () {
     Route::get('/staff/notifications', [NotificationController::class, 'staffIndex'])->name('staff.notifications');
 });
 
-// routes/web.php or routes/api.php
+// Previous readings API route (accessible by staff)
 Route::get('/staff/readings/{userId}/previous', [StaffReadingController::class, 'getPreviousReadings']);
 
-// Customer Routes
-// Customer Routes
+// ==================== CUSTOMER ROUTES ====================
 Route::middleware(['auth', 'role:customer'])->group(function () {
     Route::get('/customer/dashboard', [CustomerDashboardController::class, 'index'])->name('customer.dashboard');
     Route::get('/customer/usage', [CustomerUsageController::class, 'index'])->name('customer.usage');
     Route::get('/customer/reports', [ReportController::class, 'customerIndex'])
-        ->middleware(['auth', 'verified'])
+        ->middleware('verified')
         ->name('customer.reports');
     Route::get('/customer/announcements', [CustomerAnnouncementsController::class, 'index'])->name('customer.announcements');
 
-    // ✅ This is the correct route for customer notifications page
+    // Customer notifications
     Route::get('/customer/notifications', [NotificationController::class, 'customerIndex'])->name('customer.notifications');
-
     Route::delete('/customer/notifications/{id}', [NotificationController::class, 'destroy'])->name('customer.notifications.destroy');
     Route::put('/customer/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('customer.notifications.read');
     Route::put('/customer/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('customer.notifications.mark-all-read');
 });
 
-
-
-Route::post('/reports/sync-offline', [ReportController::class, 'syncOfflineReports'])->name('reports.sync-offline');
-
-// Select Roles
+// ==================== LEGACY/DEBUG ROUTES ====================
+// Remove or comment out the old select-roles route since we're using separate login forms
 Route::get('/select-roles', [SelectRolesController::class, 'index'])->name('select-roles');
-
-// Notification Routes
-// Add this to your web.php routes
-Route::middleware('auth')->group(function () {
-    // API route for modal notifications
-    Route::get('/api/notifications', [NotificationController::class, 'getNotificationsApi'])
-        ->name('api.notifications');
-
-    // Your existing notification routes...
-    // Route::get('/customer/notifications', [NotificationController::class, 'index'])
-    //     ->name('customer.notifications');
-
-    Route::put('/customer/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])
-        ->name('customer.notifications.read');
-
-    Route::put('/customer/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])
-        ->name('customer.notifications.mark-all-read');
-
-    Route::delete('/customer/notifications/{notification}', [NotificationController::class, 'destroy'])
-        ->name('customer.notifications.destroy');
-});
-
-// Report Routes (Public and Authenticated)
-Route::post('/reports', [ReportController::class, 'store'])->name('reports.store');
-Route::match(['get', 'post'], '/reports/track', [ReportController::class, 'track'])->name('reports.track');
-Route::get('/reports/{report}', [ReportController::class, 'show'])->name('reports.show');
-Route::get('/api/reports/find', [ReportController::class, 'findByTrackingCode'])->name('reports.find');
-Route::get('/reports/create', [ReportController::class, 'create'])->name('reports.create');
 
 Route::get('/debug/customers', function () {
     return User::where('role', 'customer')->get();
 });
+
 require __DIR__ . '/auth.php';

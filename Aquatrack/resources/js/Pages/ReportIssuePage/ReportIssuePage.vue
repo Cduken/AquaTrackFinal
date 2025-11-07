@@ -14,18 +14,18 @@
         <Navigation />
 
         <!-- Page Header -->
-        <section class="pt-24 md:pt-20 pb-8 md:pb-12 px-4 sm:px-6 lg:px-8">
+        <section class="pt-8 lg:pt-20 pb-8 md:pb-12 px-4 sm:px-6 lg:px-8">
             <div class="max-w-7xl mx-auto">
                 <div class="text-center space-y-3 md:space-y-4">
 
 
                     <h1
-                        class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white tracking-tight"
+                        class="text-3xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white tracking-tight"
                     >
                         Report <span class="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">Water Issue</span>
                     </h1>
                     <p
-                        class="text-sm sm:text-base md:text-lg lg:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed px-2"
+                        class="text-base md:text-sm lg:text-md text-slate-300 max-w-3xl mx-auto leading-relaxed px-2"
                     >
                         Submit a detailed report about water service issues in
                         your area. Our team will address it promptly.
@@ -216,7 +216,7 @@
 
                         <!-- Navigation Buttons -->
                         <div
-                            class="mt-4 md:mt-6 bg-white/10 backdrop-blur-xl rounded-2xl lg:rounded-3xl border border-white/20 shadow-2xl p-4 md:p-4"
+                            class="mt-4 md:mt-6 bg-white/10 backdrop-blur-xl rounded-2xl lg:rounded-3xl border border-white/20 shadow-2xl p-2 md:p-4"
                         >
                             <div
                                 class="flex justify-between items-center gap-2"

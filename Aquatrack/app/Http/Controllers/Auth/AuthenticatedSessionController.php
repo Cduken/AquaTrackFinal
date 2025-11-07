@@ -21,15 +21,29 @@ class AuthenticatedSessionController extends Controller
     protected $maxAttempts = 5;
 
     /**
-     * Show the login form.
+     * Show the customer login form.
      *
      * @return Response
      */
     public function create(): Response
     {
-        return Inertia::render('Auth/Login', [
+        return Inertia::render('Auth/CustomerLogin', [
             'canResetPassword' => Route::has('password.request'),
             'status' => session('status'),
+            'csrf_token' => csrf_token(),
+            'loginAttempts' => $this->getLoginAttempts(),
+            'remainingTime' => $this->getRemainingTime(),
+        ]);
+    }
+
+    /**
+     * Show the staff/admin login form (hidden URL).
+     *
+     * @return Response
+     */
+    public function staffLogin(): Response
+    {
+        return Inertia::render('Auth/StaffLogin', [
             'csrf_token' => csrf_token(),
             'loginAttempts' => $this->getLoginAttempts(),
             'remainingTime' => $this->getRemainingTime(),
@@ -93,87 +107,6 @@ class AuthenticatedSessionController extends Controller
     }
 
     /**
-     * Verify admin/staff access code (AJAX).
-     */
-    public function verifyCode(Request $request)
-    {
-        try {
-            $throttleKey = $this->throttleKey($request->ip());
-
-            // If already locked, return throttled response
-            if (RateLimiter::tooManyAttempts($throttleKey, $this->maxAttempts)) {
-                $seconds = RateLimiter::availableIn($throttleKey);
-                return response()->json([
-                    'verified' => false,
-                    'message' => "Too many login attempts. Please try again in {$seconds} seconds.",
-                    'throttled' => true,
-                    'remaining_time' => $seconds,
-                ], 429);
-            }
-
-            $request->validate([
-                'role' => 'required|in:admin,staff',
-                'code' => 'required|string'
-            ]);
-
-            $role = strtoupper($request->role);
-            $correctCode = env("{$role}_VERIFICATION_CODE");
-
-            if (!$correctCode || $request->code !== $correctCode) {
-                // compute new attempts count (current + 1) and choose decay
-                $attemptsBefore = RateLimiter::attempts($throttleKey);
-                $attemptsAfter = $attemptsBefore + 1;
-                $decay = $this->decayForAttempts($attemptsAfter);
-
-                // increment with chosen decay
-                RateLimiter::hit($throttleKey, $decay);
-
-                Activity::create([
-                    'event' => 'verification_failed',
-                    'description' => "Failed {$request->role} verification code attempt",
-                    'properties' => [
-                        'ip' => $request->ip(),
-                        'user_agent' => $request->userAgent(),
-                        'attempts' => $attemptsAfter,
-                    ]
-                ]);
-
-                // If this push exceeded maxAttempts, include remaining time
-                $errors = ['code' => ['The provided verification code is invalid']];
-                if (RateLimiter::tooManyAttempts($throttleKey, $this->maxAttempts)) {
-                    $errors['throttle'] = ["Too many login attempts. Please try again in " . RateLimiter::availableIn($throttleKey) . " seconds."];
-                    $errors['remaining_time'] = [RateLimiter::availableIn($throttleKey)];
-                }
-
-                throw ValidationException::withMessages($errors);
-            }
-
-            Activity::create([
-                'event' => 'verification_success',
-                'description' => "Successful {$request->role} verification",
-                'properties' => [
-                    'ip' => $request->ip()
-                ]
-            ]);
-
-            return response()->json([
-                'verified' => true,
-                'message' => 'Verification successful',
-                'csrf_token' => csrf_token(),
-            ]);
-        } catch (\Exception $e) {
-            if ($e instanceof \Illuminate\Session\TokenMismatchException) {
-                return response()->json([
-                    'verified' => false,
-                    'message' => 'CSRF token mismatch. Please refresh the page and try again.',
-                    'csrf_token' => csrf_token(),
-                ], 419);
-            }
-            throw $e;
-        }
-    }
-
-    /**
      * Handle an incoming authentication request.
      *
      * @param LoginRequest $request
@@ -215,26 +148,46 @@ class AuthenticatedSessionController extends Controller
                 ]);
             }
 
+            // Detect which login form was used based on the request
+            $isCustomerLogin = $request->filled('account_number');
+            $isStaffLogin = $request->filled('email') && in_array($selectedRole, ['admin', 'staff']);
+
             // Prevent admin/staff from logging in through customer form
-            if ($selectedRole === 'customer' && $user->hasAnyRole(['admin', 'staff'])) {
+            if ($isCustomerLogin && $user->hasAnyRole(['admin', 'staff'])) {
                 Activity::log('unauthorized_access', "Admin/staff attempted customer login", $user, [
                     'ip' => $request->ip(),
-                    'attempted_role' => $selectedRole
+                    'attempted_role' => $selectedRole,
+                    'login_type' => 'customer_form'
                 ]);
 
                 Auth::logout();
                 throw ValidationException::withMessages([
-                    'email' => ['Administrative accounts must use their specific login portal'],
+                    'account_number' => ['Administrative accounts must use the staff login portal.'],
                 ]);
             }
 
-            // Check role mismatch
+            // Prevent customers from logging in through staff form
+            if ($isStaffLogin && $user->hasRole('customer')) {
+                Activity::log('unauthorized_access', "Customer attempted staff login", $user, [
+                    'ip' => $request->ip(),
+                    'attempted_role' => $selectedRole,
+                    'login_type' => 'staff_form'
+                ]);
+
+                Auth::logout();
+                throw ValidationException::withMessages([
+                    'email' => ['Customer accounts must use the customer login portal.'],
+                ]);
+            }
+
+            // Check role mismatch for staff/admin logins
             if (in_array($selectedRole, ['admin', 'staff']) && !$user->hasRole($selectedRole)) {
                 $userRoles = $user->roles->pluck('name')->implode(', ');
 
                 Activity::log('role_mismatch', "User attempted login with wrong role", $user, [
                     'attempted_role' => $selectedRole,
-                    'actual_roles' => $userRoles
+                    'actual_roles' => $userRoles,
+                    'login_type' => 'staff_form'
                 ]);
 
                 Auth::logout();
@@ -253,7 +206,8 @@ class AuthenticatedSessionController extends Controller
                 'ip' => $request->ip(),
                 'user_agent' => $request->userAgent(),
                 'role' => $selectedRole,
-                'login_method' => $selectedRole === 'customer' ? 'account_number' : 'email' // Added login method tracking
+                'login_method' => $isCustomerLogin ? 'account_number' : 'email',
+                'login_type' => $isCustomerLogin ? 'customer_form' : 'staff_form'
             ]);
 
             // Role-based redirects
@@ -276,12 +230,17 @@ class AuthenticatedSessionController extends Controller
             $attempts = $attemptsAfter;
             $remaining = max(0, $this->maxAttempts - $attempts);
 
+            // Determine login type for logging
+            $loginField = $request->input('email') ?? $request->input('account_number');
+            $loginType = $request->filled('account_number') ? 'customer_form' : 'staff_form';
+
             Activity::log('login_failed', "Failed login attempt", null, [
-                'login_field' => $request->input('email') ?? $request->input('account_number'), // Changed from serial_number
+                'login_field' => $loginField,
                 'ip' => $request->ip(),
                 'errors' => $e->errors(),
                 'attempts' => $attempts,
                 'remaining_attempts' => $remaining,
+                'login_type' => $loginType
             ]);
 
             $errors = $e->errors();
@@ -296,6 +255,24 @@ class AuthenticatedSessionController extends Controller
 
             throw ValidationException::withMessages($errors);
         }
+    }
+
+    /**
+     * Redirect to appropriate dashboard based on user role.
+     */
+    public function redirectToDashboard()
+    {
+        $user = Auth::user();
+
+        if ($user->hasRole('admin')) {
+            return redirect()->route('admin.dashboard');
+        } elseif ($user->hasRole('staff')) {
+            return redirect()->route('staff.dashboard');
+        } elseif ($user->hasRole('customer')) {
+            return redirect()->route('customer.dashboard');
+        }
+
+        return redirect()->route('home');
     }
 
     /**
@@ -315,6 +292,6 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->flash('logout_success', true);
 
-        return Inertia::location('/'); // <-- send user to the homepage / hero section
+        return Inertia::location('/');
     }
 }

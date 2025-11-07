@@ -405,13 +405,13 @@ const priorityColor = (priority) => {
         <Navigation />
 
         <!-- Hero Section -->
-        <section class="pt-20 pb-16 px-4 sm:px-6 lg:px-8 relative">
+        <section class="pt-8 pb-16 px-4 sm:px-6 lg:px-8 lg:pt-20 relative">
             <div class="max-w-7xl mx-auto relative">
                 <div class="text-center">
 
 
                     <h1
-                        class="text-4xl md:text-6xl font-bold text-white mb-4 leading-tight"
+                        class="text-2xl md:text-6xl font-bold text-white mb-4 leading-tight"
                     >
                         Track Your
                         <span
@@ -421,7 +421,7 @@ const priorityColor = (priority) => {
                     </h1>
 
                     <p
-                        class="text-lg text-slate-300 max-w-3xl mx-auto mb-6 leading-relaxed"
+                        class="text-sm md-text-lg text-slate-300 max-w-3xl mx-auto mb-6 leading-relaxed"
                     >
                         Monitor your water service reports in real-time and stay
                         updated on issue resolution progress with our premium

@@ -23,20 +23,20 @@
 
         <!-- Camera Interface -->
         <div
-            class="bg-gray-50 rounded-xl overflow-hidden border border-gray-200"
+            class="bg-transparent rounded-xl overflow-hidden border border-gray-200/20 backdrop-blur-xl shadow-lg"
         >
             <!-- Camera Not Active State -->
             <div v-if="!isCameraActive" class="p-8 text-center">
                 <div class="mb-6">
                     <div
-                        class="w-20 h-20 mx-auto bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mb-4 shadow-lg"
+                        class="w-20 h-20 mx-auto bg-transparent border border-gray-200/20 rounded-full flex items-center justify-center mb-4 shadow-lg"
                     >
                         <v-icon name="hi-camera" class="w-10 h-10 text-white" />
                     </div>
-                    <h3 class="text-gray-900 text-xl font-semibold mb-3">
+                    <h3 class="text-gray-200 text-xl font-semibold mb-3">
                         Camera Required
                     </h3>
-                    <p class="text-gray-600 text-sm mb-6 max-w-md mx-auto">
+                    <p class="text-gray-200 text-sm mb-6 max-w-md mx-auto">
                         Take photos and videos to document the water quality
                         issue. Visual evidence helps us resolve issues faster.
                     </p>
@@ -46,7 +46,7 @@
                     type="button"
                     @click="$emit('initialize-camera')"
                     :disabled="isCameraLoading"
-                    class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:from-blue-300 disabled:to-blue-400 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
+                    class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-slate-800 via-slate-900 to-slate-950 hover:from-slate-900 hover:via-slate-950 hover:to-slate-800 disabled:from-blue-300 disabled:to-blue-400 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
                 >
                     <v-icon
                         v-if="isCameraLoading"
@@ -138,7 +138,7 @@
                 </div>
 
                 <!-- Enhanced Camera Controls -->
-                <div class="bg-white p-6 border-t border-gray-200">
+                <div class="bg-transparent blackdrop-blue-xl p-6">
                     <div class="flex items-center justify-center gap-4">
                         <!-- Switch Camera Button -->
                         <button

@@ -1,7 +1,7 @@
 <template>
     <div v-if="form.photo_previews.length > 0" class="space-y-4">
         <div class="flex items-center justify-between">
-            <h4 class="text-sm font-semibold text-gray-700">
+            <h4 class="text-sm font-semibold text-gray-400">
                 Captured Media ({{ form.photo_previews.length }})
             </h4>
             <button

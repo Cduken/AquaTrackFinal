@@ -1,5 +1,5 @@
 <template>
-    <div class="w-full p-6 bg-white">
+    <div class="w-full">
         <NetworkStatus
             :is-online="isOnline"
             :is-syncing="isSyncing"
@@ -9,61 +9,411 @@
 
         <FormErrors v-if="hasErrors" :errors="form.errors" />
 
-        <form @submit.prevent="submitReport" class="space-y-6">
-            <LocationFields :form="form" />
-            <ReporterInfo :form="form" @update:field="updateFormField" />
-            <AreaInfo
-                :form="form"
-                :zones="props.zones"
-                @update:field="updateFormField"
-            />
-            <WaterIssueType :form="form" @update:field="updateFormField" />
-            <DescriptionField :form="form" @update:field="updateFormField" />
+        <!-- Form Content Only - No progress or navigation here -->
+        <div class="space-y-6">
+            <!-- Step 1: Basic Information -->
+            <div v-if="currentStep === 1" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label class="block text-sm font-semibold text-white">
+                            Full Name <span class="text-red-400">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            :value="form.reporter_name"
+                            @input="
+                                updateField(
+                                    'reporter_name',
+                                    $event.target.value
+                                )
+                            "
+                            required
+                            class="w-full px-4 py-3 rounded-xl border border-white/20 bg-white/5 text-white placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm backdrop-blur-sm"
+                            placeholder="Enter your full name"
+                        />
+                    </div>
 
-            <CameraSection
-                ref="cameraSectionRef"
-                :form="form"
-                :is-camera-active="isCameraActive"
-                :is-camera-ready="isCameraReady"
-                :is-camera-loading="isCameraLoading"
-                :is-switching-camera="isSwitchingCamera"
-                :is-capturing="isCapturing"
-                :is-recording="isRecording"
-                :recording-time="recordingTime"
-                :has-multiple-cameras="hasMultipleCameras"
-                :camera-error="cameraError"
-                :camera-status="cameraStatus"
-                :media-count="mediaCount"
-                :MAX_PHOTOS="MAX_PHOTOS"
-                :MAX_VIDEOS="MAX_VIDEOS"
-                :MAX_VIDEO_DURATION="MAX_VIDEO_DURATION"
-                @retry-camera="retryCamera"
-                @initialize-camera="initializeCamera"
-                @switch-camera="switchCamera"
-                @capture-photo="capturePhoto"
-                @start-recording="startVideoRecording"
-                @stop-recording="stopVideoRecording"
-                @stop-camera="stopCamera"
-                @remove-media="removeMedia"
-                @clear-all-media="clearAllMedia"
-            />
+                    <div class="space-y-2">
+                        <label class="block text-sm font-semibold text-white">
+                            Phone Number
+                            <span class="text-slate-400 text-xs">
+                                (Optional)
+                            </span>
+                        </label>
+                        <input
+                            type="tel"
+                            :value="form.reporter_phone"
+                            @input="restrictPhoneInput($event)"
+                            class="w-full px-4 py-3 rounded-xl border border-white/20 bg-white/5 text-white placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm backdrop-blur-sm"
+                            pattern="[0-9]{1,11}"
+                            maxlength="11"
+                            placeholder="Your contact number"
+                        />
+                    </div>
+                </div>
 
-            <LocationStatus
-                :location-status="locationStatus"
-                :form="form"
-                :is-online="isOnline"
-                @get-location="getLocation"
-            />
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label class="block text-sm font-semibold text-white">
+                            Barangay <span class="text-red-400">*</span>
+                        </label>
+                        <select
+                            :value="form.barangay"
+                            @change="
+                                updateField('barangay', $event.target.value)
+                            "
+                            required
+                            class="w-full px-4 py-3 rounded-xl border border-white/20 bg-white/5 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm backdrop-blur-sm"
+                        >
+                            <option
+                                value=""
+                                disabled
+                                selected
+                                class="text-slate-800"
+                            >
+                                Select Barangay
+                            </option>
+                            <option
+                                v-for="barangay in allBarangays"
+                                :key="barangay"
+                                :value="barangay"
+                                class="text-slate-800"
+                            >
+                                {{ barangay }}
+                            </option>
+                        </select>
+                    </div>
 
-            <SubmitButton
-                :is-submitting="isSubmitting"
-                :is-recording="isRecording"
-                :is-form-valid="isFormValid"
-                :location-status="locationStatus"
-                :is-online="isOnline"
-                :form-processing="form.processing"
-            />
-        </form>
+                    <div class="space-y-2">
+                        <label class="block text-sm font-semibold text-white">
+                            Zone
+                        </label>
+                        <input
+                            type="text"
+                            :value="form.zone"
+                            readonly
+                            class="w-full px-4 py-3 rounded-xl border border-white/20 bg-white/10 text-slate-300 cursor-not-allowed focus:outline-none text-sm"
+                            placeholder="Zone will be auto-filled"
+                        />
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="block text-sm font-semibold text-white">
+                        Purok/Street <span class="text-red-400">*</span>
+                    </label>
+                    <input
+                        type="text"
+                        :value="form.purok"
+                        @input="updateField('purok', $event.target.value)"
+                        required
+                        class="w-full px-4 py-3 rounded-xl border border-white/20 bg-white/5 text-white placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm backdrop-blur-sm"
+                        placeholder="Enter purok number or street name"
+                    />
+                </div>
+            </div>
+
+            <!-- Step 2: Issue Details -->
+            <div v-if="currentStep === 2" class="space-y-6">
+                <div class="space-y-2">
+                    <label class="block text-sm font-semibold text-white">
+                        Water Issue Type <span class="text-red-400">*</span>
+                    </label>
+                    <select
+                        :value="form.water_issue_type"
+                        @change="selectWaterIssue($event)"
+                        class="w-full px-4 py-3 rounded-xl border border-white/20 bg-white/5 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm backdrop-blur-sm"
+                        required
+                    >
+                        <option disabled value="" class="text-slate-800">
+                            Select water issue type
+                        </option>
+                        <option
+                            v-for="issue in waterIssueTypes"
+                            :key="issue"
+                            :value="issue"
+                            class="text-slate-800"
+                        >
+                            {{ issue }}
+                        </option>
+                        <option value="others" class="text-slate-800">
+                            Others (please specify)
+                        </option>
+                    </select>
+
+                    <div v-if="form.water_issue_type === 'others'" class="mt-3">
+                        <input
+                            type="text"
+                            :value="form.custom_water_issue"
+                            @input="
+                                updateField(
+                                    'custom_water_issue',
+                                    $event.target.value
+                                )
+                            "
+                            class="w-full px-4 py-3 rounded-xl border border-white/20 bg-white/5 text-white placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm backdrop-blur-sm"
+                            placeholder="Please specify the water issue"
+                            maxlength="100"
+                            required
+                        />
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="block text-sm font-semibold text-white">
+                        Description <span class="text-red-400">*</span>
+                    </label>
+                    <textarea
+                        :value="form.description"
+                        @input="updateField('description', $event.target.value)"
+                        rows="4"
+                        required
+                        class="w-full px-4 py-3 rounded-xl border border-white/20 bg-white/5 text-white placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm backdrop-blur-sm resize-none"
+                        placeholder="Describe the water quality issue in detail..."
+                    ></textarea>
+                </div>
+            </div>
+
+            <!-- Step 3: Media Evidence -->
+            <div v-if="currentStep === 3" class="space-y-6">
+                <CameraSection
+                    ref="cameraSectionRef"
+                    :form="form"
+                    :is-camera-active="isCameraActive"
+                    :is-camera-ready="isCameraReady"
+                    :is-camera-loading="isCameraLoading"
+                    :is-switching-camera="isSwitchingCamera"
+                    :is-capturing="isCapturing"
+                    :is-recording="isRecording"
+                    :recording-time="recordingTime"
+                    :has-multiple-cameras="hasMultipleCameras"
+                    :camera-error="cameraError"
+                    :camera-status="cameraStatus"
+                    :media-count="mediaCount"
+                    :MAX_PHOTOS="MAX_PHOTOS"
+                    :MAX_VIDEOS="MAX_VIDEOS"
+                    :MAX_VIDEO_DURATION="MAX_VIDEO_DURATION"
+                    @retry-camera="retryCamera"
+                    @initialize-camera="initializeCamera"
+                    @switch-camera="switchCamera"
+                    @capture-photo="capturePhoto"
+                    @start-recording="startVideoRecording"
+                    @stop-recording="stopVideoRecording"
+                    @stop-camera="stopCamera"
+                    @remove-media="removeMedia"
+                    @clear-all-media="clearAllMedia"
+                />
+            </div>
+
+            <!-- Step 4: Review & Submit -->
+            <div v-if="currentStep === 4" class="space-y-6">
+                <div
+                    class="bg-gradient-to-br from-slate-800/80 to-slate-900/90 rounded-2xl p-6 border border-white/10 backdrop-blur-sm shadow-xl"
+                >
+                    <div class="flex items-center mb-6">
+                        <div class="bg-blue-500/20 p-2 rounded-lg mr-3">
+                            <FileText :size="24" class="text-blue-400" />
+                        </div>
+                        <h3 class="text-xl font-bold text-white">
+                            Review Your Report
+                        </h3>
+                    </div>
+
+                    <div class="space-y-6">
+                        <!-- Personal Information -->
+                        <div
+                            class="bg-slate-700/30 rounded-xl p-4 border border-slate-600/30"
+                        >
+                            <h4
+                                class="text-sm font-semibold text-slate-300 mb-3 flex items-center"
+                            >
+                                <User :size="16" class="mr-2 text-blue-400" />
+                                Personal Information
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label
+                                        class="text-xs text-slate-400 block mb-1"
+                                        >Full Name</label
+                                    >
+                                    <p
+                                        class="text-white font-medium bg-slate-800/50 rounded-lg px-3 py-2"
+                                    >
+                                        {{ form.reporter_name }}
+                                    </p>
+                                </div>
+                                <div>
+                                    <label
+                                        class="text-xs text-slate-400 block mb-1"
+                                        >Phone Number</label
+                                    >
+                                    <p
+                                        class="text-white font-medium bg-slate-800/50 rounded-lg px-3 py-2"
+                                    >
+                                        {{
+                                            form.reporter_phone ||
+                                            "Not provided"
+                                        }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Location Information -->
+                        <div
+                            class="bg-slate-700/30 rounded-xl p-4 border border-slate-600/30"
+                        >
+                            <h4
+                                class="text-sm font-semibold text-slate-300 mb-3 flex items-center"
+                            >
+                                <MapPin
+                                    :size="16"
+                                    class="mr-2 text-green-400"
+                                />
+                                Location Information
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label
+                                        class="text-xs text-slate-400 block mb-1"
+                                        >Barangay</label
+                                    >
+                                    <p
+                                        class="text-white font-medium bg-slate-800/50 rounded-lg px-3 py-2"
+                                    >
+                                        {{ form.barangay }}
+                                    </p>
+                                </div>
+                                <div>
+                                    <label
+                                        class="text-xs text-slate-400 block mb-1"
+                                        >Zone</label
+                                    >
+                                    <p
+                                        class="text-white font-medium bg-slate-800/50 rounded-lg px-3 py-2"
+                                    >
+                                        {{ form.zone }}
+                                    </p>
+                                </div>
+                                <div>
+                                    <label
+                                        class="text-xs text-slate-400 block mb-1"
+                                        >Purok/Street</label
+                                    >
+                                    <p
+                                        class="text-white font-medium bg-slate-800/50 rounded-lg px-3 py-2"
+                                    >
+                                        {{ form.purok }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Issue Information -->
+                        <div
+                            class="bg-slate-700/30 rounded-xl p-4 border border-slate-600/30"
+                        >
+                            <h4
+                                class="text-sm font-semibold text-slate-300 mb-3 flex items-center"
+                            >
+                                <AlertTriangle
+                                    :size="16"
+                                    class="mr-2 text-amber-400"
+                                />
+                                Issue Information
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label
+                                        class="text-xs text-slate-400 block mb-1"
+                                        >Issue Type</label
+                                    >
+                                    <p
+                                        class="text-white font-medium bg-slate-800/50 rounded-lg px-3 py-2"
+                                    >
+                                        {{
+                                            form.water_issue_type === "others"
+                                                ? form.custom_water_issue
+                                                : form.water_issue_type
+                                        }}
+                                    </p>
+                                </div>
+                                <div>
+                                    <label
+                                        class="text-xs text-slate-400 block mb-1"
+                                        >Media Evidence</label
+                                    >
+                                    <p
+                                        class="text-white font-medium bg-slate-800/50 rounded-lg px-3 py-2"
+                                    >
+                                        {{ mediaCount.images }} photos,
+                                        {{ mediaCount.videos }} videos
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <label class="text-xs text-slate-400 block mb-1"
+                                    >Description</label
+                                >
+                                <div
+                                    class="bg-slate-800/50 rounded-lg px-3 py-2 min-h-[80px]"
+                                >
+                                    <p class="text-white whitespace-pre-line">
+                                        {{ form.description }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Location Status -->
+                        <div
+                            class="bg-slate-700/30 rounded-xl p-4 border border-slate-600/30"
+                        >
+                            <h4
+                                class="text-sm font-semibold text-slate-300 mb-3 flex items-center"
+                            >
+                                <Navigation
+                                    :size="16"
+                                    class="mr-2 text-purple-400"
+                                />
+                                Location Status
+                            </h4>
+                            <div class="flex flex-wrap items-center gap-4">
+                                <div class="flex items-center">
+                                    <span class="text-xs text-slate-400 mr-2"
+                                        >Status:</span
+                                    >
+                                    <span
+                                        class="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-sm font-medium capitalize"
+                                    >
+                                        {{ locationStatus.replace(/_/g, " ") }}
+                                    </span>
+                                </div>
+                                <div class="flex items-center">
+                                    <span class="text-xs text-slate-400 mr-2"
+                                        >Coordinates:</span
+                                    >
+                                    <span
+                                        class="text-white text-sm font-medium"
+                                    >
+                                        Lat: {{ form.latitude?.toFixed(6) }},
+                                        Lng:
+                                        {{ form.longitude?.toFixed(6) }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <LocationStatus
+                    :location-status="locationStatus"
+                    :form="form"
+                    :is-online="isOnline"
+                    @get-location="getLocation"
+                />
+            </div>
+        </div>
     </div>
 </template>
 
@@ -74,64 +424,93 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import localforage from "localforage";
 
+// Lucide Vue Next Icons
+import {
+    FileText,
+    User,
+    MapPin,
+    AlertTriangle,
+    Navigation,
+    ChevronLeft,
+    ChevronRight,
+} from "lucide-vue-next";
+
 // Components
 import NetworkStatus from "./NetworkStatus.vue";
 import FormErrors from "./FormErrors.vue";
-import LocationFields from "./FormFields/LocationFields.vue";
-import ReporterInfo from "./FormFields/ReporterInfo.vue";
-import AreaInfo from "./FormFields/AreaInfo.vue";
-import WaterIssueType from "./FormFields/WaterIssueType.vue";
-import DescriptionField from "./FormFields/DescriptionField.vue";
 import CameraSection from "./Camera/CameraSection.vue";
 import LocationStatus from "./LocationStatus.vue";
 import SubmitButton from "./SubmitButton.vue";
 
-const emit = defineEmits(["submitted", "offlineReportsSynced", "cancel"]);
+// Emit form state changes to parent
+const emit = defineEmits([
+    "submitted",
+    "offlineReportsSynced",
+    "cancel",
+    "formStateChange",
+]);
 
 const props = defineProps({
     zones: {
         type: Object,
         required: true,
     },
+    currentStep: {
+        type: Number,
+        default: 1,
+    },
+    isSubmitting: {
+        type: Boolean,
+        default: false,
+    },
+    isRecording: {
+        type: Boolean,
+        default: false,
+    },
+    locationStatus: {
+        type: String,
+        default: "idle",
+    },
+    isOnline: {
+        type: Boolean,
+        default: navigator.onLine,
+    },
 });
 
-// Network and sync state
-const isOnline = ref(navigator.onLine);
+// Use props for state that's now managed by parent
+const currentStep = ref(props.currentStep);
+const isSubmitting = ref(props.isSubmitting);
+const isRecording = ref(props.isRecording);
+const locationStatus = ref(props.locationStatus);
+const isOnline = ref(props.isOnline);
+
+// Other existing state (unchanged)
 const isSyncing = ref(false);
 const offlineReportsCount = ref(0);
-
-// Form state
-const isSubmitting = ref(false);
-const locationStatus = ref("idle");
-
-// GPS State
 const lastKnownLocation = ref(null);
 const locationWatchId = ref(null);
 const locationCacheTimeout = 24 * 60 * 60 * 1000;
 
-// Camera state
+// Camera state (unchanged)
 const isCameraActive = ref(false);
 const isCameraReady = ref(false);
 const isCameraLoading = ref(false);
 const isSwitchingCamera = ref(false);
 const isCapturing = ref(false);
-const isRecording = ref(false);
 const recordingTime = ref(0);
 const availableCameras = ref([]);
 const currentCameraIndex = ref(0);
 const cameraError = ref("");
 const cameraStatus = ref("Initializing...");
-
-// Camera refs
 const cameraSectionRef = ref(null);
 
-// Camera stream and recording variables
+// Camera stream and recording variables (unchanged)
 let stream = null;
 let mediaRecorder = null;
 let recordedChunks = [];
 let recordingInterval = null;
 
-// Constants
+// Constants (unchanged)
 const MAX_PHOTOS = 3;
 const MAX_VIDEOS = 2;
 const MAX_TOTAL = MAX_PHOTOS + MAX_VIDEOS;
@@ -150,13 +529,13 @@ const waterIssueTypes = [
     "Hot water issues",
 ];
 
-// Configure localforage
+// Configure localforage (unchanged)
 const offlineReportsStore = localforage.createInstance({
     name: "aquatrack",
     storeName: "offline_reports",
 });
 
-// Form data
+// Form data (unchanged)
 const form = useForm({
     municipality: "Clarin",
     province: "Bohol",
@@ -174,7 +553,7 @@ const form = useForm({
     custom_water_issue: "",
 });
 
-// Computed properties
+// Computed properties (unchanged except for validation)
 const allBarangays = computed(() => {
     return Object.values(props.zones).flat();
 });
@@ -216,9 +595,69 @@ const mediaCount = computed(() => ({
     total: form.photos.length,
 }));
 
-// Methods
-const updateFormField = ({ field, value }) => {
+// Step validation - expose these to parent
+const canProceedToStep2 = computed(() => {
+    return form.reporter_name && form.barangay && form.purok;
+});
+
+const canProceedToStep3 = computed(() => {
+    return (
+        form.water_issue_type &&
+        form.description &&
+        (form.water_issue_type !== "others" || form.custom_water_issue)
+    );
+});
+
+const canProceedToStep4 = computed(() => {
+    return form.photos.length > 0;
+});
+
+// Multi-step navigation methods - now just update local state
+const nextStep = () => {
+    if (currentStep.value < 4) {
+        currentStep.value++;
+        emit("formStateChange", {
+            currentStep: currentStep.value,
+            isSubmitting: isSubmitting.value,
+            isRecording: isRecording.value,
+            locationStatus: locationStatus.value,
+            isOnline: isOnline.value,
+        });
+    }
+};
+
+const prevStep = () => {
+    if (currentStep.value > 1) {
+        currentStep.value--;
+        emit("formStateChange", {
+            currentStep: currentStep.value,
+            isSubmitting: isSubmitting.value,
+            isRecording: isRecording.value,
+            locationStatus: locationStatus.value,
+            isOnline: isOnline.value,
+        });
+    }
+};
+
+// Form field methods
+const updateField = (field, value) => {
     form[field] = value;
+};
+
+const restrictPhoneInput = (event) => {
+    let value = event.target.value.replace(/[^0-9]/g, "");
+    if (value.length > 11) {
+        value = value.slice(0, 11);
+    }
+    updateField("reporter_phone", value);
+};
+
+const selectWaterIssue = (event) => {
+    const value = event.target.value || "";
+    updateField("water_issue_type", value);
+    if (value !== "others") {
+        updateField("custom_water_issue", "");
+    }
 };
 
 // Network methods
@@ -321,8 +760,8 @@ const getLocation = async () => {
 
             return new Promise((resolve) => {
                 const offlineGpsOptions = {
-                    enableHighAccuracy: false, // ← CHANGED TO FALSE
-                    maximumAge: 30000, // ← Increased to 30 seconds
+                    enableHighAccuracy: false,
+                    maximumAge: 30000,
                     timeout: 10000,
                 };
 
@@ -369,8 +808,8 @@ const getLocation = async () => {
 
     return new Promise((resolve) => {
         const onlineGpsOptions = {
-            enableHighAccuracy: false, // ← CHANGED TO FALSE
-            maximumAge: 30000, // ← Increased to 30 seconds
+            enableHighAccuracy: false,
+            maximumAge: 30000,
             timeout: 10000,
         };
 
@@ -483,7 +922,7 @@ const stopLocationTracking = () => {
     }
 };
 
-// Camera methods
+// Camera methods (existing camera methods remain the same)
 const getCameras = async () => {
     try {
         cameraStatus.value = "Detecting cameras...";
@@ -1356,6 +1795,7 @@ const saveReportOffline = async () => {
 };
 
 const submitReport = async () => {
+    // Validation checks (keep your existing validation code)
     if (!form.water_issue_type) {
         Swal.fire({
             icon: "error",
@@ -1394,10 +1834,7 @@ const submitReport = async () => {
         return;
     }
 
-    if (
-        !isOnline.value &&
-        locationStatus.value === "offline_default_location"
-    ) {
+    if (!isOnline.value && locationStatus.value === "offline_default_location") {
         const result = await Swal.fire({
             icon: "warning",
             title: "Using Area Center Location",
@@ -1417,24 +1854,35 @@ const submitReport = async () => {
 
     isSubmitting.value = true;
 
+    // Close any existing SweetAlert modals first
+    Swal.close();
+
+    let loadingSwal = null;
+
     try {
-        Swal.fire({
+        // IMPROVED LOADING UI with better error handling
+        loadingSwal = Swal.fire({
             title: isOnline.value
-                ? "Submitting Report..."
-                : "Saving Report Offline...",
-            text: isOnline.value
-                ? "Please wait while we submit your report to the server"
-                : "Please wait while we save your report locally",
+                ? '<div class="flex flex-col items-center"><div class="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4"></div><div>Submitting Report...</div></div>'
+                : '<div class="flex flex-col items-center"><div class="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4"></div><div>Saving Report Offline...</div></div>',
+            html: isOnline.value
+                ? '<p class="text-gray-600 mt-2">Please wait while we submit your report to the server</p>'
+                : '<p class="text-gray-600 mt-2">Please wait while we save your report locally</p>',
             allowOutsideClick: false,
             allowEscapeKey: false,
-            allowEnterKey: false,
             showConfirmButton: false,
-            willOpen: () => {
+            showCancelButton: false,
+            didOpen: () => {
                 Swal.showLoading();
+            },
+            customClass: {
+                popup: "rounded-2xl shadow-2xl",
+                title: "text-xl font-semibold text-gray-800",
             },
         });
 
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        // Small delay to show the loading state
+        await new Promise((resolve) => setTimeout(resolve, 1000));
 
         if (isOnline.value) {
             const formData = new FormData();
@@ -1456,35 +1904,55 @@ const submitReport = async () => {
                 }
             );
 
+            // CLOSE LOADING MODAL FIRST
+            if (loadingSwal) {
+                await loadingSwal.close();
+            }
+
             isSubmitting.value = false;
-            Swal.close();
 
             if (response.data.success) {
+                console.log('Online submission successful:', response.data); // Debug log
+
+                // EMIT THE SUBMITTED EVENT
                 emit("submitted", {
                     trackingCode: response.data.trackingCode,
                     dateSubmitted: new Date().toISOString(),
+                    isOffline: false
+                });
+
+                // Reset form after successful submission
+                form.reset();
+                form.photos = [];
+                form.photo_previews = [];
+            } else {
+                // Handle server error
+                Swal.fire({
+                    icon: "error",
+                    title: "Submission Failed",
+                    text: "Server returned an error. Please try again.",
+                    confirmButtonColor: "#3085d6",
                 });
             }
-
-            form.reset();
-            form.photos = [];
-            form.photo_previews = [];
         } else {
             const reportId = await saveReportOffline();
-            isSubmitting.value = false;
-            Swal.close();
 
-            let successMessage =
-                "Your report has been saved locally and will be submitted automatically when you're back online.";
-
-            if (locationStatus.value === "offline_cached_location") {
-                successMessage =
-                    "Your report with cached GPS coordinates has been saved locally and will be submitted when online.";
-            } else if (locationStatus.value === "offline_default_location") {
-                successMessage =
-                    "Your report with default location has been saved locally and will be submitted when online.";
+            // CLOSE LOADING MODAL FIRST
+            if (loadingSwal) {
+                await loadingSwal.close();
             }
 
+            isSubmitting.value = false;
+
+            let successMessage = "Your report has been saved locally and will be submitted automatically when you're back online.";
+
+            if (locationStatus.value === "offline_cached_location") {
+                successMessage = "Your report with cached GPS coordinates has been saved locally and will be submitted when online.";
+            } else if (locationStatus.value === "offline_default_location") {
+                successMessage = "Your report with default location has been saved locally and will be submitted when online.";
+            }
+
+            // Show offline success message
             Swal.fire({
                 position: "top-end",
                 title: "Report Saved Offline!",
@@ -1494,6 +1962,18 @@ const submitReport = async () => {
                 showConfirmButton: false,
                 timer: 5000,
                 timerProgressBar: true,
+                customClass: {
+                    popup: "rounded-xl shadow-lg",
+                },
+            });
+
+            console.log('Offline submission successful:', reportId); // Debug log
+
+            // EMIT OFFLINE SUCCESS EVENT
+            emit("submitted", {
+                trackingCode: reportId,
+                dateSubmitted: new Date().toISOString(),
+                isOffline: true
             });
 
             form.reset();
@@ -1501,8 +1981,14 @@ const submitReport = async () => {
             form.photo_previews = [];
         }
     } catch (error) {
+        // Close any open loading dialogs
+        if (loadingSwal) {
+            await loadingSwal.close();
+        }
+
         isSubmitting.value = false;
-        Swal.close();
+
+        console.error('Submission error:', error); // Debug log
 
         if (isOnline.value) {
             if (error.response?.data?.errors) {
@@ -1513,8 +1999,11 @@ const submitReport = async () => {
             Swal.fire({
                 icon: "error",
                 title: "Submission Failed",
-                text: "Please check the form for errors.",
+                text: error.response?.data?.message || "Please check the form for errors.",
                 confirmButtonColor: "#3085d6",
+                customClass: {
+                    popup: "rounded-2xl shadow-2xl",
+                },
             });
         } else {
             Swal.fire({
@@ -1522,10 +2011,101 @@ const submitReport = async () => {
                 title: "Save Failed",
                 text: "Failed to save report offline. Please try again.",
                 confirmButtonColor: "#3085d6",
+                customClass: {
+                    popup: "rounded-2xl shadow-2xl",
+                },
             });
         }
     }
 };
+
+const resetForm = () => {
+    form.reset();
+    form.photos = [];
+    form.photo_previews = [];
+    currentStep.value = 1;
+    isSubmitting.value = false;
+    locationStatus.value = "idle";
+
+    // Stop camera if active
+    stopCamera();
+
+    // Emit reset state
+    emit("formStateChange", {
+        currentStep: currentStep.value,
+        isSubmitting: isSubmitting.value,
+        isRecording: isRecording.value,
+        locationStatus: locationStatus.value,
+        isOnline: isOnline.value,
+    });
+};
+
+// NOW defineExpose comes AFTER submitReport is defined
+defineExpose({
+    canProceedToStep2,
+    canProceedToStep3,
+    canProceedToStep4,
+    isFormValid,
+    submitReport,
+    resetForm, // Add this
+});
+
+// Emit state changes when they occur
+watch(currentStep, (newStep) => {
+    emit("formStateChange", {
+        currentStep: newStep,
+        isSubmitting: isSubmitting.value,
+        isRecording: isRecording.value,
+        locationStatus: locationStatus.value,
+        isOnline: isOnline.value,
+    });
+});
+
+watch(isSubmitting, (newValue) => {
+    emit("formStateChange", {
+        currentStep: currentStep.value,
+        isSubmitting: newValue,
+        isRecording: isRecording.value,
+        locationStatus: locationStatus.value,
+        isOnline: isOnline.value,
+    });
+});
+
+// Watch for prop changes
+watch(
+    () => props.currentStep,
+    (newStep) => {
+        currentStep.value = newStep;
+    }
+);
+
+watch(
+    () => props.isSubmitting,
+    (newValue) => {
+        isSubmitting.value = newValue;
+    }
+);
+
+watch(
+    () => props.isRecording,
+    (newValue) => {
+        isRecording.value = newValue;
+    }
+);
+
+watch(
+    () => props.locationStatus,
+    (newStatus) => {
+        locationStatus.value = newStatus;
+    }
+);
+
+watch(
+    () => props.isOnline,
+    (newOnline) => {
+        isOnline.value = newOnline;
+    }
+);
 
 // Watchers
 watch(

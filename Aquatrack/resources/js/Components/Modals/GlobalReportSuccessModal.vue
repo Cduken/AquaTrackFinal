@@ -1,23 +1,26 @@
-// GlobalReportSuccessModal.vue
+<!-- GlobalReportSuccessModal.vue -->
 <script setup>
 import { ref, onMounted, watch, computed, nextTick } from "vue";
 import QRCode from "qrcode";
 import { router } from "@inertiajs/vue3";
+import { Check, Download, AlertTriangle } from "lucide-vue-next";
 
 const props = defineProps({
-    show: Boolean,
-    trackingCode: String,
-    dateSubmitted: String,
+    trackingInfo: {
+        type: Object,
+        required: true,
+    },
 });
 
-const emit = defineEmits(["close"]);
+const emit = defineEmits(["close", "submit-another", "track-report"]);
 const qrCodeCanvas = ref(null);
 const qrError = ref(null);
+const isVisible = ref(false);
 
 // Format date properly
 const formattedDate = computed(() => {
-    if (!props.dateSubmitted) return "";
-    const date = new Date(props.dateSubmitted);
+    if (!props.trackingInfo?.date) return "";
+    const date = new Date(props.trackingInfo.date);
     return date.toLocaleString("en-US", {
         year: "numeric",
         month: "long",
@@ -27,14 +30,24 @@ const formattedDate = computed(() => {
     });
 });
 
+// Get tracking code
+const trackingCode = computed(() => {
+    return props.trackingInfo?.code || "";
+});
+
+// Start animation when component is mounted
+const startAnimation = () => {
+    isVisible.value = true;
+};
+
 // Redirect to track report page with the tracking code
 const trackThisReport = () => {
-    if (props.trackingCode) {
+    if (trackingCode.value) {
         // Close the modal first
         emit("close");
 
         // Then redirect to the track report page with the tracking code
-        router.visit(`/track-report?tracking_code=${props.trackingCode}`);
+        router.visit(`/track-report?tracking_code=${trackingCode.value}`);
     }
 };
 
@@ -69,7 +82,7 @@ const downloadQRCode = () => {
     ctx.font = "bold 14px Arial";
     ctx.fillText("Tracking Code:", canvas.width / 2, 245);
     ctx.font = "bold 16px Arial";
-    ctx.fillText(props.trackingCode, canvas.width / 2, 265);
+    ctx.fillText(trackingCode.value, canvas.width / 2, 265);
 
     // Draw date
     ctx.font = "12px Arial";
@@ -84,7 +97,7 @@ const downloadQRCode = () => {
 
     // Create download link
     const link = document.createElement("a");
-    link.download = `aquatrack-report-${props.trackingCode}.png`;
+    link.download = `aquatrack-report-${trackingCode.value}.png`;
     link.href = canvas.toDataURL("image/png");
     link.click();
 };
@@ -92,11 +105,11 @@ const downloadQRCode = () => {
 const generateQRCode = async () => {
     qrError.value = null;
     try {
-        if (!props.trackingCode || !qrCodeCanvas.value) {
+        if (!trackingCode.value || !qrCodeCanvas.value) {
             throw new Error("Missing tracking code or canvas element");
         }
 
-        await QRCode.toCanvas(qrCodeCanvas.value, props.trackingCode, {
+        await QRCode.toCanvas(qrCodeCanvas.value, trackingCode.value, {
             width: 180,
             margin: 1,
             color: {
@@ -112,82 +125,99 @@ const generateQRCode = async () => {
 
 // Watch for changes and generate QR code
 watch(
-    () => props.show,
-    async (show) => {
-        if (show && props.trackingCode) {
-            await nextTick(); // Wait for DOM update
-            generateQRCode();
-        }
-    }
-);
-
-watch(
-    () => props.trackingCode,
+    () => trackingCode.value,
     async (code) => {
-        if (props.show && code) {
+        if (code) {
             await nextTick(); // Wait for DOM update
             generateQRCode();
         }
-    }
+    },
+    { immediate: true }
 );
 
 // Initialize when component mounts
 onMounted(() => {
-    if (props.show && props.trackingCode) {
-        nextTick().then(generateQRCode);
+    if (trackingCode.value) {
+        nextTick().then(() => {
+            generateQRCode();
+            // Start animation after a small delay
+            setTimeout(startAnimation, 100);
+        });
     }
 });
 </script>
 
 <template>
-    <div v-if="show" class="fixed inset-0 z-50 overflow-y-auto">
+    <div class="fixed inset-0 z-50 overflow-y-auto">
         <div
             class="flex items-center justify-center min-h-screen p-4 text-center"
         >
-            <!-- Background overlay -->
-            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+            <!-- Background overlay with fade-in animation -->
+            <div
+                class="fixed inset-0 transition-opacity duration-500"
+                :class="isVisible ? 'opacity-100' : 'opacity-0'"
+                aria-hidden="true"
+            >
                 <div
                     class="absolute inset-0 bg-black/80 backdrop-blur-sm"
                 ></div>
             </div>
 
-            <!-- Modal container -->
+            <!-- Modal container with drop-down animation -->
             <div
-                class="inline-block w-full max-w-xl bg-white rounded-xl text-left overflow-hidden shadow-xl transform transition-all relative"
+                class="inline-block w-full max-w-xl bg-white rounded-xl text-left overflow-hidden shadow-xl transform transition-all duration-700 ease-out relative"
+                :class="[
+                    isVisible
+                        ? 'opacity-100 translate-y-0 scale-100'
+                        : 'opacity-0 -translate-y-20 scale-95',
+                ]"
             >
                 <!-- Modal content -->
                 <div class="bg-white px-6 py-6">
                     <div class="text-center">
-                        <!-- Success icon -->
+                        <!-- Success icon with animation -->
                         <div
-                            class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-2"
+                            class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-2 transition-all duration-1000"
+                            :class="
+                                isVisible
+                                    ? 'scale-100 rotate-0'
+                                    : 'scale-0 rotate-180'
+                            "
                         >
-                            <svg
-                                class="h-6 w-6 text-green-900"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M5 13l4 4L19 7"
-                                />
-                            </svg>
+                            <Check
+                                :size="24"
+                                class="text-green-900 transition-all duration-1000"
+                                :class="isVisible ? 'scale-100' : 'scale-0'"
+                            />
                         </div>
 
-                        <!-- Heading -->
-                        <h3 class="text-xl font-semibold text-gray-900 mb-1">
-                            Report Submitted Successfully!
-                        </h3>
-                        <p class="text-xs text-gray-500 mb-4">
-                            Your tracking code has been generated
-                        </p>
-
-                        <!-- Tracking info -->
+                        <!-- Heading with animation -->
                         <div
-                            class="bg-[#F1F5F9] rounded-lg p-3 mb-4 text-center"
+                            class="transition-all duration-700 delay-300"
+                            :class="
+                                isVisible
+                                    ? 'opacity-100 translate-y-0'
+                                    : 'opacity-0 translate-y-4'
+                            "
+                        >
+                            <h3
+                                class="text-xl font-semibold text-gray-900 mb-1"
+                            >
+                                Report Submitted Successfully!
+                            </h3>
+                            <p class="text-xs text-gray-500 mb-4">
+                                Your tracking code has been generated
+                            </p>
+                        </div>
+
+                        <!-- Tracking info with animation -->
+                        <div
+                            class="bg-[#F1F5F9] rounded-lg p-3 mb-4 text-center transition-all duration-700 delay-500"
+                            :class="
+                                isVisible
+                                    ? 'opacity-100 translate-y-0'
+                                    : 'opacity-0 translate-y-4'
+                            "
                         >
                             <div class="flex items-center justify-center">
                                 <div>
@@ -205,8 +235,15 @@ onMounted(() => {
                             </div>
                         </div>
 
-                        <!-- QR Code -->
-                        <div class="mb-4 flex flex-col items-center">
+                        <!-- QR Code with animation -->
+                        <div
+                            class="mb-4 flex flex-col items-center transition-all duration-700 delay-700"
+                            :class="
+                                isVisible
+                                    ? 'opacity-100 scale-100'
+                                    : 'opacity-0 scale-90'
+                            "
+                        >
                             <div
                                 class="p-2 bg-white rounded-xl border-2 border-[#D7DFEA]"
                             >
@@ -230,22 +267,20 @@ onMounted(() => {
                             </div>
                         </div>
 
-                        <!-- Important notice -->
+                        <!-- Important notice with animation -->
                         <div
-                            class="bg-amber-50 border-l-4 border-amber-400 p-3 rounded-r mb-5 text-left"
+                            class="bg-amber-50 border-l-4 border-amber-400 p-3 rounded-r mb-5 text-left transition-all duration-700 delay-900"
+                            :class="
+                                isVisible
+                                    ? 'opacity-100 translate-y-0'
+                                    : 'opacity-0 translate-y-4'
+                            "
                         >
                             <div class="flex items-start">
-                                <svg
-                                    class="h-4 w-4 mt-0.5 text-amber-500 flex-shrink-0"
-                                    fill="currentColor"
-                                    viewBox="0 0 20 20"
-                                >
-                                    <path
-                                        fill-rule="evenodd"
-                                        d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                                        clip-rule="evenodd"
-                                    />
-                                </svg>
+                                <AlertTriangle
+                                    :size="16"
+                                    class="text-amber-500 flex-shrink-0 mt-0.5"
+                                />
                                 <div class="ml-2">
                                     <p
                                         class="text-xs font-medium text-amber-800"
@@ -269,46 +304,22 @@ onMounted(() => {
                             </div>
                         </div>
 
-                        <div class="flex flex-col sm:flex-row gap-2">
+                        <!-- Download button with animation -->
+                        <div
+                            class="flex flex-col sm:flex-row gap-2 transition-all duration-700 delay-1100"
+                            :class="
+                                isVisible
+                                    ? 'opacity-100 translate-y-0'
+                                    : 'opacity-0 translate-y-4'
+                            "
+                        >
                             <button
                                 @click="downloadQRCode"
                                 type="button"
                                 class="flex-1 inline-flex items-center justify-center px-4 py-2 border border-[#0A7EB8] bg-[#0A7EB8] text-white text-sm font-medium rounded-lg shadow-sm hover:bg-[#086899] hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
                             >
-                                <svg
-                                    class="-ml-1 mr-2 h-4 w-4"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                                    />
-                                </svg>
+                                <Download :size="16" class="mr-2" />
                                 Download QR
-                            </button>
-                            <button
-                                @click="trackThisReport"
-                                type="button"
-                                class="flex-1 inline-flex items-center justify-center px-4 py-2 border border-gray-300 bg-white text-gray-700 text-sm font-medium rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
-                            >
-                                <svg
-                                    class="-ml-1 mr-2 h-4 w-4"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                    />
-                                </svg>
-                                Track Report
                             </button>
                         </div>
                     </div>

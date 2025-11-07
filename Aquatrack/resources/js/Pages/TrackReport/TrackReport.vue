@@ -30,6 +30,9 @@ import {
     MapPin as MapPinIcon,
     Code,
     X,
+    ChevronLeft,
+    ChevronRight,
+    Video,
 } from "lucide-vue-next";
 import Footer from "@/Components/Footer.vue";
 
@@ -46,6 +49,11 @@ const trackingCode = ref("");
 const showQrScanner = ref(false);
 const scannerError = ref(null);
 
+// Media Gallery State
+const showMediaViewer = ref(false);
+const currentMediaIndex = ref(0);
+const currentMediaList = ref([]);
+
 // QR Scanner state
 const videoRef = ref(null);
 const canvasRef = ref(null);
@@ -58,7 +66,6 @@ onMounted(() => {
     const codeFromUrl = urlParams.get("tracking_code");
     if (codeFromUrl) {
         trackingCode.value = codeFromUrl;
-        // Use setTimeout to ensure the component is fully mounted
         setTimeout(() => {
             trackReport();
         }, 100);
@@ -90,6 +97,19 @@ const trackReport = async () => {
             }
         } else if (response.data.success === true && response.data.data) {
             reportDetails.value = response.data.data;
+
+            // Process media files
+            if (reportDetails.value.photos) {
+                reportDetails.value.processedMedia =
+                    reportDetails.value.photos.map((media) => ({
+                        ...media,
+                        type: media.mime_type?.startsWith("video/")
+                            ? "video"
+                            : "image",
+                        url: "/storage/" + media.path,
+                    }));
+            }
+
             if (response.data.data.additional_tracking_codes) {
                 reportDetails.value.allTrackingCodes = [
                     reportDetails.value.tracking_code,
@@ -101,11 +121,9 @@ const trackReport = async () => {
                 ];
             }
 
-            // Generate QR code after data loads
             await nextTick();
             await generateQRCode();
 
-            // Scroll to results after a short delay
             setTimeout(() => {
                 const resultsSection =
                     document.getElementById("report-results");
@@ -160,7 +178,7 @@ const generateQRCode = async () => {
             {
                 width: 160,
                 margin: 2,
-                color: { dark: "#1e40af", light: "#ffffff" },
+                color: { dark: "#000000", light: "#ffffff" },
             }
         );
         console.log("QR code generated successfully");
@@ -169,13 +187,65 @@ const generateQRCode = async () => {
     }
 };
 
+// Media Gallery Functions
+const openMediaViewer = (index) => {
+    if (reportDetails.value?.processedMedia) {
+        currentMediaList.value = reportDetails.value.processedMedia;
+        currentMediaIndex.value = index;
+        showMediaViewer.value = true;
+    }
+};
+
+const closeMediaViewer = () => {
+    showMediaViewer.value = false;
+    currentMediaIndex.value = 0;
+    currentMediaList.value = [];
+};
+
+const nextMedia = () => {
+    if (currentMediaList.value.length > 0) {
+        currentMediaIndex.value =
+            (currentMediaIndex.value + 1) % currentMediaList.value.length;
+    }
+};
+
+const previousMedia = () => {
+    if (currentMediaList.value.length > 0) {
+        currentMediaIndex.value =
+            (currentMediaIndex.value - 1 + currentMediaList.value.length) %
+            currentMediaList.value.length;
+    }
+};
+
+// Handle keyboard navigation in media viewer
+const handleKeydown = (event) => {
+    if (!showMediaViewer.value) return;
+
+    switch (event.key) {
+        case "ArrowLeft":
+            previousMedia();
+            break;
+        case "ArrowRight":
+            nextMedia();
+            break;
+        case "Escape":
+            closeMediaViewer();
+            break;
+    }
+};
+
+// Add event listener for keyboard navigation
+onMounted(() => {
+    window.addEventListener("keydown", handleKeydown);
+});
+
 // QR Scanner functions
 const startQrScanner = async () => {
     try {
         scannerError.value = null;
         showQrScanner.value = true;
 
-        await nextTick(); // Wait for the modal to render
+        await nextTick();
 
         stream.value = await navigator.mediaDevices.getUserMedia({
             video: { facingMode: "environment" },
@@ -311,7 +381,9 @@ const priorityColor = (priority) => {
         />
     </Head>
 
-    <div class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div
+        class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"
+    >
         <!-- Fixed background gradient -->
         <div
             class="fixed inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 -z-10"
@@ -332,18 +404,11 @@ const priorityColor = (priority) => {
 
         <Navigation />
 
-        <!-- Hero Section - Adjusted text sizes -->
+        <!-- Hero Section -->
         <section class="pt-20 pb-16 px-4 sm:px-6 lg:px-8 relative">
             <div class="max-w-7xl mx-auto relative">
                 <div class="text-center">
-                    <div
-                        class="inline-flex items-center px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 mb-4 text-xs"
-                    >
-                        <Shield class="w-3 h-3 text-blue-400 mr-1.5" />
-                        <span class="font-medium text-blue-300"
-                            >Real-time Tracking</span
-                        >
-                    </div>
+
 
                     <h1
                         class="text-4xl md:text-6xl font-bold text-white mb-4 leading-tight"
@@ -363,7 +428,7 @@ const priorityColor = (priority) => {
                         tracking system.
                     </p>
 
-                    <!-- Search Section - Adjusted sizes -->
+                    <!-- Search Section -->
                     <div class="max-w-3xl mx-auto">
                         <div
                             class="bg-white/10 backdrop-blur-lg rounded-xl border border-white/20 p-6 shadow-2xl"
@@ -391,12 +456,12 @@ const priorityColor = (priority) => {
                                 class="space-y-3"
                             >
                                 <div class="space-y-2">
-                                <div class="flex items-center space-x-2">
-                                    <label
-                                        class="block text-xs font-medium text-gray-400"
-                                        >Tracking Code</label
-                                    >
-                                    <Code class="text-gray-400 w-4 h-4" />
+                                    <div class="flex items-center space-x-2">
+                                        <label
+                                            class="block text-xs font-medium text-gray-400"
+                                            >Tracking Code</label
+                                        >
+                                        <Code class="text-gray-400 w-4 h-4" />
                                     </div>
                                     <div class="relative">
                                         <input
@@ -447,13 +512,11 @@ const priorityColor = (priority) => {
                                     class="w-full h-12 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 disabled:from-gray-600 disabled:to-gray-700 text-white font-semibold rounded-lg transition-all flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl disabled:shadow-none group text-sm"
                                 >
                                     <Search class="w-4 h-4" />
-                                    <span>
-                                        {{
-                                            isLoading
-                                                ? "Tracking Report..."
-                                                : "Track Report"
-                                        }}
-                                    </span>
+                                    <span>{{
+                                        isLoading
+                                            ? "Tracking Report..."
+                                            : "Track Report"
+                                    }}</span>
                                     <ArrowRight
                                         class="w-4 h-4 transform group-hover:translate-x-0.5 transition-transform"
                                     />
@@ -465,8 +528,8 @@ const priorityColor = (priority) => {
             </div>
         </section>
 
-        <!-- Features Section - Adjusted sizes -->
-        <section v-if="!reportDetails" class="py-12 px-4 sm:px-6 lg:px-8">
+        <!-- Features Section -->
+        <!-- <section v-if="!reportDetails" class="py-12 px-4 sm:px-6 lg:px-8">
             <div class="max-w-7xl mx-auto">
                 <div class="text-center mb-12">
                     <h2 class="text-2xl md:text-3xl font-bold text-white mb-3">
@@ -531,9 +594,9 @@ const priorityColor = (priority) => {
                     </div>
                 </div>
             </div>
-        </section>
+        </section> -->
 
-        <!-- Report Details Section - Adjusted sizes -->
+        <!-- Report Details Section -->
         <Transition name="content-slide">
             <section
                 v-if="reportDetails"
@@ -705,8 +768,8 @@ const priorityColor = (priority) => {
                             <!-- Media Gallery -->
                             <div
                                 v-if="
-                                    reportDetails.photos &&
-                                    reportDetails.photos.length
+                                    reportDetails.processedMedia &&
+                                    reportDetails.processedMedia.length
                                 "
                                 class="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10"
                             >
@@ -723,20 +786,78 @@ const priorityColor = (priority) => {
                                     <div
                                         v-for="(
                                             media, index
-                                        ) in reportDetails.photos"
+                                        ) in reportDetails.processedMedia"
                                         :key="index"
+                                        @click="openMediaViewer(index)"
                                         class="relative group aspect-square rounded-lg overflow-hidden border border-white/10 hover:border-blue-500/50 transition-all cursor-pointer bg-white/5"
                                     >
-                                        <img
-                                            :src="'/storage/' + media.path"
-                                            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                        />
+                                        <!-- Image Thumbnail -->
+                                        <div v-if="media.type === 'image'">
+                                            <img
+                                                :src="media.url"
+                                                :alt="`Evidence ${index + 1}`"
+                                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                            />
+                                        </div>
+
+                                        <!-- Video Thumbnail -->
+                                        <div
+                                            v-else-if="media.type === 'video'"
+                                            class="w-full h-full flex items-center justify-center bg-black"
+                                        >
+                                            <video
+                                                :src="media.url"
+                                                class="max-w-full max-h-full object-cover"
+                                                muted
+                                                preload="metadata"
+                                            ></video>
+                                            <div
+                                                class="absolute inset-0 flex items-center justify-center bg-black/30"
+                                            >
+                                                <div
+                                                    class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm"
+                                                >
+                                                    <Play
+                                                        class="w-6 h-6 text-white fill-current"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Overlay -->
                                         <div
                                             class="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center"
                                         >
-                                            <ZoomIn
-                                                class="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                                            />
+                                            <div
+                                                class="flex items-center space-x-1"
+                                            >
+                                                <ZoomIn
+                                                    class="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                                                />
+                                                <Video
+                                                    v-if="
+                                                        media.type === 'video'
+                                                    "
+                                                    class="w-4 h-4 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <!-- Media Type Badge -->
+                                        <div class="absolute top-2 right-2">
+                                            <span
+                                                v-if="media.type === 'video'"
+                                                class="px-1.5 py-0.5 bg-red-500 text-white text-xs rounded-md flex items-center space-x-1"
+                                            >
+                                                <Video class="w-3 h-3" />
+                                                <span>VIDEO</span>
+                                            </span>
+                                            <span
+                                                v-else
+                                                class="px-1.5 py-0.5 bg-blue-500 text-white text-xs rounded-md"
+                                            >
+                                                IMAGE
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
@@ -798,7 +919,7 @@ const priorityColor = (priority) => {
                                     </button>
 
                                     <Link
-                                        :href="route('select-roles')"
+                                        :href="route('report-issue.create')"
                                         class="w-full flex items-center justify-between p-3 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 hover:border-blue-500/30 rounded-lg transition-all group text-sm"
                                     >
                                         <span
@@ -817,7 +938,7 @@ const priorityColor = (priority) => {
             </section>
         </Transition>
 
-        <!-- CTA Section - Adjusted sizes -->
+        <!-- CTA Section -->
         <section v-if="!reportDetails" class="py-16 px-4 sm:px-6 lg:px-8">
             <div class="max-w-4xl mx-auto text-center">
                 <div
@@ -832,7 +953,7 @@ const priorityColor = (priority) => {
                     </p>
                     <div class="flex flex-col sm:flex-row gap-3 justify-center">
                         <Link
-                            :href="route('select-roles')"
+                            :href="route('report-issue.create')"
                             class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold rounded-lg transition-all shadow-lg hover:shadow-xl text-sm"
                         >
                             <Droplet class="w-4 h-4 mr-2" />
@@ -854,31 +975,122 @@ const priorityColor = (priority) => {
 
         <Footer />
 
-        <!-- QR Scanner Modal - Adjusted sizes -->
+        <!-- Media Viewer Modal -->
+        <Transition name="modal-backdrop">
+            <div
+                v-if="showMediaViewer"
+                class="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm"
+            >
+                <div
+                    class="relative w-full max-w-6xl max-h-[90vh] bg-black rounded-xl overflow-hidden"
+                >
+                    <!-- Close Button -->
+                    <button
+                        @click="closeMediaViewer"
+                        class="absolute top-4 right-4 z-10 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full transition-all backdrop-blur-sm"
+                    >
+                        <X class="w-6 h-6" />
+                    </button>
+
+                    <!-- Navigation Arrows -->
+                    <button
+                        v-if="currentMediaList.length > 1"
+                        @click="previousMedia"
+                        class="absolute left-4 top-1/2 -translate-y-1/2 z-10 p-3 bg-black/50 hover:bg-black/70 text-white rounded-full transition-all backdrop-blur-sm"
+                    >
+                        <ChevronLeft class="w-6 h-6" />
+                    </button>
+
+                    <button
+                        v-if="currentMediaList.length > 1"
+                        @click="nextMedia"
+                        class="absolute right-4 top-1/2 -translate-y-1/2 z-10 p-3 bg-black/50 hover:bg-black/70 text-white rounded-full transition-all backdrop-blur-sm"
+                    >
+                        <ChevronRight class="w-6 h-6" />
+                    </button>
+
+                    <!-- Media Display -->
+                    <div
+                        class="flex items-center justify-center w-full h-full p-8"
+                    >
+                        <div
+                            class="relative w-full h-full flex items-center justify-center"
+                        >
+                            <!-- Image Display -->
+                            <div
+                                v-if="
+                                    currentMediaList[currentMediaIndex]
+                                        ?.type === 'image'
+                                "
+                                class="max-w-full max-h-full"
+                            >
+                                <img
+                                    :src="
+                                        currentMediaList[currentMediaIndex]?.url
+                                    "
+                                    :alt="`Evidence ${currentMediaIndex + 1}`"
+                                    class="max-w-full max-h-full object-contain rounded-lg"
+                                />
+                            </div>
+
+                            <!-- Video Display -->
+                            <div
+                                v-else-if="
+                                    currentMediaList[currentMediaIndex]
+                                        ?.type === 'video'
+                                "
+                                class="max-w-full max-h-full"
+                            >
+                                <video
+                                    :src="
+                                        currentMediaList[currentMediaIndex]?.url
+                                    "
+                                    controls
+                                    autoplay
+                                    class="max-w-full max-h-full object-contain rounded-lg"
+                                >
+                                    Your browser does not support the video tag.
+                                </video>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Media Counter -->
+                    <div
+                        class="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 px-3 py-2 bg-black/50 text-white text-sm rounded-full backdrop-blur-sm"
+                    >
+                        {{ currentMediaIndex + 1 }} /
+                        {{ currentMediaList.length }}
+                    </div>
+                </div>
+            </div>
+        </Transition>
+
+        <!-- QR Scanner Modal -->
         <Transition name="modal-backdrop">
             <div
                 v-if="showQrScanner"
-                class="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+                class="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
             >
                 <div
-                    class="relative w-full max-w-xs bg-white rounded-xl overflow-hidden shadow-2xl border border-gray-200"
+                    class="relative w-full max-w-md bg-transparent rounded-xl overflow-hidden shadow-2xl border border-gray-200/10 backdrop-blur-md"
                 >
-                    <div class="px-4 py-3 border-b border-gray-200 bg-white">
+                    <div class="px-4 py-3 border-b border-gray-200/10 bg-transparent">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center space-x-2">
                                 <Camera class="w-4 h-4 text-blue-600" />
                                 <h3
-                                    class="text-base font-semibold text-gray-900"
+                                    class="text-base font-semibold text-gray-200"
                                 >
                                     Scan QR Code
                                 </h3>
                             </div>
                             <button
                                 @click="closeQrScanner"
-                                class="p-1.5 hover:bg-gray-100 rounded transition-colors"
+                                class="p-1.5 hover:bg-gray-100/10 rounded"
                             >
                                 <X
-                                    class="w-4 h-4 text-gray-400 hover:text-gray-600"
+                                    class="w-4 h-4 text-gray-400"
                                 />
                             </button>
                         </div>
@@ -935,7 +1147,7 @@ const priorityColor = (priority) => {
                             <canvas ref="canvasRef" class="hidden"></canvas>
                         </div>
 
-                        <p class="mt-3 text-xs text-gray-600 text-center">
+                        <p class="mt-3 text-xs text-gray-200 text-center">
                             Position QR code within the frame to scan
                         </p>
                     </div>

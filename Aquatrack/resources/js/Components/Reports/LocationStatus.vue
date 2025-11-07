@@ -1,6 +1,6 @@
 <!-- Enhanced LocationStatus.vue -->
 <template>
-    <div class="p-4 bg-gray-50 rounded-xl border border-gray-200">
+    <div class="p-4 bg-transparent rounded-xl border border-gray-200/10 backdrop-blur-xl">
         <div class="flex items-center justify-between">
             <div class="flex items-center">
                 <v-icon
@@ -16,7 +16,7 @@
                             locationStatus === 'offline_default_location',
                     }"
                 />
-                <span class="text-sm font-medium text-gray-700">
+                <span class="text-sm font-medium text-gray-200">
                     GPS Location
                 </span>
             </div>
@@ -39,10 +39,10 @@
         <!-- Success - Live GPS -->
         <div
             v-if="locationStatus === 'success'"
-            class="mt-2 text-xs text-gray-600"
+            class="mt-2 text-xs text-gray-50"
         >
-            <div>Lat: {{ form.latitude?.toFixed(6) }}</div>
-            <div>Lng: {{ form.longitude?.toFixed(6) }}</div>
+            <!-- <div>Lat: {{ form.latitude?.toFixed(6) }}</div>
+            <div>Lng: {{ form.longitude?.toFixed(6) }}</div> -->
             <div class="text-green-600 font-medium">✓ Live GPS Acquired</div>
         </div>
 
@@ -51,8 +51,8 @@
             v-if="locationStatus === 'offline_cached_location'"
             class="mt-2 text-xs"
         >
-            <div>Lat: {{ form.latitude?.toFixed(6) }}</div>
-            <div>Lng: {{ form.longitude?.toFixed(6) }}</div>
+            <!-- <div>Lat: {{ form.latitude?.toFixed(6) }}</div>
+            <div>Lng: {{ form.longitude?.toFixed(6) }}</div> -->
             <div class="text-blue-600 font-medium">✓ Using Cached GPS</div>
             <div class="text-gray-500 text-xs mt-1">
                 Previously saved location
@@ -64,8 +64,8 @@
             v-if="locationStatus === 'offline_default_location'"
             class="mt-2 text-xs"
         >
-            <div>Lat: {{ form.latitude?.toFixed(4) }}</div>
-            <div>Lng: {{ form.longitude?.toFixed(4) }}</div>
+            <!-- <div>Lat: {{ form.latitude?.toFixed(4) }}</div>
+            <div>Lng: {{ form.longitude?.toFixed(4) }}</div> -->
             <div class="text-orange-600 font-medium">
                 ⚠ Using Default Location
             </div>

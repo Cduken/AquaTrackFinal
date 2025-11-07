@@ -1,7 +1,7 @@
     <template>
     <div class="space-y-4">
         <div class="flex items-center justify-between">
-            <label class="block text-sm font-semibold text-gray-700">
+            <label class="block text-sm font-semibold text-gray-200">
                 Capture Evidence
                 <span class="text-red-500">*</span>
             </label>

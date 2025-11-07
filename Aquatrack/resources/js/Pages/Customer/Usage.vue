@@ -1,7 +1,7 @@
 <template>
     <CustomerLayout>
         <!-- Header Section -->
-        <div class="p-2 border-b border-gray-100 dark:border-gray-700">
+        <div class=" border-b border-gray-100 dark:border-gray-700">
             <div
                 class="flex flex-col md:flex-row md:items-center justify-between gap-3"
             >
@@ -9,7 +9,7 @@
                     <h1 class="text-xl font-semibold text-gray-900">
                         Water Usage History
                     </h1>
-                   <p class="text-gray-600 text-sm">
+                    <p class="text-gray-600 text-sm">
                         Track your monthly water consumption and billing
                         information
                     </p>
@@ -39,7 +39,7 @@
         </div>
 
         <!-- Main Content -->
-        <div class="p-2">
+        <div class="mt-4">
             <!-- Chart Section -->
             <div
                 class="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-800 p-4 rounded-lg border border-blue-100 dark:border-gray-600 mb-4"
@@ -243,18 +243,22 @@
                                         {{ usage.status }}
                                     </span>
                                 </td>
-                                <td class="px-4 py-3 whitespace-nowrap">
+                                <td class="whitespace-nowrap">
                                     <div class="flex space-x-1 ml-3">
-                                        <button
-                                            @click="openUsageModal(usage)"
-                                            class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 p-1.5 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all duration-200 transform hover:scale-105"
-                                            title="View Details"
+                                        <Link
+                                            :href="
+                                                route(
+                                                    'customer.usage.details',
+                                                    usage.month
+                                                )
+                                            "
+                                            class="inline-flex items-center text-xs py-1 border text-blue-500 border-blue-200 bg-blue-100  px-2 rounded-full dark:text-gray-400 hover:bg-blue-200 dark:hover:text-white transition-colors"
                                         >
-                                            <v-icon
-                                                name="bi-eye-fill"
-                                                class="w-5 h-6"
-                                            />
-                                        </button>
+
+                                        <Eye class="w-4 h-4 mr-1 text-xs text-blue-500" />
+
+                                            View
+                                        </Link>
                                     </div>
                                 </td>
                             </tr>
@@ -358,8 +362,9 @@
 import CustomerLayout from "@/Layouts/CustomerLayout.vue";
 import CustomerUsageModal from "@/Components/Customer/CustomerUsageModal.vue";
 import { ref, onMounted, computed, watch } from "vue";
-import { usePage } from "@inertiajs/vue3";
+import { Link, usePage } from "@inertiajs/vue3";
 import Chart from "chart.js/auto";
+import { Eye } from "lucide-vue-next";
 
 const page = usePage();
 const usageData = ref(page.props.usageData ?? []);

@@ -736,10 +736,11 @@
                                                     "
                                                 >
                                                     <div class="py-1">
-                                                        <button
-                                                            @click="
-                                                                openModal(
-                                                                    report
+                                                        <Link
+                                                            :href="
+                                                                route(
+                                                                    'admin.reports.show',
+                                                                    report.id
                                                                 )
                                                             "
                                                             class="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
@@ -748,7 +749,7 @@
                                                                 class="w-4 h-4 mr-3"
                                                             />
                                                             View Details
-                                                        </button>
+                                                        </Link>
                                                         <button
                                                             v-if="props.canEdit"
                                                             @click="
@@ -849,7 +850,7 @@ import ReportDetailsModal from "@/Components/Modals/ReportDetailsModal.vue";
 import StatusChangeModal from "@/Components/Admin/Reports/StatusChangeModal.vue";
 import Pagination from "@/Components/Pagination.vue";
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from "vue";
-import { router } from "@inertiajs/vue3";
+import { Link, router } from "@inertiajs/vue3";
 import { debounce } from "lodash";
 import Swal from "sweetalert2";
 import {

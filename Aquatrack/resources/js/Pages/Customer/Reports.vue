@@ -1,7 +1,7 @@
 <template>
     <CustomerLayout>
         <!-- Content Section -->
-        <div class="bg-gray-50 px-2 py-1">
+        <div class="py-1">
             <!-- Header Section with Search and Filters on right -->
             <div
                 class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6"
@@ -41,11 +41,11 @@
                         </div>
                     </div>
 
-
                     <!-- Submit New Report Button -->
                     <button
                         @click="showAddModal = true"
-                        class="flex items-center px-4 py-2 text-sm font-medium border bg-blue-100 border-blue-500/20 bg-blue-100/40 text-blue-500 rounded-sm hover:bg-blue-100/80 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 ease-in-out">
+                        class="flex items-center px-4 py-2 text-sm font-medium border bg-blue-100 border-blue-500/20 bg-blue-100/40 text-blue-500 rounded-sm hover:bg-blue-100/80 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 ease-in-out"
+                    >
                         <v-icon name="bi-plus-lg" class="mr-2 w-4 h-4" />
                         Submit New Report
                     </button>
@@ -73,13 +73,12 @@
                             />
                         </button>
                     </div>
-
                 </div>
             </div>
 
             <!-- Reports Table Container -->
             <div
-                class="bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col"
+                class=" rounded-lg border border-gray-200 overflow-hidden flex flex-col"
                 style="height: 600px; min-height: 600px"
             >
                 <!-- Table with Scrollable Body -->
@@ -126,11 +125,11 @@
                                 </th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
+                        <tbody class=" divide-y divide-gray-200">
                             <tr
                                 v-for="report in reports.data"
                                 :key="report.id"
-                                class="hover:bg-gray-50 transition-colors"
+                                class="hover:bg-gray-50 transition-colors border-b border-gray-200"
                             >
                                 <td class="px-4 py-4 whitespace-nowrap">
                                     <span
@@ -200,16 +199,18 @@
                                 <td
                                     class="px-4 py-4 whitespace-nowrap text-sm font-medium"
                                 >
-                                    <button
-                                        class="text-blue-600 hover:text-blue-800 p-1.5 rounded hover:bg-blue-50 transition-colors"
+                                    <Link
+                                        :href="
+                                            route(
+                                                'customer.reports.show',
+                                                report.id
+                                            )
+                                        "
+                                        class="text-blue-600 hover:text-blue-800 p-1.5 rounded hover:bg-blue-50 transition-colors inline-flex items-center"
                                         title="View Details"
-                                        @click="openReportDetails(report)"
                                     >
-                                        <v-icon
-                                            name="bi-eye-fill"
-                                            class="w-4 h-4"
-                                        />
-                                    </button>
+                                        <Eye class="w-4 h-4" />
+                                    </Link>
                                 </td>
                             </tr>
                             <tr v-if="reports.data.length === 0">
@@ -290,11 +291,12 @@
 import CustomerLayout from "@/Layouts/CustomerLayout.vue";
 import ReportDetailsModal from "@/Components/Modals/ReportDetailsModal.vue";
 import Pagination from "@/Components/Pagination.vue";
-import { router, usePage } from "@inertiajs/vue3";
+import { Link, router, usePage } from "@inertiajs/vue3";
 import { ref, computed, watch, onMounted } from "vue";
 import { debounce } from "lodash";
 import Swal from "sweetalert2";
 import CustomerReportModal from "@/Components/Customer/CustomerReportModal.vue";
+import { Eye } from "lucide-vue-next";
 
 const page = usePage();
 

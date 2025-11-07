@@ -60,8 +60,11 @@
                                 </p>
                             </div>
                         </div>
+
+                        customer.usage.details',
+                                                    usage.month
                         <button
-                            @click="$inertia.visit(route('customer.usage'))"
+                            @click="$inertia.visit(route('customer.usage.details', usage.month))"
                             class="bg-white/20 hover:bg-white/30 text-white px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2"
                         >
                             <span>View Bills</span>
@@ -74,7 +77,7 @@
             <!-- Main Content -->
             <div class="space-y-6">
                 <!-- Key Metrics Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <!-- Monthly Usage -->
                     <div class="bg-white rounded-lg p-4 border border-gray-300">
                         <div class="flex items-center justify-between mb-3">
@@ -92,7 +95,7 @@
                         <h3
                             class="text-gray-500 text-xs uppercase tracking-wide mb-1"
                         >
-                            Monthly Usage
+                            Monthly Meter Reading
                         </h3>
                         <p class="text-2xl font-semibold text-gray-900">
                             {{ monthlyUsage }}
@@ -115,23 +118,25 @@
                                         currentBillStatus === 'No Bills',
                                 }"
                             >
-                              <div
-                                class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center"
-                            >
-                                <CreditCard
-                                    class="w-5 h-10 text-green-700"
-                                    :class="{
-                                        'text-red-600':
-                                            currentBillStatus === 'Overdue',
-                                        'text-yellow-600':
-                                            currentBillStatus === 'Due Soon',
-                                        'text-green-600':
-                                            currentBillStatus === 'Paid',
-                                        'text-gray-600':
-                                            currentBillStatus === 'No Bills',
-                                    }"
-                                />
-                              </div>
+                                <div
+                                    class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center"
+                                >
+                                    <CreditCard
+                                        class="w-5 h-10 text-green-700"
+                                        :class="{
+                                            'text-red-600':
+                                                currentBillStatus === 'Overdue',
+                                            'text-yellow-600':
+                                                currentBillStatus ===
+                                                'Due Soon',
+                                            'text-green-600':
+                                                currentBillStatus === 'Paid',
+                                            'text-gray-600':
+                                                currentBillStatus ===
+                                                'No Bills',
+                                        }"
+                                    />
+                                </div>
                             </div>
                             <span
                                 class="px-2 py-1 rounded text-xs font-medium"
@@ -183,13 +188,12 @@
                     </div>
                 </div>
 
-                <!-- Analytics Section -->
+                <!-- Analytics Section - Fixed alignment -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- Left Column - Charts -->
-                    <div class="lg:col-span-2 space-y-6">
-                        <!-- Meter Readings Chart -->
+                    <!-- Left Column - Meter Readings Chart -->
+                    <div class="lg:col-span-2">
                         <div
-                            class="bg-white rounded-lg p-5 border border-gray-200"
+                            class="bg-white rounded-lg p-5 border border-gray-200 h-full"
                         >
                             <div class="mb-5">
                                 <h2
@@ -201,72 +205,112 @@
                                     Monthly consumption tracking
                                 </p>
                             </div>
-                            <div class="h-72">
+
+                            <!-- No Readings History State -->
+                            <div
+                                v-if="!hasReadingsData"
+                                class="text-center py-8"
+                            >
+                                <div
+                                    class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3"
+                                >
+                                    <BarChart3 class="w-8 h-8 text-gray-400" />
+                                </div>
+                                <p class="text-gray-500 text-sm mb-2">
+                                    No meter readings history available
+                                </p>
+                                <p class="text-gray-400 text-xs">
+                                    Your consumption data will appear here once
+                                    available
+                                </p>
+                            </div>
+
+                            <!-- Chart Container -->
+                            <div v-else class="h-72">
                                 <canvas ref="yieldChart"></canvas>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Reports Pie Chart -->
-                    <div class="bg-white rounded-lg p-5 border border-gray-200">
-                        <div class="mb-5">
-                            <h2 class="text-base font-semibold text-gray-900">
-                                Reports Status
-                            </h2>
-                            <p class="text-gray-600 text-sm">
-                                Your reports distribution
-                            </p>
-                        </div>
-
-                        <!-- Pie Chart Container -->
-                        <div class="flex justify-center mb-5">
-                            <div class="relative w-40 h-40">
-                                <canvas ref="reportsChart"></canvas>
-                            </div>
-                        </div>
-
-                        <!-- Status Legend - Minimalist -->
-                        <div class="space-y-2">
-                            <div
-                                v-for="(
-                                    status, index
-                                ) in reportStatusData.labels"
-                                :key="status"
-                                class="flex items-center justify-between"
-                            >
-                                <div class="flex items-center gap-2">
-                                    <div
-                                        class="w-2.5 h-2.5 rounded-full"
-                                        :style="`background-color: ${reportStatusData.colors[index]}`"
-                                    ></div>
-                                    <span class="text-sm text-gray-700">{{
-                                        status
-                                    }}</span>
-                                </div>
-                                <span
-                                    class="text-sm font-semibold text-gray-900"
-                                >
-                                    {{ reportStatusData.data[index] }}
-                                </span>
-                            </div>
-                        </div>
-
-                        <!-- No Reports State -->
+                    <!-- Right Column - Reports Status -->
+                    <div>
                         <div
-                            v-if="!hasReportStatusData"
-                            class="text-center py-6"
+                            class="bg-white rounded-lg p-5 border border-gray-200 h-full"
                         >
-                            <div
-                                class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2"
-                            >
-                                <FileText class="w-6 h-6 text-gray-400" />
+                            <div class="mb-5">
+                                <h2
+                                    class="text-base font-semibold text-gray-900"
+                                >
+                                    Reports Status
+                                </h2>
+                                <p class="text-gray-600 text-sm">
+                                    Your reports distribution
+                                </p>
                             </div>
-                            <p class="text-gray-500 text-sm">
-                                No reports submitted
-                            </p>
+
+                            <!-- No Reports State -->
+                            <div
+                                v-if="!hasReportStatusData"
+                                class="text-center py-8"
+                            >
+                                <div
+                                    class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3"
+                                >
+                                    <FileText class="w-8 h-8 text-gray-400" />
+                                </div>
+                                <p class="text-gray-500 text-sm mb-2">
+                                    No reports submitted
+                                </p>
+                                <p class="text-gray-400 text-xs">
+                                    Submit a report to see status distribution
+                                </p>
+                            </div>
+
+                            <!-- Reports Content -->
+                            <div v-else>
+                                <!-- Pie Chart Container -->
+                                <div class="flex justify-center mb-5">
+                                    <div class="relative w-40 h-40">
+                                        <canvas ref="reportsChart"></canvas>
+                                    </div>
+                                </div>
+
+                                <!-- Status Legend - Minimalist -->
+                                <div class="space-y-2">
+                                    <div
+                                        v-for="(
+                                            status, index
+                                        ) in reportStatusData.labels"
+                                        :key="status"
+                                        class="flex items-center justify-between"
+                                    >
+                                        <div class="flex items-center gap-2">
+                                            <div
+                                                class="w-2.5 h-2.5 rounded-full"
+                                                :style="`background-color: ${reportStatusData.colors[index]}`"
+                                            ></div>
+                                            <span
+                                                class="text-sm text-gray-700"
+                                                >{{ status }}</span
+                                            >
+                                        </div>
+                                        <span
+                                            class="text-sm font-semibold text-gray-900"
+                                        >
+                                            {{ reportStatusData.data[index] }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
+
+                <!-- Additional Empty States for Other Sections -->
+
+
+
+
             </div>
         </div>
     </CustomerLayout>
@@ -283,6 +327,7 @@ import {
     ArrowRight,
     FileText,
     CreditCard,
+    BarChart3,
 } from "lucide-vue-next";
 
 const page = usePage();
@@ -308,6 +353,15 @@ const reportStats = page.props.reportStats ?? {
 
 const yieldChart = ref(null);
 const reportsChart = ref(null);
+
+// Compute if we have readings data
+const hasReadingsData = computed(() => {
+    return (
+        chartData &&
+        chartData.length > 0 &&
+        chartData.some((item) => item.reading > 0)
+    );
+});
 
 // Compute billing statistics
 const overdueBills = computed(() => {
@@ -380,11 +434,11 @@ const calculatePercentage = (count) => {
 };
 
 onMounted(() => {
-    const labels = chartData.map((item) => item.month);
-    const readingData = chartData.map((item) => item.reading);
-
     // Meter Readings Chart
-    if (yieldChart.value && readingData.length > 0) {
+    if (yieldChart.value && hasReadingsData.value) {
+        const labels = chartData.map((item) => item.month);
+        const readingData = chartData.map((item) => item.reading);
+
         new Chart(yieldChart.value, {
             type: "bar",
             data: {

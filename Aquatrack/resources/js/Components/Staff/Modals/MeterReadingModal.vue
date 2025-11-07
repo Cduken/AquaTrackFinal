@@ -1013,7 +1013,7 @@
 import { ref, computed, onMounted, watch, nextTick } from "vue";
 import Swal from "sweetalert2";
 import EditMeterRecordModal from "./EditMeterRecordModal.vue";
-import { Edit } from 'lucide-vue-next'
+import { Edit } from "lucide-vue-next";
 import Pagination from "@/Components/Pagination.vue";
 
 const props = defineProps({
@@ -1371,8 +1371,17 @@ const calculateConsumptionAndAmount = () => {
 const fetchPreviousReadings = async () => {
     isLoadingPreviousReadings.value = true;
     try {
+        // Clear existing readings first
+        previousReadings.value = [];
+
         const response = await axios.get(
-            route("staff.reading.previous", { userId: props.user.id })
+            route("staff.reading.previous", { userId: props.user.id }),
+            {
+                // Add cache busting to ensure fresh data
+                params: {
+                    _t: new Date().getTime()
+                }
+            }
         );
 
         if (response.data.error) {
@@ -1391,9 +1400,11 @@ const fetchPreviousReadings = async () => {
             }
             previousReadings.value = [];
         } else {
-            previousReadings.value = response.data || [];
+            // Ensure we have a fresh array
+            previousReadings.value = [...(response.data || [])];
         }
     } catch (error) {
+        console.error("Error fetching previous readings:", error);
         Swal.fire({
             icon: "error",
             title: "Failed to load readings",
@@ -1496,22 +1507,22 @@ const submitReading = async () => {
                 throw new Error(response.data.error);
             }
 
-            // Force a refresh of previous readings - wait for it to complete
-            await fetchPreviousReadings();
-
-            // Wait for Vue to update the DOM
-            await nextTick();
-
-            // Reset the form fields
+            // Clear the current reading input but keep other values
             newReading.value.reading = "";
             newReading.value.consumption = 0;
             newReading.value.amount = 0;
             showYearTransitionWarning.value = false;
 
+            // IMPORTANT: Force a complete refresh of previous readings
+            await fetchPreviousReadings();
+
+            // Wait for Vue to update the DOM with new data
+            await nextTick();
+
             // Update the previous reading for the next entry
             updatePreviousReading();
 
-            // Show success message but don't close the modal
+            // Show success message
             await Swal.fire({
                 icon: "success",
                 title: "Success!",
@@ -1520,7 +1531,7 @@ const submitReading = async () => {
                 showConfirmButton: false,
             });
 
-            // Emit event to parent if needed
+            // Emit event to parent to refresh search results
             emit("reading-submitted");
         }
     } catch (error) {
@@ -1564,6 +1575,21 @@ const handleReadingUpdated = async (updatedReading) => {
 
     closeEditModal();
 };
+
+watch(
+    () => props.show,
+    (newVal) => {
+        if (newVal) {
+            // Small delay to ensure modal is fully rendered
+            setTimeout(() => {
+                initializeForm();
+            }, 100);
+        } else {
+            isMaximized.value = false;
+        }
+    },
+    { immediate: true }
+);
 
 const initializeForm = async () => {
     // Fetch previous readings first

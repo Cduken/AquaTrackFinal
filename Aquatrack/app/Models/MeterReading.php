@@ -29,10 +29,17 @@ class MeterReading extends Model
         'consumption',
         'amount',
         'status',
+        'due_date', // ← ADD THIS LINE - THIS IS THE FIX!
+        'period',
+        'period_type',
+        'amount_updated',
+        'viewed_by_staff',
+        'staff_viewed_at'
     ];
 
     protected $casts = [
         'reading_date' => 'datetime:Y-m-d',
+        'due_date' => 'datetime:Y-m-d', // ← ADD THIS TOO
         'reading' => 'float',
         'consumption' => 'float',
         'amount' => 'float',

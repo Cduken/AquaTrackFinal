@@ -22,7 +22,7 @@
                     >
                         <!-- Header -->
                         <div
-                            class="flex items-center justify-between px-6 py-5 bg-[#062F64]"
+                            class="flex items-center justify-between px-6 py-2 xl:py-6 bg-[#062F64]"
                         >
                             <div class="flex items-center space-x-3">
                                 <div class="p-2 bg-white/10 rounded-full">
@@ -34,10 +34,10 @@
                                 </div>
                                 <div>
                                     <span
-                                        class="text-white font-semibold text-xl tracking-wide"
-                                        >Water Quality Issue Report</span
+                                        class="text-white font-semibold text-md tracking-wide"
+                                        >Report Issue</span
                                     >
-                                    <p class="text-blue-100 text-xs mt-1">
+                                    <p class="text-blue-100 hidden xl:block text-xs mt-1">
                                         Official Report Submission for Clarin,
                                         Bohol
                                     </p>
@@ -45,9 +45,9 @@
                             </div>
                             <div class="flex items-center space-x-2">
                                 <!-- GPS Status Indicator -->
-                                <div class="flex items-center mr-2">
+                                <div class="flex items-center mr-2 ">
                                     <div
-                                        class="flex items-center px-3 py-1 rounded-full text-xs font-medium"
+                                        class="flex items-center px-2 lg:px-3 py-1 rounded-full text-xs font-medium"
                                         :class="{
                                             'bg-green-500/20 text-green-300':
                                                 locationStatus === 'success',
@@ -123,7 +123,7 @@
                                 <!-- Maximize/Minimize Button -->
                                 <button
                                     @click="toggleMaximize"
-                                    class="text-white hover:text-gray-200 transition-all duration-200 p-2 rounded-full hover:bg-white/10"
+                                    class="text-white hidden lg:block hover:text-gray-200 transition-all duration-200 p-2 rounded-full hover:bg-white/10"
                                     :title="
                                         isMaximized ? 'Minimize' : 'Maximize'
                                     "
@@ -525,64 +525,7 @@
                                             </p>
                                         </div>
 
-                                        <!-- GPS Coordinates Display -->
-                                        <div
-                                            v-if="
-                                                form.latitude && form.longitude
-                                            "
-                                            class="p-3 rounded-lg border text-sm"
-                                            :class="{
-                                                'bg-green-50 border-green-200 text-green-700':
-                                                    locationStatus ===
-                                                    'success',
-                                                'bg-blue-50 border-blue-200 text-blue-700':
-                                                    locationStatus ===
-                                                    'offline_cached_location',
-                                                'bg-amber-50 border-amber-200 text-amber-700':
-                                                    locationStatus ===
-                                                    'offline_default_location',
-                                                'bg-gray-50 border-gray-200 text-gray-700':
-                                                    locationStatus === 'idle' ||
-                                                    locationStatus ===
-                                                        'loading',
-                                            }"
-                                        >
-                                            <div class="flex items-center">
-                                                <v-icon
-                                                    :name="
-                                                        getLocationStatusIcon()
-                                                    "
-                                                    class="mr-2"
-                                                />
-                                                <div>
-                                                    <span class="font-medium">{{
-                                                        getLocationStatusText()
-                                                    }}</span>
-                                                    <div
-                                                        class="text-xs mt-1 font-mono"
-                                                    >
-                                                        Lat:
-                                                        {{
-                                                            form.latitude.toFixed(
-                                                                6
-                                                            )
-                                                        }}, Lon:
-                                                        {{
-                                                            form.longitude.toFixed(
-                                                                6
-                                                            )
-                                                        }}
-                                                    </div>
-                                                    <div
-                                                        v-if="locationAccuracy"
-                                                        class="text-xs mt-1"
-                                                    >
-                                                        Accuracy:
-                                                        {{ locationAccuracy }}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+
                                     </div>
                                 </div>
 

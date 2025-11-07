@@ -1,6 +1,6 @@
 <template>
     <nav
-        class="bg-white border-b border-gray-200 px-2 py-[5px] shadow-sm dark:bg-gray-800 dark:border-gray-700 fixed right-0 top-0 z-40 transition-all duration-300 ease-in-out"
+        class="bg-white border-b border-gray-200 px-4 py-[9px] shadow-sm dark:bg-gray-800 dark:border-gray-700 fixed right-0 top-0 z-40 transition-all duration-300"
         :class="[
             isSidebarOpen ? 'left-64' : 'left-16',
             isMobileMenuOpen ? 'left-0' : '',
@@ -8,162 +8,141 @@
         :style="navStyle"
     >
         <div class="flex justify-between items-center">
-            <!-- Left section with breadcrumbs, mobile menu -->
-            <div class="flex items-center flex-1 max-w-3xl px-3 opacity-70">
+            <!-- Left section -->
+            <div class="flex items-center flex-1">
                 <!-- Mobile menu button -->
                 <button
                     @click="$emit('toggle-mobile-menu')"
-                    class="p-2 mr-3 text-gray-600 rounded-lg cursor-pointer md:hidden hover:text-gray-900 hover:bg-gray-100 focus:bg-gray-100 dark:focus:bg-gray-700 focus:ring-2 focus:ring-gray-100 dark:focus:ring-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white transition-colors duration-200"
+                    class="p-2 mr-2 text-gray-600 rounded-lg md:hidden hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 transition-colors"
                 >
-                    <Menu v-if="!isMobileMenuOpen" :size="24" />
-                    <X v-else :size="24" />
+                    <Menu v-if="!isMobileMenuOpen" :size="20" />
+                    <X v-else :size="20" />
                 </button>
 
-                <!-- Breadcrumbs -->
-                <div class="hidden md:flex items-center space-x-2 text-lg">
+                <!-- Page title -->
+                <div class="flex items-center">
                     <span
-                        class="text-gray-900 dark:text-white font-semibold capitalize"
-                    >
-                        {{ currentPageName }}
-                    </span>
-                </div>
-
-                <!-- Mobile Breadcrumbs -->
-                <div class="flex md:hidden items-center space-x-2 text-sm ml-2">
-                    <span
-                        class="text-gray-900 dark:text-white font-semibold capitalize"
+                        class="text-gray-900 dark:text-white font-semibold text-lg"
                     >
                         {{ currentPageName }}
                     </span>
                 </div>
             </div>
 
-            <!-- Right section with notifications and user menu -->
-            <div class="flex items-center space-x-3 ml-4">
-                <!-- Notifications Button -->
-                 <div v-if="showNotifications" class="relative">
+            <!-- Right section -->
+            <div class="flex items-center space-x-2">
+                <!-- Notifications -->
+                <div v-if="showNotifications" class="relative">
                     <button
                         type="button"
                         @click="openNotificationModal"
-                        class="relative p-2.5 text-gray-500 rounded-xl hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-700 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-all duration-200 group"
+                        class="relative p-2 text-gray-500 rounded-lg hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-700 transition-colors"
                     >
-                        <Bell
-                            :size="18"
-                            class="group-hover:scale-110 transition-transform"
-                        />
+                        <Bell :size="20" />
                         <span
                             v-if="unreadCount > 0"
-                            class="absolute -top-0.5 -right-0.5 flex items-center justify-center min-w-[20px] h-5 px-1 text-xs font-bold text-white bg-gradient-to-r from-red-500 to-red-600 rounded-full border-2 border-white dark:border-gray-800 shadow-lg animate-pulse"
+                            class="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-4.5 px-1 text-xs font-medium text-white bg-red-500 rounded-full border border-white dark:border-gray-800"
                         >
                             {{ unreadCount > 99 ? "99+" : unreadCount }}
                         </span>
                     </button>
                 </div>
 
-                <!-- User Dropdown -->
+                <!-- User dropdown -->
                 <div class="relative">
                     <button
                         type="button"
                         @click.stop="toggleUserDropdown"
-                        class="flex items-center space-x-3 text-sm rounded-xl p-2 hover:bg-gray-100 dark:hover:bg-gray-700 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-all duration-200 group"
+                        class="flex items-center space-x-2 text-sm rounded-lg p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                         ref="userButton"
                     >
-                        <img
-                            v-if="user.avatar_url"
-                            class="w-8 h-8 rounded-full border-2 border-gray-200 dark:border-gray-600 shadow-sm group-hover:border-blue-400 transition-all"
-                            :src="user.avatar_url"
-                            :alt="userDisplayName"
-                        />
-                        <div
-                            v-else
-                            class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-blue-500 text-white flex items-center justify-center font-semibold text-sm border-2 border-gray-200 dark:border-gray-600 shadow-sm group-hover:border-blue-400 transition-all"
-                        >
-                            {{ userInitials }}
-                        </div>
-                        <div class="text-left hidden sm:block">
-                            <p
-                                class="text-sm font-semibold text-gray-900 dark:text-white"
-                            >
-                                {{ userDisplayName }}
-                            </p>
-                            <p class="text-xs text-gray-500 dark:text-gray-400">
-                                {{ capitalizedUserRole }}
-                            </p>
-                        </div>
-                        <ChevronDown
-                            :size="16"
-                            class="text-gray-400 transition-transform duration-200"
-                            :class="{ 'rotate-180': isUserDropdownOpen }"
-                        />
-                    </button>
-
-                    <!-- User Dropdown Menu -->
-                    <div
-                        v-show="isUserDropdownOpen"
-                        v-click-outside="closeUserDropdown"
-                        class="absolute right-0 top-full mt-2 z-50 w-64 text-base bg-white rounded-2xl shadow-2xl dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden transform transition-all duration-200"
-                        :class="{
-                            'scale-100 opacity-100': isUserDropdownOpen,
-                            'scale-95 opacity-0': !isUserDropdownOpen,
-                        }"
-                    >
-                        <div
-                            class="py-4 px-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-600 border-b border-gray-100 dark:border-gray-600"
-                        >
-                            <div class="flex items-center space-x-3">
+                        <div class="flex items-center space-x-2">
+                            <div class="flex items-center justify-center">
                                 <img
                                     v-if="user.avatar_url"
-                                    class="w-12 h-12 rounded-full border-2 border-white dark:border-gray-700 shadow-md"
+                                    class="w-8 h-8 rounded-full border border-gray-200 dark:border-gray-600"
                                     :src="user.avatar_url"
                                     :alt="userDisplayName"
                                 />
                                 <div
                                     v-else
-                                    class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-blue-500 text-white flex items-center justify-center font-semibold text-base border-2 border-white dark:border-gray-700 shadow-md"
+                                    class="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-medium text-sm"
                                 >
                                     {{ userInitials }}
                                 </div>
+                            </div>
+                            <div class="text-left hidden sm:block">
+                                <p
+                                    class="text-sm font-medium text-gray-900 dark:text-white"
+                                >
+                                    {{ userDisplayName }}
+                                </p>
+                            </div>
+                        </div>
+                        <ChevronDown
+                            :size="16"
+                            class="text-gray-500 transition-transform duration-200"
+                            :class="{ 'rotate-180': isUserDropdownOpen }"
+                        />
+                    </button>
+
+                    <!-- Dropdown menu -->
+                    <div
+                        v-show="isUserDropdownOpen"
+                        v-click-outside="closeUserDropdown"
+                        class="absolute right-0 top-full mt-1 z-50 w-56 bg-white rounded-lg shadow-lg dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden"
+                    >
+                        <div
+                            class="py-3 px-4 border-b border-gray-100 dark:border-gray-600"
+                        >
+                            <div class="flex items-center space-x-3">
+                                <div class="flex items-center justify-center">
+                                    <img
+                                        v-if="user.avatar_url"
+                                        class="w-10 h-10 rounded-full border border-gray-200 dark:border-gray-600"
+                                        :src="user.avatar_url"
+                                        :alt="userDisplayName"
+                                    />
+                                    <div
+                                        v-else
+                                        class="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center font-medium"
+                                    >
+                                        {{ userInitials }}
+                                    </div>
+                                </div>
                                 <div class="flex-1 min-w-0">
                                     <p
-                                        class="text-sm font-semibold text-gray-900 dark:text-white truncate"
+                                        class="text-sm font-medium text-gray-900 dark:text-white truncate"
                                     >
                                         {{ userDisplayName }}
                                     </p>
                                     <p
-                                        class="text-xs text-gray-600 dark:text-gray-300 truncate"
+                                        class="text-xs text-gray-500 dark:text-gray-400 truncate"
                                     >
                                         {{ user?.email }}
                                     </p>
                                 </div>
                             </div>
                         </div>
-                        <div class="py-2">
+                        <div class="py-1">
                             <Link
                                 href="/profile"
-                                class="flex items-center gap-3 py-3 px-4 text-sm text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors duration-200 group"
+                                class="flex items-center gap-2 py-2 px-4 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                                 @click="closeUserDropdown"
                             >
-                                <User
-                                    :size="18"
-                                    class="text-gray-500 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"
-                                />
-                                <span class="font-medium"
-                                    >Profile Settings</span
-                                >
+                                <User :size="16" />
+                                <span>Profile</span>
                             </Link>
                         </div>
                         <div
-                            class="border-t border-gray-100 dark:border-gray-700 pt-2 pb-2"
+                            class="border-t border-gray-100 dark:border-gray-700 py-1"
                         >
                             <button
                                 @click.prevent="handleLogout"
-                                class="flex items-center w-full gap-3 py-3 px-4 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-200 group"
+                                class="flex items-center w-full gap-2 py-2 px-4 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                             >
-                                <LogOut
-                                    :size="18"
-                                    class="group-hover:translate-x-0.5 transition-transform"
-                                />
-                                <span class="font-medium">Sign out</span>
+                                <LogOut :size="16" />
+                                <span>Sign out</span>
                             </button>
                         </div>
                     </div>
@@ -177,88 +156,73 @@
                 v-if="showNotificationModal"
                 class="fixed inset-0 z-50 overflow-y-auto"
             >
-                <!-- Background Overlay -->
                 <div
-                    class="fixed inset-0 bg-black/60 transition-opacity"
+                    class="fixed inset-0 bg-black/50 transition-opacity"
                     @click="showNotificationModal = false"
                 ></div>
 
-                <!-- Modal Container -->
                 <div
                     class="flex items-start justify-center min-h-screen p-4 pt-20"
                 >
                     <div
-                        class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-xl overflow-hidden transform transition-all"
+                        class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md overflow-hidden"
                     >
                         <!-- Header -->
                         <div
-                            class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4"
+                            class="border-b border-gray-200 dark:border-gray-700 px-4 py-3"
                         >
                             <div class="flex justify-between items-center">
-                                <div class="flex items-center space-x-3">
+                                <div class="flex items-center space-x-2">
                                     <Bell
-                                        :size="20"
+                                        :size="18"
                                         class="text-gray-700 dark:text-gray-300"
                                     />
-                                    <div>
-                                        <h3
-                                            class="text-lg font-semibold text-gray-900 dark:text-white"
-                                        >
-                                            Notifications
-                                        </h3>
-                                        <!-- <p
-                                            v-if="
-                                                modalNotifications.length > 0 &&
-                                                !modalLoading
-                                            "
-                                            class="text-sm text-gray-500 dark:text-gray-400"
-                                        >
-                                            {{ modalUnreadCount }} unread
-                                        </p> -->
-                                    </div>
+                                    <h3
+                                        class="text-base font-semibold text-gray-900 dark:text-white"
+                                    >
+                                        Notifications
+                                    </h3>
                                 </div>
                                 <button
                                     @click="showNotificationModal = false"
                                     class="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded transition-colors"
                                 >
-                                    <X :size="20" />
+                                    <X :size="18" />
                                 </button>
                             </div>
                         </div>
 
                         <!-- Notifications List -->
-                        <div
-                            class="max-h-96 overflow-y-auto bg-white dark:bg-gray-800"
-                        >
+                        <div class="max-h-96 overflow-y-auto">
                             <div
                                 v-if="modalLoading"
-                                class="flex flex-col items-center justify-center py-12"
+                                class="flex flex-col items-center justify-center py-8"
                             >
                                 <div
-                                    class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"
+                                    class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"
                                 ></div>
                                 <p
-                                    class="mt-3 text-gray-600 dark:text-gray-400 text-sm"
+                                    class="mt-2 text-gray-600 dark:text-gray-400 text-sm"
                                 >
-                                    Loading notifications...
+                                    Loading...
                                 </p>
                             </div>
 
                             <div
                                 v-else-if="modalNotifications.length === 0"
-                                class="flex flex-col items-center justify-center py-12 px-4"
+                                class="flex flex-col items-center justify-center py-8 px-4"
                             >
                                 <BellOff
-                                    :size="48"
-                                    class="text-gray-400 dark:text-gray-500 mb-3"
+                                    :size="32"
+                                    class="text-gray-400 dark:text-gray-500 mb-2"
                                 />
                                 <p
-                                    class="text-gray-900 dark:text-white font-medium"
+                                    class="text-gray-900 dark:text-white font-medium text-sm"
                                 >
                                     No notifications
                                 </p>
                                 <p
-                                    class="text-gray-500 dark:text-gray-400 text-sm mt-1"
+                                    class="text-gray-500 dark:text-gray-400 text-xs mt-1"
                                 >
                                     You're all caught up
                                 </p>
@@ -271,7 +235,7 @@
                                 <div
                                     v-for="notification in modalNotifications"
                                     :key="notification.id"
-                                    class="p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150 cursor-pointer"
+                                    class="p-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
                                     @click="
                                         handleNotificationClickInModal(
                                             notification
@@ -280,7 +244,7 @@
                                 >
                                     <div class="flex items-start space-x-3">
                                         <div
-                                            class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center"
+                                            class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
                                             :class="
                                                 getNotificationIconBg(
                                                     notification.type
@@ -293,22 +257,18 @@
                                                         notification.type
                                                     )
                                                 "
-                                                :size="18"
+                                                :size="14"
                                                 class="text-white"
                                             />
                                         </div>
                                         <div class="flex-1 min-w-0">
-                                            <div
-                                                class="flex items-start justify-between mb-1"
-                                            >
-                                                <p
-                                                    class="text-sm font-medium text-gray-900 dark:text-white"
-                                                >
-                                                    {{ notification.title }}
-                                                </p>
-                                            </div>
                                             <p
-                                                class="text-sm text-gray-600 dark:text-gray-300 mb-2"
+                                                class="text-sm font-medium text-gray-900 dark:text-white mb-1"
+                                            >
+                                                {{ notification.title }}
+                                            </p>
+                                            <p
+                                                class="text-xs text-gray-600 dark:text-gray-300 mb-1"
                                             >
                                                 {{
                                                     notification.message ||
@@ -316,18 +276,14 @@
                                                 }}
                                             </p>
                                             <div
-                                                class="flex justify-between items-center"
+                                                class="flex items-center space-x-1 text-xs text-gray-500 dark:text-gray-400"
                                             >
-                                                <div
-                                                    class="flex items-center space-x-1 text-xs text-gray-500 dark:text-gray-400"
-                                                >
-                                                    <Clock :size="12" />
-                                                    <span>{{
-                                                        formatTime(
-                                                            notification.created_at
-                                                        )
-                                                    }}</span>
-                                                </div>
+                                                <Clock :size="12" />
+                                                <span>{{
+                                                    formatTime(
+                                                        notification.created_at
+                                                    )
+                                                }}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -337,15 +293,15 @@
 
                         <!-- Footer -->
                         <div
-                            class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-6 py-4"
+                            class="border-t border-gray-200 dark:border-gray-700 px-4 py-3"
                         >
                             <button
                                 type="button"
-                                class="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md font-medium transition-colors duration-200"
+                                class="w-full flex items-center justify-center space-x-2 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded text-sm font-medium transition-colors"
                                 @click="viewAllNotifications"
                             >
-                                <List :size="16" />
-                                <span>View All Notifications</span>
+                                <List :size="14" />
+                                <span>View All</span>
                             </button>
                         </div>
                     </div>
@@ -359,9 +315,6 @@
 import { computed, ref, onMounted, onUnmounted, watch } from "vue";
 import { usePage, Link, router } from "@inertiajs/vue3";
 import {
-    Home,
-    ChevronRight,
-    ChevronDown,
     Bell,
     BellOff,
     User,
@@ -369,15 +322,14 @@ import {
     Menu,
     X,
     Clock,
-    CheckCircle2,
-    CheckCheck,
     List,
-    AlertCircle,
+    ChevronDown,
     Info,
     RefreshCw,
     Megaphone,
     AlertTriangle,
     Calendar,
+    AlertCircle,
 } from "lucide-vue-next";
 import Swal from "sweetalert2";
 
@@ -386,7 +338,7 @@ const props = defineProps({
     isMobileMenuOpen: { type: Boolean, default: false },
 });
 
-const emit = defineEmits(["toggle-sidebar", "toggle-mobile-menu", "logout"]);
+const emit = defineEmits(["toggle-mobile-menu", "logout"]);
 
 const { props: pageProps } = usePage();
 
@@ -394,9 +346,6 @@ const { props: pageProps } = usePage();
 const user = computed(() => pageProps.auth?.user ?? {});
 const userRole = computed(() => user.value?.role || "customer");
 const userDisplayName = computed(() => user.value?.name || "Unknown User");
-const capitalizedUserRole = computed(
-    () => userRole.value.charAt(0).toUpperCase() + userRole.value.slice(1)
-);
 const userInitials = computed(() => {
     if (!user.value?.name) return "??";
     return user.value.name
@@ -407,68 +356,159 @@ const userInitials = computed(() => {
         .toUpperCase();
 });
 
-// Modal state
+// Current page name - Only show main page names, ignore dynamic routes
+const currentPageName = computed(() => {
+    const path = window.location.pathname;
+
+    // Define main routes and their display names
+    const mainRoutes = {
+        // Dashboard routes
+        "/admin/dashboard": "Dashboard",
+        "/staff/dashboard": "Dashboard",
+        "/customer/dashboard": "Dashboard",
+
+        // Report routes - show "Reports" for all report-related pages
+        "/admin/reports": "Reports",
+        "/staff/reports": "Reports",
+        "/customer/reports": "Reports",
+        "/admin/reports/create": "Reports",
+        "/staff/reports/create": "Reports",
+        "/customer/reports/create": "Reports",
+
+        // Announcement routes
+        "/admin/announcements": "Announcements",
+        "/staff/announcements": "Announcements",
+        "/customer/announcements": "Announcements",
+
+        // Billing routes
+        "/admin/billing": "Billing",
+        "/staff/billing": "Billing",
+        "/customer/billing": "Billing",
+
+        // Profile routes
+        "/admin/profile": "Profile",
+        "/staff/profile": "Profile",
+        "/customer/profile": "Profile",
+
+        // Notification routes
+        "/admin/notifications": "Notifications",
+        "/staff/notifications": "Notifications",
+        "/customer/notifications": "Notifications",
+
+        // User management routes (admin only)
+        "/admin/users": "User Management",
+        "/admin/customers": "Customers",
+        "/admin/staff": "Staff Management",
+
+        // Analytics routes
+        "/admin/analytics": "Analytics",
+        "/staff/analytics": "Analytics",
+
+        // Water quality routes
+        "/admin/water-quality": "Water Quality",
+        "/staff/water-quality": "Water Quality",
+        "/customer/water-quality": "Water Quality",
+
+        // Payment routes
+        "/admin/payments": "Payments",
+        "/staff/payments": "Payments",
+        "/customer/payments": "Payments",
+
+        // Settings routes
+        "/admin/settings": "Settings",
+        "/staff/settings": "Settings",
+        "/customer/settings": "Settings",
+    };
+
+    // Remove role prefix and find the base path
+    const segments = path.split("/").filter((segment) => segment);
+    const roleSegments = ["admin", "staff", "customer"];
+
+    // Find the base path without dynamic segments
+    let basePath = "";
+    for (let i = 0; i < segments.length; i++) {
+        const segment = segments[i];
+
+        // Skip role segments
+        if (roleSegments.includes(segment)) {
+            basePath += `/${segment}`;
+            continue;
+        }
+
+        // If we hit a dynamic segment (number or UUID), stop and use what we have
+        if (
+            /^\d+$/.test(segment) ||
+            /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+                segment
+            )
+        ) {
+            break;
+        }
+
+        basePath += `/${segment}`;
+
+        // If this is a create/edit route, include it in base path
+        if (segment === "create" || segment === "edit") {
+            break;
+        }
+    }
+
+    // Try to find exact match first
+    if (mainRoutes[basePath]) {
+        return mainRoutes[basePath];
+    }
+
+    // Try to match without role prefix
+    const pathWithoutRole = basePath.replace(/^\/(admin|staff|customer)/, "");
+    if (pathWithoutRole && pathWithoutRole !== basePath) {
+        const possiblePaths = [
+            `/admin${pathWithoutRole}`,
+            `/staff${pathWithoutRole}`,
+            `/customer${pathWithoutRole}`,
+        ];
+
+        for (const possiblePath of possiblePaths) {
+            if (mainRoutes[possiblePath]) {
+                return mainRoutes[possiblePath];
+            }
+        }
+    }
+
+    // Fallback: extract main section from path
+    const mainSection = segments.find(
+        (segment) =>
+            !roleSegments.includes(segment) &&
+            !/^\d+$/.test(segment) &&
+            !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+                segment
+            )
+    );
+
+    if (mainSection) {
+        // Format the main section nicely
+        return mainSection
+            .split("-")
+            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(" ");
+    }
+
+    return "Dashboard";
+});
+
+// Notification state
 const showNotificationModal = ref(false);
 const modalNotifications = ref([]);
 const modalLoading = ref(false);
 
-// Computed
-const modalUnreadCount = computed(
+// Computed properties
+const unreadCount = computed(
     () => modalNotifications.value.filter((n) => n.unread).length
 );
-const unreadCount = computed(() => modalUnreadCount.value);
-
 
 const showNotifications = computed(() => {
-    const allowedRoles = ['admin', 'customer']; // Only show for admin and customer
+    const allowedRoles = ["admin", "customer"];
     return allowedRoles.includes(userRole.value);
 });
-
-// Breadcrumbs data
-const currentPageName = computed(() => {
-    const path = window.location.pathname;
-    const segments = path.split("/").filter((segment) => segment);
-    const roleSegments = ["admin", "staff", "customer"];
-    const filteredSegments = segments.filter(
-        (segment) => !roleSegments.includes(segment)
-    );
-
-    if (filteredSegments.length === 0) return "Dashboard";
-    const lastSegment = filteredSegments[filteredSegments.length - 1];
-
-    const pageNames = {
-        dashboard: "Dashboard",
-        reports: "Reports",
-        announcements: "Announcements",
-        billing: "Billing",
-        profile: "Profile",
-        settings: "Settings",
-        users: "User Management",
-        customers: "Customers",
-        staff: "Staff Management",
-        analytics: "Analytics",
-        "water-quality": "Water Quality",
-        payments: "Payments",
-        notifications: "Notifications",
-    };
-
-    return (
-        pageNames[lastSegment] ||
-        lastSegment
-            .split("-")
-            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-            .join(" ")
-    );
-});
-
-// Routes
-const dashboardRoute = computed(() =>
-    userRole.value === "admin"
-        ? "/admin/dashboard"
-        : userRole.value === "staff"
-        ? "/staff/dashboard"
-        : "/customer/dashboard"
-);
 
 const notificationRoute = computed(() =>
     userRole.value === "admin"
@@ -478,10 +518,8 @@ const notificationRoute = computed(() =>
         : "/customer/notifications"
 );
 
-// Window width state
-const windowWidth = ref(
-    typeof window !== "undefined" ? window.innerWidth : 1024
-);
+// Window width for responsive behavior
+const windowWidth = ref(window.innerWidth);
 const navStyle = computed(() => ({
     left:
         windowWidth.value < 768 ? "0" : props.isSidebarOpen ? "16rem" : "4rem",
@@ -543,7 +581,6 @@ const formatTime = (timestamp) => {
     return `${days}d ago`;
 };
 
-// Modal methods
 const fetchModalNotifications = async () => {
     modalLoading.value = true;
     try {
@@ -580,9 +617,13 @@ const markAllAsRead = async () => {
         });
 
         if (response.ok) {
-            modalNotifications.value.forEach((notification) => {
-                notification.unread = false;
-            });
+            // Update local state to reflect all notifications are read
+            modalNotifications.value = modalNotifications.value.map(
+                (notification) => ({
+                    ...notification,
+                    unread: false,
+                })
+            );
         }
     } catch {
         // Silent fail
@@ -591,7 +632,7 @@ const markAllAsRead = async () => {
 
 const openNotificationModal = async () => {
     showNotificationModal.value = true;
-    await markAllAsRead();
+    await markAllAsRead(); // This will clear the badge count
 };
 
 const handleNotificationClickInModal = (notification) => {
@@ -648,9 +689,7 @@ const vClickOutside = {
             if (!(el === event.target || el.contains(event.target)))
                 binding.value();
         };
-        document.addEventListener("click", el.clickOutsideEvent, {
-            passive: true,
-        });
+        document.addEventListener("click", el.clickOutsideEvent);
     },
     unmounted(el) {
         document.removeEventListener("click", el.clickOutsideEvent);
@@ -669,37 +708,9 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-@media (max-width: 767px) {
-    nav {
-        padding-left: 0.5rem;
-        padding-right: 0.5rem;
-    }
-}
-
-.line-clamp-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
-button:active {
-    transform: scale(0.98);
-}
-
-button:focus {
-    outline: none;
-}
-
-.transition-all {
-    transition-property: all;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Modal animations */
 .modal-enter-active,
 .modal-leave-active {
-    transition: opacity 0.3s ease;
+    transition: opacity 0.2s ease;
 }
 
 .modal-enter-from,
@@ -707,35 +718,14 @@ button:focus {
     opacity: 0;
 }
 
-.modal-enter-active .relative,
-.modal-leave-active .relative {
-    transition: transform 0.3s ease;
-}
-
-.modal-enter-from .relative,
-.modal-leave-to .relative {
-    transform: scale(0.95);
-}
-
-/* Badge pulse animation */
-@keyframes badge-pulse {
-    0%,
-    100% {
-        opacity: 1;
-        transform: scale(1);
-    }
-    50% {
-        opacity: 0.9;
-        transform: scale(1.05);
-    }
-}
-
-.animate-pulse {
-    animation: badge-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-/* Smooth rotation for chevron */
 .rotate-180 {
     transform: rotate(180deg);
+}
+
+@media (max-width: 767px) {
+    nav {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
 }
 </style>

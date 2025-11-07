@@ -120,6 +120,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::delete('/admin/reports/{report}', [ReportController::class, 'destroy'])->name('admin.reports.destroy');
     Route::post('/admin/reports/{report}/update-status', [ReportController::class, 'updateStatus'])->name('admin.reports.updateStatus');
     Route::get('/admin/reports/export/pdf', [ReportController::class, 'exportPdf'])->name('admin.reports.export.pdf');
+    Route::get('/admin/reports/{report}', [ReportController::class, 'adminShow'])->name('admin.reports.show');
 
     // Report merging
     Route::get('/admin/reports/mergeable', [NotificationController::class, 'getMergeableReports'])->name('admin.reports.mergeable');
@@ -198,9 +199,11 @@ Route::get('/staff/readings/{userId}/previous', [StaffReadingController::class, 
 Route::middleware(['auth', 'role:customer'])->group(function () {
     Route::get('/customer/dashboard', [CustomerDashboardController::class, 'index'])->name('customer.dashboard');
     Route::get('/customer/usage', [CustomerUsageController::class, 'index'])->name('customer.usage');
+    Route::get('/customer/usage/{month}', [CustomerUsageController::class, 'show'])->name('customer.usage.details');
     Route::get('/customer/reports', [ReportController::class, 'customerIndex'])
         ->middleware('verified')
         ->name('customer.reports');
+    Route::get('/reports/{report}', [ReportController::class, 'show'])->name('customer.reports.show');
     Route::get('/customer/announcements', [CustomerAnnouncementsController::class, 'index'])->name('customer.announcements');
 
     // Customer notifications

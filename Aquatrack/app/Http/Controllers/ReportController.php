@@ -95,6 +95,68 @@ class ReportController extends Controller
         }
     }
 
+    public function show(Report $report)
+    {
+        // Check if the authenticated user owns this report
+        if (auth()->user()->role === 'customer' && $report->user_id !== auth()->id()) {
+            abort(404);
+        }
+
+        // Load relationships
+        $report->load(['photos', 'user']);
+
+       return Inertia::render('Customer/ReportDetailsPage', [
+           'report' => $report
+       ]);
+    }
+
+      public function adminShow(Report $report)
+{
+    try {
+        $user = Auth::user();
+
+        // Check if user is authenticated and is an admin
+        if (!$user || $user->role !== 'admin') {
+            abort(404);
+        }
+
+        // Check if report is deleted or merged reference
+        if ($report->deleted_at || $report->is_merged_reference) {
+            abort(404);
+        }
+
+        // Load relationships
+        $report->load(['photos', 'user']);
+
+        // Format user types for display
+        $report->formatted_user_types = $this->formatUserTypes(
+            $report->user_types,
+            $report->user_id,
+            $report->reporter_name
+        );
+
+        // Add avatar URL if user has avatar
+        if ($report->user && $report->user->avatar) {
+            $report->user->avatar_url = Storage::url($report->user->avatar);
+        }
+
+        return Inertia::render('Admin/ReportDetailsPage', [
+            'report' => $report
+        ]);
+
+    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        Log::warning('Report not found', ['report_id' => $report->id ?? 'unknown']);
+        abort(404);
+    } catch (\Exception $e) {
+        Log::error('Error fetching report details', [
+            'report_id' => $report->id ?? 'unknown',
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        abort(500);
+    }
+}
+
     /**
      * Get dashboard statistics combining users and reports
      */

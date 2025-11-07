@@ -55,42 +55,68 @@ class CustomerUsageController extends Controller
         ]);
     }
 
-    public function getPreviousReadings($userId)
+    public function show($month)
     {
-        try {
-            $user = User::where('id', $userId)
-                ->where('role', 'customer')
-                ->firstOrFail();
+        $user = Auth::user();
 
-            $readings = MeterReading::where('user_id', $userId)
-                ->orderBy('reading_date', 'desc')
-                ->limit(12)
-                ->get()
-                ->map(function ($reading) {
-                    $dueDate = $reading->due_date ? Carbon::parse($reading->due_date) : null;
+        // URL decode the month parameter (it might contain spaces and special characters)
+        $decodedMonth = urldecode($month);
 
-                    return [
-                        'billing_month' => $reading->billing_month,
-                        'reading_date' => $reading->reading_date ? $reading->reading_date->format('Y-m-d') : 'N/A',
-                        'previous_reading' => $reading->previous_reading,
-                        'reading' => $reading->reading,
-                        'consumption' => $reading->consumption,
-                        'amount' => $reading->amount,
-                        'year' => $reading->reading_date ? $reading->reading_date->format('Y') : date('Y'),
-                        'due_date' => $reading->due_date,
-                        'due_date_formatted' => $dueDate ? $dueDate->format('M d, Y') : 'N/A',
-                        'status' => $reading->status ?? ($reading->amount > 0 ? 'Pending' : 'Paid'),
-                    ];
-                });
+        // Parse month and year from the parameter (format: "January 2024")
+        $monthParts = explode(' ', $decodedMonth);
+        $monthName = $monthParts[0];
+        $year = $monthParts[1] ?? date('Y');
 
-            return response()->json($readings);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json(['error' => 'User not found'], 404);
-        } catch (\Exception $e) {
-            Log::error('Error fetching previous readings: ' . $e->getMessage());
-            return response()->json(['error' => 'Server error'], 500);
+        // Get the meter reading for this month
+        $reading = MeterReading::where('user_id', $user->id)
+            ->where('billing_month', $monthName)
+            ->whereYear('reading_date', $year)
+            ->first();
+
+        if (!$reading) {
+            abort(404, 'Usage record not found');
         }
+
+        // Get previous readings for context (last 12 months)
+        $previousReadings = MeterReading::where('user_id', $user->id)
+            ->orderBy('reading_date', 'desc')
+            ->limit(12)
+            ->get()
+            ->map(function ($reading) {
+                $dueDate = $reading->due_date ? Carbon::parse($reading->due_date) : null;
+
+                return [
+                    'billing_month' => $reading->billing_month,
+                    'reading_date' => $reading->reading_date ? $reading->reading_date->format('Y-m-d') : 'N/A',
+                    'previous_reading' => $reading->previous_reading,
+                    'reading' => $reading->reading,
+                    'consumption' => $reading->consumption,
+                    'amount' => $reading->amount,
+                    'year' => $reading->reading_date ? $reading->reading_date->format('Y') : date('Y'),
+                    'due_date' => $reading->due_date,
+                    'due_date_formatted' => $dueDate ? $dueDate->format('M d, Y') : 'N/A',
+                    'status' => $reading->status ?? ($reading->amount > 0 ? 'Pending' : 'Paid'),
+                ];
+            });
+
+        return Inertia::render('Customer/Usage/UsageDetails', [
+            'usage' => [
+                'month' => $decodedMonth,
+                'usage' => $reading->consumption,
+                'amount' => number_format($reading->amount, 2),
+                'status' => $reading->status ?? ($reading->amount > 0 ? 'Pending' : 'Paid'),
+                'due_date' => $reading->due_date,
+                'due_date_formatted' => $reading->due_date ? Carbon::parse($reading->due_date)->format('M d, Y') : 'N/A',
+                'previous_reading' => $reading->previous_reading,
+                'current_reading' => $reading->reading,
+                'reading_date' => $reading->reading_date ? $reading->reading_date->format('Y-m-d') : null,
+            ],
+            'previousReadings' => $previousReadings,
+        ]);
     }
+
+    // You can remove the getPreviousReadings API method since we're now loading everything in the show method
+    // unless you need it for other purposes
 
     public function update(Request $request, $id)
     {

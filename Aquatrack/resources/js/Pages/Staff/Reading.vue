@@ -1,284 +1,245 @@
 <template>
     <StaffLayout>
-        <div
-            class="min-h-screen py-1 px-2 sm:px-1 lg:px-1"
-        >
-            <div class="max-w-full mx-auto">
-                <!-- Header Section -->
-                <div class="mb-8">
-                    <div class="flex items-center gap-3 mb-2">
-
-                        <div>
-                            <h1
-                                class="text-2xl font-bold text-gray-900"
-                            >
-                                Meter Readings
-                            </h1>
-                            <p class="text-sm text-slate-500 mt-0.5">
-                                Record and manage water consumption data
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Search Section -->
-                <div
-                    class="bg-white rounded-3xl shadow-sm border border-slate-200/60 overflow-hidden mb-6"
-                >
-                    <div class="p-6 sm:p-8">
-                        <div class="flex items-center gap-2 mb-6">
-                            <Search
-                                class="w-5 h-5 text-blue-600"
-                                :stroke-width="2"
-                            />
-                            <h2 class="text-lg font-semibold text-slate-900">
-                                Find Customer
-                            </h2>
-                        </div>
-
-                        <div class="flex flex-col sm:flex-row gap-3">
-                            <div class="relative flex-1">
-                                <Search
-                                    class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"
-                                    :stroke-width="2"
-                                />
-                                <input
-                                    v-model="searchQuery"
-                                    type="text"
-                                    class="w-full pl-12 pr-12 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all duration-200"
-                                    placeholder="Search by name, account, or serial number..."
-                                    @input="debouncedSearch"
-                                />
-                                <button
-                                    v-if="searchQuery"
-                                    @click="clearSearch"
-                                    type="button"
-                                    class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
-                                >
-                                    <X class="w-4 h-4" :stroke-width="2" />
-                                </button>
-                            </div>
-                            <button
-                                @click="searchUsers"
-                                type="button"
-                                class="px-6 py-3.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-2xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 flex items-center justify-center gap-2 shadow-sm shadow-blue-600/20 hover:shadow-md hover:shadow-blue-600/30 min-w-[120px] font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                                :disabled="isSearching"
-                            >
-                                <Search
-                                    v-if="!isSearching"
-                                    class="w-4 h-4"
-                                    :stroke-width="2"
-                                />
-                                <Loader2
-                                    v-else
-                                    class="w-4 h-4 animate-spin"
-                                    :stroke-width="2"
-                                />
-                                <span>{{
-                                    isSearching ? "Searching..." : "Search"
-                                }}</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Loading State -->
-                <div
-                    v-if="isSearching"
-                    class="flex items-center justify-center py-16"
-                >
-                    <div class="text-center">
-                        <div class="relative inline-flex mb-4">
-                            <div
-                                class="absolute inset-0 bg-blue-500 blur-2xl opacity-20 rounded-full animate-pulse"
-                            ></div>
-                            <div
-                                class="relative bg-white p-4 rounded-2xl shadow-sm border border-slate-200/60"
-                            >
-                                <Loader2
-                                    class="w-8 h-8 text-blue-600 animate-spin"
-                                    :stroke-width="2"
-                                />
-                            </div>
-                        </div>
-                        <p class="text-sm font-medium text-slate-600">
-                            Searching customers...
+        <div class="min-h-screen px-4">
+            <!-- Header -->
+            <div class="mb-8">
+                <div class="flex items-center gap-3 mb-3">
+                    <Droplet class="w-8 h-8 text-blue-600" />
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">
+                            Meter Readings
+                        </h1>
+                        <p class="text-gray-500 mt-1">
+                            Record and manage water consumption data
                         </p>
                     </div>
                 </div>
+            </div>
 
-                <!-- Search Results -->
-                <div v-if="searchPerformed && !isSearching">
-                    <!-- Results Found -->
-                    <div v-if="searchResults.length > 0" class="space-y-4">
-                        <div class="flex items-center gap-2 px-1">
-                            <Users
-                                class="w-4 h-4 text-slate-500"
-                                :stroke-width="2"
+            <!-- Search Card -->
+            <div
+                class="bg-white shadow-sm border border-gray-200 rounded-lg mb-8"
+            >
+                <div class="p-6">
+                    <div class="flex items-center gap-2 mb-4">
+                        <Search class="w-5 h-5 text-blue-600" />
+                        <h2 class="text-lg font-semibold text-gray-900">
+                            Find Customer
+                        </h2>
+                    </div>
+
+                    <div class="flex flex-col lg:flex-row gap-4">
+                        <div class="relative flex-1">
+                            <Search
+                                class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
                             />
-                            <p class="text-sm font-medium text-slate-600">
-                                Found {{ searchResults.length }} customer{{
-                                    searchResults.length !== 1 ? "s" : ""
-                                }}
-                            </p>
-                        </div>
-
-                        <div class="grid gap-3">
-                            <div
-                                v-for="user in searchResults"
-                                :key="user.id"
-                                @click="openReadingForm(user)"
-                                class="group bg-white rounded-2xl shadow-sm border border-slate-200/60 hover:border-blue-300 hover:shadow-md transition-all duration-200 cursor-pointer overflow-hidden"
+                            <input
+                                v-model="searchQuery"
+                                type="text"
+                                class="w-full pl-11 pr-11 py-4 bg-gray-50 border border-gray-300 rounded-lg text-base text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                placeholder="Search by name, account number, or meter serial number..."
+                                @input="debouncedSearch"
+                            />
+                            <button
+                                v-if="searchQuery"
+                                @click="clearSearch"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                             >
-                                <div class="p-5">
-                                    <div class="flex items-start gap-4">
-                                        <!-- Avatar -->
-                                        <div class="flex-shrink-0">
+                                <X class="w-5 h-5" />
+                            </button>
+                        </div>
+                        <button
+                            @click="searchUsers"
+                            :disabled="isSearching"
+                            class="px-8 py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 min-w-[140px] font-medium text-base disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <Search v-if="!isSearching" class="w-5 h-5" />
+                            <Loader2 v-else class="w-5 h-5 animate-spin" />
+                            <span>{{
+                                isSearching ? "Searching..." : "Search"
+                            }}</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div v-if="isSearching" class="flex justify-center py-16">
+                <div class="text-center">
+                    <Loader2
+                        class="w-10 h-10 text-blue-600 animate-spin mx-auto mb-4"
+                    />
+                    <p class="text-gray-600 text-lg">Searching customers...</p>
+                </div>
+            </div>
+
+            <!-- Search Results -->
+            <div v-if="searchPerformed && !isSearching" class="w-full">
+                <!-- Results Found -->
+                <div v-if="searchResults.length > 0" class="space-y-6">
+                    <div class="flex items-center gap-2 px-2">
+                        <Users class="w-5 h-5 text-gray-500" />
+                        <p class="text-base font-medium text-gray-600">
+                            Found {{ searchResults.length }} customer{{
+                                searchResults.length !== 1 ? "s" : ""
+                            }}
+                        </p>
+                    </div>
+
+                    <!-- Results Grid -->
+                    <div
+                        class="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-6"
+                    >
+                        <div
+                            v-for="user in searchResults"
+                            :key="user.id"
+                            @click="openReadingForm(user)"
+                            class="bg-white border border-gray-200 rounded-lg hover:border-blue-400 hover:shadow-lg transition-all duration-200 cursor-pointer group"
+                        >
+                            <div class="p-6">
+                                <div class="flex items-start gap-4">
+                                    <!-- Avatar -->
+                                    <div class="flex-shrink-0">
+                                        <div
+                                            v-if="user.avatar_url"
+                                            class="w-12 h-12 rounded-lg overflow-hidden border border-gray-200"
+                                        >
+                                            <img
+                                                :src="user.avatar_url"
+                                                :alt="user.name"
+                                                class="w-full h-full object-cover"
+                                            />
+                                        </div>
+                                        <div
+                                            v-else
+                                            class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center"
+                                        >
+                                            <User class="w-6 h-6 text-white" />
+                                        </div>
+                                    </div>
+
+                                    <!-- User Info -->
+                                    <div class="flex-1 min-w-0">
+                                        <h4
+                                            class="font-semibold text-gray-900 text-lg mb-2 group-hover:text-blue-700 transition-colors"
+                                        >
+                                            {{ user.name }} {{ user.lastname }}
+                                        </h4>
+
+                                        <!-- Account & Address -->
+                                        <div class="space-y-2 mb-4">
                                             <div
-                                                v-if="user.avatar_url"
-                                                class="relative"
+                                                class="flex items-center gap-2 text-sm text-gray-600"
                                             >
-                                                <img
-                                                    :src="user.avatar_url"
-                                                    :alt="user.name"
-                                                    class="w-12 h-12 rounded-xl object-cover border border-slate-200"
+                                                <Hash
+                                                    class="w-4 h-4 text-gray-400"
                                                 />
+                                                <span class="font-medium">{{
+                                                    user.account_number
+                                                }}</span>
                                             </div>
                                             <div
-                                                v-else
-                                                class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center"
+                                                class="flex items-center gap-2 text-sm text-gray-600"
                                             >
-                                                <User
-                                                    class="w-6 h-6 text-white"
-                                                    :stroke-width="2"
+                                                <MapPin
+                                                    class="w-4 h-4 text-gray-400"
                                                 />
+                                                <span class="truncate">{{
+                                                    user.address
+                                                }}</span>
                                             </div>
                                         </div>
 
-                                        <!-- User Info -->
-                                        <div class="flex-1 min-w-0">
-                                            <h4
-                                                class="font-semibold text-slate-900 group-hover:text-blue-700 transition-colors mb-2 truncate"
+                                        <!-- Meter Details -->
+                                        <div
+                                            class="grid grid-cols-2 gap-3 pt-3 border-t border-gray-100"
+                                        >
+                                            <div
+                                                v-if="user.serial_number"
+                                                class="flex items-center gap-2 text-sm text-gray-600"
                                             >
-                                                {{ user.name }}
-                                                {{ user.lastname }}
-                                            </h4>
-                                            <div class="space-y-1.5">
                                                 <div
-                                                    class="flex items-center gap-2 text-xs text-slate-600"
-                                                >
-                                                    <Hash
-                                                        class="w-3.5 h-3.5 text-slate-400"
-                                                        :stroke-width="2"
-                                                    />
-                                                    <span class="truncate">{{
-                                                        user.account_number
-                                                    }}</span>
-                                                </div>
+                                                    class="w-2 h-2 bg-blue-500 rounded-full"
+                                                ></div>
+                                                <span class="truncate">{{
+                                                    user.serial_number
+                                                }}</span>
+                                            </div>
+                                            <div
+                                                v-if="user.brand"
+                                                class="flex items-center gap-2 text-sm text-gray-600"
+                                            >
                                                 <div
-                                                    class="flex items-center gap-2 text-xs text-slate-600"
-                                                >
-                                                    <MapPin
-                                                        class="w-3.5 h-3.5 text-slate-400"
-                                                        :stroke-width="2"
-                                                    />
-                                                    <span class="truncate">{{
-                                                        user.address
-                                                    }}</span>
-                                                </div>
+                                                    class="w-2 h-2 bg-green-500 rounded-full"
+                                                ></div>
+                                                <span class="truncate">{{
+                                                    user.brand
+                                                }}</span>
                                             </div>
                                         </div>
+                                    </div>
 
-                                        <!-- Action Arrow -->
-                                        <div class="flex-shrink-0 self-center">
-                                            <div
-                                                class="w-8 h-8 rounded-xl bg-slate-50 group-hover:bg-blue-50 flex items-center justify-center transition-colors"
-                                            >
-                                                <ChevronRight
-                                                    class="w-4 h-4 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all"
-                                                    :stroke-width="2"
-                                                />
-                                            </div>
+                                    <!-- Action Indicator -->
+                                    <div class="flex-shrink-0 self-start">
+                                        <div
+                                            class="w-10 h-10 rounded-lg bg-gray-50 group-hover:bg-blue-50 flex items-center justify-center transition-colors"
+                                        >
+                                            <ChevronRight
+                                                class="w-5 h-5 text-gray-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all"
+                                            />
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    <!-- No Results -->
-                    <div v-else class="text-center py-16">
-                        <div class="relative inline-flex mb-4">
-                            <div
-                                class="absolute inset-0 bg-slate-200 blur-2xl opacity-30 rounded-full"
-                            ></div>
-                            <div
-                                class="relative bg-white p-4 rounded-2xl shadow-sm border border-slate-200/60"
-                            >
-                                <SearchX
-                                    class="w-8 h-8 text-slate-400"
-                                    :stroke-width="2"
-                                />
-                            </div>
-                        </div>
-                        <h3 class="text-lg font-semibold text-slate-900 mb-1">
-                            No customers found
-                        </h3>
-                        <p class="text-sm text-slate-500">
-                            Try adjusting your search terms
-                        </p>
-                    </div>
                 </div>
 
-                <!-- Quick Tips -->
-                <div
-                    v-if="!searchPerformed && !isSearching"
-                    class="bg-gradient-to-br from-slate-50 to-blue-50/50 rounded-3xl border border-slate-200/60 overflow-hidden"
-                >
-                    <div class="p-6 sm:p-8">
-                        <div class="flex items-center gap-2 mb-4">
-                            <Info
-                                class="w-5 h-5 text-blue-600"
-                                :stroke-width="2"
-                            />
-                            <h3 class="text-lg font-semibold text-slate-900">
-                                Quick Tips
-                            </h3>
+                <!-- No Results -->
+                <div v-else class="text-center py-16">
+                    <SearchX class="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">
+                        No customers found
+                    </h3>
+                    <p class="text-gray-500 text-base">
+                        Try adjusting your search terms or check for spelling
+                        errors
+                    </p>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div
+                v-if="!searchPerformed && !isSearching"
+                class="text-center py-16"
+            >
+                <div class="max-w-lg mx-auto">
+                    <div
+                        class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6"
+                    >
+                        <Search class="w-10 h-10 text-blue-600" />
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-3">
+                        Search for Customers
+                    </h3>
+                    <p class="text-gray-500 text-base mb-6">
+                        Enter a customer's name, account number, or meter serial
+                        number to find and record their meter reading
+                    </p>
+                    <div
+                        class="flex flex-col sm:flex-row gap-4 justify-center items-center text-sm text-gray-500"
+                    >
+                        <div class="flex items-center gap-2">
+                            <User class="w-4 h-4" />
+                            <span>Customer Name</span>
                         </div>
-                        <div class="space-y-3">
-                            <div class="flex items-start gap-3">
-                                <div
-                                    class="w-1.5 h-1.5 rounded-full bg-blue-600 mt-2 flex-shrink-0"
-                                ></div>
-                                <p
-                                    class="text-sm text-slate-600 leading-relaxed"
-                                >
-                                    Search by customer name, account number, or
-                                    meter serial number
-                                </p>
-                            </div>
-                            <div class="flex items-start gap-3">
-                                <div
-                                    class="w-1.5 h-1.5 rounded-full bg-blue-600 mt-2 flex-shrink-0"
-                                ></div>
-                                <p
-                                    class="text-sm text-slate-600 leading-relaxed"
-                                >
-                                    Click on a customer card to record their
-                                    meter reading
-                                </p>
-                            </div>
-                            <div class="flex items-start gap-3">
-                                <div
-                                    class="w-1.5 h-1.5 rounded-full bg-blue-600 mt-2 flex-shrink-0"
-                                ></div>
-                                <p
-                                    class="text-sm text-slate-600 leading-relaxed"
-                                >
-                                    Recent readings will be shown in the
-                                    customer profile
-                                </p>
-                            </div>
+                        <div class="flex items-center gap-2">
+                            <Hash class="w-4 h-4" />
+                            <span>Account Number</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <Droplet class="w-4 h-4" />
+                            <span>Meter Serial</span>
                         </div>
                     </div>
                 </div>
@@ -310,7 +271,6 @@ import {
     MapPin,
     ChevronRight,
     SearchX,
-    Info,
 } from "lucide-vue-next";
 import StaffLayout from "@/Layouts/StaffLayout.vue";
 import MeterReadingModal from "@/Components/Staff/Modals/MeterReadingModal.vue";
@@ -373,7 +333,6 @@ const openReadingForm = (user) => {
         brand: user.brand || null,
         serial_number: user.serial_number || null,
         size: user.size || null,
-
     };
     showReadingForm.value = true;
 };
@@ -383,8 +342,16 @@ const closeReadingForm = () => {
     selectedUser.value = {};
 };
 
-const handleReadingSubmitted = () => {
-    searchUsers();
+const handleReadingSubmitted = async () => {
+    // If we have a current search, refresh it
+    if (searchQuery.value.trim()) {
+        await searchUsers();
+    }
+
+    // Optional: Also refresh the current user data in the modal if it's open
+    if (showReadingForm.value && selectedUser.value.id) {
+        // You might want to refetch user data here if needed
+    }
 };
 
 onMounted(() => {
@@ -395,32 +362,21 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Smooth scroll behavior */
-html {
-    scroll-behavior: smooth;
+/* Custom scrollbar for better appearance */
+::-webkit-scrollbar {
+    width: 6px;
 }
 
-/* Custom gradient animations */
-@keyframes gradient-shift {
-    0%,
-    100% {
-        background-position: 0% 50%;
-    }
-    50% {
-        background-position: 100% 50%;
-    }
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
 }
 
-/* Enhanced hover effects */
-.group:hover {
-    transform: translateY(-1px);
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
 }
 
-/* Smooth transitions for all interactive elements */
-* {
-    transition-property: color, background-color, border-color, transform,
-        box-shadow;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    transition-duration: 200ms;
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
 }
 </style>

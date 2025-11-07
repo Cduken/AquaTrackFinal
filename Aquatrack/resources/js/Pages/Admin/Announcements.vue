@@ -366,7 +366,7 @@
                                                 <div
                                                     class="flex flex-col items-center justify-center space-y-4"
                                                 >
-                                                    <Speaker
+                                                    <Megaphone
                                                         class="w-20 h-20 text-gray-300"
                                                     />
                                                     <span
@@ -491,6 +491,7 @@ import {
     Trash2,
     Speaker,
     ChevronsUpDown,
+    Megaphone,
 } from "lucide-vue-next";
 
 const props = defineProps({

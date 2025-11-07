@@ -46,7 +46,7 @@
                     type="button"
                     @click="$emit('initialize-camera')"
                     :disabled="isCameraLoading"
-                    class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-slate-800 via-slate-900 to-slate-950 hover:from-slate-900 hover:via-slate-950 hover:to-slate-800 disabled:from-blue-300 disabled:to-blue-400 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
+                    class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-slate-800 via-slate-900 to-slate-950 hover:from-slate-900 hover:via-slate-950 hover:to-slate-800 disabled:from-slate-600 disabled:to-slate-800 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
                 >
                     <v-icon
                         v-if="isCameraLoading"

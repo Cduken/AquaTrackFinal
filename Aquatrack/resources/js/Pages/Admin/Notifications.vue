@@ -588,7 +588,7 @@
                                                 ? getRelativeTime(
                                                       selectedNotification.updated_at
                                                   )
-                                                : ""
+                                                : "-"
                                         }}
                                     </p>
                                 </div>
@@ -625,7 +625,7 @@
                         class="bg-gray-50 dark:bg-gray-700/50 px-6 py-3 border-t border-gray-200 dark:border-gray-700"
                     >
                         <div class="flex items-center justify-between">
-                            <span
+                            <!-- <span
                                 class="text-xs text-gray-500 dark:text-gray-400"
                             >
                                 Notification ID:
@@ -634,10 +634,10 @@
                                         ? selectedNotification.id
                                         : ""
                                 }}
-                            </span>
+                            </span> -->
                             <div class="flex items-center space-x-2">
                                 <!-- Go to Action Button -->
-                                <button
+                                <!-- <button
                                     v-if="
                                         selectedNotification &&
                                         selectedNotification.action_url
@@ -646,7 +646,7 @@
                                     class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-blue-700 rounded-md hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 transition-colors"
                                 >
                                     {{ getActionLabel(selectedNotification) }}
-                                </button>
+                                </button> -->
                                 <button
                                     v-if="selectedNotification"
                                     @click="
@@ -654,7 +654,7 @@
                                             selectedNotification.id
                                         )
                                     "
-                                    class="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-red-700 rounded-md hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800 transition-colors"
+                                    class="px-4 py-2 text-sm font-medium text-right text-white bg-red-600 border border-red-700 rounded-md hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800 transition-colors"
                                 >
                                     Delete
                                 </button>

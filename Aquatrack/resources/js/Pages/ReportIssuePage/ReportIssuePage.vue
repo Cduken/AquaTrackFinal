@@ -17,12 +17,14 @@
         <section class="pt-8 lg:pt-20 pb-8 md:pb-12 px-4 sm:px-6 lg:px-8">
             <div class="max-w-7xl mx-auto">
                 <div class="text-center space-y-3 md:space-y-4">
-
-
                     <h1
                         class="text-3xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white tracking-tight"
                     >
-                        Report <span class="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">Water Issue</span>
+                        Report
+                        <span
+                            class="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent"
+                            >Water Issue</span
+                        >
                     </h1>
                     <p
                         class="text-base md:text-sm lg:text-md text-slate-300 max-w-3xl mx-auto leading-relaxed px-2"
@@ -264,27 +266,6 @@
                                 </button>
                             </div>
                         </div>
-
-                        <!-- Help Text -->
-                        <div
-                            class="mt-4 md:mt-6 flex items-start gap-2 md:gap-3 p-3 md:p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg md:rounded-xl backdrop-blur-sm"
-                        >
-                            <Info
-                                :size="16"
-                                class="text-blue-400 flex-shrink-0 mt-0.5 md:mt-1"
-                            />
-                            <p
-                                class="text-xs md:text-sm text-blue-100 leading-relaxed"
-                            >
-                                <span class="font-semibold">Need help?</span> If
-                                you have questions about filling out this form,
-                                please contact our support team at
-                                <span
-                                    class="text-blue-300 font-medium break-all"
-                                    >support@aquatrack.com</span
-                                >
-                            </p>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -327,7 +308,7 @@ import { Head, Link } from "@inertiajs/vue3";
 import Navigation from "@/Components/Header/Navigation.vue";
 import ReportForm from "@/Components/Reports/ReportForm.vue";
 import GlobalReportSuccessModal from "@/Components/Modals/GlobalReportSuccessModal.vue";
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import {
     ArrowLeft,
     Zap,
@@ -350,7 +331,7 @@ defineProps({
     },
 });
 
-// Success modal state
+// Success modal state with localStorage persistence
 const showSuccessModal = ref(false);
 const trackingInfo = ref(null);
 
@@ -368,6 +349,69 @@ const steps = [
     { id: 3, name: "Media" },
     { id: 4, name: "Review" },
 ];
+
+// LocalStorage keys
+const STORAGE_KEYS = {
+    SUCCESS_MODAL: "aquatrack_success_modal",
+    TRACKING_INFO: "aquatrack_tracking_info",
+    FORM_STATE: "aquatrack_form_state",
+};
+
+// Save state to localStorage
+const saveStateToStorage = () => {
+    if (showSuccessModal.value && trackingInfo.value) {
+        localStorage.setItem(STORAGE_KEYS.SUCCESS_MODAL, "true");
+        localStorage.setItem(
+            STORAGE_KEYS.TRACKING_INFO,
+            JSON.stringify(trackingInfo.value)
+        );
+    }
+};
+
+// Load state from localStorage
+const loadStateFromStorage = () => {
+    try {
+        const savedModalState = localStorage.getItem(
+            STORAGE_KEYS.SUCCESS_MODAL
+        );
+        const savedTrackingInfo = localStorage.getItem(
+            STORAGE_KEYS.TRACKING_INFO
+        );
+
+        if (savedModalState === "true" && savedTrackingInfo) {
+            const parsedTrackingInfo = JSON.parse(savedTrackingInfo);
+
+            // Check if the tracking info is not too old (e.g., within last 24 hours)
+            const submissionDate = new Date(parsedTrackingInfo.date);
+            const now = new Date();
+            const hoursDiff = (now - submissionDate) / (1000 * 60 * 60);
+
+            if (hoursDiff < 24) {
+                // Show modal only for reports submitted in last 24 hours
+                trackingInfo.value = parsedTrackingInfo;
+                showSuccessModal.value = true;
+
+                console.log(
+                    "Restored success modal from localStorage:",
+                    trackingInfo.value
+                );
+            } else {
+                // Clear old data
+                clearStoredState();
+            }
+        }
+    } catch (error) {
+        console.error("Error loading state from localStorage:", error);
+        clearStoredState();
+    }
+};
+
+// Clear stored state
+const clearStoredState = () => {
+    localStorage.removeItem(STORAGE_KEYS.SUCCESS_MODAL);
+    localStorage.removeItem(STORAGE_KEYS.TRACKING_INFO);
+    localStorage.removeItem(STORAGE_KEYS.FORM_STATE);
+};
 
 // Computed properties
 const progressWidth = computed(() => {
@@ -419,7 +463,10 @@ const submitReport = async () => {
 
 // Event handlers
 const handleReportSuccess = (data) => {
-    if (!data.trackingCode) return;
+    // Only show success modal for online submissions
+    if (!data.trackingCode || data.isOffline) {
+        return;
+    }
 
     trackingInfo.value = {
         code: data.trackingCode,
@@ -428,6 +475,9 @@ const handleReportSuccess = (data) => {
     };
 
     showSuccessModal.value = true;
+
+    // Save to localStorage when success modal shows
+    saveStateToStorage();
 };
 
 const handleOfflineReportsSynced = (data) => {
@@ -439,6 +489,9 @@ const handleOfflineReportsSynced = (data) => {
         isOffline: true,
     };
     showSuccessModal.value = true;
+
+    // Save to localStorage when success modal shows
+    saveStateToStorage();
 };
 
 const handleTrackReport = () => {
@@ -483,10 +536,15 @@ const handleTrackReport = () => {
 
 const closeSuccessModal = () => {
     showSuccessModal.value = false;
+    // Clear stored state when modal is manually closed
+    clearStoredState();
 };
 
 const submitAnotherReport = () => {
     showSuccessModal.value = false;
+    // Clear stored state when starting a new report
+    clearStoredState();
+
     currentStep.value = 1;
     isSubmitting.value = false;
 
@@ -503,4 +561,39 @@ const handleFormStateChange = (state) => {
     locationStatus.value = state.locationStatus;
     isOnline.value = state.isOnline;
 };
+
+// Handle browser beforeunload event
+const handleBeforeUnload = (event) => {
+    if (showSuccessModal.value && trackingInfo.value) {
+        // Don't prevent unloading, just ensure state is saved
+        saveStateToStorage();
+    }
+};
+
+// Handle page visibility change
+const handleVisibilityChange = () => {
+    if (
+        document.visibilityState === "hidden" &&
+        showSuccessModal.value &&
+        trackingInfo.value
+    ) {
+        saveStateToStorage();
+    }
+};
+
+// Lifecycle
+onMounted(() => {
+    // Load persisted state when component mounts
+    loadStateFromStorage();
+
+    // Add event listeners for persistence
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+});
+
+onUnmounted(() => {
+    // Clean up event listeners
+    window.removeEventListener("beforeunload", handleBeforeUnload);
+    document.removeEventListener("visibilitychange", handleVisibilityChange);
+});
 </script>

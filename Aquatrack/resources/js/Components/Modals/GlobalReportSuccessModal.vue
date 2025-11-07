@@ -1,4 +1,4 @@
-<!-- GlobalReportSuccessModal.vue -->
+<!-- Add this method to GlobalReportSuccessModal.vue script -->
 <script setup>
 import { ref, onMounted, watch, computed, nextTick } from "vue";
 import QRCode from "qrcode";
@@ -16,6 +16,13 @@ const emit = defineEmits(["close", "submit-another", "track-report"]);
 const qrCodeCanvas = ref(null);
 const qrError = ref(null);
 const isVisible = ref(false);
+
+// Clear localStorage when modal is closed
+const clearStoredState = () => {
+    localStorage.removeItem("aquatrack_success_modal");
+    localStorage.removeItem("aquatrack_tracking_info");
+    localStorage.removeItem("aquatrack_form_state");
+};
 
 // Format date properly
 const formattedDate = computed(() => {
@@ -43,6 +50,8 @@ const startAnimation = () => {
 // Redirect to track report page with the tracking code
 const trackThisReport = () => {
     if (trackingCode.value) {
+        // Clear stored state when navigating away
+        clearStoredState();
         // Close the modal first
         emit("close");
 
@@ -145,6 +154,17 @@ onMounted(() => {
         });
     }
 });
+
+// Add handler for close events that clears storage
+const handleClose = () => {
+    clearStoredState();
+    emit("close");
+};
+
+const handleSubmitAnother = () => {
+    clearStoredState();
+    emit("submit-another");
+};
 </script>
 
 <template>
@@ -304,7 +324,7 @@ onMounted(() => {
                             </div>
                         </div>
 
-                        <!-- Download button with animation -->
+                        <!-- Action buttons with animation -->
                         <div
                             class="flex flex-col sm:flex-row gap-2 transition-all duration-700 delay-1100"
                             :class="

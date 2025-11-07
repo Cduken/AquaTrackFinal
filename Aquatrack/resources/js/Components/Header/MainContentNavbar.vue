@@ -1,6 +1,6 @@
 <template>
     <nav
-        class="bg-white border-b border-gray-200 px-4 py-[9px] shadow-sm dark:bg-gray-800 dark:border-gray-700 fixed right-0 top-0 z-40 transition-all duration-300"
+        class="bg-white border-b border-gray-200 px-4 py-[9px] shadow-lg dark:bg-gray-800 dark:border-gray-700 fixed right-0 top-0 z-40 transition-all duration-300"
         :class="[
             isSidebarOpen ? 'left-64' : 'left-16',
             isMobileMenuOpen ? 'left-0' : '',

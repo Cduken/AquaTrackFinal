@@ -231,10 +231,7 @@
                                             <Hash class="w-3 h-3" />
                                             {{ activity.serial_number }}
                                         </span>
-                                        <span class="flex items-center gap-1">
-                                            <Clock class="w-3 h-3" />
-                                            {{ activity.reading_time }}
-                                        </span>
+
                                     </div>
                                 </div>
                             </div>

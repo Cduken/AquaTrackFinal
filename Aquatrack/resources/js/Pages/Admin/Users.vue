@@ -338,10 +338,14 @@
                                                         )
                                                     "
                                                 >
+                                                    <!-- In the action dropdown section -->
                                                     <div class="py-1">
-                                                        <button
-                                                            @click="
-                                                                viewUser(user)
+                                                        <Link
+                                                            :href="
+                                                                route(
+                                                                    'admin.users.show',
+                                                                    user.id
+                                                                )
                                                             "
                                                             class="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                                                         >
@@ -349,7 +353,7 @@
                                                                 class="w-4 h-4 mr-3"
                                                             />
                                                             View Details
-                                                        </button>
+                                                        </Link>
                                                         <button
                                                             v-if="
                                                                 user.role !==
@@ -463,11 +467,6 @@
                 @submit="submitCreateUser"
             />
 
-            <UserDetailsModal
-                :show="showUserModal"
-                :user="selectedUser"
-                @close="showUserModal = false"
-            />
 
             <EditUserDetailsModal
                 :show="showEditModal"
@@ -501,11 +500,10 @@
 import AdminLayout from "@/Layouts/AdminLayout.vue";
 import Pagination from "@/Components/Pagination.vue";
 import { ref, watch, onMounted, onUnmounted, nextTick } from "vue";
-import { router } from "@inertiajs/vue3";
+import { Link, router } from "@inertiajs/vue3";
 import { pickBy, debounce } from "lodash";
 import Swal from "sweetalert2";
-import CreateUserModal from "@/Components/Admin/Modals/CreateUserModal.vue";
-import UserDetailsModal from "@/Components/Modals/UserDetailsModal.vue";
+import CreateUserModal from "@/Components/Admin/Modals/CreateUserModal.vue"
 import EditUserDetailsModal from "@/Components/Modals/EditUserDetailsModal.vue";
 import StatusToggleModal from "@/Components/Admin/Modals/StatusToggleModal.vue";
 import DeleteUserModal from "@/Components/Admin/Modals/DeleteUserModal.vue";

@@ -665,13 +665,21 @@ const updateOnlineStatus = () => {
     const wasOffline = !isOnline.value;
     isOnline.value = navigator.onLine;
 
-    if (isOnline.value) {
-        if (wasOffline && locationStatus.value === "offline_default_location") {
-            setTimeout(() => {
-                getLocation();
-            }, 2000);
-        }
-        triggerAutoSync();
+    if (isOnline.value && wasOffline) {
+        // Wait a moment for network to stabilize, then sync
+        setTimeout(() => {
+            if (offlineReportsCount.value > 0) {
+                console.log("Auto-syncing offline reports after coming online");
+                syncOfflineReports();
+            }
+
+            // Try to get fresh location when coming online
+            if (locationStatus.value === "offline_default_location") {
+                setTimeout(() => {
+                    getLocation();
+                }, 2000);
+            }
+        }, 3000);
     }
 };
 
@@ -734,6 +742,15 @@ const saveLocationToCache = (coords) => {
 };
 
 const getLocation = async () => {
+    if (
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+            navigator.userAgent
+        )
+    ) {
+        // Mobile device - show explicit permission request
+        await requestMobileLocationPermission();
+        return;
+    }
     const cachedLocation = loadCachedLocation();
     if (cachedLocation) {
         form.latitude = cachedLocation.latitude;
@@ -860,6 +877,96 @@ const getLocation = async () => {
     });
 };
 
+const requestMobileLocationPermission = () => {
+    return new Promise((resolve) => {
+        Swal.fire({
+            title: "Location Access Required",
+            text: "This app needs location access to tag your report. Please allow location permissions when prompted.",
+            icon: "info",
+            showCancelButton: false,
+            confirmButtonText: "Allow Location",
+            confirmButtonColor: "#3085d6",
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                locationStatus.value = "loading";
+
+                const options = {
+                    enableHighAccuracy: true, // Increased accuracy for mobile
+                    timeout: 15000, // Longer timeout for mobile
+                    maximumAge: 0, // Don't use cached position
+                };
+
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const coords = {
+                            latitude: position.coords.latitude,
+                            longitude: position.coords.longitude,
+                            accuracy: position.coords.accuracy,
+                            timestamp: Date.now(),
+                        };
+
+                        saveLocationToCache(coords);
+                        form.latitude = coords.latitude;
+                        form.longitude = coords.longitude;
+                        locationStatus.value = "success";
+
+                        Swal.fire({
+                            icon: "success",
+                            title: "Location Acquired!",
+                            text: `Accuracy: ${
+                                coords.accuracy
+                                    ? coords.accuracy.toFixed(1) + "m"
+                                    : "Good"
+                            }`,
+                            toast: true,
+                            position: "top-end",
+                            showConfirmButton: false,
+                            timer: 4000,
+                        });
+
+                        resolve(coords);
+                    },
+                    (error) => {
+                        console.error("Mobile location error:", error);
+                        handleMobileLocationError(error);
+                        resolve(null);
+                    },
+                    options
+                );
+            } else {
+                useDefaultLocation();
+                resolve(null);
+            }
+        });
+    });
+};
+
+const handleMobileLocationError = (error) => {
+    let errorMessage = 'Could not get your location.';
+
+    switch(error.code) {
+        case error.PERMISSION_DENIED:
+            errorMessage = 'Location access was denied. Please enable location permissions in your browser settings.';
+            break;
+        case error.POSITION_UNAVAILABLE:
+            errorMessage = 'Location information is unavailable. Please check your GPS signal.';
+            break;
+        case error.TIMEOUT:
+            errorMessage = 'Location request timed out. Please try again.';
+            break;
+    }
+
+    Swal.fire({
+        icon: 'error',
+        title: 'Location Error',
+        text: errorMessage,
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#3085d6',
+    });
+
+    useDefaultLocation();
+};
+
 const useDefaultLocation = () => {
     form.latitude = 9.9616;
     form.longitude = 124.025;
@@ -966,6 +1073,17 @@ const initializeCamera = async () => {
             throw new Error("Camera not supported by this browser");
         }
 
+        // Mobile-specific camera constraints
+        const isMobile =
+            /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+                navigator.userAgent
+            );
+
+        if (isMobile) {
+            await requestMobileCameraPermission();
+            return;
+        }
+
         await getCameras();
 
         if (availableCameras.value.length === 0) {
@@ -983,6 +1101,100 @@ const initializeCamera = async () => {
         handleCameraError(error);
     } finally {
         isCameraLoading.value = false;
+    }
+};
+
+const requestMobileCameraPermission = async () => {
+    try {
+        cameraStatus.value = "Requesting camera access...";
+
+        // Show permission request dialog for mobile
+        const result = await Swal.fire({
+            title: "Camera Access Required",
+            text: "This app needs camera access to capture photos/videos for your report. Please allow camera permissions when prompted.",
+            icon: "info",
+            showCancelButton: false,
+            confirmButtonText: "Allow Camera",
+            confirmButtonColor: "#3085d6",
+        });
+
+        if (!result.isConfirmed) {
+            throw new Error("Camera permission denied by user");
+        }
+
+        await getCameras();
+
+        if (availableCameras.value.length === 0) {
+            throw new Error("No camera devices found");
+        }
+
+        if (stream) {
+            stream.getTracks().forEach((track) => track.stop());
+            stream = null;
+        }
+
+        await startMobileCameraStream();
+    } catch (error) {
+        throw error;
+    }
+};
+
+const startMobileCameraStream = async () => {
+    try {
+        cameraStatus.value = "Starting camera...";
+
+        if (stream) {
+            stream.getTracks().forEach((track) => track.stop());
+            stream = null;
+        }
+
+        isCameraActive.value = true;
+        await nextTick();
+
+        // Mobile-specific constraints
+        const constraints = {
+            video: {
+                width: { ideal: 1280 },
+                height: { ideal: 720 },
+                frameRate: { ideal: 30 },
+                facingMode: "environment", // Use rear camera by default on mobile
+            },
+            audio: true,
+        };
+
+        // Try to get specific camera on mobile
+        if (availableCameras.value.length > 0) {
+            // Prefer rear camera on mobile
+            const rearCamera = availableCameras.value.find(
+                (camera) =>
+                    camera.label.toLowerCase().includes("back") ||
+                    camera.label.toLowerCase().includes("rear") ||
+                    camera.label.toLowerCase().includes("environment")
+            );
+
+            if (rearCamera) {
+                constraints.video.deviceId = { exact: rearCamera.deviceId };
+            } else if (
+                currentCameraIndex.value < availableCameras.value.length
+            ) {
+                constraints.video.deviceId = {
+                    exact: availableCameras.value[currentCameraIndex.value]
+                        .deviceId,
+                };
+            }
+        }
+
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
+
+        if (cameraSectionRef.value) {
+            cameraSectionRef.value.setVideoStream(stream);
+        }
+
+        isCameraReady.value = true;
+        cameraStatus.value = "Camera ready";
+    } catch (error) {
+        console.error("Mobile camera stream error:", error);
+        throw error;
     }
 };
 
@@ -1469,6 +1681,7 @@ const syncOfflineReports = async () => {
 
         if (queue.length === 0) {
             isSyncing.value = false;
+            offlineReportsCount.value = 0;
             return;
         }
 
@@ -1500,6 +1713,7 @@ const syncOfflineReports = async () => {
                     }
                 });
 
+                // Ensure location data is included
                 if (!formData.has("latitude") || !formData.has("longitude")) {
                     formData.append(
                         "latitude",
@@ -1588,16 +1802,18 @@ const syncOfflineReports = async () => {
                         validationErrors: error.response.data.errors,
                     });
                 } else if (error.request) {
-                    failedSyncs.push({
-                        id: report.id,
-                        reason: "No server response",
-                    });
+                    // Network error - keep in queue for next sync
+                    console.log(
+                        `Network error for report ${report.id}, keeping in queue`
+                    );
+                    continue;
                 } else {
                     failedSyncs.push({ id: report.id, reason: error.message });
                 }
             }
         }
 
+        // Only remove successfully synced reports
         const updatedQueue = queue.filter(
             (report) => !successfulSyncs.includes(report.id)
         );
@@ -1607,6 +1823,7 @@ const syncOfflineReports = async () => {
         );
         offlineReportsCount.value = updatedQueue.length;
 
+        // Only show success modal if we actually synced something
         if (syncTrackingData.length > 0) {
             const latestSync = syncTrackingData[syncTrackingData.length - 1];
 
@@ -1834,7 +2051,10 @@ const submitReport = async () => {
         return;
     }
 
-    if (!isOnline.value && locationStatus.value === "offline_default_location") {
+    if (
+        !isOnline.value &&
+        locationStatus.value === "offline_default_location"
+    ) {
         const result = await Swal.fire({
             icon: "warning",
             title: "Using Area Center Location",
@@ -1854,37 +2074,9 @@ const submitReport = async () => {
 
     isSubmitting.value = true;
 
-    // Close any existing SweetAlert modals first
-    Swal.close();
-
-    let loadingSwal = null;
-
     try {
-        // IMPROVED LOADING UI with better error handling
-        loadingSwal = Swal.fire({
-            title: isOnline.value
-                ? '<div class="flex flex-col items-center"><div class="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4"></div><div>Submitting Report...</div></div>'
-                : '<div class="flex flex-col items-center"><div class="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4"></div><div>Saving Report Offline...</div></div>',
-            html: isOnline.value
-                ? '<p class="text-gray-600 mt-2">Please wait while we submit your report to the server</p>'
-                : '<p class="text-gray-600 mt-2">Please wait while we save your report locally</p>',
-            allowOutsideClick: false,
-            allowEscapeKey: false,
-            showConfirmButton: false,
-            showCancelButton: false,
-            didOpen: () => {
-                Swal.showLoading();
-            },
-            customClass: {
-                popup: "rounded-2xl shadow-2xl",
-                title: "text-xl font-semibold text-gray-800",
-            },
-        });
-
-        // Small delay to show the loading state
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
         if (isOnline.value) {
+            // Online submission
             const formData = new FormData();
             Object.keys(form.data()).forEach((key) => {
                 if (key !== "photos" && key !== "photo_previews") {
@@ -1904,21 +2096,16 @@ const submitReport = async () => {
                 }
             );
 
-            // CLOSE LOADING MODAL FIRST
-            if (loadingSwal) {
-                await loadingSwal.close();
-            }
-
             isSubmitting.value = false;
 
             if (response.data.success) {
-                console.log('Online submission successful:', response.data); // Debug log
+                console.log("Online submission successful:", response.data);
 
                 // EMIT THE SUBMITTED EVENT
                 emit("submitted", {
                     trackingCode: response.data.trackingCode,
                     dateSubmitted: new Date().toISOString(),
-                    isOffline: false
+                    isOffline: false,
                 });
 
                 // Reset form after successful submission
@@ -1935,24 +2122,24 @@ const submitReport = async () => {
                 });
             }
         } else {
+            // OFFLINE SUBMISSION - Don't show success modal immediately
             const reportId = await saveReportOffline();
-
-            // CLOSE LOADING MODAL FIRST
-            if (loadingSwal) {
-                await loadingSwal.close();
-            }
 
             isSubmitting.value = false;
 
-            let successMessage = "Your report has been saved locally and will be submitted automatically when you're back online.";
+            let successMessage =
+                "Your report has been saved locally and will be submitted automatically when you're back online.";
 
             if (locationStatus.value === "offline_cached_location") {
-                successMessage = "Your report with cached GPS coordinates has been saved locally and will be submitted when online.";
+                successMessage =
+                    "Your report with cached GPS coordinates has been saved locally and will be submitted when online.";
             } else if (locationStatus.value === "offline_default_location") {
-                successMessage = "Your report with default location has been saved locally and will be submitted when online.";
+                successMessage =
+                    "Your report with default location has been saved locally and will be submitted when online.";
             }
 
-            // Show offline success message
+            // Show offline success message but DON'T emit the submitted event
+            // This prevents the success modal from showing for offline reports
             Swal.fire({
                 position: "top-end",
                 title: "Report Saved Offline!",
@@ -1967,28 +2154,23 @@ const submitReport = async () => {
                 },
             });
 
-            console.log('Offline submission successful:', reportId); // Debug log
+            console.log("Offline submission successful:", reportId);
 
-            // EMIT OFFLINE SUCCESS EVENT
-            emit("submitted", {
-                trackingCode: reportId,
-                dateSubmitted: new Date().toISOString(),
-                isOffline: true
-            });
+            // DO NOT emit submitted event for offline reports
+            // This prevents the success modal from showing
 
+            // Reset form
             form.reset();
             form.photos = [];
             form.photo_previews = [];
+
+            // Reset to step 1
+            currentStep.value = 1;
         }
     } catch (error) {
-        // Close any open loading dialogs
-        if (loadingSwal) {
-            await loadingSwal.close();
-        }
-
         isSubmitting.value = false;
 
-        console.error('Submission error:', error); // Debug log
+        console.error("Submission error:", error);
 
         if (isOnline.value) {
             if (error.response?.data?.errors) {
@@ -1999,7 +2181,9 @@ const submitReport = async () => {
             Swal.fire({
                 icon: "error",
                 title: "Submission Failed",
-                text: error.response?.data?.message || "Please check the form for errors.",
+                text:
+                    error.response?.data?.message ||
+                    "Please check the form for errors.",
                 confirmButtonColor: "#3085d6",
                 customClass: {
                     popup: "rounded-2xl shadow-2xl",

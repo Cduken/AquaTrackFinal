@@ -8,41 +8,46 @@
             ></div>
 
             <!-- Modal Container -->
-            <!-- Modal Container -->
-            <div class="flex min-h-full items-center justify-center p-4">
+            <div class="flex min-h-full items-center justify-center p-0">
                 <!-- Modal Panel with transform for animation -->
                 <div
                     class="relative w-full transform transition-all duration-300"
-                    :class="isMaximized ? 'max-w-full h-full' : 'max-w-4xl'"
+                    :class="isMaximized ? 'w-full h-full' : 'max-w-4xl'"
                 >
                     <div
-                        class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden flex flex-col"
-                        :class="
+                        class="bg-white dark:bg-gray-900 shadow-2xl overflow-hidden flex flex-col"
+                        :class="[
                             isMaximized
-                                ? 'h-screen w-full'
-                                : 'max-h-[90vh] w-full'
-                        "
+                                ? 'h-screen w-full rounded-none'
+                                : 'max-h-[90vh] w-full rounded-lg',
+                        ]"
                     >
                         <!-- Header -->
-                        <div class="relative px-8 py-4 bg-[#172554]">
+                        <div class="relative px-6 py-4 border-b">
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center space-x-3">
-                                    <div
-                                        class="p-2.5 bg-white/20 rounded-xl backdrop-blur-sm"
-                                    >
-                                        <User class="w-6 h-6 text-white" />
-                                    </div>
+
+
+                                   <User class="w-6 h-6 text-black" />
                                     <div>
-                                        <h2 class="text-xl font-sm text-white">
+                                        <h2
+                                            class="text-xl font-semibold text-black"
+                                        >
                                             Register User
                                         </h2>
+
                                     </div>
                                 </div>
                                 <div class="flex items-center space-x-2">
                                     <!-- Maximize Button -->
                                     <button
                                         @click="toggleMaximize"
-                                        class="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200"
+                                        class="p-2 text-black hover:text-gray-600 hover:bg-gray-200/10 transition-all duration-200"
+                                        :class="
+                                            isMaximized
+                                                ? 'rounded-md'
+                                                : 'rounded-lg'
+                                        "
                                         :title="
                                             isMaximized
                                                 ? 'Minimize'
@@ -58,7 +63,12 @@
                                     <!-- Close Button -->
                                     <button
                                         @click="$emit('close')"
-                                        class="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200"
+                                        class="p-2 text-black hover:text-white hover:bg-gray-200/10 transition-all duration-200"
+                                        :class="
+                                            isMaximized
+                                                ? 'rounded-md'
+                                                : 'rounded-lg'
+                                        "
                                     >
                                         <X class="w-5 h-5" />
                                     </button>
@@ -68,15 +78,15 @@
 
                         <!-- Content -->
                         <div
-                            class="flex-1 overflow-y-auto p-6"
-                            :class="isMaximized ? 'p-8' : ''"
+                            class="flex-1 overflow-y-auto"
+                            :class="isMaximized ? 'p-8' : 'p-6'"
                         >
                             <form @submit.prevent="handleSubmit">
                                 <div
                                     class="space-y-6 mx-auto"
                                     :class="
                                         isMaximized
-                                            ? 'max-w-full w-full px-4 space-y-8'
+                                            ? 'max-w-full w-full space-y-8'
                                             : 'max-w-4xl space-y-6'
                                     "
                                 >
@@ -86,7 +96,7 @@
                                             class="flex items-center space-x-2"
                                         >
                                             <Users
-                                                class="w-5 h-5 text-gray-700 dark:text-gray-300"
+                                                class="w-5 h-5 text-blue-600 dark:text-blue-400"
                                             />
                                             <h3
                                                 class="text-lg font-semibold text-gray-900 dark:text-white"
@@ -96,12 +106,15 @@
                                         </div>
                                         <div class="grid grid-cols-2 gap-4">
                                             <label
-                                                class="relative flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all"
-                                                :class="
+                                                class="relative flex items-center p-4 border-2 cursor-pointer transition-all"
+                                                :class="[
                                                     userData.role === 'staff'
                                                         ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                                                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-                                                "
+                                                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600',
+                                                    isMaximized
+                                                        ? 'rounded-md'
+                                                        : 'rounded-lg',
+                                                ]"
                                             >
                                                 <input
                                                     type="radio"
@@ -113,13 +126,16 @@
                                                     class="flex items-center space-x-3 flex-1"
                                                 >
                                                     <div
-                                                        class="p-2 rounded-lg"
-                                                        :class="
+                                                        class="p-2"
+                                                        :class="[
                                                             userData.role ===
                                                             'staff'
                                                                 ? 'bg-blue-100 dark:bg-blue-800'
-                                                                : 'bg-gray-100 dark:bg-gray-800'
-                                                        "
+                                                                : 'bg-gray-100 dark:bg-gray-800',
+                                                            isMaximized
+                                                                ? 'rounded-md'
+                                                                : 'rounded-lg',
+                                                        ]"
                                                     >
                                                         <Briefcase
                                                             class="w-5 h-5"
@@ -159,12 +175,15 @@
                                                 </div>
                                             </label>
                                             <label
-                                                class="relative flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all"
-                                                :class="
+                                                class="relative flex items-center p-4 border-2 cursor-pointer transition-all"
+                                                :class="[
                                                     userData.role === 'customer'
                                                         ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                                                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-                                                "
+                                                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600',
+                                                    isMaximized
+                                                        ? 'rounded-md'
+                                                        : 'rounded-lg',
+                                                ]"
                                             >
                                                 <input
                                                     type="radio"
@@ -176,13 +195,16 @@
                                                     class="flex items-center space-x-3 flex-1"
                                                 >
                                                     <div
-                                                        class="p-2 rounded-lg"
-                                                        :class="
+                                                        class="p-2"
+                                                        :class="[
                                                             userData.role ===
                                                             'customer'
                                                                 ? 'bg-blue-100 dark:bg-blue-800'
-                                                                : 'bg-gray-100 dark:bg-gray-800'
-                                                        "
+                                                                : 'bg-gray-100 dark:bg-gray-800',
+                                                            isMaximized
+                                                                ? 'rounded-md'
+                                                                : 'rounded-lg',
+                                                        ]"
                                                     >
                                                         <User
                                                             class="w-5 h-5"
@@ -230,7 +252,7 @@
                                             class="flex items-center space-x-2"
                                         >
                                             <UserCircle
-                                                class="w-5 h-5 text-gray-700 dark:text-gray-300"
+                                                class="w-5 h-5 text-blue-600 dark:text-blue-400"
                                             />
                                             <h3
                                                 class="text-lg font-semibold text-gray-900 dark:text-white"
@@ -239,7 +261,8 @@
                                             </h3>
                                         </div>
                                         <div
-                                            class="grid grid-cols-1 md:grid-cols-2 gap-5"
+                                            class="grid grid-cols-1 md:grid-cols-2 gap-4"
+                                            :class="{ 'gap-6': isMaximized }"
                                         >
                                             <div>
                                                 <label
@@ -255,7 +278,12 @@
                                                         v-model="userData.name"
                                                         type="text"
                                                         required
-                                                        class="w-full pl-11 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                                        class="w-full pl-11 pr-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                                        :class="
+                                                            isMaximized
+                                                                ? 'rounded-md'
+                                                                : 'rounded-lg'
+                                                        "
                                                         placeholder="Enter First Name"
                                                     />
                                                 </div>
@@ -276,7 +304,12 @@
                                                         "
                                                         type="text"
                                                         required
-                                                        class="w-full pl-11 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                                        class="w-full pl-11 pr-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                                        :class="
+                                                            isMaximized
+                                                                ? 'rounded-md'
+                                                                : 'rounded-lg'
+                                                        "
                                                         placeholder="Enter Last Name"
                                                         @input="
                                                             updateGeneratedPassword
@@ -303,7 +336,12 @@
                                                             userData.role ===
                                                             'staff'
                                                         "
-                                                        class="w-full pl-11 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                                        class="w-full pl-11 pr-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                                        :class="
+                                                            isMaximized
+                                                                ? 'rounded-md'
+                                                                : 'rounded-lg'
+                                                        "
                                                         placeholder="Enter Email Address"
                                                     />
                                                 </div>
@@ -321,7 +359,12 @@
                                                     <input
                                                         v-model="userData.phone"
                                                         type="tel"
-                                                        class="w-full pl-11 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                                        class="w-full pl-11 pr-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                                        :class="
+                                                            isMaximized
+                                                                ? 'rounded-md'
+                                                                : 'rounded-lg'
+                                                        "
                                                         placeholder="Enter Phone Number (Optional)"
                                                         @input="
                                                             validatePhoneNumber
@@ -335,7 +378,8 @@
                                     <!-- Customer Specific Fields -->
                                     <div
                                         v-if="userData.role === 'customer'"
-                                        class="space-y-8"
+                                        class="space-y-6"
+                                        :class="{ 'space-y-8': isMaximized }"
                                     >
                                         <!-- Equipment Information -->
                                         <div class="space-y-4">
@@ -343,7 +387,7 @@
                                                 class="flex items-center space-x-2"
                                             >
                                                 <Package
-                                                    class="w-5 h-5 text-gray-700 dark:text-gray-300"
+                                                    class="w-5 h-5 text-blue-600 dark:text-blue-400"
                                                 />
                                                 <h3
                                                     class="text-lg font-semibold text-gray-900 dark:text-white"
@@ -352,9 +396,9 @@
                                                 </h3>
                                             </div>
                                             <div
-                                                class="grid grid-cols-1 md:grid-cols-2 gap-5"
+                                                class="grid grid-cols-1 md:grid-cols-2 gap-4"
                                                 :class="{
-                                                    'md:grid-cols-3':
+                                                    'md:grid-cols-3 gap-6':
                                                         isMaximized,
                                                 }"
                                             >
@@ -374,7 +418,12 @@
                                                             "
                                                             type="text"
                                                             required
-                                                            class="w-full pl-11 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                                            class="w-full pl-11 pr-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                                            :class="
+                                                                isMaximized
+                                                                    ? 'rounded-md'
+                                                                    : 'rounded-lg'
+                                                            "
                                                             placeholder="Enter Account Number"
                                                             @input="
                                                                 formatAccountNumber
@@ -383,7 +432,7 @@
                                                         />
                                                     </div>
                                                     <p
-                                                        class="text-xs text-gray-500 mt-1.5"
+                                                        class="text-xs text-gray-500 dark:text-gray-400 mt-1.5"
                                                     >
                                                         Format: XXX-XX-XXX or
                                                         XXX-XX-XXXX
@@ -405,7 +454,12 @@
                                                             "
                                                             type="date"
                                                             required
-                                                            class="w-full pl-11 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                                            class="w-full pl-11 pr-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                                            :class="
+                                                                isMaximized
+                                                                    ? 'rounded-md'
+                                                                    : 'rounded-lg'
+                                                            "
                                                         />
                                                     </div>
                                                 </div>
@@ -425,7 +479,12 @@
                                                             "
                                                             type="text"
                                                             required
-                                                            class="w-full pl-11 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                                            class="w-full pl-11 pr-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                                            :class="
+                                                                isMaximized
+                                                                    ? 'rounded-md'
+                                                                    : 'rounded-lg'
+                                                            "
                                                             placeholder="Enter Brand Name"
                                                         />
                                                     </div>
@@ -446,7 +505,12 @@
                                                             "
                                                             type="text"
                                                             required
-                                                            class="w-full pl-11 pr-16 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                                            class="w-full pl-11 pr-16 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                                            :class="
+                                                                isMaximized
+                                                                    ? 'rounded-md'
+                                                                    : 'rounded-lg'
+                                                            "
                                                             placeholder="Enter Serial Number"
                                                             @input="
                                                                 validateSerialNumber
@@ -454,7 +518,16 @@
                                                             maxlength="9"
                                                         />
                                                         <div
-                                                            class="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-gray-500"
+                                                            class="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium"
+                                                            :class="
+                                                                userData.serial_number &&
+                                                                userData
+                                                                    .serial_number
+                                                                    .length ===
+                                                                    9
+                                                                    ? 'text-green-500'
+                                                                    : 'text-gray-500'
+                                                            "
                                                         >
                                                             {{
                                                                 userData.serial_number
@@ -482,7 +555,12 @@
                                                             "
                                                             type="text"
                                                             required
-                                                            class="w-full pl-11 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                                            class="w-full pl-11 pr-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                                            :class="
+                                                                isMaximized
+                                                                    ? 'rounded-md'
+                                                                    : 'rounded-lg'
+                                                            "
                                                             placeholder="Size"
                                                         />
                                                     </div>
@@ -496,7 +574,7 @@
                                                 class="flex items-center space-x-2"
                                             >
                                                 <MapPin
-                                                    class="w-5 h-5 text-gray-700 dark:text-gray-300"
+                                                    class="w-5 h-5 text-blue-600 dark:text-blue-400"
                                                 />
                                                 <h3
                                                     class="text-lg font-semibold text-gray-900 dark:text-white"
@@ -505,7 +583,10 @@
                                                 </h3>
                                             </div>
                                             <div
-                                                class="grid grid-cols-1 md:grid-cols-2 gap-5"
+                                                class="grid grid-cols-1 md:grid-cols-2 gap-4"
+                                                :class="{
+                                                    'gap-6': isMaximized,
+                                                }"
                                             >
                                                 <div>
                                                     <label
@@ -525,7 +606,12 @@
                                                                 updateBarangays
                                                             "
                                                             required
-                                                            class="w-full pl-11 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all appearance-none"
+                                                            class="w-full pl-11 pr-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all appearance-none"
+                                                            :class="
+                                                                isMaximized
+                                                                    ? 'rounded-md'
+                                                                    : 'rounded-lg'
+                                                            "
                                                         >
                                                             <option
                                                                 value=""
@@ -565,7 +651,12 @@
                                                                 userData.barangay
                                                             "
                                                             required
-                                                            class="w-full pl-11 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all appearance-none disabled:opacity-50 disabled:cursor-not-allowed"
+                                                            class="w-full pl-11 pr-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all appearance-none disabled:opacity-50 disabled:cursor-not-allowed"
+                                                            :class="
+                                                                isMaximized
+                                                                    ? 'rounded-md'
+                                                                    : 'rounded-lg'
+                                                            "
                                                             :disabled="
                                                                 !userData.zone
                                                             "
@@ -602,13 +693,23 @@
                                     <transition name="fade">
                                         <div
                                             v-if="userData.lastname"
-                                            class="relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-700 p-5"
+                                            class="relative overflow-hidden bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-700 p-5"
+                                            :class="
+                                                isMaximized
+                                                    ? 'rounded-md'
+                                                    : 'rounded-lg'
+                                            "
                                         >
                                             <div
                                                 class="flex items-start space-x-3"
                                             >
                                                 <div
-                                                    class="p-2 bg-blue-100 dark:bg-blue-800 rounded-lg"
+                                                    class="p-2 bg-blue-100 dark:bg-blue-800"
+                                                    :class="
+                                                        isMaximized
+                                                            ? 'rounded-md'
+                                                            : 'rounded-lg'
+                                                    "
                                                 >
                                                     <Key
                                                         class="w-5 h-5 text-blue-600 dark:text-blue-400"
@@ -643,14 +744,17 @@
                             </form>
                         </div>
 
-                        <!-- Footer - Updated to match EditUserModal -->
+                        <!-- Footer -->
                         <div
-                            class="flex items-center justify-end space-x-3 px-8 py-2 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50"
+                            class="flex items-center justify-end space-x-3 px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50"
                         >
                             <button
                                 @click="$emit('close')"
                                 type="button"
-                                class="px-6 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-all duration-200"
+                                class="px-6 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200"
+                                :class="
+                                    isMaximized ? 'rounded-md' : 'rounded-lg'
+                                "
                             >
                                 Cancel
                             </button>
@@ -658,7 +762,10 @@
                                 @click="handleSubmit"
                                 :disabled="isSubmitting"
                                 type="button"
-                                class="px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-all duration-200 flex items-center space-x-2 shadow-lg shadow-blue-500/30"
+                                class="px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center space-x-2 shadow-lg shadow-blue-500/30"
+                                :class="
+                                    isMaximized ? 'rounded-md' : 'rounded-lg'
+                                "
                             >
                                 <Loader2
                                     v-if="isSubmitting"
@@ -1100,12 +1207,12 @@ const handleSubmit = async () => {
 
 .overflow-y-auto::-webkit-scrollbar-track {
     background: #f1f5f9;
-    border-radius: 10px;
+    border-radius: 3px;
 }
 
 .overflow-y-auto::-webkit-scrollbar-thumb {
     background: #cbd5e1;
-    border-radius: 10px;
+    border-radius: 3px;
 }
 
 .overflow-y-auto::-webkit-scrollbar-thumb:hover {

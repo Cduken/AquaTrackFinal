@@ -147,8 +147,10 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/users', [AdminUsersController::class, 'index'])->name('admin.users');
     Route::post('/admin/users', [AdminUsersController::class, 'store'])->name('admin.users.store');
     Route::delete('/admin/users/{user}', [AdminUsersController::class, 'destroy'])->name('admin.users.destroy');
+    Route::get('/admin/users/{user}', [AdminUsersController::class, 'show'])->name('admin.users.show');
     Route::post('/admin/users/toggle-status', [AdminUsersController::class, 'toggleStatus'])->name('admin.users.toggle-status');
     Route::put('/admin/users/{user}', [AdminUsersController::class, 'update'])->name('admin.users.update');
+
     Route::post('/admin/users/{user}/reset-password', [AdminUsersController::class, 'resetPassword'])->name('admin.users.reset-password');
 
     // Stats

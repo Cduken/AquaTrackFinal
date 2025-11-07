@@ -3,7 +3,7 @@ import { Head } from "@inertiajs/vue3";
 import Hero from "@/Components/Hero.vue";
 import Features from "@/Components/Features.vue";
 import About from "@/Components/About.vue";
-import CallToAction from "@/Components/CallToAction.vue";
+
 import Footer from "@/Components/Footer.vue";
 import { onMounted, ref } from "vue";
 import gsap from "gsap";

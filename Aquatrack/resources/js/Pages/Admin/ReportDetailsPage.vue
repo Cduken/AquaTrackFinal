@@ -1,23 +1,43 @@
-// Customer/ReportDetailsPage.vue
+//Pages/Admin/ReportDetailsPage.vue // Customer/ReportDetailsPage.vue
 <template>
-    <CustomerLayout>
+    <AdminLayout>
         <!-- Loading State -->
-        <div v-if="loading" class="min-h-screen flex items-center justify-center">
+        <div
+            v-if="loading"
+            class="min-h-screen flex items-center justify-center bg-gray-50"
+        >
             <div class="text-center">
-                <Loader2 class="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
-                <p class="text-gray-600">Loading report details...</p>
+                <div class="relative">
+                    <Loader2
+                        class="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4"
+                    />
+                    <div
+                        class="absolute inset-0 bg-blue-600/10 rounded-full animate-ping"
+                    ></div>
+                </div>
+                <p class="text-gray-600 mt-2">Loading report details...</p>
             </div>
         </div>
 
         <!-- Error State -->
-        <div v-else-if="error" class="min-h-screen flex items-center justify-center">
-            <div class="text-center">
-                <AlertCircle class="w-12 h-12 text-red-500 mx-auto mb-4" />
-                <h3 class="text-lg font-semibold text-gray-900 mb-2">Report Not Found</h3>
-                <p class="text-gray-600 mb-4">{{ error }}</p>
+        <div
+            v-else-if="error"
+            class="min-h-screen flex items-center justify-center bg-gray-50 px-4"
+        >
+            <div class="text-center max-w-md">
+                <div class="relative inline-block mb-4">
+                    <AlertCircle class="w-16 h-16 text-red-500 mx-auto" />
+                    <div
+                        class="absolute -inset-4 bg-red-100 rounded-full animate-pulse"
+                    ></div>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">
+                    Report Not Found
+                </h3>
+                <p class="text-gray-600 mb-6">{{ error }}</p>
                 <Link
                     :href="route('admin.reports')"
-                    class="inline-flex items-center px-4 py-2  bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                    class="inline-flex items-center px-5 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium rounded-sm shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
                 >
                     <ArrowLeft class="w-4 h-4 mr-2" />
                     Back to Reports
@@ -26,48 +46,80 @@
         </div>
 
         <!-- Report Details Content -->
-        <div v-else-if="report" class="min-h-screen">
-            <!-- Header -->
-            <div class=" border-b border-gray-200">
-                <div class="max-w-full mx-auto ">
+        <div v-else-if="report" class="min-h-screen p-2">
+            <!-- Header Section -->
+            <div class="border-gray-200">
+                <div class="max-w-7xl mx-auto">
                     <div class="">
-                        <!-- Back Button and Title -->
-                        <div class="flex items-center gap-4 mb-4">
-                            <Link
-                                :href="route('admin.reports')"
-                                class="inline-flex items-center border-b border-gray-200  text-gray-600 mb-2 hover:text-gray-900 transition-colors"
-                            >
-                                <ArrowLeft class="w-5 h-5 mr-2" />
-                                Back to Reports
-                            </Link>
-                        </div>
-
                         <!-- Main Header -->
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <h1 class="text-2xl font-bold text-gray-900">Report Details</h1>
-                                <p class="text-gray-600 mt-1">
-                                    Submitted on {{ formatDate(report.created_at) }}
-                                </p>
+                        <div
+                            class="flex flex-col  sm:flex-row sm:items-center sm:justify-between gap-4"
+                        >
+                            <div class="flex-1">
+                                <div
+                                    class="flex items-center flex-wrap gap-2 mb-2"
+                                >
+                                    <h1
+                                        class="text-2xl sm:text-3xl font-bold text-gray-900"
+                                    >
+                                        Report Details
+                                    </h1>
+                                    <span
+                                        :class="statusClass"
+                                        class="px-3 py-1 rounded-full text-xs font-semibold shadow-sm"
+                                    >
+                                        {{ statusLabel }}
+                                    </span>
+                                </div>
+                                <div class="flex items-center text-gray-500">
+                                    <Clock class="w-4 h-4 mr-1.5" />
+                                    <span class="text-sm"
+                                        >Submitted on
+                                        {{
+                                            formatDate(report.created_at)
+                                        }}</span
+                                    >
+                                </div>
                             </div>
 
-                            <!-- Status and Actions -->
-                            <div class="flex items-center gap-4">
-                                <span :class="statusClass" class="px-4 py-2 rounded-full text-sm font-semibold">
-                                    {{ statusLabel }}
-                                </span>
-
+                            <div class="flex justify-start lg:justify-end mt-2 sm:mt-0">
+                                <Link
+                                    :href="route('admin.reports')"
+                                    class="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors duration-200 group"
+                                >
+                                    <div
+                                        class="flex items-center justify-center w-8 h-8 bg-blue-100 rounded-lg mr-2 group-hover:bg-blue-200 transition-colors"
+                                    >
+                                        <ArrowLeft class="w-4 h-4" />
+                                    </div>
+                                    Back to Reports
+                                </Link>
                             </div>
                         </div>
 
                         <!-- Tracking Code -->
-                        <div class="mt-4 p-4 bg-blue-50 rounded border border-blue-200">
+                        <div
+                            class="mt-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-sm border border-blue-200 shadow-sm"
+                        >
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-sm text-blue-700 font-medium">Tracking Code</p>
-                                    <p class="text-lg font-bold text-blue-900">{{ report.tracking_code }}</p>
+                                    <p
+                                        class="text-sm text-blue-700 font-medium mb-1"
+                                    >
+                                        Tracking Code
+                                    </p>
+                                    <p
+                                        class="text-xl font-bold text-blue-900 font-mono"
+                                    >
+                                        {{ report.tracking_code }}
+                                    </p>
                                 </div>
-                                <Copy class="w-5 h-5 text-blue-600" />
+                                <button
+                                    @click="copyTrackingCode"
+                                    class="flex items-center justify-center w-10 h-10 bg-white rounded-lg shadow-sm border border-blue-200 hover:bg-blue-50 transition-colors"
+                                >
+                                    <Copy class="w-5 h-5 text-blue-600" />
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -76,27 +128,52 @@
 
             <!-- Main Content -->
             <div class="max-w-7xl mx-auto mt-4">
-                <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
                     <!-- Left Column -->
                     <div class="xl:col-span-2 space-y-6">
                         <!-- Issue Information Card -->
-                        <div class="bg-white rounded border border-gray-200">
-                            <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                                <h2 class="text-lg font-semibold text-gray-900 flex items-center">
-                                    <AlertTriangle class="w-5 h-5 text-orange-500 mr-2" />
+                        <div
+                            class="bg-white rounded-sm shadow-sm border border-gray-200 overflow-hidden"
+                        >
+                            <div
+                                class="px-5 py-4 bg-gradient-to-r from-orange-50 to-amber-50 border-b border-orange-100"
+                            >
+                                <h2
+                                    class="text-lg font-semibold text-gray-900 flex items-center"
+                                >
+                                    <div
+                                        class="flex items-center justify-center w-8 h-8 bg-orange-100 rounded-lg mr-3"
+                                    >
+                                        <AlertTriangle
+                                            class="w-5 h-5 text-orange-600"
+                                        />
+                                    </div>
                                     Issue Details
                                 </h2>
                             </div>
-                            <div class="p-6 space-y-4">
+                            <div class="p-5 space-y-4">
                                 <!-- Issue Type -->
-                                <div class="flex items-start gap-4 p-4 bg-gray-50 rounded">
-                                    <Tag class="w-5 h-5 text-gray-600 mt-0.5" />
+                                <div
+                                    class="flex items-start gap-4 p-4 bg-orange-50 rounded-sm border border-orange-100"
+                                >
+                                    <div
+                                        class="flex items-center justify-center w-10 h-10 bg-orange-100 rounded-lg flex-shrink-0"
+                                    >
+                                        <Tag class="w-5 h-5 text-orange-600" />
+                                    </div>
                                     <div>
-                                        <p class="text-sm text-gray-600">Issue Type</p>
-                                        <p class="font-medium text-gray-900">
-                                            {{ report.water_issue_type === 'others'
-                                                ? report.custom_water_issue || 'Custom Issue'
-                                                : report.water_issue_type
+                                        <p
+                                            class="text-sm text-orange-700 font-medium mb-1"
+                                        >
+                                            Issue Type
+                                        </p>
+                                        <p class="font-semibold text-gray-900">
+                                            {{
+                                                report.water_issue_type ===
+                                                "others"
+                                                    ? report.custom_water_issue ||
+                                                      "Custom Issue"
+                                                    : report.water_issue_type
                                             }}
                                         </p>
                                     </div>
@@ -104,21 +181,46 @@
 
                                 <!-- Description -->
                                 <div>
-                                    <p class="text-sm text-gray-600 font-medium mb-2">Description</p>
-                                    <div class="bg-gray-50 p-4 rounded border border-gray-200">
-                                        <p class="text-gray-700 whitespace-pre-line">
-                                            {{ report.description || 'No description provided' }}
+                                    <p
+                                        class="text-sm text-gray-700 font-medium mb-3"
+                                    >
+                                        Description
+                                    </p>
+                                    <div
+                                        class="bg-gray-50 p-4 rounded-sm border border-gray-200"
+                                    >
+                                        <p
+                                            class="text-gray-700 whitespace-pre-line leading-relaxed"
+                                        >
+                                            {{
+                                                report.description ||
+                                                "No description provided"
+                                            }}
                                         </p>
                                     </div>
                                 </div>
 
                                 <!-- Priority -->
-                                <div class="flex items-start gap-4 p-4 bg-gray-50 rounded">
-                                    <AlertCircle class="w-5 h-5 text-gray-600 mt-0.5" />
+                                <div
+                                    class="flex items-start gap-4 p-4 bg-gray-50 rounded-sm border border-gray-200"
+                                >
+                                    <div
+                                        class="flex items-center justify-center w-10 h-10 bg-gray-100 rounded-lg flex-shrink-0"
+                                    >
+                                        <AlertCircle
+                                            class="w-5 h-5 text-gray-600"
+                                        />
+                                    </div>
                                     <div>
-                                        <p class="text-sm text-gray-600">Priority</p>
-                                        <p class="font-medium text-gray-900">
-                                            {{ formatPriority(report.priority) }}
+                                        <p
+                                            class="text-sm text-gray-700 font-medium mb-1"
+                                        >
+                                            Priority
+                                        </p>
+                                        <p class="font-semibold text-gray-900">
+                                            {{
+                                                formatPriority(report.priority)
+                                            }}
                                         </p>
                                     </div>
                                 </div>
@@ -126,90 +228,142 @@
                         </div>
 
                         <!-- Location Information Card -->
-                        <div class="bg-white rounded border border-gray-200">
-                            <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                                <h2 class="text-lg font-semibold text-gray-900 flex items-center">
-                                    <MapPin class="w-5 h-5 text-blue-500 mr-2" />
+                        <div
+                            class="bg-white rounded-sm shadow-sm border border-gray-200 overflow-hidden"
+                        >
+                            <div
+                                class="px-5 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100"
+                            >
+                                <h2
+                                    class="text-lg font-semibold text-gray-900 flex items-center"
+                                >
+                                    <div
+                                        class="flex items-center justify-center w-8 h-8 bg-blue-100 rounded-lg mr-3"
+                                    >
+                                        <MapPin class="w-5 h-5 text-blue-600" />
+                                    </div>
                                     Location Information
                                 </h2>
                             </div>
-                            <div class="p-6">
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="p-5">
+                                <div
+                                    class="grid grid-cols-1 sm:grid-cols-2 gap-4"
+                                >
                                     <!-- Municipality -->
-                                    <div class="flex items-start gap-3 p-3 bg-gray-50 rounded">
-                                        <Building class="w-4 h-4 text-gray-600 mt-0.5" />
+                                    <div
+                                        class="flex items-start gap-3 p-3 bg-blue-50 rounded-sm border border-blue-100"
+                                    >
+                                        <Building
+                                            class="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0"
+                                        />
                                         <div>
-                                            <p class="text-sm text-gray-600">Municipality</p>
-                                            <p class="font-medium text-gray-900">
-                                                {{ report.municipality || 'N/A' }}
+                                            <p
+                                                class="text-sm text-blue-700 font-medium"
+                                            >
+                                                Municipality
+                                            </p>
+                                            <p
+                                                class="font-semibold text-gray-900"
+                                            >
+                                                {{
+                                                    report.municipality || "N/A"
+                                                }}
                                             </p>
                                         </div>
                                     </div>
 
                                     <!-- Province -->
-                                    <div class="flex items-start gap-3 p-3 bg-gray-50 rounded">
-                                        <Map class="w-4 h-4 text-gray-600 mt-0.5" />
+                                    <div
+                                        class="flex items-start gap-3 p-3 bg-blue-50 rounded-sm border border-blue-100"
+                                    >
+                                        <Map
+                                            class="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0"
+                                        />
                                         <div>
-                                            <p class="text-sm text-gray-600">Province</p>
-                                            <p class="font-medium text-gray-900">
-                                                {{ report.province || 'N/A' }}
+                                            <p
+                                                class="text-sm text-blue-700 font-medium"
+                                            >
+                                                Province
+                                            </p>
+                                            <p
+                                                class="font-semibold text-gray-900"
+                                            >
+                                                {{ report.province || "N/A" }}
                                             </p>
                                         </div>
                                     </div>
 
                                     <!-- Barangay -->
-                                    <div class="flex items-start gap-3 p-3 bg-gray-50 rounded">
-                                        <Navigation class="w-4 h-4 text-gray-600 mt-0.5" />
+                                    <div
+                                        class="flex items-start gap-3 p-3 bg-blue-50 rounded-sm border border-blue-100"
+                                    >
+                                        <Navigation
+                                            class="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0"
+                                        />
                                         <div>
-                                            <p class="text-sm text-gray-600">Barangay</p>
-                                            <p class="font-medium text-gray-900">
-                                                {{ report.barangay || 'N/A' }}
+                                            <p
+                                                class="text-sm text-blue-700 font-medium"
+                                            >
+                                                Barangay
+                                            </p>
+                                            <p
+                                                class="font-semibold text-gray-900"
+                                            >
+                                                {{ report.barangay || "N/A" }}
                                             </p>
                                         </div>
                                     </div>
 
                                     <!-- Purok/Street -->
-                                    <div class="flex items-start gap-3 p-3 bg-gray-50 rounded">
-                                        <Signpost class="w-4 h-4 text-gray-600 mt-0.5" />
+                                    <div
+                                        class="flex items-start gap-3 p-3 bg-blue-50 rounded-sm border border-blue-100"
+                                    >
+                                        <Signpost
+                                            class="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0"
+                                        />
                                         <div>
-                                            <p class="text-sm text-gray-600">Purok/Street</p>
-                                            <p class="font-medium text-gray-900">
-                                                {{ report.purok || 'N/A' }}
+                                            <p
+                                                class="text-sm text-blue-700 font-medium"
+                                            >
+                                                Purok/Street
+                                            </p>
+                                            <p
+                                                class="font-semibold text-gray-900"
+                                            >
+                                                {{ report.purok || "N/A" }}
                                             </p>
                                         </div>
                                     </div>
                                 </div>
 
-                                <!-- GPS Coordinates -->
-                                <!-- <div v-if="report.latitude && report.longitude" class="mt-4 p-4 bg-blue-50 rounded border border-blue-200">
-                                    <div class="flex items-center justify-between">
-                                        <div>
-                                            <p class="text-sm text-blue-700 font-medium">GPS Coordinates</p>
-                                            <div class="flex gap-6 mt-2">
-                                                <div>
-                                                    <p class="text-xs text-blue-600">Latitude</p>
-                                                    <p class="font-medium text-blue-900">{{ getLatitude }}</p>
-                                                </div>
-                                                <div>
-                                                    <p class="text-xs text-blue-600">Longitude</p>
-                                                    <p class="font-medium text-blue-900">{{ getLongitude }}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <MapPin class="w-5 h-5 text-blue-600" />
-                                    </div>
-                                </div> -->
-
                                 <!-- Map Section -->
-                                <div class="mt-4">
-                                    <div v-if="report.latitude && report.longitude" class="w-full h-80 rounded border border-gray-300 bg-gray-100">
-                                        <!-- Map will be rendered here -->
-                                        <div id="map" class="w-full h-full rounded"></div>
+                                <div class="mt-6">
+                                    <div
+                                        v-if="
+                                            report.latitude && report.longitude
+                                        "
+                                        class="w-full h-80 rounded-sm border border-gray-300 bg-gray-100 overflow-hidden shadow-sm"
+                                    >
+                                        <div
+                                            id="map"
+                                            class="w-full h-full rounded-sm"
+                                        ></div>
                                     </div>
-                                    <div v-else class="w-full h-80 rounded border border-gray-300 bg-gray-100 flex items-center justify-center">
+                                    <div
+                                        v-else
+                                        class="w-full h-80 rounded-sm border border-gray-300 bg-gray-100 flex items-center justify-center"
+                                    >
                                         <div class="text-center text-gray-500">
-                                            <MapPin class="w-12 h-12 mx-auto mb-2" />
-                                            <p>No GPS coordinates available</p>
+                                            <MapPin
+                                                class="w-12 h-12 mx-auto mb-3 text-gray-400"
+                                            />
+                                            <p class="font-medium">
+                                                No GPS coordinates available
+                                            </p>
+                                            <p class="text-sm mt-1">
+                                                Location data is missing for
+                                                this report
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
@@ -220,43 +374,81 @@
                     <!-- Right Column -->
                     <div class="space-y-6">
                         <!-- Reporter Information Card -->
-                        <div class="bg-white rounded border border-gray-200">
-                            <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                                <h2 class="text-lg font-semibold text-gray-900 flex items-center">
-                                    <User class="w-5 h-5 text-purple-500 mr-2" />
+                        <div
+                            class="bg-white rounded-sm shadow-sm border border-gray-200 overflow-hidden"
+                        >
+                            <div
+                                class="px-5 py-4 bg-gradient-to-r from-purple-50 to-violet-50 border-b border-purple-100"
+                            >
+                                <h2
+                                    class="text-lg font-semibold text-gray-900 flex items-center"
+                                >
+                                    <div
+                                        class="flex items-center justify-center w-8 h-8 bg-purple-100 rounded-lg mr-3"
+                                    >
+                                        <User class="w-5 h-5 text-purple-600" />
+                                    </div>
                                     Reporter Information
                                 </h2>
                             </div>
-                            <div class="p-6 space-y-4">
+                            <div class="p-5 space-y-4">
                                 <!-- Reporter Name -->
-                                <div class="flex items-start gap-3 p-3 bg-gray-50 rounded">
-                                    <User class="w-4 h-4 text-gray-600 mt-0.5" />
+                                <div
+                                    class="flex items-start gap-3 p-3 bg-purple-50 rounded-sm border border-purple-100"
+                                >
+                                    <User
+                                        class="w-5 h-5 text-purple-600 mt-0.5 flex-shrink-0"
+                                    />
                                     <div>
-                                        <p class="text-sm text-gray-600">Reporter Name</p>
-                                        <p class="font-medium text-gray-900">
-                                            {{ report.reporter_name || 'N/A' }}
+                                        <p
+                                            class="text-sm text-purple-700 font-medium"
+                                        >
+                                            Reporter Name
+                                        </p>
+                                        <p class="font-semibold text-gray-900">
+                                            {{ report.reporter_name || "N/A" }}
                                         </p>
                                     </div>
                                 </div>
 
                                 <!-- Phone Number -->
-                                <div v-if="report.reporter_phone" class="flex items-start gap-3 p-3 bg-gray-50 rounded">
-                                    <Phone class="w-4 h-4 text-gray-600 mt-0.5" />
+                                <div
+                                    v-if="report.reporter_phone"
+                                    class="flex items-start gap-3 p-3 bg-purple-50 rounded-sm border border-purple-100"
+                                >
+                                    <Phone
+                                        class="w-5 h-5 text-purple-600 mt-0.5 flex-shrink-0"
+                                    />
                                     <div>
-                                        <p class="text-sm text-gray-600">Phone Number</p>
-                                        <p class="font-medium text-gray-900">
+                                        <p
+                                            class="text-sm text-purple-700 font-medium"
+                                        >
+                                            Phone Number
+                                        </p>
+                                        <p class="font-semibold text-gray-900">
                                             {{ report.reporter_phone }}
                                         </p>
                                     </div>
                                 </div>
 
                                 <!-- User Type -->
-                                <div class="flex items-start gap-3 p-3 bg-gray-50 rounded">
-                                    <BadgeInfo class="w-4 h-4 text-gray-600 mt-0.5" />
+                                <div
+                                    class="flex items-start gap-3 p-3 bg-purple-50 rounded-sm border border-purple-100"
+                                >
+                                    <BadgeInfo
+                                        class="w-5 h-5 text-purple-600 mt-0.5 flex-shrink-0"
+                                    />
                                     <div>
-                                        <p class="text-sm text-gray-600">User Type</p>
-                                        <p class="font-medium text-gray-900">
-                                            {{ report.formatted_user_types || 'Guest' }}
+                                        <p
+                                            class="text-sm text-purple-700 font-medium"
+                                        >
+                                            User Type
+                                        </p>
+                                        <p class="font-semibold text-gray-900">
+                                            {{
+                                                report.formatted_user_types ||
+                                                "Guest"
+                                            }}
                                         </p>
                                     </div>
                                 </div>
@@ -264,33 +456,65 @@
                         </div>
 
                         <!-- Media Section -->
-                        <div v-if="report.photos && report.photos.length" class="bg-white rounded border border-gray-200">
-                            <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                                <h2 class="text-lg font-semibold text-gray-900 flex items-center">
-                                    <ImageIcon class="w-5 h-5 text-green-500 mr-2" />
+                        <div
+                            v-if="report.photos && report.photos.length"
+                            class="bg-white rounded-sm shadow-sm border border-gray-200 overflow-hidden"
+                        >
+                            <div
+                                class="px-5 py-4 bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-100"
+                            >
+                                <h2
+                                    class="text-lg font-semibold text-gray-900 flex items-center"
+                                >
+                                    <div
+                                        class="flex items-center justify-center w-8 h-8 bg-green-100 rounded-lg mr-3"
+                                    >
+                                        <ImageIcon
+                                            class="w-5 h-5 text-green-600"
+                                        />
+                                    </div>
                                     Media ({{ report.photos.length }})
                                 </h2>
                             </div>
-                            <div class="p-6">
-                                <div class="grid grid-cols-2 gap-3">
+                            <div class="p-5">
+                                <div
+                                    class="grid grid-cols-2 sm:grid-cols-3 gap-3"
+                                >
                                     <div
                                         v-for="(media, index) in report.photos"
                                         :key="index"
-                                        class="relative group cursor-pointer h-32 rounded border border-gray-200 overflow-hidden"
+                                        class="relative group cursor-pointer h-28 rounded-sm border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105"
                                         @click="openMedia(media, index)"
                                     >
                                         <!-- Video Thumbnail -->
                                         <template v-if="isVideoFile(media)">
-                                            <div class="w-full h-full bg-gray-800 flex items-center justify-center">
+                                            <div
+                                                class="w-full h-full bg-gray-800 flex items-center justify-center"
+                                            >
                                                 <video
                                                     muted
                                                     loop
                                                     class="w-full h-full object-cover"
                                                 >
-                                                    <source :src="getMediaPath(media.path)" type="video/mp4">
+                                                    <source
+                                                        :src="
+                                                            getMediaPath(
+                                                                media.path
+                                                            )
+                                                        "
+                                                        type="video/mp4"
+                                                    />
                                                 </video>
-                                                <div class="absolute inset-0 flex items-center justify-center bg-black/20">
-                                                    <Play class="w-8 h-8 text-white" />
+                                                <div
+                                                    class="absolute inset-0 flex items-center justify-center bg-black/30"
+                                                >
+                                                    <div
+                                                        class="flex items-center justify-center w-10 h-10 bg-white/90 rounded-full"
+                                                    >
+                                                        <Play
+                                                            class="w-5 h-5 text-gray-800"
+                                                        />
+                                                    </div>
                                                 </div>
                                             </div>
                                         </template>
@@ -299,20 +523,41 @@
                                         <template v-else>
                                             <img
                                                 :src="getMediaPath(media.path)"
-                                                :alt="`Report photo ${index + 1}`"
-                                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                                :alt="`Report photo ${
+                                                    index + 1
+                                                }`"
+                                                class="w-full h-full object-cover"
                                                 loading="lazy"
                                                 @error="handleImageError"
                                             />
-                                            <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
-                                                <ZoomIn class="w-6 h-6 text-white" />
+                                            <div
+                                                class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100"
+                                            >
+                                                <div
+                                                    class="flex items-center justify-center w-10 h-10 bg-white/90 rounded-full"
+                                                >
+                                                    <ZoomIn
+                                                        class="w-5 h-5 text-gray-800"
+                                                    />
+                                                </div>
                                             </div>
                                         </template>
 
                                         <!-- File Info -->
-                                        <div class="absolute bottom-1 left-1 bg-black/70 text-white text-xs px-1 rounded">
-                                            {{ (media.size / 1024 / 1024).toFixed(2) }} MB
-                                            <span v-if="isVideoFile(media)">(Video)</span>
+                                        <div
+                                            class="absolute bottom-1 left-1 bg-black/80 text-white text-xs px-2 py-1 rounded-lg backdrop-blur-sm"
+                                        >
+                                            {{
+                                                (
+                                                    media.size /
+                                                    1024 /
+                                                    1024
+                                                ).toFixed(2)
+                                            }}
+                                            MB
+                                            <span v-if="isVideoFile(media)"
+                                                >(Video)</span
+                                            >
                                         </div>
                                     </div>
                                 </div>
@@ -320,39 +565,84 @@
                         </div>
 
                         <!-- Timeline Card -->
-                        <div class="bg-white rounded border border-gray-200">
-                            <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                                <h2 class="text-lg font-semibold text-gray-900 flex items-center">
-                                    <Clock class="w-5 h-5 text-gray-600 mr-2" />
+                        <div
+                            class="bg-white rounded-sm shadow-sm border border-gray-200 overflow-hidden"
+                        >
+                            <div
+                                class="px-5 py-4 bg-gradient-to-r from-gray-50 to-slate-50 border-b border-gray-200"
+                            >
+                                <h2
+                                    class="text-lg font-semibold text-gray-900 flex items-center"
+                                >
+                                    <div
+                                        class="flex items-center justify-center w-8 h-8 bg-gray-100 rounded-lg mr-3"
+                                    >
+                                        <Clock class="w-5 h-5 text-gray-600" />
+                                    </div>
                                     Report Timeline
                                 </h2>
                             </div>
-                            <div class="p-6">
-                                <div class="space-y-4">
+                            <div class="p-5">
+                                <div class="space-y-5">
                                     <!-- Submitted -->
-                                    <div class="flex items-start gap-3">
-                                        <div class="flex-shrink-0">
-                                            <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                                                <CheckCircle class="w-4 h-4 text-blue-600" />
+                                    <div class="flex items-start gap-4">
+                                        <div class="flex-shrink-0 relative">
+                                            <div
+                                                class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center shadow-sm"
+                                            >
+                                                <CheckCircle
+                                                    class="w-5 h-5 text-blue-600"
+                                                />
                                             </div>
+                                            <div
+                                                class="absolute top-10 bottom-0 left-1/2 w-0.5 bg-blue-200 transform -translate-x-1/2"
+                                            ></div>
                                         </div>
-                                        <div>
-                                            <p class="font-medium text-gray-900">Report Submitted</p>
-                                            <p class="text-sm text-gray-600">{{ formatDateTime(report.created_at) }}</p>
+                                        <div class="flex-1 pb-5">
+                                            <p
+                                                class="font-semibold text-gray-900"
+                                            >
+                                                Report Submitted
+                                            </p>
+                                            <p
+                                                class="text-sm text-gray-600 mt-1"
+                                            >
+                                                {{
+                                                    formatDateTime(
+                                                        report.created_at
+                                                    )
+                                                }}
+                                            </p>
                                         </div>
                                     </div>
 
                                     <!-- Status Updates -->
-                                    <div class="flex items-start gap-3">
+                                    <div class="flex items-start gap-4">
                                         <div class="flex-shrink-0">
-                                            <div class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                                                <Clock class="w-4 h-4 text-gray-600" />
+                                            <div
+                                                class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center shadow-sm"
+                                            >
+                                                <Clock
+                                                    class="w-5 h-5 text-gray-600"
+                                                />
                                             </div>
                                         </div>
                                         <div>
-                                            <p class="font-medium text-gray-900">Current Status</p>
-                                            <p class="text-sm text-gray-600">{{ statusLabel }}</p>
-                                            <p class="text-xs text-gray-500">Last updated</p>
+                                            <p
+                                                class="font-semibold text-gray-900"
+                                            >
+                                                Current Status
+                                            </p>
+                                            <p
+                                                class="text-sm text-gray-600 mt-1"
+                                            >
+                                                {{ statusLabel }}
+                                            </p>
+                                            <p
+                                                class="text-xs text-gray-500 mt-1"
+                                            >
+                                                Last updated
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
@@ -378,21 +668,20 @@
             @next="nextImage"
             @prev="prevImage"
         />
-    </CustomerLayout>
+    </AdminLayout>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { Link, router } from '@inertiajs/vue3';
-import CustomerLayout from '@/Layouts/CustomerLayout.vue';
-import ImageModal from '@/Components/Modals/ImageModal.vue';
-import VideoModal from '@/Components/Modals/VideoModal.vue';
+import { ref, computed, onMounted, onUnmounted } from "vue";
+import { Link, router } from "@inertiajs/vue3";
+
+import ImageModal from "@/Components/Modals/ImageModal.vue";
+import VideoModal from "@/Components/Modals/VideoModal.vue";
 import {
     ArrowLeft,
     Eye,
     Loader2,
     AlertCircle,
-    Printer,
     Copy,
     AlertTriangle,
     Tag,
@@ -408,18 +697,19 @@ import {
     Play,
     ZoomIn,
     Clock,
-    CheckCircle
-} from 'lucide-vue-next';
+    CheckCircle,
+} from "lucide-vue-next";
+import AdminLayout from "@/Layouts/AdminLayout.vue";
 
 const props = defineProps({
     report: {
         type: Object,
-        default: null
+        default: null,
     },
     error: {
         type: String,
-        default: null
-    }
+        default: null,
+    },
 });
 
 // Reactive state
@@ -433,24 +723,27 @@ const map = ref(null);
 
 // Computed properties
 const statusClass = computed(() => {
-    if (!props.report?.status) return 'bg-gray-100 text-gray-800';
+    if (!props.report?.status) return "bg-gray-100 text-gray-800";
 
     const classes = {
-        pending: 'bg-yellow-100 text-yellow-800',
-        in_progress: 'bg-blue-100 text-blue-800',
-        resolved: 'bg-green-100 text-green-800',
+        pending: "bg-yellow-100 text-yellow-800 border border-yellow-200",
+        in_progress: "bg-blue-100 text-blue-800 border border-blue-200",
+        resolved: "bg-green-100 text-green-800 border border-green-200",
     };
 
-    return classes[props.report.status.toLowerCase()] || 'bg-gray-100 text-gray-800';
+    return (
+        classes[props.report.status.toLowerCase()] ||
+        "bg-gray-100 text-gray-800 border border-gray-200"
+    );
 });
 
 const statusLabel = computed(() => {
-    if (!props.report?.status) return 'Unknown';
+    if (!props.report?.status) return "Unknown";
 
     const labels = {
-        pending: 'Pending',
-        in_progress: 'In Progress',
-        resolved: 'Resolved',
+        pending: "Pending",
+        in_progress: "In Progress",
+        resolved: "Resolved",
     };
 
     return labels[props.report.status.toLowerCase()] || props.report.status;
@@ -459,43 +752,57 @@ const statusLabel = computed(() => {
 const getLatitude = computed(() => {
     return props.report?.latitude
         ? Number(props.report.latitude).toFixed(6)
-        : 'N/A';
+        : "N/A";
 });
 
 const getLongitude = computed(() => {
     return props.report?.longitude
         ? Number(props.report.longitude).toFixed(6)
-        : 'N/A';
+        : "N/A";
 });
 
 // Methods
 const formatPriority = (priority) => {
-    if (!priority) return 'N/A Priority';
-    return priority.charAt(0).toUpperCase() + priority.slice(1) + ' Priority';
+    if (!priority) return "N/A Priority";
+    return priority.charAt(0).toUpperCase() + priority.slice(1) + " Priority";
 };
 
 const formatDate = (dateString) => {
-    return dateString ? new Date(dateString).toLocaleDateString() : 'N/A';
+    return dateString
+        ? new Date(dateString).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+          })
+        : "N/A";
 };
 
 const formatDateTime = (dateString) => {
-    return dateString ? new Date(dateString).toLocaleString() : 'N/A';
+    return dateString
+        ? new Date(dateString).toLocaleString("en-US", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+          })
+        : "N/A";
 };
 
 const getMediaPath = (path) => {
-    const cleanPath = path.replace(/^\/?storage\/?/, '');
+    const cleanPath = path.replace(/^\/?storage\/?/, "");
     return `/storage/${cleanPath}`;
 };
 
 const handleImageError = (event) => {
-    console.error('Failed to load image:', event.target.src);
-    event.target.src = '/images/placeholder.jpg';
+    console.error("Failed to load image:", event.target.src);
+    event.target.src = "/images/placeholder.jpg";
 };
 
 const isVideoFile = (file) => {
     return (
-        file.type === 'video' ||
-        file.mime_type?.includes('video') ||
+        file.type === "video" ||
+        file.mime_type?.includes("video") ||
         file.original_name?.match(/\.(mp4|mov|avi|webm)$/i) ||
         file.path?.match(/\.(mp4|mov|avi|webm)$/i)
     );
@@ -510,8 +817,10 @@ const openMedia = (media, index = 0) => {
 };
 
 const openImageModal = (imagePath, index = 0) => {
-    const imageMedia = props.report.photos.filter(media => !isVideoFile(media));
-    allImages.value = imageMedia.map(media => getMediaPath(media.path));
+    const imageMedia = props.report.photos.filter(
+        (media) => !isVideoFile(media)
+    );
+    allImages.value = imageMedia.map((media) => getMediaPath(media.path));
 
     const targetImagePath = getMediaPath(imagePath);
     currentImageIndex.value = allImages.value.indexOf(targetImagePath);
@@ -531,13 +840,16 @@ const closeImageModal = () => {
 
 const nextImage = () => {
     if (allImages.value.length > 0) {
-        currentImageIndex.value = (currentImageIndex.value + 1) % allImages.value.length;
+        currentImageIndex.value =
+            (currentImageIndex.value + 1) % allImages.value.length;
     }
 };
 
 const prevImage = () => {
     if (allImages.value.length > 0) {
-        currentImageIndex.value = (currentImageIndex.value - 1 + allImages.value.length) % allImages.value.length;
+        currentImageIndex.value =
+            (currentImageIndex.value - 1 + allImages.value.length) %
+            allImages.value.length;
     }
 };
 
@@ -551,8 +863,14 @@ const closeVideoModal = () => {
     currentVideo.value = null;
 };
 
-const printReport = () => {
-    window.print();
+const copyTrackingCode = async () => {
+    try {
+        await navigator.clipboard.writeText(props.report.tracking_code);
+        // You could add a toast notification here
+        console.log("Tracking code copied to clipboard");
+    } catch (err) {
+        console.error("Failed to copy tracking code: ", err);
+    }
 };
 
 // Map Functions
@@ -562,7 +880,8 @@ const initializeMap = () => {
     const lat = Number(props.report.latitude);
     const lon = Number(props.report.longitude);
 
-    if (isNaN(lat) || isNaN(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) return;
+    if (isNaN(lat) || isNaN(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180)
+        return;
 
     const L = window.L;
     if (!L) return;
@@ -571,17 +890,21 @@ const initializeMap = () => {
 
     setTimeout(() => {
         try {
-            map.value = L.map('map').setView([lat, lon], 15);
+            map.value = L.map("map").setView([lat, lon], 15);
 
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
                 maxZoom: 19,
-                attribution: '&copy; OpenStreetMap contributors'
+                attribution: "&copy; OpenStreetMap contributors",
             }).addTo(map.value);
 
-            const heading = props.report.heading ? Number(props.report.heading) : 0;
+            const heading = props.report.heading
+                ? Number(props.report.heading)
+                : 0;
 
             const markerIcon = L.icon({
-                iconUrl: 'data:image/svg+xml;base64,' + btoa(`
+                iconUrl:
+                    "data:image/svg+xml;base64," +
+                    btoa(`
                     <svg xmlns="http://www.w3.org/2000/svg" width="30" height="40" viewBox="0 0 30 40">
                         <g transform="rotate(${heading} 15 15)">
                             <path d="M15,1.5 C8.1,1.5 2.5,7.1 2.5,14 C2.5,23.8 15,38.5 15,38.5 C15,38.5 27.5,23.8 27.5,14 C27.5,7.1 21.9,1.5 15,1.5 Z" fill="#dc2626" stroke="#ffffff" stroke-width="2"/>
@@ -597,7 +920,7 @@ const initializeMap = () => {
 
             L.marker([lat, lon], { icon: markerIcon }).addTo(map.value);
         } catch (error) {
-            console.error('Error initializing map:', error);
+            console.error("Error initializing map:", error);
         }
     }, 100);
 };
@@ -607,7 +930,7 @@ const destroyMap = () => {
         try {
             map.value.remove();
         } catch (error) {
-            console.error('Error removing map:', error);
+            console.error("Error removing map:", error);
         }
         map.value = null;
     }
@@ -626,22 +949,21 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-/* Print styles */
-@media print {
-    .no-print {
-        display: none !important;
-    }
+/* Custom scrollbar for webkit browsers */
+::-webkit-scrollbar {
+    width: 6px;
+}
 
-    body {
-        background: white !important;
-    }
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
 
-    .bg-gray-50 {
-        background: white !important;
-    }
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
 
-    .border {
-        border-color: #000 !important;
-    }
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
 }
 </style>

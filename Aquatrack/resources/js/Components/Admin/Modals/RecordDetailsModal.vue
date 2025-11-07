@@ -8,41 +8,41 @@
             />
 
             <!-- Modal Container -->
-            <div class="flex min-h-full items-center justify-center p-4">
+            <div class="flex min-h-full items-center justify-center p-0">
                 <div
                     class="relative w-full transform transition-all duration-300"
-                    :class="isMaximized ? 'max-w-full h-full' : 'max-w-4xl'"
+                    :class="isMaximized ? 'w-full h-full' : 'max-w-4xl'"
                 >
                     <div
-                        class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden flex flex-col"
-                        :class="isMaximized ? 'h-screen' : 'max-h-[90vh]'"
+                        class="bg-white dark:bg-gray-900 shadow-2xl overflow-hidden flex flex-col"
+                        :class="[
+                            isMaximized
+                                ? 'h-screen rounded-none'
+                                : 'max-h-[90vh] rounded-lg',
+                        ]"
                     >
                         <!-- Header -->
-                        <div class="bg-[#062F64] px-6 py-4 flex-shrink-0">
+                        <div class="border-b px-6 py-4 flex-shrink-0">
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center space-x-3">
-                                    <div>
+                                    <div class="flex">
+
+                                        <User class="w-6 h-6  text-black" />
+
                                         <h2
-                                            class="text-xl font-bold text-white"
+                                            class="text-xl font-semibold ml-2 text-black"
                                         >
+
                                             Concessioner's Record Details
                                         </h2>
-                                        <p
-                                            class="text-blue-100 text-sm mt-1"
-                                            v-if="record"
-                                        >
-                                            Record ID: {{ record.id }} •
-                                            {{
-                                                formatDate(record.reading_date)
-                                            }}
-                                        </p>
+
                                     </div>
                                 </div>
                                 <div class="flex items-center space-x-2">
                                     <!-- Maximize Button -->
                                     <button
                                         @click="toggleMaximize"
-                                        class="p-2 text-white hover:text-blue-200 hover:bg-white/10 rounded-lg transition-all duration-200"
+                                        class="p-2 text-black hover:text-gray-600 hover:bg-gray-200/10 transition-all duration-200"
                                         :title="
                                             isMaximized
                                                 ? 'Minimize'
@@ -61,7 +61,7 @@
                                     <!-- Close Button -->
                                     <button
                                         @click="emit('close')"
-                                        class="p-2 text-white hover:text-blue-200 hover:bg-white/10 rounded-lg transition-all duration-200"
+                                        class="p-2 text-black hover:text-gray-600 hover:bg-gray-200/10 transition-all duration-200"
                                     >
                                         <component
                                             :is="XIcon"
@@ -92,16 +92,18 @@
                         <!-- Content -->
                         <div
                             v-else-if="record"
-                            class="flex-1 overflow-y-auto p-6"
-                            :class="isMaximized ? 'p-8' : ''"
+                            class="flex-1 overflow-y-auto"
+                            :class="isMaximized ? 'p-8' : 'p-6'"
                         >
-                            <div
-                                class="space-y-6"
-                                :class="isMaximized ? 'w-full' : ''"
-                            >
+                            <div class="space-y-6 w-full">
                                 <!-- Status Banner -->
                                 <div
-                                    class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-6 border border-blue-100 dark:border-blue-800"
+                                    class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-6 border border-blue-100 dark:border-blue-800"
+                                    :class="
+                                        isMaximized
+                                            ? 'rounded-md'
+                                            : 'rounded-lg'
+                                    "
                                 >
                                     <div
                                         class="flex items-center justify-between"
@@ -162,7 +164,12 @@
                                                 class="flex items-center space-x-3"
                                             >
                                                 <div
-                                                    class="p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm"
+                                                    class="p-3 bg-white dark:bg-gray-800 shadow-sm"
+                                                    :class="
+                                                        isMaximized
+                                                            ? 'rounded-md'
+                                                            : 'rounded-lg'
+                                                    "
                                                 >
                                                     <v-icon
                                                         name="bi-cash-coin"
@@ -185,8 +192,13 @@
                                         </div>
                                         <div class="text-right">
                                             <span
-                                                class="px-4 py-2.5 text-sm font-semibold rounded-full border shadow-sm"
-                                                :class="statusClass"
+                                                class="px-4 py-2.5 text-sm font-semibold border shadow-sm"
+                                                :class="[
+                                                    statusClass,
+                                                    isMaximized
+                                                        ? 'rounded-md'
+                                                        : 'rounded-full',
+                                                ]"
                                             >
                                                 {{ statusLabel }}
                                             </span>
@@ -211,7 +223,12 @@
                                     >
                                         <!-- Customer Information -->
                                         <div
-                                            class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm"
+                                            class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm"
+                                            :class="
+                                                isMaximized
+                                                    ? 'rounded-md'
+                                                    : 'rounded-lg'
+                                            "
                                         >
                                             <div
                                                 class="bg-gray-50 dark:bg-gray-700/50 px-6 py-4 border-b border-gray-200 dark:border-gray-600"
@@ -276,10 +293,20 @@
                                                     "
                                                 >
                                                     <div
-                                                        class="flex items-start space-x-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg"
+                                                        class="flex items-start space-x-3 p-3 bg-gray-50 dark:bg-gray-700/30"
+                                                        :class="
+                                                            isMaximized
+                                                                ? 'rounded-md'
+                                                                : 'rounded-lg'
+                                                        "
                                                     >
                                                         <div
-                                                            class="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg"
+                                                            class="p-2 bg-blue-100 dark:bg-blue-900"
+                                                            :class="
+                                                                isMaximized
+                                                                    ? 'rounded-md'
+                                                                    : 'rounded-lg'
+                                                            "
                                                         >
                                                             <v-icon
                                                                 name="bi-person-badge"
@@ -312,10 +339,20 @@
                                                         </div>
                                                     </div>
                                                     <div
-                                                        class="flex items-start space-x-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg"
+                                                        class="flex items-start space-x-3 p-3 bg-gray-50 dark:bg-gray-700/30"
+                                                        :class="
+                                                            isMaximized
+                                                                ? 'rounded-md'
+                                                                : 'rounded-lg'
+                                                        "
                                                     >
                                                         <div
-                                                            class="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg"
+                                                            class="p-2 bg-blue-100 dark:bg-blue-900"
+                                                            :class="
+                                                                isMaximized
+                                                                    ? 'rounded-md'
+                                                                    : 'rounded-lg'
+                                                            "
                                                         >
                                                             <v-icon
                                                                 name="bi-credit-card"
@@ -344,10 +381,20 @@
                                                         </div>
                                                     </div>
                                                     <div
-                                                        class="flex items-start space-x-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg"
+                                                        class="flex items-start space-x-3 p-3 bg-gray-50 dark:bg-gray-700/30"
+                                                        :class="
+                                                            isMaximized
+                                                                ? 'rounded-md'
+                                                                : 'rounded-lg'
+                                                        "
                                                     >
                                                         <div
-                                                            class="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg"
+                                                            class="p-2 bg-blue-100 dark:bg-blue-900"
+                                                            :class="
+                                                                isMaximized
+                                                                    ? 'rounded-md'
+                                                                    : 'rounded-lg'
+                                                            "
                                                         >
                                                             <v-icon
                                                                 name="bi-upc-scan"
@@ -376,10 +423,20 @@
                                                         </div>
                                                     </div>
                                                     <div
-                                                        class="flex items-start space-x-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg"
+                                                        class="flex items-start space-x-3 p-3 bg-gray-50 dark:bg-gray-700/30"
+                                                        :class="
+                                                            isMaximized
+                                                                ? 'rounded-md'
+                                                                : 'rounded-lg'
+                                                        "
                                                     >
                                                         <div
-                                                            class="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg"
+                                                            class="p-2 bg-blue-100 dark:bg-blue-900"
+                                                            :class="
+                                                                isMaximized
+                                                                    ? 'rounded-md'
+                                                                    : 'rounded-lg'
+                                                            "
                                                         >
                                                             <v-icon
                                                                 name="bi-telephone"
@@ -410,10 +467,20 @@
                                                     </div>
                                                 </div>
                                                 <div
-                                                    class="flex items-start space-x-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg"
+                                                    class="flex items-start space-x-3 p-3 bg-gray-50 dark:bg-gray-700/30"
+                                                    :class="
+                                                        isMaximized
+                                                            ? 'rounded-md'
+                                                            : 'rounded-lg'
+                                                    "
                                                 >
                                                     <div
-                                                        class="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg"
+                                                        class="p-2 bg-blue-100 dark:bg-blue-900"
+                                                        :class="
+                                                            isMaximized
+                                                                ? 'rounded-md'
+                                                                : 'rounded-lg'
+                                                        "
                                                     >
                                                         <v-icon
                                                             name="bi-geo-alt"
@@ -464,7 +531,12 @@
                                     >
                                         <!-- Reading Information -->
                                         <div
-                                            class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm"
+                                            class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm"
+                                            :class="
+                                                isMaximized
+                                                    ? 'rounded-md'
+                                                    : 'rounded-lg'
+                                            "
                                         >
                                             <div
                                                 class="bg-gray-50 dark:bg-gray-700/50 px-6 py-4 border-b border-gray-200 dark:border-gray-600"
@@ -494,10 +566,20 @@
                                                     "
                                                 >
                                                     <div
-                                                        class="flex items-start space-x-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg"
+                                                        class="flex items-start space-x-3 p-3 bg-gray-50 dark:bg-gray-700/30"
+                                                        :class="
+                                                            isMaximized
+                                                                ? 'rounded-md'
+                                                                : 'rounded-lg'
+                                                        "
                                                     >
                                                         <div
-                                                            class="p-2 bg-green-100 dark:bg-green-900 rounded-lg"
+                                                            class="p-2 bg-green-100 dark:bg-green-900"
+                                                            :class="
+                                                                isMaximized
+                                                                    ? 'rounded-md'
+                                                                    : 'rounded-lg'
+                                                            "
                                                         >
                                                             <v-icon
                                                                 name="bi-calendar-check"
@@ -527,10 +609,20 @@
                                                         </div>
                                                     </div>
                                                     <div
-                                                        class="flex items-start space-x-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg"
+                                                        class="flex items-start space-x-3 p-3 bg-gray-50 dark:bg-gray-700/30"
+                                                        :class="
+                                                            isMaximized
+                                                                ? 'rounded-md'
+                                                                : 'rounded-lg'
+                                                        "
                                                     >
                                                         <div
-                                                            class="p-2 bg-green-100 dark:bg-green-900 rounded-lg"
+                                                            class="p-2 bg-green-100 dark:bg-green-900"
+                                                            :class="
+                                                                isMaximized
+                                                                    ? 'rounded-md'
+                                                                    : 'rounded-lg'
+                                                            "
                                                         >
                                                             <v-icon
                                                                 name="bi-calendar-x"
@@ -563,10 +655,20 @@
                                                         </div>
                                                     </div>
                                                     <div
-                                                        class="flex items-start space-x-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg"
+                                                        class="flex items-start space-x-3 p-3 bg-gray-50 dark:bg-gray-700/30"
+                                                        :class="
+                                                            isMaximized
+                                                                ? 'rounded-md'
+                                                                : 'rounded-lg'
+                                                        "
                                                     >
                                                         <div
-                                                            class="p-2 bg-green-100 dark:bg-green-900 rounded-lg"
+                                                            class="p-2 bg-green-100 dark:bg-green-900"
+                                                            :class="
+                                                                isMaximized
+                                                                    ? 'rounded-md'
+                                                                    : 'rounded-lg'
+                                                            "
                                                         >
                                                             <v-icon
                                                                 name="bi-water"
@@ -595,10 +697,20 @@
                                                         </div>
                                                     </div>
                                                     <div
-                                                        class="flex items-start space-x-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg"
+                                                        class="flex items-start space-x-3 p-3 bg-gray-50 dark:bg-gray-700/30"
+                                                        :class="
+                                                            isMaximized
+                                                                ? 'rounded-md'
+                                                                : 'rounded-lg'
+                                                        "
                                                     >
                                                         <div
-                                                            class="p-2 bg-green-100 dark:bg-green-900 rounded-lg"
+                                                            class="p-2 bg-green-100 dark:bg-green-900"
+                                                            :class="
+                                                                isMaximized
+                                                                    ? 'rounded-md'
+                                                                    : 'rounded-lg'
+                                                            "
                                                         >
                                                             <v-icon
                                                                 name="bi-graph-up"
@@ -632,7 +744,12 @@
 
                                         <!-- Payment Information -->
                                         <div
-                                            class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm"
+                                            class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm"
+                                            :class="
+                                                isMaximized
+                                                    ? 'rounded-md'
+                                                    : 'rounded-lg'
+                                            "
                                         >
                                             <div
                                                 class="bg-gray-50 dark:bg-gray-700/50 px-6 py-4 border-b border-gray-200 dark:border-gray-600"
@@ -667,13 +784,23 @@
                                                             record.status !==
                                                                 'Paid'
                                                         "
-                                                        class="flex items-center justify-between p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800"
+                                                        class="flex items-center justify-between p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800"
+                                                        :class="
+                                                            isMaximized
+                                                                ? 'rounded-md'
+                                                                : 'rounded-lg'
+                                                        "
                                                     >
                                                         <div
                                                             class="flex items-center space-x-3"
                                                         >
                                                             <div
-                                                                class="p-2 bg-white dark:bg-gray-800 rounded-lg"
+                                                                class="p-2 bg-white dark:bg-gray-800"
+                                                                :class="
+                                                                    isMaximized
+                                                                        ? 'rounded-md'
+                                                                        : 'rounded-lg'
+                                                                "
                                                             >
                                                                 <v-icon
                                                                     name="bi-exclamation-triangle"
@@ -698,13 +825,23 @@
                                                     </div>
 
                                                     <div
-                                                        class="flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg border border-green-200 dark:border-green-800"
+                                                        class="flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200 dark:border-green-800"
+                                                        :class="
+                                                            isMaximized
+                                                                ? 'rounded-md'
+                                                                : 'rounded-lg'
+                                                        "
                                                     >
                                                         <div
                                                             class="flex items-center space-x-3"
                                                         >
                                                             <div
-                                                                class="p-2 bg-white dark:bg-gray-800 rounded-lg"
+                                                                class="p-2 bg-white dark:bg-gray-800"
+                                                                :class="
+                                                                    isMaximized
+                                                                        ? 'rounded-md'
+                                                                        : 'rounded-lg'
+                                                                "
                                                             >
                                                                 <v-icon
                                                                     name="bi-receipt"
@@ -743,7 +880,7 @@
 
 <script setup>
 import { ref, computed } from "vue";
-import { XIcon, Maximize2Icon, Minimize2Icon } from "lucide-vue-next";
+import { XIcon, Maximize2Icon, Minimize2Icon, User } from "lucide-vue-next";
 
 const props = defineProps({
     show: {
@@ -957,12 +1094,12 @@ const getUserInitials = (user) => {
 
 .overflow-y-auto::-webkit-scrollbar-track {
     background: #f1f5f9;
-    border-radius: 10px;
+    border-radius: 3px;
 }
 
 .overflow-y-auto::-webkit-scrollbar-thumb {
     background: #cbd5e1;
-    border-radius: 10px;
+    border-radius: 3px;
 }
 
 .overflow-y-auto::-webkit-scrollbar-thumb:hover {

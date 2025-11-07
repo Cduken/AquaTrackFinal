@@ -7,41 +7,56 @@
                 @click="emit('close')"
             ></div>
             <!-- Modal Container -->
-            <div class="flex min-h-full items-center justify-center p-4">
+            <div class="flex min-h-full items-center justify-center p-0">
                 <div
                     class="relative w-full transform transition-all duration-300"
-                    :class="
-                        isMaximized ? 'max-w-full h-full mx-auto' : 'max-w-4xl'
-                    "
+                    :class="isMaximized ? 'w-full h-full' : 'max-w-4xl'"
                 >
                     <div
-                        class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden flex flex-col"
-                        :class="
+                        class="bg-white dark:bg-gray-900 shadow-2xl overflow-hidden flex flex-col"
+                        :class="[
                             isMaximized
-                                ? 'h-screen'
-                                : 'max-h-[90vh]'
-                        "
+                                ? 'h-screen rounded-none'
+                                : 'max-h-[90vh] rounded-lg',
+                        ]"
                     >
                         <!-- Header -->
-                        <div class="relative px-4 py-4 border-b">
+                        <div
+                            class="relative px-6 py-4 border-b border-gray-200 dark:border-gray-700"
+                        >
                             <div class="flex items-center justify-between">
-                                <div class="flex items-center">
+                                <div class="flex items-center space-x-3">
                                     <div
-                                        class="p-2.5 bg-white/20 rounded-xl backdrop-blur-sm"
+                                        class="p-2.5 bg-blue-50 dark:bg-blue-900/30"
+                                        :class="
+                                            isMaximized
+                                                ? 'rounded-md'
+                                                : 'rounded-lg'
+                                        "
                                     >
-                                        <UserCog class="w-6 h-6 text-black" />
+                                        <UserCog
+                                            class="w-6 h-6 text-blue-600 dark:text-blue-400"
+                                        />
                                     </div>
                                     <div>
-                                        <h2 class="text-xl font-sm text-black">
+                                        <h2
+                                            class="text-xl font-semibold text-gray-900 dark:text-white"
+                                        >
                                             Edit User Details
                                         </h2>
+
                                     </div>
                                 </div>
                                 <div class="flex items-center space-x-2">
                                     <!-- Maximize Button -->
                                     <button
                                         @click="toggleMaximize"
-                                        class="p-2 text-black/80 hover:text-gray-700 hover:bg-white/10 rounded-lg transition-all duration-200"
+                                        class="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200"
+                                        :class="
+                                            isMaximized
+                                                ? 'rounded-md'
+                                                : 'rounded-lg'
+                                        "
                                         :title="
                                             isMaximized
                                                 ? 'Minimize'
@@ -57,7 +72,12 @@
                                     <!-- Close Button -->
                                     <button
                                         @click="emit('close')"
-                                        class="p-2 text-black/80 hover:text-gray-400 hover:bg-white/10 rounded-lg transition-all duration-200"
+                                        class="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200"
+                                        :class="
+                                            isMaximized
+                                                ? 'rounded-md'
+                                                : 'rounded-lg'
+                                        "
                                     >
                                         <X class="w-5 h-5" />
                                     </button>
@@ -67,8 +87,8 @@
 
                         <!-- Content -->
                         <div
-                            class="flex-1 overflow-y-auto p-8"
-                            :class="isMaximized ? 'p-10' : ''"
+                            class="flex-1 overflow-y-auto"
+                            :class="isMaximized ? 'p-8' : 'p-6'"
                         >
                             <!-- Loading State -->
                             <div
@@ -88,7 +108,10 @@
                             <!-- Error Message -->
                             <div
                                 v-if="editErrorMessage"
-                                class="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex items-start space-x-3"
+                                class="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 flex items-start space-x-3"
+                                :class="
+                                    isMaximized ? 'rounded-md' : 'rounded-lg'
+                                "
                             >
                                 <AlertCircle
                                     class="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5"
@@ -104,14 +127,14 @@
 
                             <div
                                 v-if="user && !editLoading"
-                                class="space-y-8"
-                                :class="{ 'space-y-10': isMaximized }"
+                                class="space-y-6"
+                                :class="{ 'space-y-8': isMaximized }"
                             >
                                 <!-- Profile Information -->
                                 <div class="space-y-4">
                                     <div class="flex items-center space-x-2">
                                         <UserCircle
-                                            class="w-5 h-5 text-gray-700 dark:text-gray-300"
+                                            class="w-5 h-5 text-blue-600 dark:text-blue-400"
                                         />
                                         <h3
                                             class="text-lg font-semibold text-gray-900 dark:text-white"
@@ -120,9 +143,9 @@
                                         </h3>
                                     </div>
                                     <div
-                                        class="grid grid-cols-1 md:grid-cols-2 gap-5"
+                                        class="grid grid-cols-1 md:grid-cols-2 gap-4"
                                         :class="{
-                                            'md:grid-cols-3': isMaximized,
+                                            'md:grid-cols-3 gap-6': isMaximized,
                                         }"
                                     >
                                         <div>
@@ -138,12 +161,15 @@
                                                 <input
                                                     v-model="editFormData.name"
                                                     type="text"
-                                                    class="w-full pl-11 pr-4 py-3 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                                    :class="
+                                                    class="w-full pl-11 pr-4 py-3 border bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                                    :class="[
                                                         editErrors.name
                                                             ? 'border-red-500'
-                                                            : 'border-gray-300 dark:border-gray-600'
-                                                    "
+                                                            : 'border-gray-300 dark:border-gray-600',
+                                                        isMaximized
+                                                            ? 'rounded-md'
+                                                            : 'rounded-lg',
+                                                    ]"
                                                     placeholder="John"
                                                 />
                                             </div>
@@ -169,12 +195,15 @@
                                                         editFormData.lastname
                                                     "
                                                     type="text"
-                                                    class="w-full pl-11 pr-4 py-3 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                                    :class="
+                                                    class="w-full pl-11 pr-4 py-3 border bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                                    :class="[
                                                         editErrors.lastname
                                                             ? 'border-red-500'
-                                                            : 'border-gray-300 dark:border-gray-600'
-                                                    "
+                                                            : 'border-gray-300 dark:border-gray-600',
+                                                        isMaximized
+                                                            ? 'rounded-md'
+                                                            : 'rounded-lg',
+                                                    ]"
                                                     placeholder="Doe"
                                                 />
                                             </div>
@@ -198,12 +227,15 @@
                                                 <input
                                                     v-model="editFormData.email"
                                                     type="email"
-                                                    class="w-full pl-11 pr-4 py-3 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                                    :class="
+                                                    class="w-full pl-11 pr-4 py-3 border bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                                    :class="[
                                                         editErrors.email
                                                             ? 'border-red-500'
-                                                            : 'border-gray-300 dark:border-gray-600'
-                                                    "
+                                                            : 'border-gray-300 dark:border-gray-600',
+                                                        isMaximized
+                                                            ? 'rounded-md'
+                                                            : 'rounded-lg',
+                                                    ]"
                                                     placeholder="Enter email address"
                                                 />
                                             </div>
@@ -227,12 +259,15 @@
                                                 <input
                                                     v-model="editFormData.phone"
                                                     type="tel"
-                                                    class="w-full pl-11 pr-4 py-3 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                                    :class="
+                                                    class="w-full pl-11 pr-4 py-3 border bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                                    :class="[
                                                         editErrors.phone
                                                             ? 'border-red-500'
-                                                            : 'border-gray-300 dark:border-gray-600'
-                                                    "
+                                                            : 'border-gray-300 dark:border-gray-600',
+                                                        isMaximized
+                                                            ? 'rounded-md'
+                                                            : 'rounded-lg',
+                                                    ]"
                                                     placeholder="Enter phone number"
                                                 />
                                             </div>
@@ -250,7 +285,7 @@
                                 <div class="space-y-4">
                                     <div class="flex items-center space-x-2">
                                         <Shield
-                                            class="w-5 h-5 text-gray-700 dark:text-gray-300"
+                                            class="w-5 h-5 text-blue-600 dark:text-blue-400"
                                         />
                                         <h3
                                             class="text-lg font-semibold text-gray-900 dark:text-white"
@@ -259,7 +294,8 @@
                                         </h3>
                                     </div>
                                     <div
-                                        class="grid grid-cols-1 md:grid-cols-2 gap-5"
+                                        class="grid grid-cols-1 md:grid-cols-2 gap-4"
+                                        :class="{ 'gap-6': isMaximized }"
                                     >
                                         <div>
                                             <label
@@ -277,7 +313,12 @@
                                                     "
                                                     type="text"
                                                     readonly
-                                                    class="w-full pl-11 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 cursor-not-allowed"
+                                                    class="w-full pl-11 pr-4 py-3 border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 cursor-not-allowed"
+                                                    :class="
+                                                        isMaximized
+                                                            ? 'rounded-md'
+                                                            : 'rounded-lg'
+                                                    "
                                                     placeholder="XXX-XX-XXX"
                                                 />
                                                 <Lock
@@ -299,7 +340,12 @@
                                             <button
                                                 @click="resetPassword"
                                                 :disabled="resetLoading"
-                                                class="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-lg font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-amber-500/30"
+                                                class="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-amber-500/30"
+                                                :class="
+                                                    isMaximized
+                                                        ? 'rounded-md'
+                                                        : 'rounded-lg'
+                                                "
                                             >
                                                 <Loader2
                                                     v-if="resetLoading"
@@ -328,7 +374,7 @@
                                 <div class="space-y-4">
                                     <div class="flex items-center space-x-2">
                                         <Droplet
-                                            class="w-5 h-5 text-gray-700 dark:text-gray-300"
+                                            class="w-5 h-5 text-blue-600 dark:text-blue-400"
                                         />
                                         <h3
                                             class="text-lg font-semibold text-gray-900 dark:text-white"
@@ -337,9 +383,9 @@
                                         </h3>
                                     </div>
                                     <div
-                                        class="grid grid-cols-1 md:grid-cols-2 gap-5"
+                                        class="grid grid-cols-1 md:grid-cols-2 gap-4"
                                         :class="{
-                                            'md:grid-cols-3': isMaximized,
+                                            'md:grid-cols-3 gap-6': isMaximized,
                                         }"
                                     >
                                         <div>
@@ -359,12 +405,15 @@
                                                     type="text"
                                                     maxlength="9"
                                                     @input="restrictToNumbers"
-                                                    class="w-full pl-11 pr-16 py-3 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                                    :class="
+                                                    class="w-full pl-11 pr-16 py-3 border bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                                    :class="[
                                                         editErrors.serial_number
                                                             ? 'border-red-500'
-                                                            : 'border-gray-300 dark:border-gray-600'
-                                                    "
+                                                            : 'border-gray-300 dark:border-gray-600',
+                                                        isMaximized
+                                                            ? 'rounded-md'
+                                                            : 'rounded-lg',
+                                                    ]"
                                                     placeholder="123456789"
                                                 />
                                                 <div
@@ -404,12 +453,15 @@
                                                 <input
                                                     v-model="editFormData.size"
                                                     type="text"
-                                                    class="w-full pl-11 pr-4 py-3 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                                    :class="
+                                                    class="w-full pl-11 pr-4 py-3 border bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                                    :class="[
                                                         editErrors.size
                                                             ? 'border-red-500'
-                                                            : 'border-gray-300 dark:border-gray-600'
-                                                    "
+                                                            : 'border-gray-300 dark:border-gray-600',
+                                                        isMaximized
+                                                            ? 'rounded-md'
+                                                            : 'rounded-lg',
+                                                    ]"
                                                     placeholder="Size"
                                                 />
                                             </div>
@@ -433,12 +485,15 @@
                                                 <input
                                                     v-model="editFormData.brand"
                                                     type="text"
-                                                    class="w-full pl-11 pr-4 py-3 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                                    :class="
+                                                    class="w-full pl-11 pr-4 py-3 border bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                                    :class="[
                                                         editErrors.brand
                                                             ? 'border-red-500'
-                                                            : 'border-gray-300 dark:border-gray-600'
-                                                    "
+                                                            : 'border-gray-300 dark:border-gray-600',
+                                                        isMaximized
+                                                            ? 'rounded-md'
+                                                            : 'rounded-lg',
+                                                    ]"
                                                     placeholder="Brand name"
                                                 />
                                             </div>
@@ -464,12 +519,15 @@
                                                         editFormData.date_installed
                                                     "
                                                     type="date"
-                                                    class="w-full pl-11 pr-4 py-3 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                                    :class="
+                                                    class="w-full pl-11 pr-4 py-3 border bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                                    :class="[
                                                         editErrors.date_installed
                                                             ? 'border-red-500'
-                                                            : 'border-gray-300 dark:border-gray-600'
-                                                    "
+                                                            : 'border-gray-300 dark:border-gray-600',
+                                                        isMaximized
+                                                            ? 'rounded-md'
+                                                            : 'rounded-lg',
+                                                    ]"
                                                 />
                                             </div>
                                             <p
@@ -486,7 +544,7 @@
                                 <div class="space-y-4">
                                     <div class="flex items-center space-x-2">
                                         <MapPin
-                                            class="w-5 h-5 text-gray-700 dark:text-gray-300"
+                                            class="w-5 h-5 text-blue-600 dark:text-blue-400"
                                         />
                                         <h3
                                             class="text-lg font-semibold text-gray-900 dark:text-white"
@@ -495,7 +553,8 @@
                                         </h3>
                                     </div>
                                     <div
-                                        class="grid grid-cols-1 md:grid-cols-2 gap-5"
+                                        class="grid grid-cols-1 md:grid-cols-2 gap-4"
+                                        :class="{ 'gap-6': isMaximized }"
                                     >
                                         <div>
                                             <label
@@ -509,12 +568,15 @@
                                                 />
                                                 <select
                                                     v-model="editFormData.zone"
-                                                    class="w-full pl-11 pr-4 py-3 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all appearance-none"
-                                                    :class="
+                                                    class="w-full pl-11 pr-4 py-3 border bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all appearance-none"
+                                                    :class="[
                                                         editErrors.zone
                                                             ? 'border-red-500'
-                                                            : 'border-gray-300 dark:border-gray-600'
-                                                    "
+                                                            : 'border-gray-300 dark:border-gray-600',
+                                                        isMaximized
+                                                            ? 'rounded-md'
+                                                            : 'rounded-lg',
+                                                    ]"
                                                 >
                                                     <option
                                                         v-for="(
@@ -551,12 +613,15 @@
                                                     v-model="
                                                         editFormData.barangay
                                                     "
-                                                    class="w-full pl-11 pr-4 py-3 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all appearance-none"
-                                                    :class="
+                                                    class="w-full pl-11 pr-4 py-3 border bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all appearance-none"
+                                                    :class="[
                                                         editErrors.barangay
                                                             ? 'border-red-500'
-                                                            : 'border-gray-300 dark:border-gray-600'
-                                                    "
+                                                            : 'border-gray-300 dark:border-gray-600',
+                                                        isMaximized
+                                                            ? 'rounded-md'
+                                                            : 'rounded-lg',
+                                                    ]"
                                                 >
                                                     <option
                                                         v-for="barangay in getBarangays(
@@ -586,12 +651,15 @@
 
                         <!-- Footer -->
                         <div
-                            class="flex items-center justify-end space-x-3 px-8 py-2 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50"
+                            class="flex items-center justify-end space-x-3 px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50"
                         >
                             <button
                                 @click="emit('close')"
                                 type="button"
-                                class="px-6 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-all duration-200"
+                                class="px-6 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200"
+                                :class="
+                                    isMaximized ? 'rounded-md' : 'rounded-lg'
+                                "
                             >
                                 Cancel
                             </button>
@@ -599,7 +667,10 @@
                                 @click="submitForm"
                                 :disabled="editLoading"
                                 type="button"
-                                class="px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-all duration-200 flex items-center space-x-2 shadow-lg shadow-blue-500/30"
+                                class="px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center space-x-2 shadow-lg shadow-blue-500/30"
+                                :class="
+                                    isMaximized ? 'rounded-md' : 'rounded-lg'
+                                "
                             >
                                 <Loader2
                                     v-if="editLoading"
@@ -973,12 +1044,12 @@ const submitForm = async () => {
 
 .overflow-y-auto::-webkit-scrollbar-track {
     background: #f1f5f9;
-    border-radius: 10px;
+    border-radius: 3px;
 }
 
 .overflow-y-auto::-webkit-scrollbar-thumb {
     background: #cbd5e1;
-    border-radius: 10px;
+    border-radius: 3px;
 }
 
 .overflow-y-auto::-webkit-scrollbar-thumb:hover {

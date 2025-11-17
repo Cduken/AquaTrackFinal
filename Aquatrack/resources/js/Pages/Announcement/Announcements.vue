@@ -31,8 +31,8 @@ const props = defineProps({
 const searchQuery = ref("");
 const selectedFilter = ref("all");
 
-// Filter only active announcements
-const activeAnnouncements = computed(() => {
+// Current active announcements (within date range)
+const currentAnnouncements = computed(() => {
     return props.announcements.filter((announcement) => {
         const now = new Date();
         const startDate = announcement.start_date
@@ -44,20 +44,39 @@ const activeAnnouncements = computed(() => {
 
         if (announcement.status !== "Active") return false;
 
-        if (startDate && endDate) {
-            return now >= startDate && now <= endDate;
-        } else if (startDate && !endDate) {
-            return now >= startDate;
-        } else if (!startDate && endDate) {
-            return now <= endDate;
-        }
+        // If no dates, consider it current
+        if (!startDate && !endDate) return true;
 
-        return true;
+        // Check if within date range
+        const hasStarted = !startDate || now >= startDate;
+        const hasNotEnded = !endDate || now <= endDate;
+
+        return hasStarted && hasNotEnded;
     });
 });
 
+// Upcoming announcements (future start dates)
+const upcomingAnnouncements = computed(() => {
+    return props.announcements.filter((announcement) => {
+        const now = new Date();
+        const startDate = announcement.start_date
+            ? new Date(announcement.start_date)
+            : null;
+
+        if (announcement.status !== "Active") return false;
+        if (!startDate) return false;
+
+        return startDate > now; // Future start date
+    });
+});
+
+// Combine both for display
+const displayAnnouncements = computed(() => {
+    return [...currentAnnouncements.value, ...upcomingAnnouncements.value];
+});
+
 const filteredAnnouncements = computed(() => {
-    let filtered = activeAnnouncements.value;
+    let filtered = displayAnnouncements.value;
 
     if (searchQuery.value) {
         const query = searchQuery.value.toLowerCase();
@@ -91,6 +110,15 @@ const getDaysRemaining = (endDate) => {
     return diffDays > 0 ? diffDays : 0;
 };
 
+const getDaysUntilStart = (startDate) => {
+    if (!startDate) return null;
+    const start = new Date(startDate);
+    const now = new Date();
+    const diffTime = start - now;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? diffDays : 0;
+};
+
 const getTimeAgo = (date) => {
     const now = new Date();
     const then = new Date(date);
@@ -113,6 +141,31 @@ const formatDate = (date) => {
         year: "numeric",
     });
 };
+
+const isUpcoming = (announcement) => {
+    const now = new Date();
+    const startDate = announcement.start_date
+        ? new Date(announcement.start_date)
+        : null;
+    return startDate && startDate > now;
+};
+
+const isCurrent = (announcement) => {
+    const now = new Date();
+    const startDate = announcement.start_date
+        ? new Date(announcement.start_date)
+        : null;
+    const endDate = announcement.end_date
+        ? new Date(announcement.end_date)
+        : null;
+
+    if (!startDate && !endDate) return true;
+
+    const hasStarted = !startDate || now >= startDate;
+    const hasNotEnded = !endDate || now <= endDate;
+
+    return hasStarted && hasNotEnded;
+};
 </script>
 
 <template>
@@ -127,16 +180,17 @@ const formatDate = (date) => {
         <Navigation />
 
         <!-- Compact Hero Section -->
-        <section class="pt-8 lg:pt-20  pb-6 px-4">
+        <section class="pt-8 lg:pt-20 pb-6 px-4">
             <div class="max-w-6xl mx-auto">
                 <!-- Header -->
                 <div class="text-center mb-6">
-
-
                     <h1
                         class="text-3xl sm:text-4xl md:text-6xl font-bold text-white mb-2"
                     >
-                        Announce<span class="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">ments</span>
+                        Announce<span
+                            class="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent"
+                            >ments</span
+                        >
                     </h1>
                     <p
                         class="text-sm sm:text-base text-slate-400 max-w-2xl mx-auto"
@@ -152,7 +206,7 @@ const formatDate = (date) => {
                         class="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 p-3 text-center"
                     >
                         <div class="text-2xl font-bold text-white mb-0.5">
-                            {{ activeAnnouncements.length }}
+                            {{ currentAnnouncements.length }}
                         </div>
                         <div class="text-xs text-slate-400">Active</div>
                     </div>
@@ -160,15 +214,9 @@ const formatDate = (date) => {
                         class="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 p-3 text-center"
                     >
                         <div class="text-2xl font-bold text-white mb-0.5">
-                            {{ new Date().getDate() }}
+                            {{ upcomingAnnouncements.length }}
                         </div>
-                        <div class="text-xs text-slate-400">
-                            {{
-                                new Date().toLocaleDateString("en-US", {
-                                    month: "short",
-                                })
-                            }}
-                        </div>
+                        <div class="text-xs text-slate-400">Upcoming</div>
                     </div>
                     <div
                         class="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 p-3 text-center"
@@ -246,12 +294,23 @@ const formatDate = (date) => {
                                     >
                                         <!-- Status Badge -->
                                         <span
+                                            v-if="isCurrent(announcement)"
                                             class="inline-flex items-center gap-1 px-2 py-0.5 bg-green-500/20 text-green-400 text-xs font-medium rounded-md border border-green-500/30"
                                         >
                                             <span
                                                 class="w-1 h-1 bg-green-400 rounded-full animate-pulse"
                                             ></span>
                                             Active
+                                        </span>
+
+                                        <span
+                                            v-else-if="isUpcoming(announcement)"
+                                            class="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-500/20 text-blue-400 text-xs font-medium rounded-md border border-blue-500/30"
+                                        >
+                                            <span
+                                                class="w-1 h-1 bg-blue-400 rounded-full animate-pulse"
+                                            ></span>
+                                            Upcoming
                                         </span>
 
                                         <!-- Time Badge -->
@@ -280,6 +339,25 @@ const formatDate = (date) => {
                                                     announcement.end_date
                                                 )
                                             }}d left
+                                        </span>
+
+                                        <!-- Days Until Start Badge -->
+                                        <span
+                                            v-if="
+                                                isUpcoming(announcement) &&
+                                                getDaysUntilStart(
+                                                    announcement.start_date
+                                                ) > 0
+                                            "
+                                            class="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-500/20 text-purple-400 text-xs font-medium rounded-md border border-purple-500/30"
+                                        >
+                                            <Calendar class="w-3 h-3" />
+                                            Starts in
+                                            {{
+                                                getDaysUntilStart(
+                                                    announcement.start_date
+                                                )
+                                            }}d
                                         </span>
                                     </div>
 
@@ -313,12 +391,32 @@ const formatDate = (date) => {
                                             class="flex items-center gap-1.5 text-slate-400"
                                         >
                                             <Calendar class="w-3.5 h-3.5" />
-                                            <span>{{
-                                                formatDate(
-                                                    announcement.start_date ||
+                                            <span
+                                                v-if="announcement.start_date"
+                                            >
+                                                {{
+                                                    formatDate(
+                                                        announcement.start_date
+                                                    )
+                                                }}
+                                                <span
+                                                    v-if="announcement.end_date"
+                                                >
+                                                    -
+                                                    {{
+                                                        formatDate(
+                                                            announcement.end_date
+                                                        )
+                                                    }}
+                                                </span>
+                                            </span>
+                                            <span v-else>
+                                                {{
+                                                    formatDate(
                                                         announcement.created_at
-                                                )
-                                            }}</span>
+                                                    )
+                                                }}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
@@ -353,15 +451,15 @@ const formatDate = (date) => {
                         </div>
                         <h2 class="text-xl font-bold text-white mb-2">
                             {{
-                                activeAnnouncements.length === 0
-                                    ? "No Active Announcements"
+                                displayAnnouncements.length === 0
+                                    ? "No Announcements"
                                     : "No Results Found"
                             }}
                         </h2>
                         <p class="text-sm text-slate-400 mb-6">
                             {{
-                                activeAnnouncements.length === 0
-                                    ? "There are currently no active announcements. Check back later for updates."
+                                displayAnnouncements.length === 0
+                                    ? "There are currently no announcements. Check back later for updates."
                                     : "We couldn't find any announcements matching your search."
                             }}
                         </p>
@@ -369,20 +467,13 @@ const formatDate = (date) => {
                             class="flex flex-col sm:flex-row gap-2 justify-center"
                         >
                             <button
-                                v-if="activeAnnouncements.length > 0"
+                                v-if="displayAnnouncements.length > 0"
                                 @click="clearFilters"
                                 class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition"
                             >
                                 <X class="w-4 h-4" />
                                 Clear Search
                             </button>
-                            <!-- <Link
-                                href="/"
-                                class="inline-flex items-center justify-center gap-2 px-4 py-2 border border-slate-600 hover:border-slate-500 text-slate-300 hover:text-white text-sm font-medium rounded-lg transition"
-                            >
-                                <Home class="w-4 h-4" />
-                                Back to Home
-                            </Link> -->
                         </div>
                     </div>
                 </div>
@@ -397,14 +488,9 @@ const formatDate = (date) => {
                     >
                         <CheckCircle2 class="w-4 h-4 text-green-400" />
                         <span class="text-xs text-slate-400">
-                            All announcements are up to date as of
-                            {{
-                                new Date().toLocaleDateString("en-US", {
-                                    month: "long",
-                                    day: "numeric",
-                                    year: "numeric",
-                                })
-                            }}
+                            Showing {{ currentAnnouncements.length }} active and
+                            {{ upcomingAnnouncements.length }} upcoming
+                            announcements
                         </span>
                     </div>
                 </div>

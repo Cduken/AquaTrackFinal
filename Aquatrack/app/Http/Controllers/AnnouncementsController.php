@@ -108,31 +108,73 @@ class AnnouncementsController extends Controller
 
     public function guestIndex()
     {
-        // For guests, only show announcements that are for all zones
-        $announcements = Announcements::where('status', 'active')
-            ->where('zone', 'All Zones')
-            ->where('barangay', 'All Barangays')
-            ->orderBy('updated_at', 'desc')
-            ->get()
-            ->map(function ($announcement) {
+        // First, let's see what's actually in the database
+        $allActiveAnnouncements = Announcements::where('status', 'active')->get();
+
+        Log::info('DEBUG: All active announcements in database', [
+            'total' => $allActiveAnnouncements->count(),
+            'announcements' => $allActiveAnnouncements->map(function ($ann) {
                 return [
-                    'id' => $announcement->id,
-                    'title' => $announcement->title,
-                    'content' => $announcement->content,
-                    'status' => ucfirst($announcement->status),
-                    'start_date' => $announcement->start_date?->format('Y-m-d'),
-                    'end_date' => $announcement->end_date?->format('Y-m-d'),
-                    'created_at' => $announcement->created_at->toISOString(),
-                    'updated_at' => $announcement->updated_at->toISOString(),
-                    'author' => $announcement->author ?? 'ClarinWaterDistrict',
-                    'zone' => $announcement->zone,
-                    'barangay' => $announcement->barangay,
-                    'scope' => 'For Everyone',
+                    'id' => $ann->id,
+                    'title' => $ann->title,
+                    'zone' => $ann->zone,
+                    'barangay' => $ann->barangay,
+                    'status' => $ann->status,
                 ];
-            });
+            })->toArray()
+        ]);
+
+        // For guests, show announcements that are for everyone (global announcements)
+        $announcements = Announcements::where('status', 'active')
+            ->where(function ($query) {
+                // Global announcements - either both are "All" or both are null/empty
+                $query->where(function ($q) {
+                    $q->where('zone', 'All Zones')
+                        ->where('barangay', 'All Barangays');
+                })->orWhere(function ($q) {
+                    // Also include announcements where zone and barangay are empty/null
+                    $q->whereNull('zone')
+                        ->whereNull('barangay');
+                })->orWhere(function ($q) {
+                    // Or where zone is empty and barangay is empty
+                    $q->where('zone', '')
+                        ->where('barangay', '');
+                });
+            })
+            ->orderBy('updated_at', 'desc')
+            ->get();
+
+        Log::info('DEBUG: Filtered announcements for guest', [
+            'total' => $announcements->count(),
+            'announcements' => $announcements->map(function ($ann) {
+                return [
+                    'id' => $ann->id,
+                    'title' => $ann->title,
+                    'zone' => $ann->zone,
+                    'barangay' => $ann->barangay,
+                ];
+            })->toArray()
+        ]);
+
+        $formattedAnnouncements = $announcements->map(function ($announcement) {
+            return [
+                'id' => $announcement->id,
+                'title' => $announcement->title,
+                'content' => $announcement->content,
+                'status' => ucfirst($announcement->status),
+                'start_date' => $announcement->start_date?->format('Y-m-d'),
+                'end_date' => $announcement->end_date?->format('Y-m-d'),
+                'created_at' => $announcement->created_at->toISOString(),
+                'updated_at' => $announcement->updated_at->toISOString(),
+                'author' => $announcement->author ?? 'ClarinWaterDistrict',
+                'zone' => $announcement->zone,
+                'barangay' => $announcement->barangay,
+                'scope' => 'For Everyone',
+            ];
+        });
 
         return Inertia::render('Announcement/Announcements', [
-            'announcements' => $announcements,
+            'announcements' => $formattedAnnouncements,
             'title' => 'Announcements - Clarin Water District',
             'description' => 'Latest updates and important information from Clarin Water District'
         ]);
@@ -252,8 +294,8 @@ class AnnouncementsController extends Controller
             'barangay' => 'nullable|string',
         ]);
 
-        // Clear zone/barangay if "All Zones" is selected in frontend
-        if ($request->zone === 'All Zones' || empty($request->zone)) {
+        // Ensure global announcements are consistently stored
+        if (empty($request->zone) || $request->zone === 'All Zones' || $request->zone === '') {
             $validated['zone'] = 'All Zones';
             $validated['barangay'] = 'All Barangays';
         }

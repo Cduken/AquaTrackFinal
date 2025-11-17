@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\WaterRateController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\NotificationController;
@@ -27,6 +28,10 @@ Route::middleware('auth:sanctum')->group(function () {
         ->name('api.reports.notifications');
     // routes/api.php
     Route::get('/notifications', [NotificationController::class, 'getNotificationsApi']);
+
+
+    // Water rates API for staff reading calculations
+    Route::get('/water-rates/active', [WaterRateController::class, 'getActiveRates'])->name('api.water-rates.active');
 
 
 

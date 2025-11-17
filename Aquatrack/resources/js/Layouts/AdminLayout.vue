@@ -51,12 +51,14 @@ const adminLinks = [
         icon: "bi-megaphone-fill",
     },
     { name: "Users", url: "/admin/users", icon: "fa-users" },
+    {name: "Water Rates", url: "/admin/water-rates", icon: "bi-water"},
     { name: "Notifications", url: "/admin/notifications", icon: "hi-bell" },
     {
         name: "Activity Logs",
         url: "/admin/activity-logs",
         icon: "hi-clipboard-list",
     },
+
 ];
 
 const form = useForm({});

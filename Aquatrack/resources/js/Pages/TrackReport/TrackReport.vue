@@ -408,8 +408,6 @@ const priorityColor = (priority) => {
         <section class="pt-8 pb-16 px-4 sm:px-6 lg:px-8 lg:pt-20 relative">
             <div class="max-w-7xl mx-auto relative">
                 <div class="text-center">
-
-
                     <h1
                         class="text-2xl md:text-6xl font-bold text-white mb-4 leading-tight"
                     >
@@ -792,7 +790,10 @@ const priorityColor = (priority) => {
                                         class="relative group aspect-square rounded-lg overflow-hidden border border-white/10 hover:border-blue-500/50 transition-all cursor-pointer bg-white/5"
                                     >
                                         <!-- Image Thumbnail -->
-                                        <div v-if="media.type === 'image'">
+                                        <div
+                                            v-if="media.type === 'image'"
+                                            class="w-full h-full"
+                                        >
                                             <img
                                                 :src="media.url"
                                                 :alt="`Evidence ${index + 1}`"
@@ -803,11 +804,11 @@ const priorityColor = (priority) => {
                                         <!-- Video Thumbnail -->
                                         <div
                                             v-else-if="media.type === 'video'"
-                                            class="w-full h-full flex items-center justify-center bg-black"
+                                            class="w-full h-full relative bg-black"
                                         >
                                             <video
                                                 :src="media.url"
-                                                class="max-w-full max-h-full object-cover"
+                                                class="w-full h-full object-cover"
                                                 muted
                                                 preload="metadata"
                                             ></video>
@@ -818,7 +819,7 @@ const priorityColor = (priority) => {
                                                     class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm"
                                                 >
                                                     <Play
-                                                        class="w-6 h-6 text-white fill-current"
+                                                        class="w-6 h-6 text-white fill-current ml-1"
                                                     />
                                                 </div>
                                             </div>
@@ -962,18 +963,12 @@ const priorityColor = (priority) => {
                                 class="w-4 h-4 ml-1 transform group-hover:translate-x-0.5 transition-transform"
                             />
                         </Link>
-                        <Link
-                            href="/"
-                            class="inline-flex items-center px-6 py-3 border border-white/20 hover:border-white/30 text-slate-300 hover:text-white font-semibold rounded-lg transition-all backdrop-blur-sm text-sm"
-                        >
-                            Return to Home
-                        </Link>
                     </div>
                 </div>
             </div>
         </section>
 
-        <Footer />
+
 
         <!-- Media Viewer Modal -->
         <Transition name="modal-backdrop">
@@ -1075,7 +1070,9 @@ const priorityColor = (priority) => {
                 <div
                     class="relative w-full max-w-md bg-transparent rounded-xl overflow-hidden shadow-2xl border border-gray-200/10 backdrop-blur-md"
                 >
-                    <div class="px-4 py-3 border-b border-gray-200/10 bg-transparent">
+                    <div
+                        class="px-4 py-3 border-b border-gray-200/10 bg-transparent"
+                    >
                         <div class="flex items-center justify-between">
                             <div class="flex items-center space-x-2">
                                 <Camera class="w-4 h-4 text-blue-600" />
@@ -1089,9 +1086,7 @@ const priorityColor = (priority) => {
                                 @click="closeQrScanner"
                                 class="p-1.5 hover:bg-gray-100/10 rounded"
                             >
-                                <X
-                                    class="w-4 h-4 text-gray-400"
-                                />
+                                <X class="w-4 h-4 text-gray-400" />
                             </button>
                         </div>
                     </div>

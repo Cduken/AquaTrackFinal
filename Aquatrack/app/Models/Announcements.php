@@ -18,6 +18,8 @@ class Announcements extends Model
         'status',
         'target_audience',
         'active',
+        'zone',
+        'barangay',
     ];
 
     protected $casts = [

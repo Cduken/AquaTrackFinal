@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\AdminRecordController;
 use App\Http\Controllers\Admin\AdminUsersController;
 use App\Http\Controllers\AnnouncementsController;
 use App\Http\Controllers\Admin\AdminActivityLogController;
+use App\Http\Controllers\Admin\WaterRateController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Customer\CustomerAnnouncementsController;
 use App\Http\Controllers\Customer\CustomerDashboardController;
@@ -121,6 +122,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/admin/reports/{report}/update-status', [ReportController::class, 'updateStatus'])->name('admin.reports.updateStatus');
     Route::get('/admin/reports/export/pdf', [ReportController::class, 'exportPdf'])->name('admin.reports.export.pdf');
     Route::get('/admin/reports/{report}', [ReportController::class, 'adminShow'])->name('admin.reports.show');
+    Route::get('/admin/reports/export/csv', [ReportController::class, 'exportCsv'])->name('admin.reports.export.csv');
 
     // Report merging
     Route::get('/admin/reports/mergeable', [NotificationController::class, 'getMergeableReports'])->name('admin.reports.mergeable');
@@ -134,12 +136,13 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::delete('/admin/records/{record}', [AdminRecordController::class, 'destroy'])->name('admin.records.destroy');
     Route::get('/admin/records/{record}/details', [AdminRecordController::class, 'details'])->name('admin.records.details');
 
+
     // Record utilities
     Route::get('/admin/records/update-overdue', [AdminRecordController::class, 'manualUpdateOverdue'])
         ->name('admin.records.update-overdue');
     Route::get('/admin/records/force-fix-due-dates', [AdminRecordController::class, 'forceFixDueDates'])
         ->name('admin.records.force-fix-due-dates');
-    Route::get('/admin/records/export', [AdminRecordController::class, 'export'])->name('admin.records.export');
+
     Route::get('/admin/records/period-stats', [AdminRecordController::class, 'getPeriodStats'])->name('admin.records.period-stats');
     Route::get('/admin/records/available-periods', [AdminRecordController::class, 'getAvailablePeriodsApi'])->name('admin.records.available-periods');
 
@@ -174,6 +177,13 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/admin/notifications/bulk-delete', [NotificationController::class, 'bulkDelete'])->name('admin.notifications.bulk-delete');
     Route::post('/admin/notifications/{id}/mark-read', [NotificationController::class, 'markAsRead'])->name('admin.notifications.mark-read');
 
+    Route::get('/admin/water-rates/active', [WaterRateController::class, 'getActiveRates'])->name('admin.water-rates.active');
+    Route::get('/admin/water-rates', [WaterRateController::class, 'index'])->name('admin.water-rates.index');
+    Route::post('/admin/water-rates', [WaterRateController::class, 'store'])->name('admin.water-rates.store');
+    Route::put('/admin/water-rates/{waterRate}', [WaterRateController::class, 'update'])->name('admin.water-rates.update');
+    Route::put('/admin/water-rates/{waterRate}/status', [WaterRateController::class, 'updateStatus'])->name('admin.water-rates.update-status');
+    Route::delete('/admin/water-rates/{waterRate}', [WaterRateController::class, 'destroy'])->name('admin.water-rates.destroy');
+
     // Customer notifications (admin access)
     Route::delete('/customer/notifications/{id}', [NotificationController::class, 'destroy'])->name('customer.notifications.destroy');
 });
@@ -190,6 +200,7 @@ Route::middleware(['auth', 'role:staff'])->group(function () {
     Route::get('/staff/reading/previous/{userId}', [StaffReadingController::class, 'getPreviousReadings'])->name('staff.reading.previous');
     Route::post('/staff/reading', [StaffReadingController::class, 'storeReading'])->name('staff.reading.store');
     Route::put('/staff/reading/{readingId}/update', [StaffReadingController::class, 'updateReading'])->name('staff.reading.update');
+    Route::get('/water-rates', [StaffReadingController::class, 'getWaterRates'])->name('staff.water-rates');
 
     Route::get('/staff/notifications', [NotificationController::class, 'staffIndex'])->name('staff.notifications');
 });
@@ -198,15 +209,18 @@ Route::middleware(['auth', 'role:staff'])->group(function () {
 Route::get('/staff/readings/{userId}/previous', [StaffReadingController::class, 'getPreviousReadings']);
 
 // ==================== CUSTOMER ROUTES ====================
+// ==================== CUSTOMER ROUTES ====================
 Route::middleware(['auth', 'role:customer'])->group(function () {
     Route::get('/customer/dashboard', [CustomerDashboardController::class, 'index'])->name('customer.dashboard');
     Route::get('/customer/usage', [CustomerUsageController::class, 'index'])->name('customer.usage');
-    Route::get('/customer/usage/{month}', [CustomerUsageController::class, 'show'])->name('customer.usage.details');
+    Route::get('/customer/usage/{month}', [CustomerUsageController::class, 'index'])->name('customer.usage.details');
     Route::get('/customer/reports', [ReportController::class, 'customerIndex'])
         ->middleware('verified')
         ->name('customer.reports');
     Route::get('/reports/{report}', [ReportController::class, 'show'])->name('customer.reports.show');
-    Route::get('/customer/announcements', [CustomerAnnouncementsController::class, 'index'])->name('customer.announcements');
+
+    // FIX: Use the main AnnouncementsController for customer announcements
+    Route::get('/customer/announcements', [AnnouncementsController::class, 'customerIndex'])->name('customer.announcements');
 
     // Customer notifications
     Route::get('/customer/notifications', [NotificationController::class, 'customerIndex'])->name('customer.notifications');

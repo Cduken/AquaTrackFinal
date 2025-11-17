@@ -208,7 +208,7 @@
                                                 "Unknown"
                                             }}
                                         </span>
-                                        <span
+                                        <!-- <span
                                             :class="
                                                 getStatusBadgeClass(
                                                     activity.status
@@ -217,7 +217,7 @@
                                             class="text-xs px-2 py-0.5 rounded-full font-medium whitespace-nowrap ml-2"
                                         >
                                             {{ activity.status }}
-                                        </span>
+                                        </span> -->
                                     </div>
 
                                     <div

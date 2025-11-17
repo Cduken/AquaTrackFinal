@@ -844,19 +844,7 @@ const getLocation = async () => {
                 form.longitude = coords.longitude;
                 locationStatus.value = "success";
 
-                Swal.fire({
-                    icon: "success",
-                    title: "Location Acquired!",
-                    text: `Accuracy: ${
-                        coords.accuracy
-                            ? coords.accuracy.toFixed(1) + "m"
-                            : "Good"
-                    }`,
-                    toast: true,
-                    position: "bottom-end",
-                    showConfirmButton: false,
-                    timer: 4000,
-                });
+
 
                 resolve(coords);
             },

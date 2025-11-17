@@ -45,7 +45,7 @@
                         class="bg-transparent backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl p-8"
                     >
                         <!-- Header -->
-                        <div class="text-start mb-8">
+                        <div class="text-center mb-8">
                             <h2 class="text-2xl font-light text-white mb-2">
                                 Welcome Back!
                                 <!-- <span

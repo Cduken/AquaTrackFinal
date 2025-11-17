@@ -155,10 +155,11 @@ import {
     BellIcon,
     ClipboardDocumentListIcon,
     XMarkIcon,
+
 } from "@heroicons/vue/24/outline";
 import { ArrowLeftFromLine } from "lucide-vue-next";
 import { LayoutDashboard } from "lucide-vue-next";
-import { Megaphone } from "lucide-vue-next";
+import { Megaphone, Droplet } from "lucide-vue-next";
 import { ref, onMounted, onUnmounted } from "vue";
 
 defineProps({
@@ -201,6 +202,7 @@ const iconMap = {
     "bi-file-earmark-text-fill": DocumentTextIcon,
     "hi-bell": BellIcon,
     "hi-clipboard-list": ClipboardDocumentListIcon,
+    "bi-water": Droplet
 };
 
 const getIconComponent = (iconName) => {

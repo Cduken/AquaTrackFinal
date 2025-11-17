@@ -132,6 +132,125 @@
                                     </p>
                                 </div>
 
+                                <!-- Zone and Barangay Fields -->
+                                <div
+                                    class="grid grid-cols-1 md:grid-cols-2 gap-4"
+                                >
+                                    <!-- Zone Field -->
+                                    <div>
+                                        <label
+                                            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                                        >
+                                            Zone
+                                        </label>
+                                        <div class="relative">
+                                            <MapPin
+                                                class="absolute left-3 top-3.5 w-5 h-5 text-gray-400 pointer-events-none z-10"
+                                            />
+                                            <select
+                                                v-model="form.zone"
+                                                @change="handleZoneChange"
+                                                class="w-full pl-10 p-3 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors appearance-none"
+                                            >
+                                                <option value="">
+                                                    All Zones (Visible to
+                                                    Everyone)
+                                                </option>
+                                                <option
+                                                    v-for="(
+                                                        barangays, zoneName
+                                                    ) in zones"
+                                                    :key="zoneName"
+                                                    :value="zoneName"
+                                                >
+                                                    {{ zoneName }}
+                                                </option>
+                                            </select>
+                                            <ChevronDown
+                                                class="absolute right-3 top-3.5 w-5 h-5 text-gray-400 pointer-events-none"
+                                            />
+                                        </div>
+                                        <p
+                                            v-if="errors.zone"
+                                            class="mt-1 text-sm text-red-600 flex items-center gap-1"
+                                        >
+                                            <AlertCircle class="w-4 h-4" />
+                                            {{ errors.zone }}
+                                        </p>
+                                    </div>
+
+                                    <!-- Barangay Field -->
+                                    <div>
+                                        <label
+                                            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                                        >
+                                            Barangay
+                                        </label>
+                                        <div class="relative">
+                                            <Home
+                                                class="absolute left-3 top-3.5 w-5 h-5 text-gray-400 pointer-events-none z-10"
+                                            />
+
+                                            <!-- Show dropdown if zone selected -->
+                                            <select
+                                                v-if="form.zone"
+                                                v-model="form.barangay"
+                                                class="w-full pl-10 p-3 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors appearance-none"
+                                            >
+                                                <!-- Always include "All Barangays" option when zone is selected -->
+                                                <option value="All Barangays">
+                                                    All Barangays in
+                                                    {{ form.zone }}
+                                                </option>
+                                                <!-- Show specific barangays -->
+                                                <option
+                                                    v-for="barangay in filteredBarangays"
+                                                    :key="barangay"
+                                                    :value="barangay"
+                                                >
+                                                    {{ barangay }}
+                                                </option>
+                                            </select>
+
+                                            <!-- Show disabled select if no zone selected -->
+                                            <select
+                                                v-else
+                                                disabled
+                                                class="w-full pl-10 p-3 border border-gray-300 dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed appearance-none"
+                                            >
+                                                <option>
+                                                    Select zone first
+                                                </option>
+                                            </select>
+
+                                            <ChevronDown
+                                                v-if="form.zone"
+                                                class="absolute right-3 top-3.5 w-5 h-5 text-gray-400 pointer-events-none"
+                                            />
+                                        </div>
+                                        <p
+                                            v-if="errors.barangay"
+                                            class="mt-1 text-sm text-red-600 flex items-center gap-1"
+                                        >
+                                            <AlertCircle class="w-4 h-4" />
+                                            {{ errors.barangay }}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Scope Information -->
+                                <div
+                                    v-if="form.zone || form.barangay"
+                                    class="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md"
+                                >
+                                    <p
+                                        class="text-sm text-blue-700 dark:text-blue-300"
+                                    >
+                                        <strong>Scope:</strong>
+                                        {{ getAnnouncementScope() }}
+                                    </p>
+                                </div>
+
                                 <!-- Date Range Fields -->
                                 <div
                                     class="grid grid-cols-1 md:grid-cols-2 gap-4"
@@ -248,7 +367,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from "vue";
+import { ref, computed, watch, onMounted } from "vue";
 import {
     X,
     Maximize2,
@@ -261,6 +380,9 @@ import {
     FileText,
     Calendar,
     ToggleLeft,
+    MapPin,
+    Home,
+    ChevronDown,
 } from "lucide-vue-next";
 
 const props = defineProps({
@@ -272,6 +394,7 @@ const props = defineProps({
     },
     form: Object,
     errors: Object,
+    zones: Object,
 });
 
 const emit = defineEmits(["close", "submit"]);
@@ -279,6 +402,50 @@ const emit = defineEmits(["close", "submit"]);
 const isEditing = computed(() => props.editing);
 const isSubmitting = ref(false);
 const isMaximized = ref(false);
+const filteredBarangays = ref([]);
+
+// Handle zone change - reset barangay and update available barangays
+const handleZoneChange = () => {
+    if (props.form.zone && props.zones[props.form.zone]) {
+        filteredBarangays.value = props.zones[props.form.zone];
+        // Set default barangay to "All Barangays" when zone changes
+        props.form.barangay = "All Barangays";
+    } else {
+        filteredBarangays.value = [];
+        props.form.barangay = "";
+    }
+};
+
+// Get announcement scope for display
+const getAnnouncementScope = () => {
+    if (!props.form.zone || props.form.zone === "") {
+        return "For All Zones and All Barangays (Visible to Everyone)";
+    } else if (
+        props.form.barangay === "All Barangays" ||
+        !props.form.barangay
+    ) {
+        return `For ${props.form.zone} (All Barangays)`;
+    } else {
+        return `For ${props.form.zone} - ${props.form.barangay} only`;
+    }
+};
+
+// Update barangays when zone changes in edit mode
+const updateBarangays = () => {
+    if (props.form.zone && props.zones[props.form.zone]) {
+        filteredBarangays.value = props.zones[props.form.zone];
+
+        // If editing and current barangay is empty, set to "All Barangays"
+        if (
+            isEditing.value &&
+            (!props.form.barangay || props.form.barangay === "")
+        ) {
+            props.form.barangay = "All Barangays";
+        }
+    } else {
+        filteredBarangays.value = [];
+    }
+};
 
 const toggleMaximize = () => {
     isMaximized.value = !isMaximized.value;
@@ -291,16 +458,36 @@ const closeModal = () => {
 const submitForm = async () => {
     isSubmitting.value = true;
     emit("submit");
-    // Note: The parent component should handle resetting isSubmitting
 };
 
-// Reset maximize state when modal closes
+// Reset filtered barangays when modal opens with existing data
 watch(
     () => props.show,
     (newVal) => {
-        if (!newVal) {
+        if (newVal) {
+            updateBarangays();
+        } else {
+            // Reset when modal closes
             isMaximized.value = false;
             isSubmitting.value = false;
+            filteredBarangays.value = [];
+        }
+    }
+);
+
+// Watch for zone changes in the form (for editing)
+watch(
+    () => props.form.zone,
+    (newZone) => {
+        if (newZone && props.zones[newZone]) {
+            filteredBarangays.value = props.zones[newZone];
+            // Auto-set barangay to "All Barangays" if not set
+            if (!props.form.barangay || props.form.barangay === "") {
+                props.form.barangay = "All Barangays";
+            }
+        } else {
+            filteredBarangays.value = [];
+            props.form.barangay = "";
         }
     }
 );
@@ -316,10 +503,17 @@ watch(
         }
     }
 );
+
+// Initialize when component mounts
+onMounted(() => {
+    if (props.form.zone) {
+        updateBarangays();
+    }
+});
 </script>
 
 <style scoped>
-/* Modal transition styles */
+/* Your existing styles remain the same */
 .modal-enter-active,
 .modal-leave-active {
     transition: opacity 0.3s ease;
@@ -330,7 +524,6 @@ watch(
     opacity: 0;
 }
 
-/* Custom scrollbar */
 .overflow-y-auto::-webkit-scrollbar {
     width: 6px;
 }
@@ -348,7 +541,6 @@ watch(
     background: #94a3b8;
 }
 
-/* Dark mode scrollbar */
 .dark .overflow-y-auto::-webkit-scrollbar-track {
     background: #374151;
 }

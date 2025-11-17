@@ -1484,42 +1484,50 @@ const exportReports = async () => {
             },
         });
 
-        if (format === "csv") {
-            // Generate export data for CSV
-            const exportData = filteredReports.value.map((report) => ({
-                ID: report.id,
-                "Tracking Code": report.tracking_code,
-                "Reporter Name":
-                    report.reporter_name || report.user?.name || "N/A",
-                "User Type": report.formatted_user_types || "Guest",
-                Zone: report.zone || "N/A",
-                Barangay: report.barangay || "N/A",
-                Purok: report.purok || "N/A",
-                "Issue Type":
-                    report.water_issue_type === "others"
-                        ? report.custom_water_issue || "Custom Issue"
-                        : report.water_issue_type,
-                Priority: report.priority || "N/A",
-                Status: formatStatus(report.status),
-                "Date Created": formatDate(report.created_at),
-                "Time Created": formatTime(report.created_at),
-                Description: report.description || "",
-                "Reporter Phone": report.reporter_phone || "N/A",
-            }));
+        // Build query parameters from current filters
+        const params = new URLSearchParams();
 
-            exportToCSV(exportData);
-        } else if (format === "pdf") {
-            // Export to PDF using server-side generation
-            await exportToPDF();
+        if (filters.value.search) params.append("search", filters.value.search);
+        if (filters.value.status) params.append("status", filters.value.status);
+        if (filters.value.userType && filters.value.userType !== "all") {
+            params.append("userType", filters.value.userType);
         }
 
-        Swal.fire({
-            icon: "success",
-            title: "Export Complete!",
-            text: `Reports exported as ${format.toUpperCase()} successfully`,
-            timer: 2000,
-            showConfirmButton: false,
-        });
+        // Add timestamp to prevent caching
+        params.append("_t", new Date().getTime());
+
+        let exportUrl;
+        if (format === "csv") {
+            exportUrl =
+                route("admin.reports.export.csv") + "?" + params.toString();
+        } else if (format === "pdf") {
+            exportUrl =
+                route("admin.reports.export.pdf") + "?" + params.toString();
+        }
+
+        // Create a temporary link to trigger the download
+        const link = document.createElement("a");
+        link.href = exportUrl;
+        link.setAttribute("download", "");
+        link.style.display = "none";
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // Close loading
+        Swal.close();
+
+        // Show success message after a short delay to ensure download starts
+        setTimeout(() => {
+            Swal.fire({
+                icon: "success",
+                title: "Export Complete!",
+                text: `Reports exported as ${format.toUpperCase()} successfully`,
+                timer: 2000,
+                showConfirmButton: false,
+            });
+        }, 1000);
     } catch (error) {
         console.error("Export failed:", error);
         Swal.fire({

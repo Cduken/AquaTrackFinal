@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\MeterReading;
+use App\Models\WaterRate;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -196,7 +197,6 @@ class StaffReadingController extends Controller
         }
     }
 
-    // FIXED: storeReading method with proper due date handling
     public function storeReading(Request $request)
     {
         Log::info('=== STORE READING START ===');
@@ -245,7 +245,16 @@ class StaffReadingController extends Controller
             }
 
             $consumption = $validated['reading'] - $previousReadingValue;
+
+            // Use dynamic water rates from database - NO FALLBACK
             $amount = $this->calculateBillAmount($consumption);
+
+            // If no water rates are configured, throw an error
+            if ($amount === null) {
+                return response()->json([
+                    'error' => 'No water rates configured. Please contact administrator to set up water rates.'
+                ], 422);
+            }
 
             // Calculate due date
             $dueDate = $this->calculateDueDate($user, $validated['reading_date']);
@@ -261,13 +270,15 @@ class StaffReadingController extends Controller
                 'consumption' => $consumption,
                 'amount' => $amount,
                 'status' => 'Pending',
-                'due_date' => $dueDate, // ← THIS WILL NOW WORK
+                'due_date' => $dueDate,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
 
-            Log::info('Reading created with due_date:', [
+            Log::info('Reading created with dynamic water rates:', [
                 'id' => $newReading->id,
+                'consumption' => $consumption,
+                'amount' => $amount,
                 'due_date' => $newReading->due_date
             ]);
 
@@ -309,12 +320,8 @@ class StaffReadingController extends Controller
     }
 
     /**
-     * Calculate bill amount based on tiered pricing
-     * 1-10 m³ = ₱132 (fixed)
-     * 11-20 m³ = ₱14 per m³
-     * 21-30 m³ = ₱14.85 per m³
-     * 31-40 m³ = ₱16 per m³
-     * 41+ m³ = ₱17.25 per m³
+     * Calculate bill amount based on dynamic tiered pricing from database
+     * Returns null if no water rates are configured
      */
     private function calculateBillAmount($consumption)
     {
@@ -322,23 +329,40 @@ class StaffReadingController extends Controller
             return 0;
         }
 
-        if ($consumption <= 10) {
-            return 132.00; // Fixed rate for first 10 m³
+        // Get active rates ordered by consumption range
+        $rates = WaterRate::active()->ordered()->get();
+
+        if ($rates->isEmpty()) {
+            // NO FALLBACK - return null to indicate no rates configured
+            Log::error('No active water rates found in database. Please configure water rates in admin panel.');
+            return null;
         }
 
-        $amount = 132.00; // Base amount for first 10 m³
+        $totalAmount = 0;
+        $remainingConsumption = $consumption;
 
-        if ($consumption > 10 && $consumption <= 20) {
-            $amount += ($consumption - 10) * 14;
-        } elseif ($consumption > 20 && $consumption <= 30) {
-            $amount += (10 * 14) + (($consumption - 20) * 14.85);
-        } elseif ($consumption > 30 && $consumption <= 40) {
-            $amount += (10 * 14) + (10 * 14.85) + (($consumption - 30) * 16);
-        } else {
-            $amount += (10 * 14) + (10 * 14.85) + (10 * 16) + (($consumption - 40) * 17.25);
+        foreach ($rates as $rate) {
+            if ($remainingConsumption <= 0) break;
+
+            $tierConsumption = $remainingConsumption;
+
+            // If this tier has a max consumption limit
+            if ($rate->max_consumption !== null) {
+                $tierRange = $rate->max_consumption - $rate->min_consumption + 1;
+                $tierConsumption = min($remainingConsumption, $tierRange);
+            }
+
+            // Add fixed charge for this tier if applicable
+            if ($tierConsumption > 0 && $rate->fixed_charge > 0) {
+                $totalAmount += $rate->fixed_charge;
+            }
+
+            // Calculate consumption charge
+            $totalAmount += $tierConsumption * $rate->rate_per_cubic;
+            $remainingConsumption -= $tierConsumption;
         }
 
-        return round($amount, 2);
+        return round($totalAmount, 2);
     }
 
     /**
@@ -399,6 +423,34 @@ class StaffReadingController extends Controller
             return Carbon::parse($readingDate)->addDays(15)->toDateString();
         }
     }
+
+    // Add a new method to get current water rates (for the frontend)
+    public function getWaterRates()
+    {
+        try {
+            $rates = WaterRate::active()->ordered()->get()->map(function ($rate) {
+                return [
+                    'id' => $rate->id,
+                    'name' => $rate->name,
+                    'min_consumption' => $rate->min_consumption,
+                    'max_consumption' => $rate->max_consumption,
+                    'rate_per_cubic' => (float)$rate->rate_per_cubic,
+                    'fixed_charge' => (float)$rate->fixed_charge,
+                    'order' => $rate->order,
+                    'is_active' => $rate->is_active
+                ];
+            });
+
+            return response()->json([
+                'waterRates' => $rates,
+                'hasRates' => !$rates->isEmpty()
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching water rates: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to fetch water rates'], 500);
+        }
+    }
+
 
     // In StaffReadingController
     public function viewCustomerReading($readingId)

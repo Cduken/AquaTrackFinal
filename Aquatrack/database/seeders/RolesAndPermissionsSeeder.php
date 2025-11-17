@@ -41,31 +41,31 @@ class RolesAndPermissionsSeeder extends Seeder
         $admin->save();
 
         // Create or update staff user
-        $staff = User::updateOrCreate(
-            ['email' => 'staff@clarinwaterdistrict.com'],
-            [
-                'name' => 'Staff',
-                'password' => Hash::make('staff123'),
-                'email_verified_at' => now()
-            ]
-        );
-        $staff->syncRoles([$staffRole]);
-        $staff->role = 'staff';
-        $staff->save();
+        // $staff = User::updateOrCreate(
+        //     ['email' => 'staff@clarinwaterdistrict.com'],
+        //     [
+        //         'name' => 'Staff',
+        //         'password' => Hash::make('staff123'),
+        //         'email_verified_at' => now()
+        //     ]
+        // );
+        // $staff->syncRoles([$staffRole]);
+        // $staff->role = 'staff';
+        // $staff->save();
 
 
-        $customer = User::updateOrCreate(
-            ['email' => 'customer@email.com'],
-            [
-                'name' => 'Concessioner',
-                'serial_number' => '123456789',
-                'account_number' => '123-45-678A',
-                'password' => Hash::make('customer123'),
-                'email_verified_at' => now()
-            ]
-        );
-        $customer->syncRoles([$customerRole]);
-        $customer->role = 'customer';
-        $customer->save();
+        // $customer = User::updateOrCreate(
+        //     ['email' => 'customer@email.com'],
+        //     [
+        //         'name' => 'Concessioner',
+        //         'serial_number' => '123456789',
+        //         'account_number' => '123-45-678A',
+        //         'password' => Hash::make('customer123'),
+        //         'email_verified_at' => now()
+        //     ]
+        // );
+        // $customer->syncRoles([$customerRole]);
+        // $customer->role = 'customer';
+        // $customer->save();
     }
 }

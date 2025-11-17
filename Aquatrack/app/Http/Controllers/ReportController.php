@@ -105,57 +105,56 @@ class ReportController extends Controller
         // Load relationships
         $report->load(['photos', 'user']);
 
-       return Inertia::render('Customer/ReportDetailsPage', [
-           'report' => $report
-       ]);
-    }
-
-      public function adminShow(Report $report)
-{
-    try {
-        $user = Auth::user();
-
-        // Check if user is authenticated and is an admin
-        if (!$user || $user->role !== 'admin') {
-            abort(404);
-        }
-
-        // Check if report is deleted or merged reference
-        if ($report->deleted_at || $report->is_merged_reference) {
-            abort(404);
-        }
-
-        // Load relationships
-        $report->load(['photos', 'user']);
-
-        // Format user types for display
-        $report->formatted_user_types = $this->formatUserTypes(
-            $report->user_types,
-            $report->user_id,
-            $report->reporter_name
-        );
-
-        // Add avatar URL if user has avatar
-        if ($report->user && $report->user->avatar) {
-            $report->user->avatar_url = Storage::url($report->user->avatar);
-        }
-
-        return Inertia::render('Admin/ReportDetailsPage', [
+        return Inertia::render('Customer/ReportDetailsPage', [
             'report' => $report
         ]);
-
-    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-        Log::warning('Report not found', ['report_id' => $report->id ?? 'unknown']);
-        abort(404);
-    } catch (\Exception $e) {
-        Log::error('Error fetching report details', [
-            'report_id' => $report->id ?? 'unknown',
-            'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
-        ]);
-        abort(500);
     }
-}
+
+    public function adminShow(Report $report)
+    {
+        try {
+            $user = Auth::user();
+
+            // Check if user is authenticated and is an admin
+            if (!$user || $user->role !== 'admin') {
+                abort(404);
+            }
+
+            // Check if report is deleted or merged reference
+            if ($report->deleted_at || $report->is_merged_reference) {
+                abort(404);
+            }
+
+            // Load relationships
+            $report->load(['photos', 'user']);
+
+            // Format user types for display
+            $report->formatted_user_types = $this->formatUserTypes(
+                $report->user_types,
+                $report->user_id,
+                $report->reporter_name
+            );
+
+            // Add avatar URL if user has avatar
+            if ($report->user && $report->user->avatar) {
+                $report->user->avatar_url = Storage::url($report->user->avatar);
+            }
+
+            return Inertia::render('Admin/ReportDetailsPage', [
+                'report' => $report
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            Log::warning('Report not found', ['report_id' => $report->id ?? 'unknown']);
+            abort(404);
+        } catch (\Exception $e) {
+            Log::error('Error fetching report details', [
+                'report_id' => $report->id ?? 'unknown',
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            abort(500);
+        }
+    }
 
     /**
      * Get dashboard statistics combining users and reports
@@ -1848,6 +1847,120 @@ class ReportController extends Controller
                 'data' => $this->getDashboardStats()
             ], 500);
         }
+    }
+
+    public function exportCsv(Request $request)
+    {
+        try {
+            // Build the query based on filters (same as PDF export)
+            $query = Report::with('user');
+
+            // Apply search filter
+            if ($request->has('search') && !empty($request->search)) {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+                    $q->where('id', 'like', "%{$search}%")
+                        ->orWhere('tracking_code', 'like', "%{$search}%")
+                        ->orWhere('reporter_name', 'like', "%{$search}%")
+                        ->orWhere('water_issue_type', 'like', "%{$search}%")
+                        ->orWhere('custom_water_issue', 'like', "%{$search}%")
+                        ->orWhereHas('user', function ($userQuery) use ($search) {
+                            $userQuery->where('name', 'like', "%{$search}%");
+                        });
+                });
+            }
+
+            // Apply status filter
+            if ($request->has('status') && !empty($request->status)) {
+                $query->where('status', $request->status);
+            }
+
+            // Apply user type filter
+            if ($request->has('userType') && !empty($request->userType) && $request->userType !== 'all') {
+                if ($request->userType === 'guest') {
+                    $query->whereNull('user_id');
+                } elseif ($request->userType === 'authenticated') {
+                    $query->whereNotNull('user_id');
+                }
+            }
+
+            // Get filtered reports
+            $reports = $query->orderBy('created_at', 'desc')->get();
+
+            // Prepare CSV data
+            $csvData = [];
+
+            // Headers
+            $headers = [
+                'ID',
+                'Tracking Code',
+                'Reporter Name',
+                'User Type',
+                'Zone',
+                'Barangay',
+                'Purok',
+                'Issue Type',
+                'Priority',
+                'Status',
+                'Date Created',
+                'Time Created',
+                'Description',
+                'Reporter Phone'
+            ];
+
+            $csvData[] = $headers;
+
+            // Rows
+            foreach ($reports as $report) {
+                $csvData[] = [
+                    $report->id,
+                    $report->tracking_code,
+                    $report->reporter_name || $report->user?->name || 'N/A',
+                    $this->formatUserTypes($report->user_types, $report->user_id, $report->reporter_name),
+                    $report->zone || 'N/A',
+                    $report->barangay || 'N/A',
+                    $report->purok || 'N/A',
+                    $report->water_issue_type === 'others'
+                        ? $report->custom_water_issue || 'Custom Issue'
+                        : $report->water_issue_type,
+                    $report->priority || 'N/A',
+                    $report->status,
+                    $this->formatDateForExport($report->created_at),
+                    $this->formatTimeForExport($report->created_at),
+                    $report->description ? '"' . str_replace('"', '""', $report->description) . '"' : '',
+                    $report->reporter_phone || 'N/A'
+                ];
+            }
+
+            // Generate CSV content
+            $csvContent = '';
+            foreach ($csvData as $row) {
+                $csvContent .= implode(',', $row) . "\n";
+            }
+
+            $filename = 'aquatrack-reports-' . Carbon::now()->format('Y-m-d-H-i-s') . '.csv';
+
+            return response($csvContent)
+                ->header('Content-Type', 'text/csv')
+                ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
+                ->header('Pragma', 'no-cache')
+                ->header('Expires', '0');
+        } catch (\Exception $e) {
+            Log::error('CSV Export Error: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to generate CSV'], 500);
+        }
+    }
+
+    private function formatDateForExport($dateString)
+    {
+        if (!$dateString) return 'N/A';
+        return Carbon::parse($dateString)->format('Y-m-d');
+    }
+
+    private function formatTimeForExport($dateString)
+    {
+        if (!$dateString) return '';
+        return Carbon::parse($dateString)->format('H:i:s');
     }
 
     public function exportPdf(Request $request)

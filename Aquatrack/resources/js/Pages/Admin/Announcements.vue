@@ -59,7 +59,7 @@
                                         class="flex items-center px-4 py-2 text-sm font-medium border bg-blue-100/40 border-blue-500/20 text-blue-500 rounded-sm hover:bg-blue-100/80 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 ease-in-out"
                                     >
                                         <Plus class="w-4 h-4 mr-2" />
-                                        Create Announcement
+                                         Announcement
                                     </button>
 
                                     <!-- Filter Dropdown -->
@@ -78,73 +78,132 @@
                                         <!-- Filter Dropdown Content -->
                                         <div
                                             v-if="showFilterDropdown"
-                                            class="absolute z-50 mt-1 w-35 bg-white rounded-lg shadow-lg border border-gray-200 dark:bg-gray-700 dark:border-gray-600"
+                                            class="absolute z-50 mt-1 w-64 bg-white rounded-lg shadow-lg border border-gray-200 dark:bg-gray-700 dark:border-gray-600"
                                             :style="filterDropdownStyle"
                                         >
-                                            <div class="p-4">
-                                                <h6
-                                                    class="mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                                                >
-                                                    Status
-                                                </h6>
-                                                <div class="space-y-2">
-                                                    <div
-                                                        class="flex items-center"
+                                            <div class="p-4 space-y-4">
+                                                <!-- Status Filter -->
+                                                <div>
+                                                    <h6
+                                                        class="mb-2 text-sm font-medium text-gray-900 dark:text-white"
                                                     >
-                                                        <input
-                                                            id="status-all"
-                                                            type="radio"
-                                                            v-model="
-                                                                filters.status
-                                                            "
-                                                            value=""
-                                                            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
-                                                        />
-                                                        <label
-                                                            for="status-all"
-                                                            class="ml-2 text-sm text-gray-700 dark:text-gray-300"
+                                                        Status
+                                                    </h6>
+                                                    <div class="space-y-2">
+                                                        <div
+                                                            class="flex items-center"
                                                         >
-                                                            All Status
-                                                        </label>
+                                                            <input
+                                                                id="status-all"
+                                                                type="radio"
+                                                                v-model="
+                                                                    filters.status
+                                                                "
+                                                                value=""
+                                                                class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
+                                                            />
+                                                            <label
+                                                                for="status-all"
+                                                                class="ml-2 text-sm text-gray-700 dark:text-gray-300"
+                                                            >
+                                                                All Status
+                                                            </label>
+                                                        </div>
+                                                        <div
+                                                            class="flex items-center"
+                                                        >
+                                                            <input
+                                                                id="status-active"
+                                                                type="radio"
+                                                                v-model="
+                                                                    filters.status
+                                                                "
+                                                                value="active"
+                                                                class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
+                                                            />
+                                                            <label
+                                                                for="status-active"
+                                                                class="ml-2 text-sm text-gray-700 dark:text-gray-300"
+                                                            >
+                                                                Active
+                                                            </label>
+                                                        </div>
+                                                        <div
+                                                            class="flex items-center"
+                                                        >
+                                                            <input
+                                                                id="status-inactive"
+                                                                type="radio"
+                                                                v-model="
+                                                                    filters.status
+                                                                "
+                                                                value="inactive"
+                                                                class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
+                                                            />
+                                                            <label
+                                                                for="status-inactive"
+                                                                class="ml-2 text-sm text-gray-700 dark:text-gray-300"
+                                                            >
+                                                                Inactive
+                                                            </label>
+                                                        </div>
                                                     </div>
-                                                    <div
-                                                        class="flex items-center"
+                                                </div>
+
+                                                <!-- Zone Filter -->
+                                                <div>
+                                                    <h6
+                                                        class="mb-2 text-sm font-medium text-gray-900 dark:text-white"
                                                     >
-                                                        <input
-                                                            id="status-active"
-                                                            type="radio"
-                                                            v-model="
-                                                                filters.status
-                                                            "
-                                                            value="active"
-                                                            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
-                                                        />
-                                                        <label
-                                                            for="status-active"
-                                                            class="ml-2 text-sm text-gray-700 dark:text-gray-300"
-                                                        >
-                                                            Active
-                                                        </label>
-                                                    </div>
-                                                    <div
-                                                        class="flex items-center"
+                                                        Zone
+                                                    </h6>
+                                                    <select
+                                                        v-model="filters.zone"
+                                                        @change="applyFilters"
+                                                        class="w-full p-2 text-sm border border-gray-300 rounded bg-white dark:bg-gray-600 dark:border-gray-500 dark:text-white focus:ring-2 focus:ring-blue-500"
                                                     >
-                                                        <input
-                                                            id="status-inactive"
-                                                            type="radio"
-                                                            v-model="
-                                                                filters.status
-                                                            "
-                                                            value="inactive"
-                                                            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
-                                                        />
-                                                        <label
-                                                            for="status-inactive"
-                                                            class="ml-2 text-sm text-gray-700 dark:text-gray-300"
+                                                        <option value="all">
+                                                            All Zones
+                                                        </option>
+                                                        <option
+                                                            v-for="(
+                                                                label, value
+                                                            ) in zones"
+                                                            :key="value"
+                                                            :value="value"
                                                         >
-                                                            Inactive
-                                                        </label>
-                                                    </div>
+                                                            {{ label }}
+                                                        </option>
+                                                    </select>
+                                                </div>
+
+                                                <!-- Barangay Filter -->
+                                                <div>
+                                                    <h6
+                                                        class="mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                                                    >
+                                                        Barangay
+                                                    </h6>
+                                                    <select
+                                                        v-model="
+                                                            filters.barangay
+                                                        "
+                                                        @change="applyFilters"
+                                                        class="w-full p-2 text-sm border border-gray-300 rounded bg-white dark:bg-gray-600 dark:border-gray-500 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                                    >
+                                                        <option value="all">
+                                                            All Barangays
+                                                        </option>
+                                                        <option
+                                                            v-for="(
+                                                                label, value
+                                                            ) in barangays"
+                                                            :key="value"
+                                                            :value="value"
+                                                        >
+                                                            {{ label }}
+                                                        </option>
+                                                    </select>
                                                 </div>
                                             </div>
                                             <div
@@ -163,7 +222,6 @@
                                                     />
                                                     Reset
                                                 </button>
-
                                             </div>
                                         </div>
                                     </div>
@@ -209,7 +267,19 @@
                                                 scope="col"
                                                 class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
                                             >
-                                                Content Preview
+                                                Content
+                                            </th>
+                                            <th
+                                                scope="col"
+                                                class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                            >
+                                                Zone
+                                            </th>
+                                            <th
+                                                scope="col"
+                                                class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                            >
+                                                Barangay
                                             </th>
                                             <th
                                                 scope="col"
@@ -272,6 +342,26 @@
                                                         )
                                                     }}</span
                                                 >
+                                            </td>
+
+                                            <!-- Zone -->
+                                            <td
+                                                class="px-6 py-2 text-xs text-gray-900 dark:text-white whitespace-nowrap"
+                                            >
+                                                {{
+                                                    announcement.zone ||
+                                                    "All Zones"
+                                                }}
+                                            </td>
+
+                                            <!-- Barangay -->
+                                            <td
+                                                class="px-6 py-2 text-xs text-gray-900 dark:text-white whitespace-nowrap"
+                                            >
+                                                {{
+                                                    announcement.barangay ||
+                                                    "All Barangays"
+                                                }}
                                             </td>
 
                                             <!-- Start Date -->
@@ -360,7 +450,7 @@
                                             "
                                         >
                                             <td
-                                                colspan="7"
+                                                colspan="9"
                                                 class="px-6 py-24 text-center"
                                             >
                                                 <div
@@ -462,6 +552,8 @@
                 :editing="editing"
                 :form="form"
                 :errors="errors"
+                :zones="zones"
+                :barangays="barangays"
                 @close="closeModal"
                 @submit="editing ? updateAnnouncement() : createAnnouncement()"
             />
@@ -498,6 +590,8 @@ const props = defineProps({
     announcements: Object,
     errors: Object,
     filters: Object,
+    zones: Object,
+    barangays: Object,
 });
 
 // Refs
@@ -514,6 +608,8 @@ const showCalendar = ref(true);
 const filters = reactive({
     search: props.filters?.search || "",
     status: props.filters?.status || "",
+    zone: props.filters?.zone || "all",
+    barangay: props.filters?.barangay || "all",
     sort: props.filters?.sort || "id",
     order: props.filters?.order || "desc",
     per_page: props.filters?.per_page || 10,
@@ -525,6 +621,8 @@ const form = useForm({
     status: "active",
     start_date: null,
     end_date: null,
+    zone: "",
+    barangay: "",
 });
 
 // Methods
@@ -561,6 +659,8 @@ const resetFilters = () => {
     Object.assign(filters, {
         search: "",
         status: "",
+        zone: "all",
+        barangay: "all",
         sort: "id",
         order: "desc",
         per_page: 10,
@@ -588,6 +688,7 @@ const fetchAnnouncements = () => {
         },
     });
 };
+
 
 // Helper functions
 const statusClasses = (status) => {
@@ -672,6 +773,8 @@ const editAnnouncement = (announcement) => {
     form.status = announcement.status.toLowerCase();
     form.start_date = announcement.start_date;
     form.end_date = announcement.end_date;
+    form.zone = announcement.zone; // Use original zone value (could be null)
+    form.barangay = announcement.barangay; // Use original barangay value (could be null)
     showModal.value = true;
 };
 

@@ -292,7 +292,7 @@
                                             >
                                                 <Eye class="w-4 h-4" />
                                             </button>
-                                            <button
+                                            <!-- <button
                                                 v-if="notification.unread"
                                                 @click="
                                                     markAsRead(notification.id)
@@ -305,7 +305,7 @@
                                                 "
                                             >
                                                 <Check class="w-4 h-4" />
-                                            </button>
+                                            </button> -->
                                             <button
                                                 @click="
                                                     deleteNotification(

@@ -109,6 +109,12 @@ const downloadQRCode = () => {
     link.download = `aquatrack-report-${trackingCode.value}.png`;
     link.href = canvas.toDataURL("image/png");
     link.click();
+
+    // Close modal after download (add a small delay to ensure download starts)
+    setTimeout(() => {
+        clearStoredState();
+        emit("close");
+    }, 500);
 };
 
 const generateQRCode = async () => {

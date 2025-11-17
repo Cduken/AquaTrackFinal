@@ -167,15 +167,6 @@
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- Export Button -->
-                            <button
-                                @click="showExportOptions"
-                                class="flex items-center px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-sm hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800 dark:hover:bg-green-900/30"
-                            >
-                                <Download class="w-4 h-4 mr-2" />
-                                Export
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -580,7 +571,6 @@ import {
     CheckCircle,
     Clock,
     AlertCircle,
-    Download,
 } from "lucide-vue-next";
 
 // Props
@@ -600,9 +590,8 @@ const showRecordModal = ref(false);
 const selectedRecord = ref(null);
 const loadingRecord = ref(false);
 const showEditRecordModal = ref(false);
-const isExporting = ref(false);
 
-// Local filters - SIMPLIFIED (removed period filters)
+// Local filters
 const filters = ref({
     search: props.filters.search || "",
     status: props.filters.status || "",
@@ -658,97 +647,6 @@ const overdueRecordsCount = computed(() => {
             .length || 0
     );
 });
-
-// Export functionality
-const showExportOptions = async () => {
-    const { value: format } = await Swal.fire({
-        title: "Export Reports",
-        text: "Choose export format",
-        icon: "info",
-        showCancelButton: true,
-        confirmButtonText: "Export",
-        cancelButtonText: "Cancel",
-        input: "select",
-        inputOptions: {
-            csv: "CSV (Excel)",
-            pdf: "PDF Document",
-        },
-        inputPlaceholder: "Select format",
-        inputValidator: (value) => {
-            if (!value) {
-                return "You need to select a format!";
-            }
-        },
-    });
-
-    if (format) {
-        exportRecords(format);
-    }
-};
-
-const exportRecords = async (format) => {
-    isExporting.value = true;
-
-    try {
-        // Show loading state
-        Swal.fire({
-            title: "Exporting...",
-            text: "Please wait while we prepare your export",
-            allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
-            },
-        });
-
-        // Build export parameters with current filters (month and year)
-        const exportParams = {
-            ...pickBy(filters.value),
-            format: format,
-            _t: new Date().getTime(), // Cache busting
-        };
-
-        // Create a temporary form to submit the export request
-        const form = document.createElement("form");
-        form.method = "GET";
-        form.action = route("admin.records.export");
-
-        // Add parameters to the form
-        Object.keys(exportParams).forEach((key) => {
-            if (exportParams[key] !== null && exportParams[key] !== undefined) {
-                const input = document.createElement("input");
-                input.type = "hidden";
-                input.name = key;
-                input.value = exportParams[key];
-                form.appendChild(input);
-            }
-        });
-
-        // Append form to body and submit
-        document.body.appendChild(form);
-        form.submit();
-        document.body.removeChild(form);
-
-        // Close the loading SweetAlert
-        Swal.close();
-
-        Swal.fire({
-            icon: "success",
-            title: "Export Complete!",
-            text: `Reports exported as ${format.toUpperCase()} successfully`,
-            timer: 2000,
-            showConfirmButton: false,
-        });
-    } catch (error) {
-        console.error("Export failed:", error);
-        Swal.fire({
-            icon: "error",
-            title: "Export Failed",
-            text: "Failed to generate export. Please try again.",
-        });
-    } finally {
-        isExporting.value = false;
-    }
-};
 
 // Dropdown handlers
 const toggleFilterDropdown = async () => {

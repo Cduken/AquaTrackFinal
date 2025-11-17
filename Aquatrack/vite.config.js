@@ -5,9 +5,9 @@ import vue from "@vitejs/plugin-vue";
 
 export default defineConfig({
     server: {
-        host: "192.168.137.1",
-        port: 5173,
-        cors: true,
+        // host: "192.168.137.1",
+        // port: 5173,
+        // cors: true,
     },
     plugins: [
         laravel({

@@ -86,23 +86,21 @@
                         </p>
                     </div>
 
-                    <!-- Results Grid -->
-                    <div
-                        class="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-6"
-                    >
+                    <!-- Results Grid - Full Width -->
+                    <div class="space-y-4 width-full">
                         <div
                             v-for="user in searchResults"
                             :key="user.id"
                             @click="openReadingForm(user)"
-                            class="bg-white border border-gray-200 rounded-lg hover:border-blue-400 hover:shadow-lg transition-all duration-200 cursor-pointer group"
+                            class="w-full bg-white border border-gray-200 rounded-xl hover:border-blue-400 hover:shadow-xl transition-all duration-300 cursor-pointer group overflow-hidden"
                         >
                             <div class="p-6">
-                                <div class="flex items-start gap-4">
+                                <div class="flex items-start gap-5">
                                     <!-- Avatar -->
                                     <div class="flex-shrink-0">
                                         <div
                                             v-if="user.avatar_url"
-                                            class="w-12 h-12 rounded-lg overflow-hidden border border-gray-200"
+                                            class="w-14 h-14 rounded-xl overflow-hidden border-2 border-gray-100 group-hover:border-blue-100 transition-colors"
                                         >
                                             <img
                                                 :src="user.avatar_url"
@@ -112,69 +110,194 @@
                                         </div>
                                         <div
                                             v-else
-                                            class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center"
+                                            class="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center group-hover:from-blue-600 group-hover:to-blue-700 transition-all"
                                         >
-                                            <User class="w-6 h-6 text-white" />
+                                            <User class="w-7 h-7 text-white" />
                                         </div>
                                     </div>
 
                                     <!-- User Info -->
                                     <div class="flex-1 min-w-0">
+                                        <!-- Name -->
                                         <h4
-                                            class="font-semibold text-gray-900 text-lg mb-2 group-hover:text-blue-700 transition-colors"
+                                            class="font-bold text-gray-900 text-xl mb-3 group-hover:text-blue-800 transition-colors"
                                         >
                                             {{ user.name }} {{ user.lastname }}
                                         </h4>
 
-                                        <!-- Account & Address -->
-                                        <div class="space-y-2 mb-4">
-                                            <div
-                                                class="flex items-center gap-2 text-sm text-gray-600"
-                                            >
-                                                <Hash
-                                                    class="w-4 h-4 text-gray-400"
-                                                />
-                                                <span class="font-medium">{{
-                                                    user.account_number
-                                                }}</span>
+                                        <!-- Main Info Grid -->
+                                        <div
+                                            class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4"
+                                        >
+                                            <!-- Account & Contact -->
+                                            <div class="space-y-3">
+                                                <!-- Account Number -->
+                                                <div
+                                                    class="flex items-center gap-3"
+                                                >
+                                                    <div
+                                                        class="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center group-hover:bg-blue-100 transition-colors"
+                                                    >
+                                                        <Hash
+                                                            class="w-4 h-4 text-blue-600"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <p
+                                                            class="text-xs text-gray-500 font-medium uppercase tracking-wide"
+                                                        >
+                                                            Account No.
+                                                        </p>
+                                                        <p
+                                                            class="text-sm font-semibold text-gray-900"
+                                                        >
+                                                            {{
+                                                                user.account_number
+                                                            }}
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Phone -->
+                                                <div
+                                                    class="flex items-center gap-3"
+                                                    v-if="user.phone"
+                                                >
+                                                    <div
+                                                        class="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center group-hover:bg-green-100 transition-colors"
+                                                    >
+                                                        <Phone
+                                                            class="w-4 h-4 text-green-600"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <p
+                                                            class="text-xs text-gray-500 font-medium uppercase tracking-wide"
+                                                        >
+                                                            Phone
+                                                        </p>
+                                                        <p
+                                                            class="text-sm font-semibold text-gray-900"
+                                                        >
+                                                            {{ user.phone }}
+                                                        </p>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div
-                                                class="flex items-center gap-2 text-sm text-gray-600"
-                                            >
-                                                <MapPin
-                                                    class="w-4 h-4 text-gray-400"
-                                                />
-                                                <span class="truncate">{{
-                                                    user.address
-                                                }}</span>
+
+                                            <!-- Address -->
+                                            <div class="flex items-start gap-3">
+                                                <div
+                                                    class="w-8 h-8 bg-purple-50 rounded-lg flex items-center justify-center group-hover:bg-purple-100 transition-colors flex-shrink-0 mt-1"
+                                                >
+                                                    <MapPin
+                                                        class="w-4 h-4 text-purple-600"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <p
+                                                        class="text-xs text-gray-500 font-medium uppercase tracking-wide"
+                                                    >
+                                                        Address
+                                                    </p>
+                                                    <p
+                                                        class="text-sm font-semibold text-gray-900 leading-relaxed"
+                                                    >
+                                                        {{ user.address }}
+                                                    </p>
+                                                </div>
                                             </div>
                                         </div>
 
                                         <!-- Meter Details -->
                                         <div
-                                            class="grid grid-cols-2 gap-3 pt-3 border-t border-gray-100"
+                                            class="pt-4 border-t border-gray-100"
                                         >
-                                            <div
-                                                v-if="user.serial_number"
-                                                class="flex items-center gap-2 text-sm text-gray-600"
+                                            <p
+                                                class="text-xs text-gray-500 font-medium uppercase tracking-wide mb-3"
                                             >
+                                                Meter Details
+                                            </p>
+                                            <div class="flex flex-wrap gap-4">
+                                                <!-- Serial Number -->
                                                 <div
-                                                    class="w-2 h-2 bg-blue-500 rounded-full"
-                                                ></div>
-                                                <span class="truncate">{{
-                                                    user.serial_number
-                                                }}</span>
-                                            </div>
-                                            <div
-                                                v-if="user.brand"
-                                                class="flex items-center gap-2 text-sm text-gray-600"
-                                            >
+                                                    v-if="user.serial_number"
+                                                    class="flex items-center gap-2"
+                                                >
+                                                    <div
+                                                        class="w-6 h-6 bg-blue-100 rounded-md flex items-center justify-center"
+                                                    >
+                                                        <Cpu
+                                                            class="w-3 h-3 text-blue-600"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <p
+                                                            class="text-xs text-gray-500"
+                                                        >
+                                                            Serial No.
+                                                        </p>
+                                                        <p
+                                                            class="text-sm font-medium text-gray-900"
+                                                        >
+                                                            {{
+                                                                user.serial_number
+                                                            }}
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Brand -->
                                                 <div
-                                                    class="w-2 h-2 bg-green-500 rounded-full"
-                                                ></div>
-                                                <span class="truncate">{{
-                                                    user.brand
-                                                }}</span>
+                                                    v-if="user.brand"
+                                                    class="flex items-center gap-2"
+                                                >
+                                                    <div
+                                                        class="w-6 h-6 bg-green-100 rounded-md flex items-center justify-center"
+                                                    >
+                                                        <Tag
+                                                            class="w-3 h-3 text-green-600"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <p
+                                                            class="text-xs text-gray-500"
+                                                        >
+                                                            Brand
+                                                        </p>
+                                                        <p
+                                                            class="text-sm font-medium text-gray-900"
+                                                        >
+                                                            {{ user.brand }}
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Size -->
+                                                <div
+                                                    v-if="user.size"
+                                                    class="flex items-center gap-2"
+                                                >
+                                                    <div
+                                                        class="w-6 h-6 bg-orange-100 rounded-md flex items-center justify-center"
+                                                    >
+                                                        <Ruler
+                                                            class="w-3 h-3 text-orange-600"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <p
+                                                            class="text-xs text-gray-500"
+                                                        >
+                                                            Size
+                                                        </p>
+                                                        <p
+                                                            class="text-sm font-medium text-gray-900"
+                                                        >
+                                                            {{ user.size }}mm
+                                                        </p>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -182,15 +305,20 @@
                                     <!-- Action Indicator -->
                                     <div class="flex-shrink-0 self-start">
                                         <div
-                                            class="w-10 h-10 rounded-lg bg-gray-50 group-hover:bg-blue-50 flex items-center justify-center transition-colors"
+                                            class="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 group-hover:from-blue-50 group-hover:to-blue-100 flex items-center justify-center transition-all duration-300 shadow-sm group-hover:shadow-md"
                                         >
                                             <ChevronRight
-                                                class="w-5 h-5 text-gray-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all"
+                                                class="w-6 h-6 text-gray-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all duration-300"
                                             />
                                         </div>
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Hover Effect Border -->
+                            <div
+                                class="h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                            ></div>
                         </div>
                     </div>
                 </div>
@@ -271,6 +399,7 @@ import {
     MapPin,
     ChevronRight,
     SearchX,
+    Phone, Cpu, Tag, Ruler
 } from "lucide-vue-next";
 import StaffLayout from "@/Layouts/StaffLayout.vue";
 import MeterReadingModal from "@/Components/Staff/Modals/MeterReadingModal.vue";

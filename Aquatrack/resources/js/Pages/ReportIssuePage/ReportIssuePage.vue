@@ -38,124 +38,14 @@
 
         <!-- Main Content Section -->
         <section class="pb-12 md:pb-20 px-3 sm:px-4 lg:px-8">
-            <div class="max-w-7xl mx-auto">
+            <div class="max-w-4xl mx-auto">
                 <div
-                    class="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 lg:gap-12 items-start"
+                    class="flex items-center justify-center"
                 >
-                    <!-- Left Side - Illustration & Features - Hidden on mobile -->
-                    <div
-                        class="lg:col-span-5 space-y-6 md:space-y-8 hidden lg:block"
-                    >
-                        <!-- Illustration Card -->
-                        <div class="relative">
-                            <div
-                                class="absolute -top-6 -right-6 w-24 h-24 bg-yellow-500/20 rounded-full blur-2xl animate-pulse"
-                            ></div>
-                            <div
-                                class="absolute -bottom-8 -left-8 w-32 h-32 bg-blue-500/20 rounded-full blur-2xl animate-pulse"
-                                style="animation-delay: 1s"
-                            ></div>
 
-                            <div
-                                class="relative z-10 bg-gradient-to-br from-blue-500/10 via-cyan-500/10 to-blue-500/10 rounded-2xl lg:rounded-3xl p-6 lg:p-10 border border-white/10 backdrop-blur-sm shadow-2xl"
-                            >
-                                <img
-                                    src="/images/report-img.png"
-                                    alt="Water Issue Report Illustration"
-                                    class="w-full h-auto object-contain drop-shadow-2xl"
-                                />
-                            </div>
-                        </div>
 
-                        <!-- Feature Cards -->
-                        <div class="space-y-4">
-                            <h3 class="text-white text-lg font-semibold mb-4">
-                                Why Report with Us?
-                            </h3>
 
-                            <div
-                                class="group flex items-start gap-4 p-4 bg-white/5 hover:bg-white/10 rounded-xl lg:rounded-2xl border border-white/10 hover:border-white/20 backdrop-blur-sm transition-all duration-300"
-                            >
-                                <div
-                                    class="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-lg lg:rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300"
-                                >
-                                    <Zap
-                                        :size="20"
-                                        class="text-green-400 lg:text-green-400"
-                                    />
-                                </div>
-                                <div class="flex-1">
-                                    <h4
-                                        class="text-white font-semibold text-sm lg:text-base mb-1"
-                                    >
-                                        Quick Response Time
-                                    </h4>
-                                    <p
-                                        class="text-slate-300 text-xs lg:text-sm leading-relaxed"
-                                    >
-                                        Our team typically responds within 24-48
-                                        hours to address your concerns
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div
-                                class="group flex items-start gap-4 p-4 bg-white/5 hover:bg-white/10 rounded-xl lg:rounded-2xl border border-white/10 hover:border-white/20 backdrop-blur-sm transition-all duration-300"
-                            >
-                                <div
-                                    class="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-lg lg:rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300"
-                                >
-                                    <Cloud
-                                        :size="20"
-                                        class="text-blue-400 lg:text-blue-400"
-                                    />
-                                </div>
-                                <div class="flex-1">
-                                    <h4
-                                        class="text-white font-semibold text-sm lg:text-base mb-1"
-                                    >
-                                        Offline Support
-                                    </h4>
-                                    <p
-                                        class="text-slate-300 text-xs lg:text-sm leading-relaxed"
-                                    >
-                                        Submit reports even without internet
-                                        connection - they'll sync automatically
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div
-                                class="group flex items-start gap-4 p-4 bg-white/5 hover:bg-white/10 rounded-xl lg:rounded-2xl border border-white/10 hover:border-white/20 backdrop-blur-sm transition-all duration-300"
-                            >
-                                <div
-                                    class="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-lg lg:rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300"
-                                >
-                                    <Shield
-                                        :size="20"
-                                        class="text-purple-400 lg:text-purple-400"
-                                    />
-                                </div>
-                                <div class="flex-1">
-                                    <h4
-                                        class="text-white font-semibold text-sm lg:text-base mb-1"
-                                    >
-                                        Secure & Private
-                                    </h4>
-                                    <p
-                                        class="text-slate-300 text-xs lg:text-sm leading-relaxed"
-                                    >
-                                        Your information is protected and kept
-                                        confidential at all times
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Right Side - Form Container -->
                     <div class="lg:col-span-7 w-full">
-                        <!-- Progress Steps -->
                         <div
                             class="mb-4 md:mb-6 bg-white/10 backdrop-blur-xl rounded-2xl lg:rounded-3xl border border-white/20 shadow-2xl p-4 md:p-6"
                         >

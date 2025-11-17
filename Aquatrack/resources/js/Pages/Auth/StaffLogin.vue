@@ -22,7 +22,7 @@
                     <!-- Left Side - Logo Section -->
                     <div class="relative z-10 text-center">
                         <div
-                            class="w-52 h-52 mx-auto mb-6 bg-white/5 backdrop-blur-sm rounded-3xl p-6 flex items-center justify-center border border-white/10"
+                            class="w-[400px] h-[400px] mx-auto flex items-center justify-center "
                         >
                             <img
                                 src="/images/MainLogo.png"

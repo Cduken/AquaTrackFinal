@@ -367,4 +367,526 @@ class AdminRecordController extends Controller
         return redirect()->route('admin.records.index')
             ->with('success', "Fixed {$fixedDueDates} due dates. {$remainingNull} records still without due dates.");
     }
+
+    /**
+     * Export records in multiple formats
+     */
+    public function export(Request $request)
+{
+    try {
+        // Fix missing due dates first
+        $this->fixMissingDueDates();
+
+        // Auto-update overdue records
+        $this->autoUpdateOverdueRecords();
+
+        // Handle both GET and POST parameters
+        $search = $request->get('search', $request->search);
+        $status = $request->get('status', $request->status);
+        $month = $request->get('month', $request->month);
+        $year = $request->get('year', $request->year);
+        $format = $request->get('format', $request->format ?? 'csv');
+
+        // Build the query with relationships
+        $query = MeterReading::with('user');
+
+        // Apply search filter
+        if (!empty($search)) {
+            $query->whereHas('user', function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('lastname', 'like', "%{$search}%")
+                    ->orWhere('account_number', 'like', "%{$search}%");
+            });
+        }
+
+        // Apply status filter
+        if (!empty($status)) {
+            $query->where('status', $status);
+        }
+
+        // Apply month filter
+        if (!empty($month)) {
+            $query->whereMonth('reading_date', $month);
+        }
+
+        // Apply year filter
+        if (!empty($year)) {
+            $query->whereYear('reading_date', $year);
+        }
+
+        // Get all records (no pagination for export)
+        $records = $query->orderBy('reading_date', 'desc')->get();
+
+        // Rest of your export code remains the same...
+        switch ($format) {
+            case 'excel':
+                return $this->exportExcel($records, $request);
+            case 'pdf':
+                return $this->exportPdf($records, $request);
+            case 'csv':
+            default:
+                return $this->exportCsv($records, $request);
+        }
+    } catch (\Exception $e) {
+        Log::error('Export failed: ' . $e->getMessage());
+
+        if ($request->ajax() || $request->expectsJson()) {
+            return response()->json([
+                'error' => 'Export failed: ' . $e->getMessage()
+            ], 500);
+        }
+
+        return redirect()->back()
+            ->with('error', 'Export failed: ' . $e->getMessage());
+    }
+}
+
+    /**
+     * Export records as CSV
+     */
+    private function exportCsv($records, $request)
+    {
+        $fileName = 'billing_records_' . date('Y-m-d_H-i-s') . '.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv; charset=utf-8',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0'
+        ];
+
+        $callback = function () use ($records) {
+            $file = fopen('php://output', 'w');
+
+            // Add BOM for UTF-8 to ensure Excel displays special characters correctly
+            fwrite($file, "\xEF\xBB\xBF");
+
+            // Add headers
+            fputcsv($file, [
+                'Account Number',
+                'Customer Name',
+                'Serial Number',
+                'Zone',
+                'Reading Date',
+                'Due Date',
+                'Current Reading (m³)',
+                'Previous Reading (m³)',
+                'Consumption (m³)',
+                'Base Amount (₱)',
+                'Surcharge (₱)',
+                'Total Amount (₱)',
+                'Status',
+                'Days Status',
+                'Contact Email',
+                'Contact Phone'
+            ]);
+
+            // Calculate totals
+            $totalAmount = 0;
+            $totalSurcharge = 0;
+            $totalFinalAmount = 0;
+
+            // Add data
+            foreach ($records as $record) {
+                $finalAmount = $record->amount;
+                $surcharge = 0;
+                $originalAmount = $record->amount;
+
+                // Calculate surcharge for overdue records
+                if ($record->status !== 'Paid' && $record->due_date) {
+                    $dueDate = Carbon::parse($record->due_date);
+                    $today = Carbon::now('Asia/Manila');
+
+                    if ($today->gt($dueDate)) {
+                        $surcharge = round($record->amount * 0.10, 2);
+                        $finalAmount = $record->amount + $surcharge;
+                    }
+                }
+
+                // Add to totals
+                $totalAmount += $originalAmount;
+                $totalSurcharge += $surcharge;
+                $totalFinalAmount += $finalAmount;
+
+                $readingDate = $record->reading_date ? Carbon::parse($record->reading_date)->format('Y-m-d') : 'N/A';
+                $dueDate = $record->due_date ? Carbon::parse($record->due_date)->format('Y-m-d') : 'N/A';
+
+                // Calculate previous reading
+                $previousReading = $record->reading - $record->consumption;
+
+                fputcsv($file, [
+                    $record->user->account_number ?? 'N/A',
+                    $record->user->name . ' ' . $record->user->lastname,
+                    $record->user->serial_number ?? 'N/A',
+                    $record->user->zone ?? 'N/A',
+                    $readingDate,
+                    $dueDate,
+                    $record->reading,
+                    $previousReading,
+                    $record->consumption,
+                    number_format($originalAmount, 2),
+                    number_format($surcharge, 2),
+                    number_format($finalAmount, 2),
+                    $record->status,
+                    $this->getDaysUntilDue($record->due_date),
+                    $record->user->email ?? 'N/A',
+                    $record->user->phone ?? 'N/A'
+                ]);
+            }
+
+            // Add summary row
+            fputcsv($file, []); // Empty row
+            fputcsv($file, ['SUMMARY', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '']);
+            fputcsv($file, ['Total Records:', $records->count(), '', '', '', '', '', '', '', '', '', '', '', '', '', '']);
+            fputcsv($file, ['Total Base Amount:', '', '', '', '', '', '', '', '', '₱' . number_format($totalAmount, 2), '', '', '', '', '', '']);
+            fputcsv($file, ['Total Surcharge:', '', '', '', '', '', '', '', '', '', '₱' . number_format($totalSurcharge, 2), '', '', '', '', '']);
+            fputcsv($file, ['Total Final Amount:', '', '', '', '', '', '', '', '', '', '', '₱' . number_format($totalFinalAmount, 2), '', '', '', '']);
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Export records as Excel (XLSX) - Simple HTML table that Excel can open
+     */
+    private function exportExcel($records, $request)
+    {
+        $fileName = 'billing_records_' . date('Y-m-d_H-i-s') . '.xls';
+
+        // Calculate totals
+        $totalAmount = 0;
+        $totalSurcharge = 0;
+        $totalFinalAmount = 0;
+
+        foreach ($records as $record) {
+            $originalAmount = $record->amount;
+            $surcharge = 0;
+            $finalAmount = $record->amount;
+
+            if ($record->status !== 'Paid' && $record->due_date) {
+                $dueDate = Carbon::parse($record->due_date);
+                $today = Carbon::now('Asia/Manila');
+                if ($today->gt($dueDate)) {
+                    $surcharge = round($record->amount * 0.10, 2);
+                    $finalAmount = $record->amount + $surcharge;
+                }
+            }
+
+            $totalAmount += $originalAmount;
+            $totalSurcharge += $surcharge;
+            $totalFinalAmount += $finalAmount;
+        }
+
+        $paidCount = $records->where('status', 'Paid')->count();
+        $pendingCount = $records->where('status', 'Pending')->count();
+        $overdueCount = $records->where('status', 'Overdue')->count();
+
+        $html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+                <head>
+                    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+                    <title>Billing Records Report</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; }
+                        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 10px; }
+                        .header h1 { margin: 0; color: #333; font-size: 24px; }
+                        .header .subtitle { color: #666; margin-top: 5px; font-size: 14px; }
+                        .summary { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 5px; }
+                        .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; }
+                        .summary-item { padding: 10px; background: white; border-radius: 5px; border: 1px solid #ddd; }
+                        .summary-value { font-size: 16px; font-weight: bold; color: #333; }
+                        table { border-collapse: collapse; width: 100%; font-family: Arial, sans-serif; margin-top: 20px; }
+                        th { background-color: #f2f2f2; font-weight: bold; border: 1px solid #ddd; padding: 8px; text-align: left; }
+                        td { border: 1px solid #ddd; padding: 8px; }
+                        .summary-row { background-color: #f9f9f9; font-weight: bold; }
+                        .total-row { background-color: #e8f4ff; font-weight: bold; }
+                        .text-right { text-align: right; }
+                        .text-center { text-align: center; }
+                        .status-paid { color: green; font-weight: bold; }
+                        .status-pending { color: orange; font-weight: bold; }
+                        .status-overdue { color: red; font-weight: bold; }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>Billing Records Report</h1>
+                        <div class="subtitle">Generated on: ' . date('F j, Y g:i A') . '</div>
+                    </div>
+
+                    <div class="summary">
+                        <strong>Report Summary:</strong>
+                        <div class="summary-grid">
+                            <div class="summary-item">
+                                <div>Total Records: <span class="summary-value">' . $records->count() . '</span></div>
+                                <div>Paid Records: <span class="summary-value">' . $paidCount . '</span></div>
+                                <div>Pending Records: <span class="summary-value">' . $pendingCount . '</span></div>
+                                <div>Overdue Records: <span class="summary-value">' . $overdueCount . '</span></div>
+                            </div>
+                            <div class="summary-item">
+                                <div>Total Base Amount: <span class="summary-value">₱' . number_format($totalAmount, 2) . '</span></div>
+                                <div>Total Surcharge: <span class="summary-value">₱' . number_format($totalSurcharge, 2) . '</span></div>
+                                <div>Total Final Amount: <span class="summary-value">₱' . number_format($totalFinalAmount, 2) . '</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <table>
+                        <tr>
+                            <th>Account Number</th>
+                            <th>Customer Name</th>
+                            <th>Zone</th>
+                            <th>Reading Date</th>
+                            <th>Due Date</th>
+                            <th>Current Reading</th>
+                            <th>Consumption</th>
+                            <th>Base Amount (₱)</th>
+                            <th>Surcharge (₱)</th>
+                            <th>Total Amount (₱)</th>
+                            <th>Status</th>
+                        </tr>';
+
+        foreach ($records as $record) {
+            $finalAmount = $record->amount;
+            $surcharge = 0;
+            $originalAmount = $record->amount;
+
+            if ($record->status !== 'Paid' && $record->due_date) {
+                $dueDate = Carbon::parse($record->due_date);
+                $today = Carbon::now('Asia/Manila');
+                if ($today->gt($dueDate)) {
+                    $surcharge = round($record->amount * 0.10, 2);
+                    $finalAmount = $record->amount + $surcharge;
+                }
+            }
+
+            $readingDate = $record->reading_date ? Carbon::parse($record->reading_date)->format('Y-m-d') : 'N/A';
+            $dueDate = $record->due_date ? Carbon::parse($record->due_date)->format('Y-m-d') : 'N/A';
+
+            $html .= '<tr>
+                        <td>' . ($record->user->account_number ?? 'N/A') . '</td>
+                        <td>' . $record->user->name . ' ' . $record->user->lastname . '</td>
+                        <td>' . ($record->user->zone ?? 'N/A') . '</td>
+                        <td>' . $readingDate . '</td>
+                        <td>' . $dueDate . '</td>
+                        <td>' . $record->reading . '</td>
+                        <td>' . $record->consumption . '</td>
+                        <td class="text-right">' . number_format($originalAmount, 2) . '</td>
+                        <td class="text-right">' . number_format($surcharge, 2) . '</td>
+                        <td class="text-right">' . number_format($finalAmount, 2) . '</td>
+                        <td class="text-center status-' . strtolower($record->status) . '">' . $record->status . '</td>
+                    </tr>';
+        }
+
+        // Add summary row
+        $html .= '<tr class="total-row">
+                    <td colspan="7" class="text-right"><strong>GRAND TOTALS:</strong></td>
+                    <td class="text-right"><strong>' . number_format($totalAmount, 2) . '</strong></td>
+                    <td class="text-right"><strong>' . number_format($totalSurcharge, 2) . '</strong></td>
+                    <td class="text-right"><strong>' . number_format($totalFinalAmount, 2) . '</strong></td>
+                    <td class="text-center"><strong>Records: ' . $records->count() . '</strong></td>
+                </tr>';
+
+        $html .= '</table></body></html>';
+
+        $headers = [
+            'Content-Type' => 'application/vnd.ms-excel',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0'
+        ];
+
+        return response($html, 200, $headers);
+    }
+
+    /**
+     * Export records as PDF - Simple HTML that can be printed as PDF
+     */
+    private function exportPdf($records, $request)
+    {
+        $fileName = 'billing_records_' . date('Y-m-d_H-i-s') . '.html';
+
+        // Calculate totals
+        $totalAmount = 0;
+        $totalSurcharge = 0;
+        $totalFinalAmount = 0;
+
+        foreach ($records as $record) {
+            $originalAmount = $record->amount;
+            $surcharge = 0;
+            $finalAmount = $record->amount;
+
+            if ($record->status !== 'Paid' && $record->due_date) {
+                $dueDate = Carbon::parse($record->due_date);
+                $today = Carbon::now('Asia/Manila');
+                if ($today->gt($dueDate)) {
+                    $surcharge = round($record->amount * 0.10, 2);
+                    $finalAmount = $record->amount + $surcharge;
+                }
+            }
+
+            $totalAmount += $originalAmount;
+            $totalSurcharge += $surcharge;
+            $totalFinalAmount += $finalAmount;
+        }
+
+        $html = $this->generatePdfHtml($records, $totalAmount, $totalSurcharge, $totalFinalAmount);
+
+        $headers = [
+            'Content-Type' => 'text/html',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0'
+        ];
+
+        return response($html, 200, $headers);
+    }
+
+    /**
+     * Generate HTML content for PDF export
+     */
+    private function generatePdfHtml($records, $totalAmount, $totalSurcharge, $totalFinalAmount)
+    {
+        $paidCount = $records->where('status', 'Paid')->count();
+        $pendingCount = $records->where('status', 'Pending')->count();
+        $overdueCount = $records->where('status', 'Overdue')->count();
+
+        $html = '<!DOCTYPE html>
+        <html>
+        <head>
+            <title>Billing Records Report</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; font-size: 12px; }
+                .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }
+                .header h1 { margin: 0; color: #333; font-size: 24px; }
+                .header .subtitle { color: #666; margin-top: 5px; font-size: 14px; }
+                .summary { margin: 15px 0; padding: 10px; background: #f8f9fa; border-radius: 5px; }
+                .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; }
+                .summary-item { padding: 10px; background: white; border-radius: 5px; border: 1px solid #ddd; }
+                .summary-value { font-size: 16px; font-weight: bold; color: #333; }
+                table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 10px; }
+                th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
+                th { background-color: #f8f9fa; font-weight: bold; }
+                .status-paid { color: green; font-weight: bold; }
+                .status-pending { color: orange; font-weight: bold; }
+                .status-overdue { color: red; font-weight: bold; }
+                .text-right { text-align: right; }
+                .text-center { text-align: center; }
+                .footer { margin-top: 20px; text-align: center; font-size: 10px; color: #666; }
+                .total-row { background-color: #e8f4ff; font-weight: bold; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>Billing Records Report</h1>
+                <div class="subtitle">Generated on ' . date('F j, Y g:i A') . '</div>
+            </div>
+
+            <div class="summary">
+                <strong>Report Summary:</strong>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <div>Total Records: <span class="summary-value">' . $records->count() . '</span></div>
+                        <div>Paid Records: <span class="summary-value">' . $paidCount . '</span></div>
+                        <div>Pending Records: <span class="summary-value">' . $pendingCount . '</span></div>
+                        <div>Overdue Records: <span class="summary-value">' . $overdueCount . '</span></div>
+                    </div>
+                    <div class="summary-item">
+                        <div>Total Base Amount: <span class="summary-value">₱' . number_format($totalAmount, 2) . '</span></div>
+                        <div>Total Surcharge: <span class="summary-value">₱' . number_format($totalSurcharge, 2) . '</span></div>
+                        <div>Total Final Amount: <span class="summary-value">₱' . number_format($totalFinalAmount, 2) . '</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Account No.</th>
+                        <th>Customer Name</th>
+                        <th>Zone</th>
+                        <th>Reading Date</th>
+                        <th>Due Date</th>
+                        <th class="text-center">Reading (m³)</th>
+                        <th class="text-center">Consumption (m³)</th>
+                        <th class="text-right">Base Amount (₱)</th>
+                        <th class="text-right">Surcharge (₱)</th>
+                        <th class="text-right">Total Amount (₱)</th>
+                        <th class="text-center">Status</th>
+                    </tr>
+                </thead>
+                <tbody>';
+
+        foreach ($records as $record) {
+            $finalAmount = $record->amount;
+            $surcharge = 0;
+            $originalAmount = $record->amount;
+
+            if ($record->status !== 'Paid' && $record->due_date) {
+                $dueDate = Carbon::parse($record->due_date);
+                $today = Carbon::now('Asia/Manila');
+                if ($today->gt($dueDate)) {
+                    $surcharge = round($record->amount * 0.10, 2);
+                    $finalAmount = $record->amount + $surcharge;
+                }
+            }
+
+            $readingDate = $record->reading_date ? Carbon::parse($record->reading_date)->format('M j, Y') : 'N/A';
+            $dueDate = $record->due_date ? Carbon::parse($record->due_date)->format('M j, Y') : 'N/A';
+
+            $html .= '
+                    <tr>
+                        <td>' . ($record->user->account_number ?? 'N/A') . '</td>
+                        <td>' . $record->user->name . ' ' . $record->user->lastname . '</td>
+                        <td>' . ($record->user->zone ?? 'N/A') . '</td>
+                        <td>' . $readingDate . '</td>
+                        <td>' . $dueDate . '</td>
+                        <td class="text-center">' . $record->reading . '</td>
+                        <td class="text-center">' . $record->consumption . '</td>
+                        <td class="text-right">' . number_format($originalAmount, 2) . '</td>
+                        <td class="text-right">' . number_format($surcharge, 2) . '</td>
+                        <td class="text-right">' . number_format($finalAmount, 2) . '</td>
+                        <td class="text-center status-' . strtolower($record->status) . '">' . $record->status . '</td>
+                    </tr>';
+        }
+
+        $html .= '
+                </tbody>
+                <tfoot>
+                    <tr class="total-row">
+                        <td colspan="7" class="text-right"><strong>GRAND TOTALS:</strong></td>
+                        <td class="text-right"><strong>₱' . number_format($totalAmount, 2) . '</strong></td>
+                        <td class="text-right"><strong>₱' . number_format($totalSurcharge, 2) . '</strong></td>
+                        <td class="text-right"><strong>₱' . number_format($totalFinalAmount, 2) . '</strong></td>
+                        <td class="text-center"><strong>Records: ' . $records->count() . '</strong></td>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <div class="footer">
+                <p>Generated by Water Billing System | Page 1 of 1</p>
+            </div>
+        </body>
+        </html>';
+
+        return $html;
+    }
+
+    private function getDaysUntilDue($dueDate)
+    {
+        if (!$dueDate) return 'N/A';
+
+        $today = Carbon::now('Asia/Manila');
+        $due = Carbon::parse($dueDate);
+        $diffDays = $today->diffInDays($due, false);
+
+        if ($diffDays === 0) return 'Due today';
+        if ($diffDays === 1) return 'Due tomorrow';
+        if ($diffDays > 1) return "Due in {$diffDays} days";
+        if ($diffDays === -1) return "Overdue by 1 day";
+        return "Overdue by " . abs($diffDays) . " days";
+    }
 }

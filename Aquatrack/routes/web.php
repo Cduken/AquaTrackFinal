@@ -135,6 +135,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::put('/admin/records/{record}', [AdminRecordController::class, 'update'])->name('admin.records.update');
     Route::delete('/admin/records/{record}', [AdminRecordController::class, 'destroy'])->name('admin.records.destroy');
     Route::get('/admin/records/{record}/details', [AdminRecordController::class, 'details'])->name('admin.records.details');
+   // In web.php, update the export route:
+Route::match(['get', 'post'], '/admin/records/export', [AdminRecordController::class, 'export'])->name('admin.records.export');
 
 
     // Record utilities

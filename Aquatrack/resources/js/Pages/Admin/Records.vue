@@ -43,6 +43,69 @@
                                 </div>
                             </div>
 
+                            <!-- Export Dropdown -->
+                            <div class="relative">
+                                <button
+                                    @click="toggleExportDropdown"
+                                    ref="exportButton"
+                                    :disabled="exportLoading"
+                                    class="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    type="button"
+                                >
+                                    <Download
+                                        class="w-4 h-4 mr-2"
+                                        :class="{
+                                            'animate-spin': exportLoading,
+                                        }"
+                                    />
+                                    {{
+                                        exportLoading
+                                            ? "Exporting..."
+                                            : "Export"
+                                    }}
+                                    <ChevronDown class="ml-1 w-4 h-4" />
+                                </button>
+
+                                <!-- Export Options Dropdown -->
+                                <div
+                                    v-if="showExportDropdown"
+                                    class="fixed z-[1000] mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 dark:bg-gray-700 dark:border-gray-600"
+                                    :style="exportDropdownStyle"
+                                    @click.stop
+                                >
+                                    <div class="py-1">
+                                        <button
+                                            @click="exportRecords('csv')"
+                                            class="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                                        >
+                                            <FileText class="w-4 h-4 mr-3" />
+                                            Export as CSV
+                                        </button>
+                                        <button
+                                            @click="exportRecords('excel')"
+                                            class="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                                        >
+                                            <FileText class="w-4 h-4 mr-3" />
+                                            Export as Excel
+                                        </button>
+                                        <button
+                                            @click="exportRecords('pdf')"
+                                            class="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                                        >
+                                            <FileText class="w-4 h-4 mr-3" />
+                                            Export as PDF
+                                        </button>
+                                        <button
+                                            @click="printRecords"
+                                            class="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                                        >
+                                            <Printer class="w-4 h-4 mr-3" />
+                                            Print Records
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- Status Filter -->
                             <div class="relative">
                                 <button
@@ -546,6 +609,9 @@
                 @close="closeEditModal"
                 @saved="handleRecordUpdated"
             />
+
+            <!-- Hidden iframe for printing -->
+            <iframe id="printFrame" class="hidden"></iframe>
         </div>
     </AdminLayout>
 </template>
@@ -570,7 +636,8 @@ import {
     FileText,
     CheckCircle,
     Clock,
-    AlertCircle,
+    Download,
+    Printer,
 } from "lucide-vue-next";
 
 // Props
@@ -582,14 +649,18 @@ const props = defineProps({
 // Reactive data
 const loading = ref(false);
 const showFilterDropdown = ref(false);
+const showExportDropdown = ref(false);
 const isResetting = ref(false);
 const activeActionMenu = ref(null);
 const filterDropdownStyle = ref({});
+const exportDropdownStyle = ref({});
 const filterButton = ref(null);
+const exportButton = ref(null);
 const showRecordModal = ref(false);
 const selectedRecord = ref(null);
 const loadingRecord = ref(false);
 const showEditRecordModal = ref(false);
+const exportLoading = ref(false);
 
 // Local filters
 const filters = ref({
@@ -648,6 +719,253 @@ const overdueRecordsCount = computed(() => {
     );
 });
 
+// Export functions
+const toggleExportDropdown = async () => {
+    showExportDropdown.value = !showExportDropdown.value;
+    if (showExportDropdown.value && exportButton.value) {
+        await nextTick();
+        const rect = exportButton.value.getBoundingClientRect();
+        const dropdownWidth = 192;
+        exportDropdownStyle.value = {
+            left: `${rect.right - dropdownWidth}px`,
+            top: `${rect.bottom + 8}px`,
+            position: "fixed",
+        };
+    }
+};
+
+const exportRecords = async (format) => {
+    try {
+        exportLoading.value = true;
+        showExportDropdown.value = false;
+
+        // Create form data with filters
+        const formData = new FormData();
+        formData.append('format', format);
+
+        // Add filters
+        if (filters.value.search) formData.append('search', filters.value.search);
+        if (filters.value.status) formData.append('status', filters.value.status);
+        if (filters.value.month) formData.append('month', filters.value.month);
+        if (filters.value.year) formData.append('year', filters.value.year);
+
+        // Use fetch with POST method
+        const response = await fetch(route('admin.records.export'), {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        });
+
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+
+            // Set filename based on format
+            const fileName = `billing_records_${new Date().toISOString().split('T')[0]}.${format}`;
+            a.download = fileName;
+
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+
+            Swal.fire({
+                icon: "success",
+                title: "Export Completed",
+                text: `Your ${format.toUpperCase()} file has been downloaded.`,
+                toast: true,
+                position: "top-end",
+                showConfirmButton: false,
+                timer: 3000,
+            });
+        } else {
+            throw new Error('Export failed');
+        }
+
+        exportLoading.value = false;
+
+    } catch (error) {
+        console.error("Export error:", error);
+        Swal.fire({
+            icon: "error",
+            title: "Export Failed",
+            text: "Failed to export records. Please try again.",
+            toast: true,
+            position: "top-end",
+            showConfirmButton: false,
+            timer: 3000,
+        });
+        exportLoading.value = false;
+    }
+};
+
+const printRecords = () => {
+    showExportDropdown.value = false;
+
+    // Calculate totals
+    const totalRecords = props.records.total;
+    const paidRecords = props.records.data.filter(r => r.status === "Paid").length;
+    const pendingRecords = props.records.data.filter(r => r.status === "Pending").length;
+    const overdueRecords = props.records.data.filter(r => r.status === "Overdue").length;
+
+    // Calculate total amounts
+    const totalAmount = props.records.data.reduce((sum, record) => sum + parseFloat(record.amount), 0);
+    const paidAmount = props.records.data
+        .filter(r => r.status === "Paid")
+        .reduce((sum, record) => sum + parseFloat(record.amount), 0);
+    const pendingAmount = props.records.data
+        .filter(r => r.status === "Pending")
+        .reduce((sum, record) => sum + parseFloat(record.amount), 0);
+    const overdueAmount = props.records.data
+        .filter(r => r.status === "Overdue")
+        .reduce((sum, record) => sum + parseFloat(record.amount), 0);
+
+    // Create a print-friendly version of the table
+    const printWindow = window.open("", "_blank");
+    const printContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Billing Records Report</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 10px; }
+                .header h1 { margin: 0; color: #333; }
+                .header .subtitle { color: #666; margin-top: 5px; }
+                .summary { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 5px; }
+                .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; }
+                .summary-item { padding: 10px; background: white; border-radius: 5px; border: 1px solid #ddd; }
+                .summary-value { font-size: 16px; font-weight: bold; color: #333; }
+                table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 12px; }
+                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                th { background-color: #f8f9fa; font-weight: bold; }
+                .status-paid { color: green; font-weight: bold; }
+                .status-pending { color: orange; font-weight: bold; }
+                .status-overdue { color: red; font-weight: bold; }
+                .text-right { text-align: right; }
+                .text-center { text-align: center; }
+                .amount { font-weight: bold; }
+                @media print {
+                    body { margin: 10px; font-size: 12px; }
+                    .no-print { display: none; }
+                    table { font-size: 10px; }
+                    th, td { padding: 6px; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>Water Billing Records Report</h1>
+                <div class="subtitle">Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</div>
+            </div>
+
+            <div class="summary">
+                <strong>Report Summary:</strong>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <div>Total Records: <span class="summary-value">${totalRecords}</span></div>
+                        <div>Paid Records: <span class="summary-value">${paidRecords}</span></div>
+                        <div>Pending Records: <span class="summary-value">${pendingRecords}</span></div>
+                        <div>Overdue Records: <span class="summary-value">${overdueRecords}</span></div>
+                    </div>
+                    <div class="summary-item">
+                        <div>Total Amount: <span class="summary-value">₱${totalAmount.toFixed(2)}</span></div>
+                        <div>Paid Amount: <span class="summary-value">₱${paidAmount.toFixed(2)}</span></div>
+                        <div>Pending Amount: <span class="summary-value">₱${pendingAmount.toFixed(2)}</span></div>
+                        <div>Overdue Amount: <span class="summary-value">₱${overdueAmount.toFixed(2)}</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filters">
+                <strong>Filters Applied:</strong><br>
+                Search: ${filters.value.search || "None"} |
+                Status: ${filters.value.status || "All"} |
+                Month: ${
+                    filters.value.month
+                        ? months.find((m) => m.value === filters.value.month)?.name
+                        : "All"
+                } |
+                Year: ${filters.value.year || "All"}
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Account No.</th>
+                        <th>Customer Name</th>
+                        <th>Zone</th>
+                        <th>Reading Date</th>
+                        <th>Due Date</th>
+                        <th class="text-center">Reading (m³)</th>
+                        <th class="text-center">Consumption (m³)</th>
+                        <th class="text-right">Amount (₱)</th>
+                        <th class="text-center">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${props.records.data
+                        .map(
+                            (record) => `
+                        <tr>
+                            <td>${record.user.account_number || "N/A"}</td>
+                            <td>${record.user.name} ${record.user.lastname}</td>
+                            <td>${record.user.zone || "N/A"}</td>
+                            <td>${formatDate(record.reading_date)}</td>
+                            <td>${formatDate(record.due_date)}</td>
+                            <td class="text-center">${record.reading}</td>
+                            <td class="text-center">${record.consumption}</td>
+                            <td class="text-right amount">₱${parseFloat(record.amount).toFixed(2)}</td>
+                            <td class="text-center status-${record.status.toLowerCase()}">${record.status}</td>
+                        </tr>
+                    `
+                        )
+                        .join("")}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="7" class="text-right" style="font-weight: bold;">Grand Total:</td>
+                        <td class="text-right amount">₱${totalAmount.toFixed(2)}</td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <div class="no-print" style="margin-top: 20px; text-align: center;">
+                <button onclick="window.print()" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 5px;">
+                    Print Report
+                </button>
+                <button onclick="window.close()" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 5px;">
+                    Close Window
+                </button>
+            </div>
+
+            <div style="margin-top: 30px; text-align: center; font-size: 11px; color: #666;">
+                <p>Generated by Water Billing System | ${new Date().toLocaleDateString()}</p>
+            </div>
+        </body>
+        </html>
+    `;
+
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+
+    // Auto-print after content loads
+    printWindow.onload = function () {
+        printWindow.focus();
+        // Auto-print after a short delay to ensure content is rendered
+        setTimeout(() => {
+            printWindow.print();
+        }, 500);
+    };
+};
+
 // Dropdown handlers
 const toggleFilterDropdown = async () => {
     showFilterDropdown.value = !showFilterDropdown.value;
@@ -699,6 +1017,15 @@ const handleClickOutside = (event) => {
     if (!isFilterClick) {
         showFilterDropdown.value = false;
     }
+
+    const isExportClick =
+        exportButton.value?.contains(event.target) ||
+        (showExportDropdown.value &&
+            event.target.closest(".fixed.z-\\[1000\\]"));
+    if (!isExportClick) {
+        showExportDropdown.value = false;
+    }
+
     const actionButtons = document.querySelectorAll("[data-action-button]");
     let isClickInsideActionMenu = false;
     actionButtons.forEach((button) => {

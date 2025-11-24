@@ -1,67 +1,170 @@
 <template>
     <AdminLayout>
-        <div class="mx-auto w-full max-w-7xl">
+        <div class="mx-auto w-full">
             <div
-                class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm h-64"
+                class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden"
             >
-                <!-- Header -->
-                <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+                <!-- Search and Filter Section -->
+                <div class="p-2 border-b border-gray-200 dark:border-gray-700">
                     <div
-                        class="flex flex-col sm:flex-row sm:items-center sm:justify-between"
+                        class="flex flex-col md:flex-row md:items-center justify-between gap-4"
                     >
-                        <div>
-
-                            <p
-                                class="mt-1 text-sm text-gray-600 dark:text-gray-400"
-                            >
-                                Water rates consumption
-                            </p>
+                        <div class="flex items-center px-2 space-x-4">
+                            <h5 class="text-sm font-semibold text-gray-500">
+                                <span class="font-bold text-black">{{
+                                    waterRates.length
+                                }}</span>
+                                Total Water Rates
+                            </h5>
                         </div>
-                        <button
-                            @click="showCreateModal = true"
-                            class="flex items-center px-4 py-2 text-sm font-medium border border-blue-500/20 bg-blue-100/40 text-blue-500 rounded-sm hover:bg-blue-100/80 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 ease-in-out"
+
+                        <div
+                            class="flex flex-col md:flex-row items-center space-x-3"
                         >
-                            <Plus class="w-4 h-4 mr-1" />
-                            Add New Rate
-                        </button>
+                            <div class="w-full md:w-auto">
+                                <div class="relative">
+                                    <div
+                                        class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
+                                    >
+                                        <Search
+                                            class="w-4 h-4 text-gray-900 dark:text-gray-400"
+                                        />
+                                    </div>
+                                    <input
+                                        v-model="filters.search"
+                                        type="text"
+                                        class="block w-full md:w-auto pl-10 text-sm text-gray-900 border border-gray-300 rounded-sm bg-white focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                        placeholder="Search"
+                                        @keyup.enter="fetchRates"
+                                    />
+                                </div>
+                            </div>
+
+                            <button
+                                @click="showCreateModal = true"
+                                type="button"
+                                class="flex items-center px-4 py-2 text-sm font-medium border border-blue-500/20 bg-blue-100/40 text-blue-500 rounded-sm hover:bg-blue-100/80 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 ease-in-out"
+                            >
+                                <Plus class="w-4 h-4 mr-2" />
+                                Add New Rate
+                            </button>
+
+                            <div class="relative">
+                                <button
+                                    @click="toggleFilterDropdown"
+                                    ref="filterButton"
+                                    class="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600"
+                                    type="button"
+                                >
+                                    <Filter class="w-4 h-4 mr-2" />
+                                    Filter
+                                    <ChevronDown class="ml-1 w-4 h-4" />
+                                </button>
+
+                                <div
+                                    v-if="showFilterDropdown"
+                                    class="fixed z-[1000] mt-1 w-56 bg-white rounded-lg shadow-lg border border-gray-200 dark:bg-gray-700 dark:border-gray-600"
+                                    :style="filterDropdownStyle"
+                                    @click.stop
+                                >
+                                    <div class="p-4">
+                                        <h6
+                                            class="mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                                        >
+                                            Status
+                                        </h6>
+                                        <div class="space-y-2">
+                                            <div
+                                                class="flex items-center"
+                                                v-for="statusOption in statusOptions"
+                                                :key="statusOption.value"
+                                            >
+                                                <input
+                                                    :id="`status-${statusOption.value}`"
+                                                    type="radio"
+                                                    name="status"
+                                                    :value="statusOption.value"
+                                                    :checked="
+                                                        filters.status ===
+                                                        statusOption.value
+                                                    "
+                                                    @change="
+                                                        updateStatusFilter(
+                                                            statusOption.value
+                                                        )
+                                                    "
+                                                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
+                                                />
+                                                <label
+                                                    :for="`status-${statusOption.value}`"
+                                                    class="ml-2 text-sm text-gray-700 dark:text-gray-300"
+                                                >
+                                                    {{ statusOption.label }}
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div
+                                        class="flex items-center justify-between p-4 border-t border-gray-200 dark:border-gray-600"
+                                    >
+                                        <button
+                                            @click="resetFilters"
+                                            class="flex items-center text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+                                        >
+                                            <RefreshCw
+                                                class="w-4 h-4 mr-1"
+                                                :class="{
+                                                    'animate-spin': isResetting,
+                                                }"
+                                            />
+                                            Reset
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Rates Table -->
-                <div class="p-2 h-[500px]">
-                    <div
-                        class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700"
-                    >
+                <!-- Table Container with Fixed Height -->
+                <div
+                    class="flex flex-col"
+                    style="height: 613px; min-height: 600px"
+                >
+                    <!-- Table with Scrollable Body -->
+                    <div class="flex-1 overflow-x-auto overflow-y-auto">
                         <table class="w-full">
-                            <thead class="bg-gray-50 dark:bg-gray-700">
+                            <thead
+                                class="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 sticky top-0 z-10"
+                            >
                                 <tr>
                                     <th
-                                        class="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider border-b border-gray-200 dark:border-gray-600"
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
                                     >
-                                        Tier Name
+                                        Tier
                                     </th>
                                     <th
-                                        class="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider border-b border-gray-200 dark:border-gray-600"
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
                                     >
                                         Consumption Range
                                     </th>
                                     <th
-                                        class="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider border-b border-gray-200 dark:border-gray-600"
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
                                     >
                                         Fixed Charge
                                     </th>
                                     <th
-                                        class="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider border-b border-gray-200 dark:border-gray-600"
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
                                     >
                                         Rate per m³
                                     </th>
-                                    <!-- <th
-                                        class="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider border-b border-gray-200 dark:border-gray-600"
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
                                     >
                                         Status
-                                    </th> -->
+                                    </th>
                                     <th
-                                        class="px-6 py-4 text-right text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider border-b border-gray-200 dark:border-gray-600"
+                                        class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
                                     >
                                         Actions
                                     </th>
@@ -71,80 +174,74 @@
                                 class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"
                             >
                                 <tr
-                                    v-for="rate in waterRates"
+                                    v-for="rate in filteredRates"
                                     :key="rate.id"
-                                    class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150"
+                                    class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150"
                                 >
-                                    <td class="px-6 py-4">
-                                        <div
-                                            class="flex items-center space-x-3"
-                                        >
+                                    <td class="px-6 py-3">
+                                        <div class="flex items-center">
                                             <div
-                                                class="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center"
+                                                class="flex-shrink-0 h-8 w-8 mr-3"
                                             >
-                                                <span
-                                                    class="text-xs font-semibold text-white"
-                                                    >{{ rate.order }}</span
+                                                <div
+                                                    class="h-8 w-8 rounded-full flex items-center justify-center text-white font-semibold text-xs"
+                                                    :class="
+                                                        getTierColor(rate.order)
+                                                    "
                                                 >
+                                                    {{ rate.order }}
+                                                </div>
                                             </div>
                                             <div>
                                                 <div
-                                                    class="text-sm font-semibold text-gray-900 dark:text-white"
+                                                    class="font-medium text-gray-900 dark:text-white text-sm"
                                                 >
                                                     {{ rate.name }}
                                                 </div>
                                                 <div
-                                                    class="text-xs text-gray-500 dark:text-gray-400 mt-0.5"
+                                                    class="text-xs text-gray-500 dark:text-gray-400"
                                                 >
                                                     Order: {{ rate.order }}
                                                 </div>
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4">
-                                        <div
-                                            class="text-sm text-gray-900 dark:text-white font-medium"
-                                        >
-                                            {{
-                                                formatNumber(
-                                                    rate.min_consumption
-                                                )
-                                            }}
-                                            -
-                                            {{
-                                                rate.max_consumption !== null
-                                                    ? formatNumber(
-                                                          rate.max_consumption
-                                                      )
-                                                    : "∞"
-                                            }}
-                                            m³
-                                        </div>
+
+                                    <td
+                                        class="px-6 py-3 text-sm text-gray-900 dark:text-white whitespace-nowrap"
+                                    >
+                                        {{ formatNumber(rate.min_consumption) }}
+                                        -
+                                        {{
+                                            rate.max_consumption !== null
+                                                ? formatNumber(
+                                                      rate.max_consumption
+                                                  )
+                                                : "∞"
+                                        }}
+                                        m³
                                     </td>
-                                    <td class="px-6 py-4">
-                                        <div
-                                            class="text-sm font-semibold text-gray-900 dark:text-white"
-                                            v-if="rate.fixed_charge > 0"
-                                        >
+
+                                    <td
+                                        class="px-6 py-3 text-sm text-gray-900 dark:text-white whitespace-nowrap"
+                                    >
+                                        <span v-if="rate.fixed_charge > 0">
                                             ₱{{
                                                 formatNumber(
                                                     rate.fixed_charge,
                                                     2
                                                 )
                                             }}
-                                        </div>
-                                        <div
-                                            class="text-sm text-gray-500 dark:text-gray-400"
-                                            v-else
-                                        >
+                                        </span>
+                                        <span v-else class="text-gray-400">
                                             -
-                                        </div>
+                                        </span>
                                     </td>
-                                    <td class="px-6 py-4">
-                                        <div
-                                            class="text-sm font-semibold text-gray-900 dark:text-white"
-                                            v-if="rate.rate_per_cubic > 0"
-                                        >
+
+                                    <td
+                                        class="px-6 py-3 text-sm text-gray-900 dark:text-white whitespace-nowrap"
+                                    >
+                                        <span v-if="rate.rate_per_cubic > 0">
                                             ₱{{
                                                 formatNumber(
                                                     rate.rate_per_cubic,
@@ -153,31 +250,28 @@
                                             }}
                                             <span
                                                 class="text-xs text-gray-500 font-normal"
-                                                >per m³</span
                                             >
-                                        </div>
-                                        <div
-                                            class="text-sm text-gray-500 dark:text-gray-400"
-                                            v-else
-                                        >
+                                                per m³
+                                            </span>
+                                        </span>
+                                        <span v-else class="text-gray-400">
                                             -
-                                        </div>
+                                        </span>
                                     </td>
-                                    <!-- <td class="px-6 py-4">
+
+                                    <td class="px-6 py-3">
                                         <span
                                             :class="
-                                                rate.is_active
-                                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 border border-green-200 dark:border-green-800'
-                                                    : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 border border-red-200 dark:border-red-800'
+                                                statusClasses(rate.is_active)
                                             "
-                                            class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
+                                            class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium"
                                         >
                                             <span
-                                                class="w-2 h-2 rounded-full mr-2"
+                                                class="w-1.5 h-1.5 rounded-full mr-1.5"
                                                 :class="
                                                     rate.is_active
-                                                        ? 'bg-green-500'
-                                                        : 'bg-red-500'
+                                                        ? 'bg-green-400'
+                                                        : 'bg-red-400'
                                                 "
                                             ></span>
                                             {{
@@ -186,125 +280,88 @@
                                                     : "Inactive"
                                             }}
                                         </span>
-                                    </td> -->
-                                    <td class="px-6 py-4">
+                                    </td>
+
+                                    <td class="px-6 py-3 text-right">
                                         <div class="flex justify-end">
-                                            <!-- Dropdown Menu -->
-                                            <div
-                                                class="relative"
-                                                ref="dropdownContainer"
-                                            >
+                                            <div class="relative">
                                                 <button
                                                     @click="
-                                                        toggleDropdown(rate.id)
+                                                        toggleActionMenu(
+                                                            rate.id
+                                                        )
                                                     "
-                                                    class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors duration-200"
-                                                >
-                                                    <svg
-                                                        class="w-5 h-5"
-                                                        fill="none"
-                                                        stroke="currentColor"
-                                                        viewBox="0 0 24 24"
-                                                    >
-                                                        <path
-                                                            stroke-linecap="round"
-                                                            stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
-                                                        />
-                                                    </svg>
-                                                </button>
-
-                                                <!-- Dropdown Menu -->
-                                                <div
-                                                    v-if="
-                                                        activeDropdown ===
+                                                    class="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-200 dark:hover:text-gray-300 rounded-lg transition-colors"
+                                                    :data-action-button="
                                                         rate.id
                                                     "
-                                                    class="absolute right-0 top-10 z-10 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1"
                                                 >
-                                                    <!-- Edit Option -->
-                                                    <button
-                                                        @click="editRate(rate)"
-                                                        class="flex items-center w-full px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150"
-                                                    >
-                                                        <svg
-                                                            class="w-4 h-4 mr-3 text-blue-500"
-                                                            fill="none"
-                                                            stroke="currentColor"
-                                                            viewBox="0 0 24 24"
-                                                        >
-                                                            <path
-                                                                stroke-linecap="round"
-                                                                stroke-linejoin="round"
-                                                                stroke-width="2"
-                                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                                                            />
-                                                        </svg>
-                                                        Edit
-                                                    </button>
+                                                    <MoreHorizontal
+                                                        class="w-4 h-4"
+                                                    />
+                                                </button>
 
-                                                    <!-- Activate/Deactivate Option -->
-                                                    <!-- <button
-                                                        @click="
-                                                            toggleRateStatus(
-                                                                rate
-                                                            )
-                                                        "
-                                                        :class="
-                                                            rate.is_active
-                                                                ? 'text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20'
-                                                                : 'text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20'
-                                                        "
-                                                        class="flex items-center w-full px-4 py-2.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150"
-                                                    >
-                                                        <svg
-                                                            class="w-4 h-4 mr-3"
-                                                            :class="
-                                                                rate.is_active
-                                                                    ? 'text-orange-500'
-                                                                    : 'text-green-500'
+                                                <div
+                                                    v-if="
+                                                        activeActionMenu ===
+                                                        rate.id
+                                                    "
+                                                    class="fixed z-[1000] mt-1 w-48 bg-white dark:bg-gray-700 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600"
+                                                    :style="
+                                                        getActionDropdownStyle(
+                                                            rate.id
+                                                        )
+                                                    "
+                                                    @click.stop
+                                                >
+                                                    <div class="py-1">
+                                                        <button
+                                                            @click="
+                                                                editRate(rate)
                                                             "
-                                                            fill="none"
-                                                            stroke="currentColor"
-                                                            viewBox="0 0 24 24"
+                                                            class="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                                                         >
-                                                            <path
-                                                                stroke-linecap="round"
-                                                                stroke-linejoin="round"
-                                                                stroke-width="2"
-                                                                d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                                            <Edit
+                                                                class="w-4 h-4 mr-3"
                                                             />
-                                                        </svg>
-                                                        {{
-                                                            rate.is_active
-                                                                ? "Deactivate"
-                                                                : "Activate"
-                                                        }}
-                                                    </button> -->
-
-                                                    <!-- Delete Option -->
-                                                    <button
-                                                        @click="
-                                                            deleteRate(rate)
-                                                        "
-                                                        class="flex items-center w-full px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-150"
-                                                    >
-                                                        <svg
-                                                            class="w-4 h-4 mr-3 text-red-500"
-                                                            fill="none"
-                                                            stroke="currentColor"
-                                                            viewBox="0 0 24 24"
+                                                            Edit
+                                                        </button>
+                                                        <button
+                                                            @click="
+                                                                toggleRateStatus(
+                                                                    rate
+                                                                )
+                                                            "
+                                                            class="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                                                         >
-                                                            <path
-                                                                stroke-linecap="round"
-                                                                stroke-linejoin="round"
-                                                                stroke-width="2"
-                                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                                            <Lock
+                                                                v-if="
+                                                                    rate.is_active
+                                                                "
+                                                                class="w-4 h-4 mr-3"
                                                             />
-                                                        </svg>
-                                                        Delete
-                                                    </button>
+                                                            <Unlock
+                                                                v-else
+                                                                class="w-4 h-4 mr-3"
+                                                            />
+                                                            {{
+                                                                rate.is_active
+                                                                    ? "Deactivate"
+                                                                    : "Activate"
+                                                            }}
+                                                        </button>
+                                                        <button
+                                                            @click="
+                                                                deleteRate(rate)
+                                                            "
+                                                            class="flex items-center w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                                                        >
+                                                            <Trash2
+                                                                class="w-4 h-4 mr-3"
+                                                            />
+                                                            Delete
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -312,7 +369,7 @@
                                 </tr>
 
                                 <!-- Empty State -->
-                                <tr v-if="waterRates.length === 0">
+                                <tr v-if="filteredRates.length === 0">
                                     <td
                                         colspan="6"
                                         class="px-6 py-24 text-center"
@@ -320,56 +377,73 @@
                                         <div
                                             class="flex flex-col items-center justify-center space-y-4"
                                         >
-                                            <div
-                                                class="w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center"
+                                            <FileText
+                                                class="w-20 h-20 text-gray-300"
+                                            />
+                                            <span
+                                                class="text-2xl font-medium text-gray-500 dark:text-gray-400"
+                                                >No water rates found</span
                                             >
-                                                <FileText
-                                                    class="w-10 h-10 text-gray-400"
-                                                />
-                                            </div>
-                                            <div>
-                                                <span
-                                                    class="text-xl font-semibold text-gray-500 dark:text-gray-400 block mb-2"
-                                                >
-                                                    No water rates configured
-                                                </span>
-                                                <span
-                                                    class="text-sm text-gray-400 dark:text-gray-500"
-                                                >
-                                                    Get started by creating your
-                                                    first pricing tier.
-                                                </span>
-                                            </div>
+                                            <span
+                                                class="text-sm text-gray-400 dark:text-gray-500"
+                                            >
+                                                Try adjusting your filters or
+                                                search keywords.
+                                            </span>
                                         </div>
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
+
+                    <!-- Pagination - Fixed at Bottom -->
+                    <div
+                        class="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+                    >
+                        <div
+                            class="px-6 py-3 text-sm text-gray-500 dark:text-gray-400"
+                        >
+                            Showing {{ filteredRates.length }} of
+                            {{ waterRates.length }} rates
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Create/Edit Modal -->
-        <WaterRateModal
-            :show="showCreateModal || showEditModal"
-            :rate="editingRate"
-            :is-editing="showEditModal"
-            @close="closeModal"
-            @saved="handleRateSaved"
-        />
+            <!-- Create/Edit Modal -->
+            <WaterRateModal
+                :show="showCreateModal || showEditModal"
+                :rate="editingRate"
+                :is-editing="showEditModal"
+                @close="closeModal"
+                @saved="handleRateSaved"
+            />
+        </div>
     </AdminLayout>
 </template>
 
 <script setup>
 import AdminLayout from "@/Layouts/AdminLayout.vue";
 import WaterRateModal from "@/Components/Admin/Modals/WaterRateModal.vue";
+import { ref, onMounted, onUnmounted, nextTick, computed } from "vue";
 import { router } from "@inertiajs/vue3";
-import { ref, onMounted, onUnmounted } from "vue";
-import { Plus, FileText } from "lucide-vue-next";
+import { debounce } from "lodash";
 import Swal from "sweetalert2";
+import {
+    Search,
+    Plus,
+    Filter,
+    ChevronDown,
+    RefreshCw,
+    Edit,
+    Lock,
+    Unlock,
+    Trash2,
+    FileText,
+    MoreHorizontal,
+} from "lucide-vue-next";
 
-// Props
 const props = defineProps({
     waterRates: {
         type: Array,
@@ -377,14 +451,158 @@ const props = defineProps({
     },
 });
 
-// Reactive data
+// Reactive state
+const filters = ref({
+    search: "",
+    status: "",
+});
+
 const showCreateModal = ref(false);
 const showEditModal = ref(false);
+const showFilterDropdown = ref(false);
+const isResetting = ref(false);
+const activeActionMenu = ref(null);
+const filterDropdownStyle = ref({});
+const filterButton = ref(null);
 const editingRate = ref(null);
-const activeDropdown = ref(null);
-const dropdownContainer = ref(null);
 
-// Format number with commas and decimals
+// Constants
+const statusOptions = [
+    { value: "", label: "All Status" },
+    { value: "1", label: "Active" },
+    { value: "0", label: "Inactive" },
+];
+
+const tierColors = [
+    "bg-blue-500",
+    "bg-green-500",
+    "bg-purple-500",
+    "bg-pink-500",
+    "bg-indigo-500",
+    "bg-yellow-500",
+    "bg-red-500",
+    "bg-teal-500",
+    "bg-orange-500",
+];
+
+// Computed
+const filteredRates = computed(() => {
+    let filtered = [...props.waterRates];
+
+    // Apply search filter
+    if (filters.value.search) {
+        const searchTerm = filters.value.search.toLowerCase();
+        filtered = filtered.filter(
+            (rate) =>
+                rate.name.toLowerCase().includes(searchTerm) ||
+                rate.order.toString().includes(searchTerm)
+        );
+    }
+
+    // Apply status filter
+    if (filters.value.status !== "") {
+        const statusBool = filters.value.status === "1";
+        filtered = filtered.filter((rate) => rate.is_active === statusBool);
+    }
+
+    return filtered;
+});
+
+// Dropdown handlers
+const toggleFilterDropdown = async () => {
+    showFilterDropdown.value = !showFilterDropdown.value;
+
+    if (showFilterDropdown.value && filterButton.value) {
+        await nextTick();
+        const rect = filterButton.value.getBoundingClientRect();
+        const dropdownWidth = 224;
+
+        filterDropdownStyle.value = {
+            left: `${rect.right - dropdownWidth}px`,
+            top: `${rect.bottom + 8}px`,
+            position: "fixed",
+        };
+    }
+};
+
+const getActionDropdownStyle = (rateId) => {
+    if (typeof window === "undefined") return {};
+
+    const button = document.querySelector(`[data-action-button="${rateId}"]`);
+    if (!button) return {};
+
+    const rect = button.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    const spaceBelow = viewportHeight - rect.bottom;
+    const dropdownHeight = 176;
+
+    let top = rect.bottom + 4;
+
+    if (spaceBelow < dropdownHeight && rect.top > dropdownHeight) {
+        top = rect.top - dropdownHeight - 4;
+    }
+
+    return {
+        left: `${rect.right - 192}px`,
+        top: `${top}px`,
+    };
+};
+
+const toggleActionMenu = async (rateId) => {
+    if (activeActionMenu.value === rateId) {
+        activeActionMenu.value = null;
+    } else {
+        activeActionMenu.value = rateId;
+        await nextTick();
+    }
+};
+
+// Click outside handler
+const handleClickOutside = (event) => {
+    const isFilterClick =
+        filterButton.value?.contains(event.target) ||
+        (showFilterDropdown.value &&
+            event.target.closest(".fixed.z-\\[1000\\]"));
+
+    if (!isFilterClick) {
+        showFilterDropdown.value = false;
+    }
+
+    const actionButtons = document.querySelectorAll("[data-action-button]");
+    let isClickInsideActionMenu = false;
+
+    actionButtons.forEach((button) => {
+        if (button.contains(event.target)) {
+            isClickInsideActionMenu = true;
+        }
+    });
+
+    const actionDropdowns = document.querySelectorAll(".fixed.z-\\[1000\\]");
+    actionDropdowns.forEach((dropdown) => {
+        if (dropdown.contains(event.target)) {
+            isClickInsideActionMenu = true;
+        }
+    });
+
+    if (!isClickInsideActionMenu) {
+        activeActionMenu.value = null;
+    }
+};
+
+onMounted(() => {
+    document.addEventListener("click", handleClickOutside);
+});
+
+onUnmounted(() => {
+    document.removeEventListener("click", handleClickOutside);
+});
+
+// Filter methods
+const updateStatusFilter = (status) => {
+    filters.value.status = status;
+};
+
+// Utility methods
 const formatNumber = (number, decimals = 0) => {
     return parseFloat(number).toLocaleString("en-US", {
         minimumFractionDigits: decimals,
@@ -392,30 +610,17 @@ const formatNumber = (number, decimals = 0) => {
     });
 };
 
-// Dropdown methods
-const toggleDropdown = (rateId) => {
-    activeDropdown.value = activeDropdown.value === rateId ? null : rateId;
+const getTierColor = (order) => {
+    if (!order) return "bg-gray-400";
+    const index = (order - 1) % tierColors.length;
+    return tierColors[index];
 };
 
-const closeDropdown = () => {
-    activeDropdown.value = null;
-};
-
-// Close dropdown when clicking outside
-const handleClickOutside = (event) => {
-    if (
-        dropdownContainer.value &&
-        !dropdownContainer.value.contains(event.target)
-    ) {
-        closeDropdown();
-    }
-};
-
-// Methods
+// Rate actions - KEEPING ALL ORIGINAL FUNCTIONALITY
 const editRate = (rate) => {
     editingRate.value = { ...rate };
     showEditModal.value = true;
-    closeDropdown();
+    activeActionMenu.value = null;
 };
 
 const closeModal = () => {
@@ -430,7 +635,7 @@ const handleRateSaved = () => {
 };
 
 const toggleRateStatus = async (rate) => {
-    closeDropdown();
+    activeActionMenu.value = null;
 
     const result = await Swal.fire({
         title: `${rate.is_active ? "Deactivate" : "Activate"} Rate?`,
@@ -486,7 +691,7 @@ const toggleRateStatus = async (rate) => {
 };
 
 const deleteRate = async (rate) => {
-    closeDropdown();
+    activeActionMenu.value = null;
 
     const result = await Swal.fire({
         title: "Delete Rate?",
@@ -533,12 +738,40 @@ const refreshRates = () => {
     router.reload({ only: ["waterRates"] });
 };
 
-// Event listeners
-onMounted(() => {
-    document.addEventListener("click", handleClickOutside);
-});
+const resetFilters = () => {
+    isResetting.value = true;
+    setTimeout(() => {
+        filters.value = {
+            search: "",
+            status: "",
+        };
+        showFilterDropdown.value = false;
+        isResetting.value = false;
+    }, 1500);
+};
 
-onUnmounted(() => {
-    document.removeEventListener("click", handleClickOutside);
-});
+// Styling helpers
+const statusClasses = (isActive) => {
+    return {
+        "bg-green-100 border border-green-200 text-green-800 dark:bg-green-900 dark:text-green-200":
+            isActive,
+        "bg-red-100 border border-red-200 text-red-800 dark:bg-red-900 dark:text-red-200":
+            !isActive,
+    };
+};
 </script>
+
+<style scoped>
+.animate-spin {
+    animation: spin 1.5s linear;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+</style>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\MeterReading;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -166,8 +167,27 @@ class AdminRecordController extends Controller
         return $updatedCount;
     }
 
+    /**
+     * Debug method to check user zones
+     */
+    private function debugUserZones()
+    {
+        $zones = User::select('zone')
+            ->whereNotNull('zone')
+            ->distinct()
+            ->pluck('zone')
+            ->toArray();
+
+        Log::info('Available zones in database:', $zones);
+
+        return $zones;
+    }
+
     public function index(Request $request)
     {
+        // Debug: Check available zones
+        $this->debugUserZones();
+
         // Fix missing due dates first
         $fixedDueDates = $this->fixMissingDueDates();
 
@@ -207,6 +227,16 @@ class AdminRecordController extends Controller
             $query->whereYear('reading_date', $request->year);
         }
 
+        // Apply zone filter - Filter by user's zone
+        if ($request->has('zone') && !empty($request->zone)) {
+            $zone = $request->zone;
+            $query->whereHas('user', function ($q) use ($zone) {
+                $q->where('zone', $zone);
+            });
+
+            Log::info("Applying zone filter: {$zone}"); // Debug log
+        }
+
         // Apply sorting
         $sortField = $request->get('sort', 'id');
         $sortDirection = $request->get('direction', 'desc');
@@ -240,10 +270,19 @@ class AdminRecordController extends Controller
 
         $serial_number = Auth::user()->serial_number;
 
+        // Debug logging
+        Log::info("Records query executed", [
+            'total_records' => $records->total(),
+            'filters' => $request->all(),
+            'zone_filter' => $request->zone ?? 'none',
+            'current_page' => $records->currentPage(),
+            'per_page' => $records->perPage()
+        ]);
+
         return Inertia::render('Admin/Records', [
             'serial_number' => $serial_number,
             'records' => $records,
-            'filters' => $request->only(['search', 'status', 'month', 'year', 'perPage']),
+            'filters' => $request->only(['search', 'status', 'month', 'year', 'zone', 'perPage']),
             'sortField' => $sortField,
             'sortDirection' => $sortDirection,
         ]);
@@ -372,74 +411,82 @@ class AdminRecordController extends Controller
      * Export records in multiple formats
      */
     public function export(Request $request)
-{
-    try {
-        // Fix missing due dates first
-        $this->fixMissingDueDates();
+    {
+        try {
+            // Fix missing due dates first
+            $this->fixMissingDueDates();
 
-        // Auto-update overdue records
-        $this->autoUpdateOverdueRecords();
+            // Auto-update overdue records
+            $this->autoUpdateOverdueRecords();
 
-        // Handle both GET and POST parameters
-        $search = $request->get('search', $request->search);
-        $status = $request->get('status', $request->status);
-        $month = $request->get('month', $request->month);
-        $year = $request->get('year', $request->year);
-        $format = $request->get('format', $request->format ?? 'csv');
+            // Handle both GET and POST parameters
+            $search = $request->get('search', $request->search);
+            $status = $request->get('status', $request->status);
+            $month = $request->get('month', $request->month);
+            $year = $request->get('year', $request->year);
+            $zone = $request->get('zone', $request->zone);
+            $format = $request->get('format', $request->format ?? 'csv');
 
-        // Build the query with relationships
-        $query = MeterReading::with('user');
+            // Build the query with relationships
+            $query = MeterReading::with('user');
 
-        // Apply search filter
-        if (!empty($search)) {
-            $query->whereHas('user', function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('lastname', 'like', "%{$search}%")
-                    ->orWhere('account_number', 'like', "%{$search}%");
-            });
+            // Apply search filter
+            if (!empty($search)) {
+                $query->whereHas('user', function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('lastname', 'like', "%{$search}%")
+                        ->orWhere('account_number', 'like', "%{$search}%");
+                });
+            }
+
+            // Apply status filter
+            if (!empty($status)) {
+                $query->where('status', $status);
+            }
+
+            // Apply month filter
+            if (!empty($month)) {
+                $query->whereMonth('reading_date', $month);
+            }
+
+            // Apply year filter
+            if (!empty($year)) {
+                $query->whereYear('reading_date', $year);
+            }
+
+            // Apply zone filter
+            if (!empty($zone)) {
+                $query->whereHas('user', function ($q) use ($zone) {
+                    $q->where('zone', $zone);
+                });
+            }
+
+            // Get all records (no pagination for export)
+            $records = $query->orderBy('reading_date', 'desc')->get();
+
+            // Rest of your export code remains the same...
+            switch ($format) {
+                case 'excel':
+                    return $this->exportExcel($records, $request);
+                case 'pdf':
+                    return $this->exportPdf($records, $request);
+                case 'csv':
+                default:
+                    return $this->exportCsv($records, $request);
+            }
+        } catch (\Exception $e) {
+            Log::error('Export failed: ' . $e->getMessage());
+
+            if ($request->ajax() || $request->expectsJson()) {
+                return response()->json([
+                    'error' => 'Export failed: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->back()
+                ->with('error', 'Export failed: ' . $e->getMessage());
         }
-
-        // Apply status filter
-        if (!empty($status)) {
-            $query->where('status', $status);
-        }
-
-        // Apply month filter
-        if (!empty($month)) {
-            $query->whereMonth('reading_date', $month);
-        }
-
-        // Apply year filter
-        if (!empty($year)) {
-            $query->whereYear('reading_date', $year);
-        }
-
-        // Get all records (no pagination for export)
-        $records = $query->orderBy('reading_date', 'desc')->get();
-
-        // Rest of your export code remains the same...
-        switch ($format) {
-            case 'excel':
-                return $this->exportExcel($records, $request);
-            case 'pdf':
-                return $this->exportPdf($records, $request);
-            case 'csv':
-            default:
-                return $this->exportCsv($records, $request);
-        }
-    } catch (\Exception $e) {
-        Log::error('Export failed: ' . $e->getMessage());
-
-        if ($request->ajax() || $request->expectsJson()) {
-            return response()->json([
-                'error' => 'Export failed: ' . $e->getMessage()
-            ], 500);
-        }
-
-        return redirect()->back()
-            ->with('error', 'Export failed: ' . $e->getMessage());
     }
-}
 
     /**
      * Export records as CSV

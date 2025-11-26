@@ -1,22 +1,18 @@
+//Pages/Admin/Records.vue
 <template>
     <AdminLayout>
         <div class="mx-auto w-full">
-            <div
-                class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden"
-            >
+            <div class="bg-white border border-gray-200 overflow-hidden">
                 <!-- Search and Filter Section -->
-                <div class="p-2 border-b border-gray-200 dark:border-gray-700">
+                <div class="p-2 border-b border-gray-200">
                     <div
                         class="flex flex-col md:flex-row md:items-center justify-between gap-4"
                     >
                         <div class="flex items-center px-2 space-x-4">
-                            <h5
-                                class="text-sm font-semibold text-gray-500 dark:text-gray-400"
-                            >
-                                <span
-                                    class="font-bold text-black dark:text-white"
-                                    >{{ records.total || 0 }}</span
-                                >
+                            <h5 class="text-sm font-semibold text-gray-500">
+                                <span class="font-bold text-black">{{
+                                    records.total || 0
+                                }}</span>
                                 Total Records
                             </h5>
                         </div>
@@ -29,14 +25,12 @@
                                     <div
                                         class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
                                     >
-                                        <Search
-                                            class="w-4 h-4 text-gray-900 dark:text-gray-400"
-                                        />
+                                        <Search class="w-4 h-4 text-gray-900" />
                                     </div>
                                     <input
                                         v-model="filters.search"
                                         type="text"
-                                        class="block w-full md:w-auto pl-10 text-sm text-gray-900 border border-gray-300 rounded-sm bg-white focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                        class="block w-full md:w-auto pl-10 text-sm text-gray-900 border border-gray-300 rounded-sm bg-white focus:ring-blue-500 focus:border-blue-500"
                                         placeholder="Search customers, account numbers..."
                                         @keyup.enter="getRecords"
                                     />
@@ -49,7 +43,7 @@
                                     @click="toggleExportDropdown"
                                     ref="exportButton"
                                     :disabled="exportLoading"
-                                    class="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    class="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                                     type="button"
                                 >
                                     <Download
@@ -69,35 +63,35 @@
                                 <!-- Export Options Dropdown -->
                                 <div
                                     v-if="showExportDropdown"
-                                    class="fixed z-[1000] mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 dark:bg-gray-700 dark:border-gray-600"
+                                    class="fixed z-[1000] mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200"
                                     :style="exportDropdownStyle"
                                     @click.stop
                                 >
                                     <div class="py-1">
                                         <button
                                             @click="exportRecords('csv')"
-                                            class="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                                            class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                                         >
                                             <FileText class="w-4 h-4 mr-3" />
                                             Export as CSV
                                         </button>
                                         <button
                                             @click="exportRecords('excel')"
-                                            class="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                                            class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                                         >
                                             <FileText class="w-4 h-4 mr-3" />
                                             Export as Excel
                                         </button>
                                         <button
                                             @click="exportRecords('pdf')"
-                                            class="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                                            class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                                         >
                                             <FileText class="w-4 h-4 mr-3" />
                                             Export as PDF
                                         </button>
                                         <button
                                             @click="printRecords"
-                                            class="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                                            class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                                         >
                                             <Printer class="w-4 h-4 mr-3" />
                                             Print Records
@@ -111,7 +105,7 @@
                                 <button
                                     @click="toggleFilterDropdown"
                                     ref="filterButton"
-                                    class="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600"
+                                    class="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     type="button"
                                 >
                                     <Filter class="w-4 h-4 mr-2" />
@@ -121,13 +115,13 @@
 
                                 <div
                                     v-if="showFilterDropdown"
-                                    class="fixed z-[1000] mt-1 w-56 bg-white rounded-lg shadow-lg border border-gray-200 dark:bg-gray-700 dark:border-gray-600"
+                                    class="fixed z-[1000] mt-1 w-64 bg-white rounded-lg shadow-lg border border-gray-200"
                                     :style="filterDropdownStyle"
                                     @click.stop
                                 >
                                     <div class="p-4">
                                         <h6
-                                            class="mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                                            class="mb-2 text-sm font-medium text-gray-900"
                                         >
                                             Status
                                         </h6>
@@ -151,31 +145,70 @@
                                                             statusOption.value
                                                         )
                                                     "
-                                                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
+                                                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500"
                                                 />
                                                 <label
                                                     :for="`status-${statusOption.value}`"
-                                                    class="ml-2 text-sm text-gray-700 dark:text-gray-300"
+                                                    class="ml-2 text-sm text-gray-700"
                                                 >
                                                     {{ statusOption.label }}
                                                 </label>
                                             </div>
                                         </div>
 
+                                        <!-- Zone Filter -->
                                         <h6
-                                            class="mb-2 mt-4 text-sm font-medium text-gray-900 dark:text-white"
+                                            class="mb-2 mt-4 text-sm font-medium text-gray-900"
+                                        >
+                                            Zone
+                                        </h6>
+                                        <div
+                                            class="space-y-2 max-h-32 overflow-y-auto"
+                                        >
+                                            <div
+                                                class="flex items-center"
+                                                v-for="zoneOption in zoneOptions"
+                                                :key="zoneOption.value"
+                                            >
+                                                <input
+                                                    :id="`zone-${zoneOption.value}`"
+                                                    type="radio"
+                                                    name="zone"
+                                                    :value="zoneOption.value"
+                                                    :checked="
+                                                        filters.zone ===
+                                                        zoneOption.value
+                                                    "
+                                                    @change="
+                                                        updateZoneFilter(
+                                                            zoneOption.value
+                                                        )
+                                                    "
+                                                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500"
+                                                />
+                                                <label
+                                                    :for="`zone-${zoneOption.value}`"
+                                                    class="ml-2 text-sm text-gray-700"
+                                                >
+                                                    {{ zoneOption.label }}
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <h6
+                                            class="mb-2 mt-4 text-sm font-medium text-gray-900"
                                         >
                                             Date Range
                                         </h6>
                                         <div class="grid grid-cols-2 gap-2">
                                             <div>
                                                 <label
-                                                    class="text-xs text-gray-600 dark:text-gray-400"
+                                                    class="text-xs text-gray-600"
                                                     >Month</label
                                                 >
                                                 <select
                                                     v-model="filters.month"
-                                                    class="w-full p-2 text-xs text-gray-900 border border-gray-300 rounded bg-white focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:text-white"
+                                                    class="w-full p-2 text-xs text-gray-900 border border-gray-300 rounded bg-white focus:ring-blue-500 focus:border-blue-500"
                                                 >
                                                     <option value="">
                                                         All Months
@@ -191,12 +224,12 @@
                                             </div>
                                             <div>
                                                 <label
-                                                    class="text-xs text-gray-600 dark:text-gray-400"
+                                                    class="text-xs text-gray-600"
                                                     >Year</label
                                                 >
                                                 <select
                                                     v-model="filters.year"
-                                                    class="w-full p-2 text-xs text-gray-900 border border-gray-300 rounded bg-white focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:text-white"
+                                                    class="w-full p-2 text-xs text-gray-900 border border-gray-300 rounded bg-white focus:ring-blue-500 focus:border-blue-500"
                                                 >
                                                     <option value="">
                                                         All Years
@@ -213,11 +246,11 @@
                                         </div>
                                     </div>
                                     <div
-                                        class="flex items-center justify-between p-4 border-t border-gray-200 dark:border-gray-600"
+                                        class="flex items-center justify-between p-4 border-t border-gray-200"
                                     >
                                         <button
                                             @click="resetFilters"
-                                            class="flex items-center text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+                                            class="flex items-center text-sm text-gray-600 hover:text-gray-800"
                                         >
                                             <RefreshCw
                                                 class="w-4 h-4 mr-1"
@@ -243,53 +276,51 @@
                     <div class="flex-1 overflow-x-auto overflow-y-auto">
                         <table class="w-full">
                             <thead
-                                class="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 sticky top-0 z-10"
+                                class="bg-gray-50 border-b border-gray-200 sticky top-0 z-10"
                             >
                                 <tr>
                                     <th
-                                        class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                        class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                                     >
                                         Customer
                                     </th>
                                     <th
-                                        class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                        class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                                     >
                                         Account Details
                                     </th>
                                     <th
-                                        class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                        class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                                     >
                                         Reading
                                     </th>
                                     <th
-                                        class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                        class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                                     >
                                         Amount
                                     </th>
                                     <th
-                                        class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                        class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                                     >
                                         Due Date
                                     </th>
                                     <th
-                                        class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                        class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                                     >
                                         Status
                                     </th>
                                     <th
-                                        class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                        class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
                                     >
                                         Actions
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody
-                                class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"
-                            >
+                            <tbody class="bg-white divide-y divide-gray-200">
                                 <tr
                                     v-for="record in records.data"
                                     :key="record.id"
-                                    class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150"
+                                    class="hover:bg-gray-50 transition-colors duration-150"
                                 >
                                     <!-- Customer Column -->
                                     <td class="px-6 py-2">
@@ -325,48 +356,46 @@
                                             </div>
                                             <div>
                                                 <div
-                                                    class="font-medium text-gray-900 dark:text-white text-xs"
+                                                    class="font-medium text-gray-900 text-xs"
                                                 >
                                                     {{ record.user.name }}
                                                     {{ record.user.lastname }}
                                                 </div>
                                                 <div
-                                                    class="text-xs text-gray-500 dark:text-gray-400"
+                                                    class="text-xs text-gray-500"
                                                 >
                                                     {{ record.user.email }}
+                                                </div>
+                                                <div
+                                                    v-if="record.user.zone"
+                                                    class="text-xs text-blue-600 font-medium mt-1"
+                                                >
+                                                    Zone {{ record.user.zone }}
                                                 </div>
                                             </div>
                                         </div>
                                     </td>
 
                                     <!-- Account Details -->
-                                    <td
-                                        class="px-6 py-2 text-xs text-gray-900 dark:text-white"
-                                    >
+                                    <td class="px-6 py-2 text-xs text-gray-900">
                                         <div class="font-medium">
                                             {{
                                                 record.user.account_number ||
                                                 "N/A"
                                             }}
                                         </div>
-                                        <div
-                                            class="text-gray-500 dark:text-gray-400"
-                                        >
+                                        <div class="text-gray-500">
                                             Serial:
                                             {{ record.user.serial_number }}
                                         </div>
                                     </td>
 
                                     <!-- Reading Data -->
-                                    <td
-                                        class="px-6 py-2 text-xs text-gray-900 dark:text-white"
-                                    >
+                                    <td class="px-6 py-2 text-xs text-gray-900">
                                         <div class="font-medium">
                                             {{ record.reading }} m³
                                         </div>
-                                        <div
-                                            class="text-gray-500 dark:text-gray-400"
-                                        >
+                                        <div class="text-gray-500">
                                             Consumption:
                                             {{ record.consumption }} m³
                                         </div>
@@ -377,7 +406,7 @@
                                         <div class="text-xs">
                                             <div
                                                 v-if="record.status === 'Paid'"
-                                                class="font-medium text-green-600 dark:text-green-400"
+                                                class="font-medium text-green-600"
                                             >
                                                 ₱{{ record.amount }}
                                             </div>
@@ -396,20 +425,18 @@
                                                     }}
                                                 </div>
                                                 <div
-                                                    class="font-medium text-red-600 dark:text-red-400"
+                                                    class="font-medium text-red-600"
                                                 >
                                                     ₱{{ record.amount }}
                                                 </div>
-                                                <div
-                                                    class="text-red-600 dark:text-red-400"
-                                                >
+                                                <div class="text-red-600">
                                                     +₱{{ record.surcharge }}
                                                     surcharge
                                                 </div>
                                             </div>
                                             <div
                                                 v-else
-                                                class="font-medium text-gray-900 dark:text-white"
+                                                class="font-medium text-gray-900"
                                             >
                                                 ₱{{ record.amount }}
                                             </div>
@@ -417,15 +444,11 @@
                                     </td>
 
                                     <!-- Due Date -->
-                                    <td
-                                        class="px-6 py-2 text-xs text-gray-900 dark:text-white"
-                                    >
+                                    <td class="px-6 py-2 text-xs text-gray-900">
                                         <div>
                                             {{ formatDate(record.due_date) }}
                                         </div>
-                                        <div
-                                            class="text-gray-500 dark:text-gray-400"
-                                        >
+                                        <div class="text-gray-500">
                                             {{
                                                 getDaysUntilDue(record.due_date)
                                             }}
@@ -462,7 +485,7 @@
                                                             record.id
                                                         )
                                                     "
-                                                    class="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-200 dark:hover:text-gray-300 rounded-lg transition-colors"
+                                                    class="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded-lg transition-colors"
                                                     :data-action-button="
                                                         record.id
                                                     "
@@ -478,7 +501,7 @@
                                                         activeActionMenu ===
                                                         record.id
                                                     "
-                                                    class="fixed z-[1000] mt-1 w-48 bg-white dark:bg-gray-700 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600"
+                                                    class="fixed z-[1000] mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200"
                                                     :style="
                                                         getActionDropdownStyle(
                                                             record.id
@@ -492,7 +515,7 @@
                                                                     record
                                                                 )
                                                             "
-                                                            class="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                                                            class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                                                         >
                                                             <Eye
                                                                 class="w-4 h-4 mr-3"
@@ -505,7 +528,7 @@
                                                                     record
                                                                 )
                                                             "
-                                                            class="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                                                            class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                                                         >
                                                             <Edit
                                                                 class="w-4 h-4 mr-3"
@@ -523,7 +546,7 @@
                                                                     'Paid'
                                                                 )
                                                             "
-                                                            class="flex items-center w-full px-4 py-2 text-sm text-green-600 dark:text-green-400 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                                                            class="flex items-center w-full px-4 py-2 text-sm text-green-600 hover:bg-gray-100 transition-colors"
                                                         >
                                                             <CheckCircle
                                                                 class="w-4 h-4 mr-3"
@@ -541,7 +564,7 @@
                                                                     'Pending'
                                                                 )
                                                             "
-                                                            class="flex items-center w-full px-4 py-2 text-sm text-yellow-600 dark:text-yellow-400 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                                                            class="flex items-center w-full px-4 py-2 text-sm text-yellow-600 hover:bg-gray-100 transition-colors"
                                                         >
                                                             <Clock
                                                                 class="w-4 h-4 mr-3"
@@ -568,13 +591,11 @@
                                                 class="w-20 h-20 text-gray-300"
                                             />
                                             <span
-                                                class="text-2xl font-medium text-gray-500 dark:text-gray-400"
+                                                class="text-2xl font-medium text-gray-500"
                                             >
                                                 No records found
                                             </span>
-                                            <span
-                                                class="text-sm text-gray-400 dark:text-gray-500"
-                                            >
+                                            <span class="text-sm text-gray-400">
                                                 Try adjusting your filters or
                                                 search keywords.
                                             </span>
@@ -587,7 +608,7 @@
 
                     <!-- Pagination - Fixed at Bottom -->
                     <div
-                        class="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+                        class="flex-shrink-0 border-t border-gray-200 bg-white"
                     >
                         <Pagination :data="records" />
                     </div>
@@ -662,14 +683,18 @@ const loadingRecord = ref(false);
 const showEditRecordModal = ref(false);
 const exportLoading = ref(false);
 
-// Local filters
+// Local filters - initialize from props but don't trigger immediate watch
 const filters = ref({
     search: props.filters.search || "",
     status: props.filters.status || "",
     month: props.filters.month || "",
     year: props.filters.year || "",
+    zone: props.filters.zone || "",
     perPage: props.filters.perPage || 10,
 });
+
+// Track if component is mounted to prevent initial automatic calls
+const isMounted = ref(false);
 
 // Constants
 const statusOptions = [
@@ -677,6 +702,22 @@ const statusOptions = [
     { value: "Paid", label: "Paid" },
     { value: "Pending", label: "Pending" },
     { value: "Overdue", label: "Overdue" },
+];
+
+const zoneOptions = [
+    { value: "", label: "All Zones" },
+    { value: "Zone 1", label: "Zone 1" },
+    { value: "Zone 2", label: "Zone 2" },
+    { value: "Zone 3", label: "Zone 3" },
+    { value: "Zone 4", label: "Zone 4" },
+    { value: "Zone 5", label: "Zone 5" },
+    { value: "Zone 6", label: "Zone 6" },
+    { value: "Zone 7", label: "Zone 7" },
+    { value: "Zone 8", label: "Zone 8" },
+    { value: "Zone 9", label: "Zone 9" },
+    { value: "Zone 10", label: "Zone 10" },
+    { value: "Zone 11", label: "Zone 11" },
+    { value: "Zone 12", label: "Zone 12" },
 ];
 
 const months = [
@@ -741,33 +782,40 @@ const exportRecords = async (format) => {
 
         // Create form data with filters
         const formData = new FormData();
-        formData.append('format', format);
+        formData.append("format", format);
 
         // Add filters
-        if (filters.value.search) formData.append('search', filters.value.search);
-        if (filters.value.status) formData.append('status', filters.value.status);
-        if (filters.value.month) formData.append('month', filters.value.month);
-        if (filters.value.year) formData.append('year', filters.value.year);
+        if (filters.value.search)
+            formData.append("search", filters.value.search);
+        if (filters.value.status)
+            formData.append("status", filters.value.status);
+        if (filters.value.month) formData.append("month", filters.value.month);
+        if (filters.value.year) formData.append("year", filters.value.year);
+        if (filters.value.zone) formData.append("zone", filters.value.zone);
 
         // Use fetch with POST method
-        const response = await fetch(route('admin.records.export'), {
-            method: 'POST',
+        const response = await fetch(route("admin.records.export"), {
+            method: "POST",
             body: formData,
             headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            }
+                "X-Requested-With": "XMLHttpRequest",
+                "X-CSRF-TOKEN": document
+                    .querySelector('meta[name="csrf-token"]')
+                    .getAttribute("content"),
+            },
         });
 
         if (response.ok) {
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.style.display = 'none';
+            const a = document.createElement("a");
+            a.style.display = "none";
             a.href = url;
 
             // Set filename based on format
-            const fileName = `billing_records_${new Date().toISOString().split('T')[0]}.${format}`;
+            const fileName = `billing_records_${
+                new Date().toISOString().split("T")[0]
+            }.${format}`;
             a.download = fileName;
 
             document.body.appendChild(a);
@@ -785,11 +833,10 @@ const exportRecords = async (format) => {
                 timer: 3000,
             });
         } else {
-            throw new Error('Export failed');
+            throw new Error("Export failed");
         }
 
         exportLoading.value = false;
-
     } catch (error) {
         console.error("Export error:", error);
         Swal.fire({
@@ -810,20 +857,29 @@ const printRecords = () => {
 
     // Calculate totals
     const totalRecords = props.records.total;
-    const paidRecords = props.records.data.filter(r => r.status === "Paid").length;
-    const pendingRecords = props.records.data.filter(r => r.status === "Pending").length;
-    const overdueRecords = props.records.data.filter(r => r.status === "Overdue").length;
+    const paidRecords = props.records.data.filter(
+        (r) => r.status === "Paid"
+    ).length;
+    const pendingRecords = props.records.data.filter(
+        (r) => r.status === "Pending"
+    ).length;
+    const overdueRecords = props.records.data.filter(
+        (r) => r.status === "Overdue"
+    ).length;
 
     // Calculate total amounts
-    const totalAmount = props.records.data.reduce((sum, record) => sum + parseFloat(record.amount), 0);
+    const totalAmount = props.records.data.reduce(
+        (sum, record) => sum + parseFloat(record.amount),
+        0
+    );
     const paidAmount = props.records.data
-        .filter(r => r.status === "Paid")
+        .filter((r) => r.status === "Paid")
         .reduce((sum, record) => sum + parseFloat(record.amount), 0);
     const pendingAmount = props.records.data
-        .filter(r => r.status === "Pending")
+        .filter((r) => r.status === "Pending")
         .reduce((sum, record) => sum + parseFloat(record.amount), 0);
     const overdueAmount = props.records.data
-        .filter(r => r.status === "Overdue")
+        .filter((r) => r.status === "Overdue")
         .reduce((sum, record) => sum + parseFloat(record.amount), 0);
 
     // Create a print-friendly version of the table
@@ -875,10 +931,18 @@ const printRecords = () => {
                         <div>Overdue Records: <span class="summary-value">${overdueRecords}</span></div>
                     </div>
                     <div class="summary-item">
-                        <div>Total Amount: <span class="summary-value">₱${totalAmount.toFixed(2)}</span></div>
-                        <div>Paid Amount: <span class="summary-value">₱${paidAmount.toFixed(2)}</span></div>
-                        <div>Pending Amount: <span class="summary-value">₱${pendingAmount.toFixed(2)}</span></div>
-                        <div>Overdue Amount: <span class="summary-value">₱${overdueAmount.toFixed(2)}</span></div>
+                        <div>Total Amount: <span class="summary-value">₱${totalAmount.toFixed(
+                            2
+                        )}</span></div>
+                        <div>Paid Amount: <span class="summary-value">₱${paidAmount.toFixed(
+                            2
+                        )}</span></div>
+                        <div>Pending Amount: <span class="summary-value">₱${pendingAmount.toFixed(
+                            2
+                        )}</span></div>
+                        <div>Overdue Amount: <span class="summary-value">₱${overdueAmount.toFixed(
+                            2
+                        )}</span></div>
                     </div>
                 </div>
             </div>
@@ -887,9 +951,11 @@ const printRecords = () => {
                 <strong>Filters Applied:</strong><br>
                 Search: ${filters.value.search || "None"} |
                 Status: ${filters.value.status || "All"} |
+                Zone: ${filters.value.zone || "All"} |
                 Month: ${
                     filters.value.month
-                        ? months.find((m) => m.value === filters.value.month)?.name
+                        ? months.find((m) => m.value === filters.value.month)
+                              ?.name
                         : "All"
                 } |
                 Year: ${filters.value.year || "All"}
@@ -921,8 +987,12 @@ const printRecords = () => {
                             <td>${formatDate(record.due_date)}</td>
                             <td class="text-center">${record.reading}</td>
                             <td class="text-center">${record.consumption}</td>
-                            <td class="text-right amount">₱${parseFloat(record.amount).toFixed(2)}</td>
-                            <td class="text-center status-${record.status.toLowerCase()}">${record.status}</td>
+                            <td class="text-right amount">₱${parseFloat(
+                                record.amount
+                            ).toFixed(2)}</td>
+                            <td class="text-center status-${record.status.toLowerCase()}">${
+                                record.status
+                            }</td>
                         </tr>
                     `
                         )
@@ -931,7 +1001,9 @@ const printRecords = () => {
                 <tfoot>
                     <tr>
                         <td colspan="7" class="text-right" style="font-weight: bold;">Grand Total:</td>
-                        <td class="text-right amount">₱${totalAmount.toFixed(2)}</td>
+                        <td class="text-right amount">₱${totalAmount.toFixed(
+                            2
+                        )}</td>
                         <td></td>
                     </tr>
                 </tfoot>
@@ -972,7 +1044,7 @@ const toggleFilterDropdown = async () => {
     if (showFilterDropdown.value && filterButton.value) {
         await nextTick();
         const rect = filterButton.value.getBoundingClientRect();
-        const dropdownWidth = 224;
+        const dropdownWidth = 256;
         filterDropdownStyle.value = {
             left: `${rect.right - dropdownWidth}px`,
             top: `${rect.bottom + 8}px`,
@@ -1006,6 +1078,36 @@ const toggleActionMenu = async (recordId) => {
         activeActionMenu.value = recordId;
         await nextTick();
     }
+};
+
+// Filter methods
+const updateStatusFilter = (status) => {
+    filters.value.status = status;
+    showFilterDropdown.value = false;
+    getRecords();
+};
+
+const updateZoneFilter = (zone) => {
+    filters.value.zone = zone;
+    showFilterDropdown.value = false;
+    getRecords();
+};
+
+const resetFilters = () => {
+    isResetting.value = true;
+    setTimeout(() => {
+        filters.value = {
+            search: "",
+            status: "",
+            month: "",
+            year: "",
+            zone: "",
+            perPage: 10,
+        };
+        showFilterDropdown.value = false;
+        isResetting.value = false;
+        getRecords();
+    }, 500);
 };
 
 // Click outside handler
@@ -1045,6 +1147,7 @@ const handleClickOutside = (event) => {
 };
 
 onMounted(() => {
+    isMounted.value = true;
     document.addEventListener("click", handleClickOutside);
 });
 
@@ -1052,31 +1155,10 @@ onUnmounted(() => {
     document.removeEventListener("click", handleClickOutside);
 });
 
-// Filter methods
-const updateStatusFilter = (status) => {
-    filters.value.status = status;
-    showFilterDropdown.value = false;
-    getRecords();
-};
-
-const resetFilters = () => {
-    isResetting.value = true;
-    setTimeout(() => {
-        filters.value = {
-            search: "",
-            status: "",
-            month: "",
-            year: "",
-            perPage: 10,
-        };
-        showFilterDropdown.value = false;
-        isResetting.value = false;
-        getRecords();
-    }, 500);
-};
-
-// Data fetching with cache busting
+// Data fetching with cache busting - only call when filters change after mount
 const getRecords = () => {
+    if (!isMounted.value) return; // Don't call API until component is mounted
+
     loading.value = true;
 
     // Add cache busting timestamp to prevent browser caching
@@ -1086,13 +1168,15 @@ const getRecords = () => {
         _t: cacheBuster, // Cache busting parameter
     };
 
+    console.log('Sending filters to backend:', params); // Debug log
+
     router.get(route("admin.records.index"), params, {
         preserveState: true,
         replace: true,
         only: ["records", "filters"], // Only update these props
         onSuccess: () => {
             loading.value = false;
-            console.log("Records fetched successfully");
+            console.log("Records fetched successfully with zone filter:", filters.value.zone);
         },
         onError: () => {
             loading.value = false;
@@ -1109,19 +1193,22 @@ const getRecords = () => {
     });
 };
 
-// Watch for filter changes - use immediate: true to trigger on initial load
+// Watch for filter changes - only trigger after component is mounted
 watch(
     () => ({
         search: filters.value.search,
         status: filters.value.status,
         month: filters.value.month,
         year: filters.value.year,
+        zone: filters.value.zone,
         perPage: filters.value.perPage,
     }),
     debounce((newFilters) => {
-        getRecords();
+        if (isMounted.value) {
+            getRecords();
+        }
     }, 300),
-    { deep: true, immediate: true }
+    { deep: true }
 );
 
 const avatarColors = [
@@ -1177,12 +1264,9 @@ const getDaysUntilDue = (dueDate) => {
 // Status styling
 const statusClasses = (status) => {
     return {
-        "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200":
-            status === "Paid",
-        "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200":
-            status === "Pending",
-        "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200":
-            status === "Overdue",
+        "bg-green-100 text-green-800": status === "Paid",
+        "bg-yellow-100 text-yellow-800": status === "Pending",
+        "bg-red-100 text-red-800": status === "Overdue",
     };
 };
 

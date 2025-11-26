@@ -1,3 +1,4 @@
+//Pages/Admin/Reports.vue
 <template>
     <AdminLayout>
         <div class="mx-auto w-full">
@@ -17,20 +18,18 @@
                     class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md pointer-events-auto"
                 >
                     <div
-                        class="bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 mx-4"
+                        class="bg-white rounded-lg shadow-xl border border-gray-200 mx-4"
                     >
                         <!-- Header -->
                         <div
-                            class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700"
+                            class="flex items-center justify-between p-4 border-b border-gray-200"
                         >
-                            <h3
-                                class="text-lg font-semibold text-gray-900 dark:text-white"
-                            >
+                            <h3 class="text-lg font-semibold text-gray-900">
                                 Report Contributors
                             </h3>
                             <button
                                 @click="closeReporterModal"
-                                class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                                class="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-lg hover:bg-gray-100"
                             >
                                 <svg
                                     class="w-5 h-5"
@@ -56,7 +55,7 @@
                                         reporter, index
                                     ) in selectedReportReporters"
                                     :key="index"
-                                    class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                                    class="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
                                 >
                                     <div class="flex items-center space-x-3">
                                         <!-- Avatar -->
@@ -92,7 +91,7 @@
                                         <!-- Name and Type -->
                                         <div>
                                             <div
-                                                class="font-medium text-gray-900 dark:text-white text-sm"
+                                                class="font-medium text-gray-900 text-sm"
                                             >
                                                 {{ reporter.name }}
                                             </div>
@@ -128,7 +127,7 @@
                                             index === 0 &&
                                             selectedReportReporters.length > 1
                                         "
-                                        class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                                        class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
                                     >
                                         Initial Reporter
                                     </span>
@@ -139,22 +138,17 @@
                 </div>
             </div>
 
-            <div
-                class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden"
-            >
+            <div class="bg-white border border-gray-200 overflow-hidden">
                 <!-- Search and Filter Section -->
-                <div class="p-2 border-b border-gray-200 dark:border-gray-700">
+                <div class="p-2 border-b border-gray-200">
                     <div
                         class="flex flex-col md:flex-row md:items-center justify-between gap-4"
                     >
                         <div class="flex items-center px-2 space-x-4">
-                            <h5
-                                class="text-sm font-semibold text-gray-500 dark:text-gray-400"
-                            >
-                                <span
-                                    class="font-bold text-black dark:text-white"
-                                    >{{ reports.total || 0 }}</span
-                                >
+                            <h5 class="text-sm font-semibold text-gray-500">
+                                <span class="font-bold text-black">{{
+                                    reports.total || 0
+                                }}</span>
                                 Total Reports
                             </h5>
                         </div>
@@ -167,14 +161,12 @@
                                     <div
                                         class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
                                     >
-                                        <Search
-                                            class="w-4 h-4 text-gray-900 dark:text-gray-400"
-                                        />
+                                        <Search class="w-4 h-4 text-gray-900" />
                                     </div>
                                     <input
                                         v-model="filters.search"
                                         type="text"
-                                        class="block w-full md:w-auto pl-10 text-sm text-gray-900 border border-gray-300 rounded-sm bg-white focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                        class="block w-full md:w-auto pl-10 text-sm text-gray-900 border border-gray-300 rounded-sm bg-white focus:ring-blue-500 focus:border-blue-500"
                                         placeholder="Search reports, names, issues..."
                                         @keyup.enter="getReports"
                                     />
@@ -186,7 +178,7 @@
                                 <button
                                     @click="toggleFilterDropdown"
                                     ref="filterButton"
-                                    class="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600"
+                                    class="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     type="button"
                                 >
                                     <Filter class="w-4 h-4 mr-2" />
@@ -196,13 +188,13 @@
 
                                 <div
                                     v-if="showFilterDropdown"
-                                    class="fixed z-[1000] mt-1 w-56 bg-white rounded-lg shadow-lg border border-gray-200 dark:bg-gray-700 dark:border-gray-600"
+                                    class="fixed z-[1000] mt-1 w-64 bg-white rounded-lg shadow-lg border border-gray-200"
                                     :style="filterDropdownStyle"
                                     @click.stop
                                 >
                                     <div class="p-4">
                                         <h6
-                                            class="mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                                            class="mb-2 text-sm font-medium text-gray-900"
                                         >
                                             Status
                                         </h6>
@@ -226,11 +218,11 @@
                                                             statusOption.value
                                                         )
                                                     "
-                                                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
+                                                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500"
                                                 />
                                                 <label
                                                     :for="`status-${statusOption.value}`"
-                                                    class="ml-2 text-sm text-gray-700 dark:text-gray-300"
+                                                    class="ml-2 text-sm text-gray-700"
                                                 >
                                                     {{ statusOption.label }}
                                                 </label>
@@ -238,7 +230,7 @@
                                         </div>
 
                                         <h6
-                                            class="mb-2 mt-4 text-sm font-medium text-gray-900 dark:text-white"
+                                            class="mb-2 mt-4 text-sm font-medium text-gray-900"
                                         >
                                             User Type
                                         </h6>
@@ -264,73 +256,62 @@
                                                             userTypeOption.value
                                                         )
                                                     "
-                                                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
+                                                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500"
                                                 />
                                                 <label
                                                     :for="`userType-${userTypeOption.value}`"
-                                                    class="ml-2 text-sm text-gray-700 dark:text-gray-300"
+                                                    class="ml-2 text-sm text-gray-700"
                                                 >
                                                     {{ userTypeOption.label }}
                                                 </label>
                                             </div>
                                         </div>
 
-                                        <!-- Quick Stats Section -->
-                                        <div
-                                            class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600"
+                                        <!-- Zone Filter -->
+                                        <h6
+                                            class="mb-2 mt-4 text-sm font-medium text-gray-900"
                                         >
-                                            <h6
-                                                class="mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                                            >
-                                                Quick Stats
-                                            </h6>
+                                            Zone
+                                        </h6>
+                                        <div
+                                            class="space-y-2 max-h-32 overflow-y-auto"
+                                        >
                                             <div
-                                                class="grid grid-cols-2 gap-2 text-xs"
+                                                class="flex items-center"
+                                                v-for="zoneOption in zoneOptions"
+                                                :key="zoneOption.value"
                                             >
-                                                <div
-                                                    class="flex items-center text-green-600 dark:text-green-400"
+                                                <input
+                                                    :id="`zone-${zoneOption.value}`"
+                                                    type="radio"
+                                                    name="zone"
+                                                    :value="zoneOption.value"
+                                                    :checked="
+                                                        filters.zone ===
+                                                        zoneOption.value
+                                                    "
+                                                    @change="
+                                                        updateZoneFilter(
+                                                            zoneOption.value
+                                                        )
+                                                    "
+                                                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500"
+                                                />
+                                                <label
+                                                    :for="`zone-${zoneOption.value}`"
+                                                    class="ml-2 text-sm text-gray-700"
                                                 >
-                                                    <CheckCircle
-                                                        class="w-3 h-3 mr-1"
-                                                    />
-                                                    {{ resolvedReportsCount }}
-                                                    Resolved
-                                                </div>
-                                                <div
-                                                    class="flex items-center text-blue-600 dark:text-blue-400"
-                                                >
-                                                    <RefreshCw
-                                                        class="w-3 h-3 mr-1"
-                                                    />
-                                                    {{ inProgressReportsCount }}
-                                                    In Progress
-                                                </div>
-                                                <div
-                                                    class="flex items-center text-yellow-600 dark:text-yellow-400"
-                                                >
-                                                    <Clock
-                                                        class="w-3 h-3 mr-1"
-                                                    />
-                                                    {{ pendingReportsCount }}
-                                                    Pending
-                                                </div>
-                                                <div
-                                                    class="flex items-center text-gray-600 dark:text-gray-400"
-                                                >
-                                                    <FileText
-                                                        class="w-3 h-3 mr-1"
-                                                    />
-                                                    {{ reports.total }} Total
-                                                </div>
+                                                    {{ zoneOption.label }}
+                                                </label>
                                             </div>
                                         </div>
                                     </div>
                                     <div
-                                        class="flex items-center justify-between p-4 border-t border-gray-200 dark:border-gray-600"
+                                        class="flex items-center justify-between p-4 border-t border-gray-200"
                                     >
                                         <button
                                             @click="resetFilters"
-                                            class="flex items-center text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+                                            class="flex items-center text-sm text-gray-600 hover:text-gray-800"
                                         >
                                             <RefreshCw
                                                 class="w-4 h-4 mr-1"
@@ -347,7 +328,7 @@
                             <!-- Export Button -->
                             <button
                                 @click="exportReports"
-                                class="flex items-center px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-sm hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800 dark:hover:bg-green-900/30"
+                                class="flex items-center px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-sm hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-green-500"
                             >
                                 <Download class="w-4 h-4 mr-2" />
                                 Export
@@ -365,58 +346,56 @@
                     <div class="flex-1 overflow-x-auto overflow-y-auto">
                         <table class="w-full">
                             <thead
-                                class="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 sticky top-0 z-10"
+                                class="bg-gray-50 border-b border-gray-200 sticky top-0 z-10"
                             >
                                 <tr>
                                     <th
-                                        class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                        class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                                     >
                                         Reporter
                                     </th>
                                     <th
-                                        class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                        class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                                     >
                                         User Type
                                     </th>
                                     <th
-                                        class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                        class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                                     >
                                         Location
                                     </th>
                                     <th
-                                        class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                        class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                                     >
                                         Issue Type
                                     </th>
                                     <th
-                                        class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                        class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                                     >
                                         Priority
                                     </th>
                                     <th
-                                        class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                        class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                                     >
                                         Status
                                     </th>
                                     <th
-                                        class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                        class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                                     >
                                         Date
                                     </th>
                                     <th
-                                        class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                                        class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
                                     >
                                         Actions
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody
-                                class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"
-                            >
+                            <tbody class="bg-white divide-y divide-gray-200">
                                 <tr
                                     v-for="report in filteredReports"
                                     :key="report.id"
-                                    class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150"
+                                    class="hover:bg-gray-50 transition-colors duration-150"
                                     :class="getStatusRowClass(report.status)"
                                 >
                                     <!-- Reporter Column -->
@@ -454,11 +433,11 @@
                                                                         report
                                                                     )
                                                                 "
-                                                                class="h-6 w-6 rounded-full object-cover border-2 border-white dark:border-gray-800"
+                                                                class="h-6 w-6 rounded-full object-cover border-2 border-white"
                                                             />
                                                             <div
                                                                 v-else
-                                                                class="h-6 w-6 rounded-full flex items-center justify-center text-white font-semibold text-xs border-2 border-white dark:border-gray-800"
+                                                                class="h-6 w-6 rounded-full flex items-center justify-center text-white font-semibold text-xs border-2 border-white"
                                                                 :class="
                                                                     getReporterAvatarColor(
                                                                         report
@@ -477,7 +456,7 @@
                                                             class="absolute bottom-0 right-0 z-0"
                                                         >
                                                             <div
-                                                                class="h-6 w-6 rounded-full flex items-center justify-center text-white font-semibold text-xs bg-gradient-to-br from-purple-500 to-pink-600 border-2 border-white dark:border-gray-800"
+                                                                class="h-6 w-6 rounded-full flex items-center justify-center text-white font-semibold text-xs bg-gradient-to-br from-purple-500 to-pink-600 border-2 border-white"
                                                             >
                                                                 +{{
                                                                     getAdditionalReportersCount(
@@ -527,7 +506,7 @@
 
                                             <div>
                                                 <div
-                                                    class="font-medium text-gray-900 dark:text-white text-xs"
+                                                    class="font-medium text-gray-900 text-xs"
                                                 >
                                                     <span
                                                         v-if="
@@ -555,7 +534,7 @@
                                                                         report
                                                                     ) > 0
                                                                 "
-                                                                class="text-gray-600 dark:text-gray-400"
+                                                                class="text-gray-600"
                                                             >
                                                                 (+{{
                                                                     getAdditionalReportersCount(
@@ -574,7 +553,7 @@
                                                     </span>
                                                 </div>
                                                 <div
-                                                    class="text-xs text-gray-500 dark:text-gray-400"
+                                                    class="text-xs text-gray-500"
                                                 >
                                                     {{ report.tracking_code }}
                                                 </div>
@@ -607,15 +586,11 @@
                                     </td>
 
                                     <!-- Location -->
-                                    <td
-                                        class="px-6 py-2 text-xs text-gray-900 dark:text-white"
-                                    >
+                                    <td class="px-6 py-2 text-xs text-gray-900">
                                         <div class="font-medium">
                                             {{ report.zone || "N/A" }}
                                         </div>
-                                        <div
-                                            class="text-gray-500 dark:text-gray-400"
-                                        >
+                                        <div class="text-gray-500">
                                             {{ report.barangay }},
                                             {{ report.purok }}
                                         </div>
@@ -625,7 +600,7 @@
                                     <td class="px-6 py-2">
                                         <div class="text-xs">
                                             <div
-                                                class="font-medium text-gray-900 dark:text-white"
+                                                class="font-medium text-gray-900"
                                             >
                                                 {{
                                                     report.water_issue_type ===
@@ -636,7 +611,7 @@
                                                 }}
                                             </div>
                                             <div
-                                                class="text-gray-500 dark:text-gray-400 truncate max-w-xs"
+                                                class="text-gray-500 truncate max-w-xs"
                                             >
                                                 {{
                                                     truncateText(
@@ -689,15 +664,11 @@
                                     </td>
 
                                     <!-- Date -->
-                                    <td
-                                        class="px-6 py-2 text-xs text-gray-900 dark:text-white"
-                                    >
+                                    <td class="px-6 py-2 text-xs text-gray-900">
                                         <div>
                                             {{ formatDate(report.created_at) }}
                                         </div>
-                                        <div
-                                            class="text-gray-500 dark:text-gray-400"
-                                        >
+                                        <div class="text-gray-500">
                                             {{ formatTime(report.created_at) }}
                                         </div>
                                     </td>
@@ -712,7 +683,7 @@
                                                             report.id
                                                         )
                                                     "
-                                                    class="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-200 dark:hover:text-gray-300 rounded-lg transition-colors"
+                                                    class="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded-lg transition-colors"
                                                     :data-action-button="
                                                         report.id
                                                     "
@@ -728,7 +699,7 @@
                                                         activeActionMenu ===
                                                         report.id
                                                     "
-                                                    class="fixed z-[1000] mt-1 w-48 bg-white dark:bg-gray-700 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600"
+                                                    class="fixed z-[1000] mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200"
                                                     :style="
                                                         getActionDropdownStyle(
                                                             report.id
@@ -743,7 +714,7 @@
                                                                     report.id
                                                                 )
                                                             "
-                                                            class="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                                                            class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                                                         >
                                                             <Eye
                                                                 class="w-4 h-4 mr-3"
@@ -757,7 +728,7 @@
                                                                     report
                                                                 )
                                                             "
-                                                            class="flex items-center w-full px-4 py-2 text-sm text-yellow-600 dark:text-yellow-400 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                                                            class="flex items-center w-full px-4 py-2 text-sm text-yellow-600 hover:bg-gray-100 transition-colors"
                                                         >
                                                             <Edit
                                                                 class="w-4 h-4 mr-3"
@@ -773,7 +744,7 @@
                                                                     report
                                                                 )
                                                             "
-                                                            class="flex items-center w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                                                            class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100 transition-colors"
                                                         >
                                                             <Trash2
                                                                 class="w-4 h-4 mr-3"
@@ -800,13 +771,11 @@
                                                 class="w-20 h-20 text-gray-300"
                                             />
                                             <span
-                                                class="text-2xl font-medium text-gray-500 dark:text-gray-400"
+                                                class="text-2xl font-medium text-gray-500"
                                             >
                                                 No reports found
                                             </span>
-                                            <span
-                                                class="text-sm text-gray-400 dark:text-gray-500"
-                                            >
+                                            <span class="text-sm text-gray-400">
                                                 Try adjusting your filters or
                                                 search keywords.
                                             </span>
@@ -819,7 +788,7 @@
 
                     <!-- Pagination - Fixed at Bottom -->
                     <div
-                        class="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+                        class="flex-shrink-0 border-t border-gray-200 bg-white"
                     >
                         <Pagination :data="reports" />
                     </div>
@@ -883,6 +852,7 @@ const filters = ref({
     userType: props.filters?.userType || "all",
     status: props.filters?.status || "",
     search: props.filters?.search || "",
+    zone: props.filters?.zone || "",
 });
 
 const showModal = ref(false);
@@ -914,6 +884,22 @@ const userTypeOptions = [
     { value: "authenticated", label: "Registered" },
 ];
 
+const zoneOptions = [
+    { value: "", label: "All Zones" },
+    { value: "Zone 1", label: "Zone 1" },
+    { value: "Zone 2", label: "Zone 2" },
+    { value: "Zone 3", label: "Zone 3" },
+    { value: "Zone 4", label: "Zone 4" },
+    { value: "Zone 5", label: "Zone 5" },
+    { value: "Zone 6", label: "Zone 6" },
+    { value: "Zone 7", label: "Zone 7" },
+    { value: "Zone 8", label: "Zone 8" },
+    { value: "Zone 9", label: "Zone 9" },
+    { value: "Zone 10", label: "Zone 10" },
+    { value: "Zone 11", label: "Zone 11" },
+    { value: "Zone 12", label: "Zone 12" },
+];
+
 // Computed properties
 const pendingReportsCount = computed(() => {
     return props.reports.data.filter((report) => report.status === "pending")
@@ -941,6 +927,8 @@ const filteredReports = computed(() => {
             !report.status.startsWith("Deleted") &&
             report.status !== filters.value.status
         )
+            return false;
+        if (filters.value.zone && report.zone !== filters.value.zone)
             return false;
 
         if (filters.value.search) {
@@ -981,7 +969,7 @@ const toggleFilterDropdown = async () => {
     if (showFilterDropdown.value && filterButton.value) {
         await nextTick();
         const rect = filterButton.value.getBoundingClientRect();
-        const dropdownWidth = 224;
+        const dropdownWidth = 256;
         filterDropdownStyle.value = {
             left: `${rect.right - dropdownWidth}px`,
             top: `${rect.bottom + 8}px`,
@@ -1063,6 +1051,11 @@ const updateUserTypeFilter = (userType) => {
     showFilterDropdown.value = false;
 };
 
+const updateZoneFilter = (zone) => {
+    filters.value.zone = zone;
+    showFilterDropdown.value = false;
+};
+
 const resetFilters = () => {
     isResetting.value = true;
     setTimeout(() => {
@@ -1070,6 +1063,7 @@ const resetFilters = () => {
             userType: "all",
             status: "",
             search: "",
+            zone: "",
         };
         showFilterDropdown.value = false;
         isResetting.value = false;
@@ -1492,6 +1486,9 @@ const exportReports = async () => {
         if (filters.value.userType && filters.value.userType !== "all") {
             params.append("userType", filters.value.userType);
         }
+        if (filters.value.zone) {
+            params.append("zone", filters.value.zone);
+        }
 
         // Add timestamp to prevent caching
         params.append("_t", new Date().getTime());
@@ -1581,6 +1578,9 @@ const exportToPDF = async () => {
         if (filters.value.userType && filters.value.userType !== "all") {
             params.append("userType", filters.value.userType);
         }
+        if (filters.value.zone) {
+            params.append("zone", filters.value.zone);
+        }
 
         // Add timestamp to prevent caching
         params.append("_t", new Date().getTime());
@@ -1623,11 +1623,11 @@ const formatTime = (dateString) => {
 // Enhanced styling helpers for Hybrid type
 const userTypeClasses = (userType) => {
     if (userType === "Hybrid") {
-        return "bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-800 dark:from-blue-900 dark:to-cyan-900 dark:text-blue-200 border border-blue-200 dark:border-blue-700";
+        return "bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-800 border border-blue-200";
     } else if (userType === "Registered") {
-        return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200";
+        return "bg-purple-100 text-purple-800";
     } else {
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
+        return "bg-gray-100 text-gray-800";
     }
 };
 
@@ -1666,14 +1666,10 @@ const getDisplayUserType = (report) => {
 
 const priorityClasses = (priority) => {
     return {
-        "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200":
-            priority === "high",
-        "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200":
-            priority === "medium",
-        "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200":
-            priority === "low",
-        "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200":
-            !priority,
+        "bg-red-100 text-red-800": priority === "high",
+        "bg-yellow-100 text-yellow-800": priority === "medium",
+        "bg-green-100 text-green-800": priority === "low",
+        "bg-gray-100 text-gray-800": !priority,
     };
 };
 
@@ -1688,14 +1684,10 @@ const priorityDotClasses = (priority) => {
 
 const statusClasses = (status) => {
     return {
-        "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200":
-            status === "pending",
-        "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200":
-            status === "in_progress",
-        "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200":
-            status === "resolved",
-        "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200":
-            status?.startsWith("Deleted"),
+        "bg-gray-100 text-gray-800": status === "pending",
+        "bg-blue-100 text-blue-800": status === "in_progress",
+        "bg-green-100 text-green-800": status === "resolved",
+        "bg-red-100 text-red-800": status?.startsWith("Deleted"),
     };
 };
 
@@ -1717,24 +1709,24 @@ const getStatusRowClass = (status) => {
     return status === "pending"
         ? ""
         : status === "in_progress"
-        ? "bg-blue-50 dark:bg-blue-900/20"
+        ? "bg-blue-50"
         : status === "resolved"
-        ? "bg-green-50 dark:bg-green-900/20"
+        ? "bg-green-50"
         : status?.startsWith("Deleted")
-        ? "bg-red-50 dark:bg-red-900/20"
+        ? "bg-red-50"
         : "";
 };
 
 const getReporterTypeClasses = (type) => {
     switch (type) {
         case "Registered":
-            return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200";
+            return "bg-purple-100 text-purple-800";
         case "Guest":
-            return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
+            return "bg-gray-100 text-gray-800";
         case "Hybrid":
-            return "bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-800 dark:from-blue-900 dark:to-cyan-900 dark:text-blue-200";
+            return "bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-800";
         default:
-            return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
+            return "bg-gray-100 text-gray-800";
     }
 };
 
@@ -1799,10 +1791,6 @@ const formatStatus = (status) => {
     color: #2563eb; /* blue-600 */
 }
 
-.dark .reporter-link:hover {
-    color: #60a5fa; /* blue-400 */
-}
-
 /* Custom scrollbar styling */
 .scrollbar-custom {
     scrollbar-width: thin;
@@ -1823,15 +1811,7 @@ const formatStatus = (status) => {
     border-radius: 3px;
 }
 
-.dark .scrollbar-custom::-webkit-scrollbar-thumb {
-    background-color: #4b5563;
-}
-
 .scrollbar-custom::-webkit-scrollbar-thumb:hover {
     background-color: #a0aec0;
-}
-
-.dark .scrollbar-custom::-webkit-scrollbar-thumb:hover {
-    background-color: #6b7280;
 }
 </style>

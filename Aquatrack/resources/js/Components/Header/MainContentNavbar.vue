@@ -77,6 +77,11 @@
                                 >
                                     {{ userDisplayName }}
                                 </p>
+                                <p
+                                    class="text-xs text-gray-500 dark:text-gray-400"
+                                >
+                                    {{ userRoleDisplay }}
+                                </p>
                             </div>
                         </div>
                         <ChevronDown
@@ -120,6 +125,11 @@
                                         class="text-xs text-gray-500 dark:text-gray-400 truncate"
                                     >
                                         {{ user?.email }}
+                                    </p>
+                                    <p
+                                        class="text-xs text-blue-600 dark:text-blue-400 font-medium"
+                                    >
+                                        {{ userRoleDisplay }}
                                     </p>
                                 </div>
                             </div>
@@ -342,9 +352,43 @@ const emit = defineEmits(["toggle-mobile-menu", "logout"]);
 
 const { props: pageProps } = usePage();
 
-// User data
+// Debug: Check what's in pageProps
+console.log("pageProps:", pageProps);
+console.log("auth user:", pageProps.auth?.user);
+console.log("user role from props:", pageProps.auth?.user?.role);
+
+// User data with enhanced role detection
 const user = computed(() => pageProps.auth?.user ?? {});
-const userRole = computed(() => user.value?.role || "customer");
+const userRole = computed(() => {
+    const roleFromProps = user.value?.role;
+    const path = window.location.pathname;
+
+    console.log("Role detection:", {
+        fromProps: roleFromProps,
+        fromURL: path,
+        userData: user.value,
+    });
+
+    // If role from props is wrong or missing, detect from URL as fallback
+    if (!roleFromProps || roleFromProps === "customer") {
+        if (path.includes("/admin/")) {
+            console.log("Detected admin from URL");
+            return "admin";
+        }
+        if (path.includes("/staff/")) {
+            console.log("Detected staff from URL");
+            return "staff";
+        }
+        if (path.includes("/customer/")) {
+            console.log("Detected customer from URL");
+            return "customer";
+        }
+    }
+
+    console.log("Using role from props:", roleFromProps);
+    return roleFromProps || "customer";
+});
+
 const userDisplayName = computed(() => user.value?.name || "Unknown User");
 const userInitials = computed(() => {
     if (!user.value?.name) return "??";
@@ -354,6 +398,16 @@ const userInitials = computed(() => {
         .slice(0, 2)
         .join("")
         .toUpperCase();
+});
+
+const userRoleDisplay = computed(() => {
+    const role = userRole.value;
+    const roleMap = {
+        admin: "Administrator",
+        staff: "Staff Member",
+        customer: "Customer",
+    };
+    return roleMap[role] || role;
 });
 
 // Current page name - Only show main page names, ignore dynamic routes
@@ -418,6 +472,9 @@ const currentPageName = computed(() => {
         "/admin/settings": "Settings",
         "/staff/settings": "Settings",
         "/customer/settings": "Settings",
+
+        // Staff reading routes
+        "/staff/reading": "Meter Reading",
     };
 
     // Remove role prefix and find the base path
@@ -506,8 +563,13 @@ const unreadCount = computed(
 );
 
 const showNotifications = computed(() => {
-    const allowedRoles = ["admin", "customer"];
-    return allowedRoles.includes(userRole.value);
+    const shouldShow =
+        userRole.value === "admin" || userRole.value === "customer";
+    console.log("Show notifications check:", {
+        userRole: userRole.value,
+        shouldShow: shouldShow,
+    });
+    return shouldShow;
 });
 
 const notificationRoute = computed(() =>
@@ -700,6 +762,13 @@ const vClickOutside = {
 onMounted(() => {
     window.addEventListener("resize", handleResize);
     fetchModalNotifications();
+
+    // Debug final state
+    console.log("Final navbar state:", {
+        userRole: userRole.value,
+        showNotifications: showNotifications.value,
+        userData: user.value,
+    });
 });
 
 onUnmounted(() => {

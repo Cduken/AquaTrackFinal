@@ -3,12 +3,12 @@
         <div class="bg-gray-50 px-2 py-1">
             <!-- Header -->
             <div class="mb-4">
-                <div class="flex items-center justify-between">
+                <div class="flex items-start md:items-center flex-col md:flex-row md:justify-between">
                     <div>
                         <h1 class="text-xl font-semibold text-gray-900">
                             Dashboard Overview
                         </h1>
-                        <p class="text-gray-600 mt-1">
+                        <p class="text-gray-600 lg:mt-1">
                             Welcome back,
                             <span class="font-semibold text-gray-800">{{
                                 customerName
@@ -17,10 +17,10 @@
                     </div>
                     <div class="text-right">
                         <div
-                            class="bg-white px-4 py-2 rounded-lg border border-gray-200 shadow-xs"
+                            class="bg-white mt-2 px-2 py-1 lg:px-4 lg:py-2  rounded-lg border border-gray-200 shadow-xs"
                         >
                             <p
-                                class="text-xs text-gray-500 font-medium uppercase tracking-wide"
+                                class="text-xs text-left text-gray-500 font-medium uppercase tracking-wide"
                             >
                                 Billing Period
                             </p>

@@ -1,117 +1,103 @@
+//Pages/Customer/Notifications.vue
 <template>
     <CustomerLayout>
-        <div class="bg-gray-50 px-2 py-0">
-            <div class="overflow-hidden">
-                <!-- Header Section with Search and Filters on right -->
-                <div class="py-2 border-b border-gray-200 bg-gray-50">
-                    <div
-                        class="flex flex-col md:flex-row md:items-center justify-between gap-4"
-                    >
-                        <!-- Left side - Title and description -->
-                        <div class="flex-1">
-                            <h1 class="text-xl font-semibold text-gray-900">
-                                Notifications
-                            </h1>
-                            <p class="text-sm text-gray-600 mt-1">
-                                Stay updated with your account activities
-                            </p>
+        <div class="min-h-screen bg-white">
+            <!-- Header Section -->
+            <div class="px-4 py-6 border-b border-gray-100">
+                <div class="flex flex-col space-y-4">
+                    <!-- Title and description -->
+                    <div>
+                        <h1 class="text-2xl font-light text-gray-900">
+                            Notifications
+                        </h1>
+                        <p class="text-gray-500 mt-1">
+                            Your account updates and alerts
+                        </p>
+                    </div>
+
+                    <!-- Search and Filters -->
+                    <div class="flex flex-col space-y-3">
+                        <!-- Search -->
+                        <div class="relative">
+                            <div
+                                class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
+                            >
+                                <Search class="w-4 h-4 text-gray-400" />
+                            </div>
+                            <input
+                                v-model="filters.search"
+                                type="text"
+                                class="w-full pl-10 pr-4 py-2 text-base border border-gray-200 rounded-lg bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="Search notifications..."
+                                @keyup.enter="applyFilters"
+                            />
                         </div>
 
-                        <!-- Right side - Search and Filters -->
-                        <div
-                            class="flex flex-col sm:flex-row items-start sm:items-center gap-3"
-                        >
-                            <!-- Search -->
-                            <div class="w-full sm:w-auto">
-                                <div class="relative">
-                                    <div
-                                        class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
-                                    >
-                                        <Search class="w-4 h-4 text-gray-400" />
-                                    </div>
-                                    <input
-                                        v-model="filters.search"
-                                        type="text"
-                                        class="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:w-64"
-                                        placeholder="Search notifications..."
-                                        @keyup.enter="applyFilters"
-                                    />
-                                </div>
-                            </div>
+                        <!-- Filter Controls -->
+                        <div class="flex flex-wrap gap-2">
+                            <!-- Type Filter -->
+                            <select
+                                v-model="filters.type"
+                                @change="applyFilters"
+                                class="flex-1 min-w-[120px] px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                                <option value="">All Types</option>
+                                <option value="records">Records</option>
+                                <option value="reports">Reports</option>
+                                <option value="announcements">
+                                    Announcements
+                                </option>
+                            </select>
 
-                            <!-- Filter Controls -->
-                            <div class="flex flex-wrap items-center gap-2">
-                                <!-- Type Filter -->
-                                <div class="relative">
-                                    <select
-                                        v-model="filters.type"
-                                        @change="applyFilters"
-                                        class="w-[115px] spx-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                    >
-                                        <option value="">All Types</option>
-                                        <option value="records">Records</option>
-                                        <option value="reports">Reports</option>
-                                        <option value="announcements">
-                                            Announcements
-                                        </option>
-                                    </select>
-                                </div>
+                            <!-- Status Filter -->
+                            <select
+                                v-model="filters.status"
+                                @change="applyFilters"
+                                class="flex-1 min-w-[120px] px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                                <option value="">All Status</option>
+                                <option value="unread">Unread</option>
+                                <option value="read">Read</option>
+                            </select>
 
-                                <!-- Status Filter -->
-                                <div class="relative">
-                                    <select
-                                        v-model="filters.status"
-                                        @change="applyFilters"
-                                        class="w-[110px] px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                    >
-                                        <option value="">All Status</option>
-                                        <option value="unread">Unread</option>
-                                        <option value="read">Read</option>
-                                    </select>
-                                </div>
+                            <!-- Sort -->
+                            <select
+                                v-model="filters.sort"
+                                @change="applyFilters"
+                                class="flex-1 min-w-[120px] px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                                <option value="created_at">Newest First</option>
+                                <option value="created_at_asc">
+                                    Oldest First
+                                </option>
+                            </select>
 
-                                <!-- Sort -->
-                                <div class="relative">
-                                    <select
-                                        v-model="filters.sort"
-                                        @change="applyFilters"
-                                        class="w-[130px] px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                    >
-                                        <option value="created_at">
-                                            Newest First
-                                        </option>
-                                        <option value="created_at_asc">
-                                            Oldest First
-                                        </option>
-
-                                    </select>
-                                </div>
-
-                                <!-- Reset Filters -->
-                                <button
-                                    @click="clearFilters"
-                                    class="flex items-center px-3 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
-                                >
-                                    <RefreshCw class="w-4 h-4 mr-2" />
-
-                                </button>
-                            </div>
+                            <!-- Reset Filters -->
+                            <button
+                                @click="clearFilters"
+                                class="flex items-center justify-center px-3 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50"
+                            >
+                                <RefreshCw class="w-4 h-4" />
+                            </button>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Notifications Table Container with Fixed Height -->
-                <div
-                    class="flex flex-col"
-                    style="height: 613px; min-height: 600px"
-                >
-                    <!-- Table with Scrollable Body -->
-                    <div class="flex-1 overflow-x-auto overflow-y-auto">
+            <!-- Notifications List -->
+            <div class="pb-20">
+                <!-- Desktop Table View -->
+                <div class="hidden md:block">
+                    <div
+                        class="border border-gray-100 rounded-lg overflow-hidden"
+                    >
                         <table class="w-full">
-                            <thead class="bg-gray-50 sticky top-0 z-10">
+                            <thead
+                                class="bg-white border-b border-gray-100 sticky top-0 z-10"
+                            >
                                 <tr>
                                     <th
-                                        class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                        class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                                     >
                                         <div
                                             class="flex items-center space-x-2"
@@ -120,35 +106,35 @@
                                                 type="checkbox"
                                                 :checked="allSelected"
                                                 @change="toggleSelectAll"
-                                                class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                                                class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                                             />
                                             <span>Notification</span>
                                         </div>
                                     </th>
                                     <th
-                                        class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                        class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                                     >
                                         Type
                                     </th>
                                     <th
-                                        class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                        class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                                     >
                                         Date
                                     </th>
                                     <th
-                                        class="px-2 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                        class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
                                     >
                                         Actions
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
+                            <tbody class="bg-white divide-y divide-gray-100">
                                 <tr
                                     v-for="notification in paginatedNotifications"
                                     :key="notification.id"
                                     class="hover:bg-gray-50 transition-colors"
                                 >
-                                    <td class="px-2 py-4 whitespace-nowrap">
+                                    <td class="px-4 py-4">
                                         <div class="flex items-start space-x-3">
                                             <input
                                                 type="checkbox"
@@ -162,11 +148,11 @@
                                                         notification.id
                                                     )
                                                 "
-                                                class="mt-1 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                                                class="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                                             />
                                             <div class="flex-shrink-0">
                                                 <div
-                                                    class="p-2 rounded-lg"
+                                                    class="p-2 rounded-full"
                                                     :class="
                                                         getNotificationIconClass(
                                                             notification
@@ -189,7 +175,6 @@
                                                 </div>
                                             </div>
                                             <div class="min-w-0 flex-1">
-                                                <!-- Clickable Notification Content -->
                                                 <div
                                                     class="flex items-start justify-between cursor-pointer"
                                                     @click="
@@ -240,7 +225,7 @@
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="px-2 py-4 whitespace-nowrap">
+                                    <td class="px-4 py-4">
                                         <span
                                             class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize"
                                             :class="
@@ -254,9 +239,7 @@
                                             }}
                                         </span>
                                     </td>
-                                    <td
-                                        class="px-2 py-4 whitespace-nowrap text-sm text-gray-600"
-                                    >
+                                    <td class="px-4 py-4 text-sm text-gray-600">
                                         <div
                                             class="flex items-center space-x-1"
                                         >
@@ -276,7 +259,7 @@
                                         </div>
                                     </td>
                                     <td
-                                        class="px-2 py-4 whitespace-nowrap text-right text-sm font-medium"
+                                        class="px-4 py-4 text-right text-sm font-medium"
                                     >
                                         <div
                                             class="flex items-center justify-end space-x-2"
@@ -287,32 +270,18 @@
                                                         notification
                                                     )
                                                 "
-                                                class="text-blue-600 hover:text-blue-900 transition-colors p-1 rounded hover:bg-blue-50"
+                                                class="text-gray-500 hover:text-gray-700 transition-colors p-1 rounded hover:bg-gray-100"
                                                 title="View Details"
                                             >
                                                 <Eye class="w-4 h-4" />
                                             </button>
-                                            <!-- <button
-                                                v-if="notification.unread"
-                                                @click="
-                                                    markAsRead(notification.id)
-                                                "
-                                                class="text-green-600 hover:text-green-900 transition-colors p-1 rounded hover:bg-green-50"
-                                                title="Mark as Read"
-                                                :disabled="
-                                                    markingAsRead ===
-                                                    notification.id
-                                                "
-                                            >
-                                                <Check class="w-4 h-4" />
-                                            </button> -->
                                             <button
                                                 @click="
                                                     deleteNotification(
                                                         notification.id
                                                     )
                                                 "
-                                                class="text-red-600 hover:text-red-900 transition-colors p-1 rounded hover:bg-red-50"
+                                                class="text-gray-500 hover:text-red-600 transition-colors p-1 rounded hover:bg-gray-100"
                                                 title="Delete"
                                                 :disabled="
                                                     deletingNotification ===
@@ -325,29 +294,29 @@
                                     </td>
                                 </tr>
 
-                                <!-- Empty State -->
+                                <!-- Empty State for Desktop -->
                                 <tr v-if="filteredNotifications.length === 0">
                                     <td
                                         colspan="4"
-                                        class="px-2 py-24 text-center"
+                                        class="px-4 py-16 text-center"
                                     >
                                         <div
                                             class="flex flex-col items-center justify-center space-y-4"
                                         >
                                             <div
-                                                class="p-4 bg-gray-100 rounded-full"
+                                                class="p-4 bg-gray-50 rounded-full"
                                             >
                                                 <Bell
-                                                    class="w-20 h-20 text-gray-300"
+                                                    class="w-12 h-12 text-gray-300"
                                                 />
                                             </div>
                                             <h3
-                                                class="text-2xl font-medium text-gray-500"
+                                                class="text-lg font-medium text-gray-500"
                                             >
                                                 No notifications found
                                             </h3>
                                             <p
-                                                class="text-sm text-gray-400 max-w-md"
+                                                class="text-sm text-gray-400 max-w-sm"
                                             >
                                                 {{
                                                     filters.search ||
@@ -373,15 +342,221 @@
                                 </tr>
                             </tbody>
                         </table>
+
+                        <!-- Pagination - Now inside the table container -->
+                        <div
+                            v-if="filteredNotifications.length > 0"
+                            class="bg-white border-t border-gray-100 px-4 py-4"
+                        >
+                            <div
+                                class="flex flex-col sm:flex-row items-center justify-between space-y-3 sm:space-y-0"
+                            >
+                                <div class="text-sm text-gray-600">
+                                    Showing {{ startIndex + 1 }} to
+                                    {{ endIndex }} of
+                                    {{
+                                        filteredNotifications.length
+                                    }}
+                                    notifications
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <button
+                                        @click="prevPage"
+                                        :disabled="currentPage === 1"
+                                        class="px-3 py-1.5 text-sm rounded border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        Previous
+                                    </button>
+                                    <div class="flex space-x-1">
+                                        <button
+                                            v-for="page in totalPages"
+                                            :key="page"
+                                            @click="currentPage = page"
+                                            :class="[
+                                                'px-3 py-1.5 text-sm rounded min-w-8',
+                                                currentPage === page
+                                                    ? 'bg-blue-600 text-white'
+                                                    : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50',
+                                            ]"
+                                        >
+                                            {{ page }}
+                                        </button>
+                                    </div>
+                                    <button
+                                        @click="nextPage"
+                                        :disabled="currentPage === totalPages"
+                                        class="px-3 py-1.5 text-sm rounded border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        Next
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mobile Card View -->
+                <div class="md:hidden">
+                    <div class="space-y-2 p-4">
+                        <div
+                            v-for="notification in paginatedNotifications"
+                            :key="notification.id"
+                            class="bg-white border border-gray-100 rounded-lg p-4 hover:shadow-sm transition-shadow"
+                        >
+                            <div class="flex items-start space-x-3">
+                                <div class="flex-shrink-0">
+                                    <div
+                                        class="p-2 rounded-full"
+                                        :class="
+                                            getNotificationIconClass(
+                                                notification
+                                            )
+                                        "
+                                    >
+                                        <component
+                                            :is="
+                                                getNotificationIcon(
+                                                    notification
+                                                )
+                                            "
+                                            class="w-4 h-4"
+                                            :class="
+                                                getNotificationIconColor(
+                                                    notification
+                                                )
+                                            "
+                                        />
+                                    </div>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div
+                                        class="cursor-pointer"
+                                        @click="
+                                            handleNotificationClick(
+                                                notification
+                                            )
+                                        "
+                                    >
+                                        <div
+                                            class="flex items-start justify-between"
+                                        >
+                                            <p
+                                                class="text-sm font-medium text-gray-900 line-clamp-1"
+                                            >
+                                                {{
+                                                    getNotificationTitle(
+                                                        notification
+                                                    )
+                                                }}
+                                            </p>
+                                            <div
+                                                class="flex items-center space-x-1 ml-2"
+                                            >
+                                                <span
+                                                    v-if="notification.unread"
+                                                    class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                                                >
+                                                    New
+                                                </span>
+                                                <button
+                                                    @click.stop="
+                                                        deleteNotification(
+                                                            notification.id
+                                                        )
+                                                    "
+                                                    class="text-gray-400 hover:text-red-500 transition-colors p-1"
+                                                    :disabled="
+                                                        deletingNotification ===
+                                                        notification.id
+                                                    "
+                                                >
+                                                    <Trash2 class="w-3 h-3" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <p
+                                            class="text-sm text-gray-600 mt-1 line-clamp-2"
+                                        >
+                                            {{ notification.message }}
+                                        </p>
+                                        <div
+                                            class="flex items-center justify-between mt-2"
+                                        >
+                                            <span
+                                                class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize"
+                                                :class="
+                                                    getTypeBadgeClass(
+                                                        notification
+                                                    )
+                                                "
+                                            >
+                                                {{
+                                                    formatNotificationType(
+                                                        notification.type
+                                                    )
+                                                }}
+                                            </span>
+                                            <div
+                                                class="flex items-center space-x-1 text-xs text-gray-500"
+                                            >
+                                                <Clock class="w-3 h-3" />
+                                                <span>{{
+                                                    getRelativeTime(
+                                                        notification.created_at
+                                                    )
+                                                }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Pagination -->
+                    <!-- Empty State for Mobile -->
                     <div
-                        v-if="filteredNotifications.length > 0"
-                        class="flex-shrink-0 border-t border-gray-200 bg-white"
+                        v-if="filteredNotifications.length === 0"
+                        class="py-16 text-center"
                     >
                         <div
-                            class="flex items-center justify-between px-2 py-4"
+                            class="flex flex-col items-center justify-center space-y-4"
+                        >
+                            <div class="p-4 bg-gray-50 rounded-full">
+                                <Bell class="w-12 h-12 text-gray-300" />
+                            </div>
+                            <h3 class="text-lg font-medium text-gray-500">
+                                No notifications found
+                            </h3>
+                            <p class="text-sm text-gray-400 max-w-sm">
+                                {{
+                                    filters.search ||
+                                    filters.type ||
+                                    filters.status
+                                        ? "Try adjusting your filters or search keywords."
+                                        : "All caught up! No notifications to display."
+                                }}
+                            </p>
+                            <button
+                                v-if="
+                                    filters.search ||
+                                    filters.type ||
+                                    filters.status
+                                "
+                                @click="clearFilters"
+                                class="mt-2 px-4 py-2 text-sm text-blue-600 hover:text-blue-800"
+                            >
+                                Clear all filters
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Pagination for Mobile -->
+                    <div
+                        v-if="filteredNotifications.length > 0"
+                        class="px-4 py-4 border-t border-gray-100"
+                    >
+                        <div
+                            class="flex flex-col sm:flex-row items-center justify-between space-y-3 sm:space-y-0"
                         >
                             <div class="text-sm text-gray-600">
                                 Showing {{ startIndex + 1 }} to
@@ -392,7 +567,7 @@
                                 <button
                                     @click="prevPage"
                                     :disabled="currentPage === 1"
-                                    class="px-3 py-1.5 text-sm rounded border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    class="px-3 py-1.5 text-sm rounded border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     Previous
                                 </button>
@@ -405,7 +580,7 @@
                                             'px-3 py-1.5 text-sm rounded min-w-8',
                                             currentPage === page
                                                 ? 'bg-blue-600 text-white'
-                                                : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50',
+                                                : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50',
                                         ]"
                                     >
                                         {{ page }}
@@ -414,7 +589,7 @@
                                 <button
                                     @click="nextPage"
                                     :disabled="currentPage === totalPages"
-                                    class="px-3 py-1.5 text-sm rounded border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    class="px-3 py-1.5 text-sm rounded border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     Next
                                 </button>
@@ -422,30 +597,27 @@
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Bulk Actions Bar -->
-                <div
-                    v-if="selectedNotifications.length > 0"
-                    class="px-2 py-4 border-t border-gray-200 bg-blue-50"
-                >
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center space-x-2">
-                            <CheckSquare class="w-4 h-4 text-blue-600" />
-                            <span class="text-sm font-medium text-blue-800">
-                                {{ selectedNotifications.length }}
-                                notification(s) selected
-                            </span>
-                        </div>
-                        <div class="flex items-center space-x-3">
-                            <button
-                                @click="bulkDelete"
-                                class="px-3 py-1.5 text-sm text-white bg-red-600 border border-red-700 rounded-md hover:bg-red-700 transition-colors"
-                                :disabled="bulkActionLoading"
-                            >
-                                Delete Selected
-                            </button>
-                        </div>
+            <!-- Bulk Actions Bar (Mobile Bottom Sheet) -->
+            <div
+                v-if="selectedNotifications.length > 0"
+                class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg p-4 md:relative md:border-t md:bg-blue-50 md:shadow-none"
+            >
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                        <CheckSquare class="w-4 h-4 text-blue-600" />
+                        <span class="text-sm font-medium text-blue-800">
+                            {{ selectedNotifications.length }} selected
+                        </span>
                     </div>
+                    <button
+                        @click="bulkDelete"
+                        class="px-4 py-2 text-sm text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+                        :disabled="bulkActionLoading"
+                    >
+                        Delete
+                    </button>
                 </div>
             </div>
         </div>
@@ -470,14 +642,14 @@
             >
                 <!-- Modal Panel -->
                 <div
-                    class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg"
+                    class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 w-full max-w-md"
                 >
                     <!-- Modal Header -->
-                    <div class="bg-white px-2 py-4 border-b border-gray-200">
+                    <div class="bg-white px-6 py-4 border-b border-gray-100">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center space-x-3">
                                 <div
-                                    class="p-2 rounded-lg"
+                                    class="p-2 rounded-full"
                                     :class="
                                         selectedNotification
                                             ? getNotificationIconClass(
@@ -538,7 +710,7 @@
                     </div>
 
                     <!-- Modal Content -->
-                    <div class="bg-white px-2 py-4">
+                    <div class="bg-white px-6 py-4">
                         <div class="space-y-4">
                             <!-- Notification Message -->
                             <div>
@@ -618,10 +790,12 @@
                     </div>
 
                     <!-- Modal Footer -->
-                    <div class="bg-gray-50 px-2 py-3 border-t border-gray-200">
-                        <div class="flex items-center justify-between">
+                    <div class="bg-gray-50 px-6 py-4 border-t border-gray-100">
+                        <div
+                            class="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:items-center sm:justify-between"
+                        >
                             <span class="text-xs text-gray-500">
-                                Notification ID:
+                                ID:
                                 {{
                                     selectedNotification
                                         ? selectedNotification.id
@@ -636,7 +810,7 @@
                                         getActionUrl(selectedNotification)
                                     "
                                     @click="goToAction(selectedNotification)"
-                                    class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-blue-700 rounded-md hover:bg-blue-700 transition-colors"
+                                    class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
                                 >
                                     {{ getActionLabel(selectedNotification) }}
                                 </button>
@@ -647,7 +821,7 @@
                                         selectedNotification.unread
                                     "
                                     @click="markAsRead(selectedNotification.id)"
-                                    class="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-green-700 rounded-md hover:bg-green-700 transition-colors"
+                                    class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
                                 >
                                     Mark as Read
                                 </button>
@@ -658,7 +832,7 @@
                                             selectedNotification.id
                                         )
                                     "
-                                    class="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-red-700 rounded-md hover:bg-red-700 transition-colors"
+                                    class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
                                 >
                                     Delete
                                 </button>

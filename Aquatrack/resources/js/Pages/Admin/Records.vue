@@ -38,67 +38,7 @@
                             </div>
 
                             <!-- Export Dropdown -->
-                            <div class="relative">
-                                <button
-                                    @click="toggleExportDropdown"
-                                    ref="exportButton"
-                                    :disabled="exportLoading"
-                                    class="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    type="button"
-                                >
-                                    <Download
-                                        class="w-4 h-4 mr-2"
-                                        :class="{
-                                            'animate-spin': exportLoading,
-                                        }"
-                                    />
-                                    {{
-                                        exportLoading
-                                            ? "Exporting..."
-                                            : "Export"
-                                    }}
-                                    <ChevronDown class="ml-1 w-4 h-4" />
-                                </button>
 
-                                <!-- Export Options Dropdown -->
-                                <div
-                                    v-if="showExportDropdown"
-                                    class="fixed z-[1000] mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200"
-                                    :style="exportDropdownStyle"
-                                    @click.stop
-                                >
-                                    <div class="py-1">
-                                        <button
-                                            @click="exportRecords('csv')"
-                                            class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                                        >
-                                            <FileText class="w-4 h-4 mr-3" />
-                                            Export as CSV
-                                        </button>
-                                        <button
-                                            @click="exportRecords('excel')"
-                                            class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                                        >
-                                            <FileText class="w-4 h-4 mr-3" />
-                                            Export as Excel
-                                        </button>
-                                        <button
-                                            @click="exportRecords('pdf')"
-                                            class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                                        >
-                                            <FileText class="w-4 h-4 mr-3" />
-                                            Export as PDF
-                                        </button>
-                                        <button
-                                            @click="printRecords"
-                                            class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                                        >
-                                            <Printer class="w-4 h-4 mr-3" />
-                                            Print Records
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
 
                             <!-- Status Filter -->
                             <div class="relative">
@@ -259,6 +199,62 @@
                                                 }"
                                             />
                                             Reset
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="relative">
+                                <button
+                                    @click="toggleExportDropdown"
+                                    ref="exportButton"
+                                    :disabled="exportLoading"
+                                    class="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    type="button"
+                                >
+                                    <Download
+                                        class="w-4 h-4 mr-2"
+                                        :class="{
+                                            'animate-spin': exportLoading,
+                                        }"
+                                    />
+                                    {{
+                                        exportLoading
+                                            ? "Exporting..."
+                                            : "Export"
+                                    }}
+                                    <ChevronDown class="ml-1 w-4 h-4" />
+                                </button>
+
+                                <!-- Export Options Dropdown -->
+                                <div
+                                    v-if="showExportDropdown"
+                                    class="fixed z-[1000] mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200"
+                                    :style="exportDropdownStyle"
+                                    @click.stop
+                                >
+                                    <div class="py-1">
+                                        <button
+                                            @click="exportRecords('csv')"
+                                            class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                                        >
+                                            <FileText class="w-4 h-4 mr-3" />
+                                            Export as CSV
+                                        </button>
+
+                                        <button
+                                            @click="exportRecords('pdf')"
+                                            class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                                        >
+                                            <FileText class="w-4 h-4 mr-3" />
+                                            Export as PDF
+                                        </button>
+                                        <button
+                                            @click="printRecords"
+                                            class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                                        >
+                                            <Printer class="w-4 h-4 mr-3" />
+                                            Print Records
                                         </button>
                                     </div>
                                 </div>

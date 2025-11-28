@@ -18,7 +18,7 @@
 
                 <!-- Right side - Filters and Reset -->
                 <div
-                    class="flex flex-col sm:flex-row items-start sm:items-center gap-2"
+                    class="flex sm:flex-row items-start sm:items-center gap-2"
                 >
                     <!-- Status Filter -->
                     <select
